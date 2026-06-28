@@ -3,57 +3,25 @@
 import { useState } from "react";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent } from "@/components/map/Map";
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-
-// `color` = bright brand hue for the map dot + chip border/tint.
-// `ink`   = accessible (WCAG AA) variant used only for the chip TEXT + icon.
-const CATEGORIES = [
-  { id: "playa",      label: "Playas",     icon: "beach_access",    color: "#25CCB8", ink: "#0C6A60" },
-  { id: "naturaleza", label: "Naturaleza", icon: "forest",          color: "#4CAF50", ink: "#2E7D32" },
-  { id: "gastro",     label: "Gastro",     icon: "restaurant",      color: "#F76C4D", ink: "#B23410" },
-  { id: "cultura",    label: "Cultura",    icon: "account_balance", color: "#2D9CDB", ink: "#1F6FA8" },
-  { id: "aventura",   label: "Aventura",   icon: "kayaking",        color: "#FF8D16", ink: "#985409" },
-] as const;
-
-type CategoryId = (typeof CATEGORIES)[number]["id"];
-
-const CATEGORY_COLOR: Record<CategoryId, string> = Object.fromEntries(
-  CATEGORIES.map((c) => [c.id, c.color])
-) as Record<CategoryId, string>;
-
-const MAP_PINS: { name: string; lng: number; lat: number; category: CategoryId }[] = [
-  { name: "Bahía de las Águilas", lng: -71.77, lat: 17.89, category: "playa"      },
-  { name: "Playa Rincón",         lng: -69.55, lat: 19.33, category: "playa"      },
-  { name: "Playa Frontón",        lng: -69.47, lat: 19.38, category: "playa"      },
-  { name: "Las Terrenas",         lng: -69.54, lat: 19.30, category: "playa"      },
-  { name: "Barahona",             lng: -71.10, lat: 18.21, category: "playa"      },
-  { name: "Los Haitises",         lng: -69.66, lat: 19.13, category: "naturaleza" },
-  { name: "Salto El Limón",       lng: -69.58, lat: 19.15, category: "naturaleza" },
-  { name: "Lago Enriquillo",      lng: -71.62, lat: 18.48, category: "naturaleza" },
-  { name: "Constanza",            lng: -70.72, lat: 18.91, category: "naturaleza" },
-  { name: "Santiago",             lng: -70.70, lat: 19.45, category: "gastro"     },
-  { name: "La Romana",            lng: -68.97, lat: 18.43, category: "gastro"     },
-  { name: "Zona Colonial",        lng: -69.89, lat: 18.47, category: "cultura"    },
-  { name: "Altos de Chavón",      lng: -68.97, lat: 18.42, category: "cultura"    },
-  { name: "Puerto Plata",         lng: -70.69, lat: 19.79, category: "cultura"    },
-  { name: "Pico Duarte",          lng: -70.99, lat: 19.05, category: "aventura"   },
-  { name: "27 Charcos",           lng: -70.58, lat: 19.62, category: "aventura"   },
-  { name: "Cabarete",             lng: -70.40, lat: 19.76, category: "aventura"   },
-  { name: "Jarabacoa",            lng: -70.64, lat: 19.11, category: "aventura"   },
-];
+import {
+  DESTINATIONS,
+  CATEGORIES,
+  CATEGORY_META,
+  type Category,
+} from "@/data/destinations";
 
 // ─── Component ────────────────────────────────────────────────────────────────
+// Pines y categorías vienen de la fuente de verdad única (#5).
 
 export default function MapaOverlay() {
   const { activeScene } = useScene();
   const isVisible = activeScene === "mapa";
 
-  const [activeCategories, setActiveCategories] = useState<Set<CategoryId>>(
-    new Set(CATEGORIES.map((c) => c.id))
+  const [activeCategories, setActiveCategories] = useState<Set<Category>>(
+    new Set(CATEGORIES)
   );
 
-  function toggleCategory(id: CategoryId) {
+  function toggleCategory(id: Category) {
     setActiveCategories((prev) => {
       const next = new Set(prev);
       if (next.has(id) && next.size > 1) {
@@ -69,11 +37,11 @@ export default function MapaOverlay() {
     <>
       {/* Category pins — only mounted when scene is active */}
       {isVisible &&
-        MAP_PINS.map((pin) => {
-          const color = CATEGORY_COLOR[pin.category];
+        DESTINATIONS.map((pin) => {
+          const color = CATEGORY_META[pin.category].color;
           const pinActive = activeCategories.has(pin.category);
           return (
-            <MapMarker key={pin.name} longitude={pin.lng} latitude={pin.lat}>
+            <MapMarker key={pin.id} longitude={pin.coords[0]} latitude={pin.coords[1]}>
               <MarkerContent>
                 <div
                   title={pin.name}
@@ -135,20 +103,21 @@ export default function MapaOverlay() {
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {CATEGORIES.map((cat) => {
-              const isActive = activeCategories.has(cat.id);
+              const meta = CATEGORY_META[cat];
+              const isActive = activeCategories.has(cat);
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => toggleCategory(cat.id)}
+                  key={cat}
+                  onClick={() => toggleCategory(cat)}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 5,
                     padding: "6px 12px",
                     borderRadius: 999,
-                    border: `1.5px solid ${isActive ? cat.color : "#EBE6D9"}`,
-                    background: isActive ? `${cat.color}1A` : "transparent",
-                    color: isActive ? cat.ink : "#5B6B72",
+                    border: `1.5px solid ${isActive ? meta.color : "#EBE6D9"}`,
+                    background: isActive ? `${meta.color}1A` : "transparent",
+                    color: isActive ? meta.ink : "#5B6B72",
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 700,
                     fontSize: 12.5,
@@ -157,8 +126,8 @@ export default function MapaOverlay() {
                   }}
                   aria-pressed={isActive}
                 >
-                  <span className="ms" style={{ fontSize: 14 }}>{cat.icon}</span>
-                  {cat.label}
+                  <span className="ms" style={{ fontSize: 14 }}>{meta.icon}</span>
+                  {meta.label}
                 </button>
               );
             })}

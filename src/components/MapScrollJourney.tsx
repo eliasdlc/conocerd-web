@@ -11,6 +11,7 @@ import ViajerosOverlay from "@/components/overlays/ViajerosOverlay";
 import NegociosOverlay from "@/components/overlays/NegociosOverlay";
 import EquipoOverlay from "@/components/overlays/EquipoOverlay";
 import CTAOverlay from "@/components/overlays/CTAOverlay";
+import { SCENE_CAMERAS } from "@/data/destinations";
 
 // ─── Scene registry ───────────────────────────────────────────────────────────
 
@@ -36,38 +37,7 @@ type SceneName = (typeof SCENES)[number]["name"];
 const TRIGGER_TOTAL_VH = SCENES.reduce((sum, s) => sum + s.height, 0);
 
 // ─── Dominican Republic flyTo targets ─────────────────────────────────────────
-
-type Viewport = { center: [number, number]; zoom: number; pitch: number; bearing: number };
-
-const LOCATIONS: Record<string, Viewport> = {
-  rdOverview:   { center: [-70.35, 18.85],     zoom: 7.2,  pitch: 0,  bearing: 0   },
-  bahiaAquilas: { center: [-71.77, 17.89],     zoom: 11.5, pitch: 45, bearing: -20 },
-  picoDuarte:   { center: [-70.99, 19.05],     zoom: 10.5, pitch: 50, bearing: 15  },
-  saltoLimon:   { center: [-69.58, 19.15],     zoom: 11.0, pitch: 40, bearing: 5   },
-  charcos27:    { center: [-70.58, 19.62],     zoom: 11.5, pitch: 35, bearing: -10 },
-  constanza:    { center: [-70.72, 18.91],     zoom: 11.5, pitch: 50, bearing: 20  },
-  losHaitises:  { center: [-69.66, 19.13],     zoom: 11.0, pitch: 30, bearing: 0   },
-  rdCaribbean:  { center: [-70.35, 18.85],     zoom: 6.5,  pitch: 0,  bearing: 0   },
-  rdNorth:      { center: [-70.30, 19.00],     zoom: 8.5,  pitch: 20, bearing: 0   },
-  santiago:     { center: [-70.6901, 19.4517], zoom: 12.5, pitch: 30, bearing: 5   },
-  globeOut:     { center: [-69.00, 17.00],     zoom: 3.5,  pitch: 15, bearing: -5  },
-};
-
-const SCENE_TO_LOCATION: Record<SceneName, string> = {
-  "destinos-intro":  "rdOverview",
-  "polaroid-0":      "bahiaAquilas",
-  "polaroid-1":      "picoDuarte",
-  "polaroid-2":      "saltoLimon",
-  "polaroid-3":      "charcos27",
-  "polaroid-4":      "constanza",
-  "polaroid-5":      "losHaitises",
-  "destinos-finale": "rdOverview",
-  "mapa":            "rdOverview",
-  "viajeros":        "rdCaribbean",
-  "negocios":        "rdNorth",
-  "equipo":          "santiago",
-  "cta":             "globeOut",
-};
+// Las cámaras por escena viven en la fuente de verdad única (SCENE_CAMERAS, #5).
 
 // Polaroid sub-transitions are faster; CTA is cinematic
 const SCENE_DURATION: Partial<Record<SceneName, number>> = {
@@ -100,8 +70,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !activeScene) return;
-    const locationKey = SCENE_TO_LOCATION[activeScene as SceneName];
-    const location = LOCATIONS[locationKey];
+    const location = SCENE_CAMERAS[activeScene];
     if (!location) return;
     const duration = SCENE_DURATION[activeScene as SceneName] ?? 2200;
     map.flyTo({ ...location, duration, essential: true });

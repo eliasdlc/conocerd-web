@@ -4,77 +4,11 @@ import Image from "next/image";
 import CategoryChip from "@/components/CategoryChip";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
+import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-
-const POLAROIDS = [
-  {
-    id: "aguilas",
-    src: "/assets/ph-playa.png",
-    rotate: -4,
-    name: "Bahía de las Águilas",
-    meta: "Pedernales · 17.88°N",
-    icon: "beach_access",
-    chip: "Playa virgen",
-    desc: "8 km de arena sin un solo edificio.",
-    mapCoords: [-71.77, 17.89] as [number, number],
-  },
-  {
-    id: "duarte",
-    src: "/assets/ph-montana.png",
-    rotate: 3,
-    name: "Pico Duarte",
-    meta: "La Vega · 3,098 m",
-    icon: "landscape",
-    chip: "Montaña",
-    desc: "El techo del Caribe, a tu alcance.",
-    mapCoords: [-70.99, 19.05] as [number, number],
-  },
-  {
-    id: "limon",
-    src: "/assets/ph-cascada.png",
-    rotate: -2,
-    name: "Salto El Limón",
-    meta: "Samaná · 40 m",
-    icon: "water_drop",
-    chip: "Cascada",
-    desc: "A caballo entre montañas verdes.",
-    mapCoords: [-69.58, 19.15] as [number, number],
-  },
-  {
-    id: "charcos",
-    src: "/assets/ph-rio.png",
-    rotate: 4,
-    name: "27 Charcos",
-    meta: "Puerto Plata · Damajagua",
-    icon: "kayaking",
-    chip: "Ecoturismo",
-    desc: "Salta y nada entre cascadas turquesa.",
-    mapCoords: [-70.58, 19.62] as [number, number],
-  },
-  {
-    id: "constanza",
-    src: "/assets/ph-pueblo.png",
-    rotate: -3,
-    name: "Constanza",
-    meta: "La Vega · 1,200 m",
-    icon: "cottage",
-    chip: "Pueblo & valle",
-    desc: "Clima fresco, fresas y pinares.",
-    mapCoords: [-70.72, 18.91] as [number, number],
-  },
-  {
-    id: "haitises",
-    src: "/assets/ph-sunset.png",
-    rotate: 2,
-    name: "Los Haitises",
-    meta: "Samaná · Parque Nacional",
-    icon: "forest",
-    chip: "Naturaleza",
-    desc: "Manglares, cuevas y cayos en bote.",
-    mapCoords: [-69.66, 19.13] as [number, number],
-  },
-];
+// Los 6 destinos del journey vienen de la fuente de verdad única (#5).
+const POLAROIDS = FEATURED_DESTINATIONS;
 
 // Final rotation for each card in the pile = original rotate + extra scatter
 const PILE_OFFSETS = [
@@ -116,7 +50,7 @@ export default function DestinosOverlay() {
     <>
       {/* Map pins rendered via MapMarker portals (positioned by maplibre on the canvas) */}
       {POLAROIDS.filter((_, i) => i < visibleCount).map((pol) => (
-        <MapMarker key={pol.id} longitude={pol.mapCoords[0]} latitude={pol.mapCoords[1]}>
+        <MapMarker key={pol.id} longitude={pol.coords[0]} latitude={pol.coords[1]}>
           <MarkerContent>
             <div
               style={{
@@ -190,7 +124,7 @@ export default function DestinosOverlay() {
         {/* Polaroid pile */}
         {POLAROIDS.map((pol, i) => {
           const offset = PILE_OFFSETS[i];
-          const totalRotate = pol.rotate + offset.extraRotate;
+          const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
           const isCardVisible = i < visibleCount;
 
           return (
@@ -227,7 +161,7 @@ export default function DestinosOverlay() {
                   background: "#F5EFE2",
                 }}
               >
-                <Image src={pol.src} alt={pol.name} fill style={{ objectFit: "cover" }} />
+                <Image src={pol.image} alt={pol.name} fill style={{ objectFit: "cover" }} />
                 <div
                   style={{
                     position: "absolute",
@@ -241,7 +175,7 @@ export default function DestinosOverlay() {
                     alignItems: "flex-start",
                   }}
                 >
-                  <CategoryChip icon={pol.icon}>{pol.chip}</CategoryChip>
+                  <CategoryChip icon={CATEGORY_META[pol.category].icon}>{pol.tagline}</CategoryChip>
                   <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,.92)", lineHeight: 1.4 }}>
                     {pol.desc}
                   </p>
