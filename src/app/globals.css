@@ -109,6 +109,9 @@ body {
     border-radius: 20px 20px 0 0;
     max-height: 52vh;
     overflow-y: auto;
+    /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
+       reponerlo como padding para que el contenido no quede pegado al borde. */
+    padding: 16px 16px 20px !important;
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
   .crd-ol-panel-right { display: none !important; }
@@ -122,7 +125,10 @@ body {
   .crd-stat-chips { display: flex !important; }
   /* Footer: 4 columnas → 2 en móvil. */
   .crd-footer-grid { grid-template-columns: 1fr 1fr !important; }
-  .crd-navlink { font-size: 13.5px; }
+  /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
+  .crd-navlink { display: none !important; }
+  /* Viajeros: el mockup de teléfono tapa el bottom-sheet → ocultarlo en móvil. */
+  .crd-phone-wrap { display: none !important; }
 }
 
 /* Stat chips live only on mobile (see media query above). */
