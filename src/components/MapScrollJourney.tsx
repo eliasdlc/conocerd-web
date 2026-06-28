@@ -15,9 +15,13 @@ import CTAOverlay from "@/components/overlays/CTAOverlay";
 
 // Applied once on map load — aligns water/border colors with brand palette
 function applyBrandPaint(map: maplibregl.Map) {
-  try { map.setPaintProperty("water", "fill-color", "#c8ede9"); } catch {}
-  try { map.setPaintProperty("admin_country", "line-color", "#264653"); } catch {}
-  try { map.setPaintProperty("admin_country", "line-width", 2); } catch {}
+  // El estilo Carto no siempre expone estas capas → guardar con getLayer para
+  // no ensuciar la consola con "Cannot style non-existing layer".
+  if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
+  if (map.getLayer("admin_country")) {
+    map.setPaintProperty("admin_country", "line-color", "#264653");
+    map.setPaintProperty("admin_country", "line-width", 2);
+  }
 }
 
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────

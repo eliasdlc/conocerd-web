@@ -15,7 +15,7 @@ export default function Nav() {
         nav.style.background = "rgba(253,248,240,.88)";
         nav.style.boxShadow = "0 6px 24px rgba(38,70,83,.10)";
         nav.style.backdropFilter = "blur(18px)";
-        (nav.style as any).webkitBackdropFilter = "blur(18px)";
+        nav.style.setProperty("-webkit-backdrop-filter", "blur(18px)");
       } else {
         nav.style.background = "rgba(253,248,240,0)";
         nav.style.boxShadow = "none";

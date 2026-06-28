@@ -16,9 +16,9 @@ function GlobeOrb() {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   function handleLoad(map: maplibregl.Map) {
-    // Brand water color
-    try { map.setPaintProperty("water", "fill-color", "#c8ede9"); } catch {}
-    try { map.setPaintProperty("admin_country", "line-color", "#264653"); } catch {}
+    // Brand water color (guardar con getLayer: el estilo no siempre las expone)
+    if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
+    if (map.getLayer("admin_country")) map.setPaintProperty("admin_country", "line-color", "#264653");
     mapRef.current = map;
   }
 

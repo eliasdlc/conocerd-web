@@ -19,8 +19,8 @@ export function useReveal() {
         el.style.transform = "none";
 
         el.querySelectorAll<HTMLElement>("[data-count]").forEach(countEl => {
-          if ((countEl as any)._done) return;
-          (countEl as any)._done = true;
+          if (countEl.dataset.done) return;
+          countEl.dataset.done = "1";
           const target = parseFloat(countEl.dataset.count!);
           const dec = countEl.dataset.dec ? parseInt(countEl.dataset.dec) : 0;
           const suf = countEl.dataset.suffix || "";
