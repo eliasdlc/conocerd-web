@@ -1,54 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import type maplibregl from "maplibre-gl";
 import { Map } from "@/components/map/Map";
 import { SceneProvider, useScene } from "@/context/SceneContext";
-import { useSceneTrigger } from "@/hooks/useSceneTrigger";
+import { useJourneyScroll } from "@/hooks/useJourneyScroll";
+import { SCENES, TRIGGER_TOTAL_VH, cameraAtProgress } from "@/lib/journey";
 import DestinosOverlay from "@/components/overlays/DestinosOverlay";
 import MapaOverlay from "@/components/overlays/MapaOverlay";
 import ViajerosOverlay from "@/components/overlays/ViajerosOverlay";
 import NegociosOverlay from "@/components/overlays/NegociosOverlay";
 import EquipoOverlay from "@/components/overlays/EquipoOverlay";
 import CTAOverlay from "@/components/overlays/CTAOverlay";
-import { SCENE_CAMERAS } from "@/data/destinations";
-
-// ─── Scene registry ───────────────────────────────────────────────────────────
-
-const SCENES = [
-  { name: "destinos-intro",  height: 80  },
-  { name: "polaroid-0",      height: 100 },
-  { name: "polaroid-1",      height: 100 },
-  { name: "polaroid-2",      height: 100 },
-  { name: "polaroid-3",      height: 100 },
-  { name: "polaroid-4",      height: 100 },
-  { name: "polaroid-5",      height: 100 },
-  { name: "destinos-finale", height: 80  },
-  { name: "mapa",            height: 120 },
-  { name: "viajeros",        height: 120 },
-  { name: "negocios",        height: 140 },
-  { name: "equipo",          height: 100 },
-  { name: "cta",             height: 100 },
-] as const;
-
-type SceneName = (typeof SCENES)[number]["name"];
-
-// Outer div = sticky map (100vh) + all trigger divs (1340vh) = 1440vh total
-const TRIGGER_TOTAL_VH = SCENES.reduce((sum, s) => sum + s.height, 0);
-
-// ─── Dominican Republic flyTo targets ─────────────────────────────────────────
-// Las cámaras por escena viven en la fuente de verdad única (SCENE_CAMERAS, #5).
-
-// Polaroid sub-transitions are faster; CTA is cinematic
-const SCENE_DURATION: Partial<Record<SceneName, number>> = {
-  "polaroid-0": 1600,
-  "polaroid-1": 1600,
-  "polaroid-2": 1600,
-  "polaroid-3": 1600,
-  "polaroid-4": 1600,
-  "polaroid-5": 1600,
-  "cta":        3500,
-};
 
 // Applied once on map load — aligns water/border colors with brand palette
 function applyBrandPaint(map: maplibregl.Map) {
@@ -60,21 +23,27 @@ function applyBrandPaint(map: maplibregl.Map) {
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
 
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
-  const { activeScene } = useScene();
+  const { setActiveScene, progress } = useScene();
   const outerRef = useRef<HTMLDivElement>(null);
 
-  // Wire up IntersectionObserver on all [data-scene] divs in outerRef
-  useSceneTrigger(outerRef);
+  // Scroll-linked engine: cámara = función continua del scroll (#3).
+  useJourneyScroll({
+    containerRef: outerRef,
+    mapRef,
+    progress,
+    onSceneChange: setActiveScene,
+  });
 
-  // Animate map to the location that corresponds to the active scene
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !activeScene) return;
-    const location = SCENE_CAMERAS[activeScene];
-    if (!location) return;
-    const duration = SCENE_DURATION[activeScene as SceneName] ?? 2200;
-    map.flyTo({ ...location, duration, essential: true });
-  }, [activeScene, mapRef]);
+  // On load: brand paint + posiciona la cámara según el progreso actual,
+  // así no se queda en el view inicial (globo) hasta el primer scroll.
+  const handleLoad = useCallback(
+    (map: maplibregl.Map) => {
+      applyBrandPaint(map);
+      const c = cameraAtProgress(progress.get());
+      map.jumpTo({ center: c.center, zoom: c.zoom, pitch: c.pitch, bearing: c.bearing });
+    },
+    [progress]
+  );
 
   return (
     <div ref={outerRef} style={{ position: "relative", height: `calc(100vh + ${TRIGGER_TOTAL_VH}vh)` }}>
@@ -100,7 +69,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             pitch: 0,
             bearing: 0,
           }}
-          onLoad={applyBrandPaint}
+          onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
           dragPan={false}
@@ -115,10 +84,9 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           <EquipoOverlay />
           <CTAOverlay />
         </Map>
-        {/* Additional overlay components added in steps 7–11 */}
       </div>
 
-      {/* Invisible trigger divs — each one drives a scene change via IntersectionObserver */}
+      {/* Anchor divs — drive scroll height + nav targets (id=trigger-<scene>) */}
       {SCENES.map((scene) => (
         <div
           key={scene.name}
