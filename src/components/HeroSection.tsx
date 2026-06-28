@@ -1,8 +1,103 @@
 "use client";
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import Button from "./Button";
-import AnimatedRays from "./ui/AnimatedRays";
+import { Map } from "@/components/map/Map";
+import type maplibregl from "maplibre-gl";
 import { scrollToSection } from "@/lib/journeyNav";
+
+// ─── Globe orb — slow auto-rotating map, decorative only ─────────────────────
+
+function GlobeOrb() {
+  const rafRef = useRef<number>(0);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const bearingRef = useRef(-20);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  function handleLoad(map: maplibregl.Map) {
+    // Brand water color
+    try { map.setPaintProperty("water", "fill-color", "#c8ede9"); } catch {}
+    try { map.setPaintProperty("admin_country", "line-color", "#264653"); } catch {}
+    mapRef.current = map;
+  }
+
+  // Rotation runs ONLY while the hero is on-screen and the user hasn't asked
+  // for reduced motion — and it fully stops (cancels the rAF) when off-screen.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    const start = () => {
+      if (rafRef.current) return; // already running
+      const rotate = () => {
+        const map = mapRef.current;
+        if (map) {
+          bearingRef.current = (bearingRef.current + 0.008) % 360;
+          map.setBearing(bearingRef.current);
+        }
+        rafRef.current = requestAnimationFrame(rotate);
+      };
+      rafRef.current = requestAnimationFrame(rotate);
+    };
+    const stop = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => (entry.isIntersecting ? start() : stop()),
+      { threshold: 0.01 }
+    );
+    io.observe(wrap);
+
+    return () => { io.disconnect(); stop(); };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "clamp(300px, 58vw, 600px)",
+        aspectRatio: "1",
+        borderRadius: "50%",
+        overflow: "hidden",
+        zIndex: 1,
+        opacity: 0.72,
+        boxShadow:
+          "0 0 0 1.5px rgba(37,204,184,0.18), 0 24px 80px rgba(37,204,184,0.18), 0 4px 24px rgba(38,70,83,0.10)",
+      }}
+    >
+      <Map
+        theme="light"
+        projection={{ type: "globe" }}
+        initialViewState={{
+          longitude: -70.1627,
+          latitude: 18.7357,
+          zoom: 2.6,
+          pitch: 0,
+          bearing: -20,
+        }}
+        onLoad={handleLoad}
+        interactive={false}
+        scrollZoom={false}
+        dragPan={false}
+        dragRotate={false}
+        touchZoomRotate={false}
+        attributionControl={false}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </div>
+  );
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
 
 export default function HeroSection() {
   return (
@@ -22,8 +117,14 @@ export default function HeroSection() {
         background: "radial-gradient(60% 50% at 18% 16%,rgba(37,204,184,.10),transparent 70%),radial-gradient(55% 45% at 84% 24%,rgba(255,141,22,.10),transparent 70%),radial-gradient(60% 50% at 50% 98%,rgba(247,108,77,.08),transparent 70%), #FDF8F0",
       }}
     >
-      {/* fondo animado: rayos de luz con colores ConoceRD */}
-      <AnimatedRays />
+      {/* Accessible page title — the visible logo is an image, so the real
+          <h1> lives here (screen readers + SEO) without altering the layout. */}
+      <h1 className="sr-only">
+        ConoceRD — Descubre lo nuestro: la app de turismo auténtico en República Dominicana
+      </h1>
+
+      {/* Globe orb — replaces AnimatedRays */}
+      <GlobeOrb />
 
       {/* decoración ambiental */}
       <Image src="/assets/bird.svg" alt="" width={120} height={80} style={{ position: "absolute", left: "9%", top: "12%", width: 120, opacity: .9, zIndex: 3, animation: "crdFloatX 7s ease-in-out infinite" }} />
@@ -49,12 +150,12 @@ export default function HeroSection() {
           color: "#264653", fontWeight: 500,
           animation: "crdRise .7s ease .7s both",
         }}>
-          La app que te lleva a la República Dominicana que{" "}
-          <strong style={{ color: "#F76C4D" }}>no sale en las guías</strong>: destinos auténticos, negocios locales y experiencias reales, en una sola ruta.
+          La app que te lleva a la República Dominicana{" "}
+          <strong style={{ color: "#F76C4D" }}>autentica</strong>: negocios locales y experiencias reales, en una sola ruta.
         </p>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center", marginTop: 26, animation: "crdRise .7s ease .85s both" }}>
-          <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("crd-descargar")}>Descargar la app</Button>
-          <Button variant="outline" size="lg" icon="storefront" onClick={() => scrollToSection("crd-negocios")}>Soy un negocio</Button>
+          <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>Descargar la app</Button>
+          <Button variant="outline" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>Soy un negocio</Button>
         </div>
       </div>
 
@@ -62,7 +163,7 @@ export default function HeroSection() {
       <div id="crd-scrollcue" style={{
         position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
         zIndex: 5, display: "flex", flexDirection: "column", alignItems: "center",
-        gap: 6, color: "#7A8A91", animation: "crdRise .7s ease 1.1s both",
+        gap: 6, color: "#5B6B72", animation: "crdRise .7s ease 1.1s both",
       }}>
         <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase" }}>Explora</span>
         <svg viewBox="0 0 24 24" style={{ width: 22, height: 22, animation: "crdBob 1.6s ease-in-out infinite" }}>

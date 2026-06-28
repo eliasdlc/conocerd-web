@@ -12,8 +12,13 @@
   --color-cream:      #FDF8F0;
   --color-cream-2:    #F5EFE2;
   --color-line:       #EBE6D9;
-  --color-muted:      #7A8A91;
-  --color-muted-2:    #97A2A8;
+  --color-muted:      #5B6B72;   /* darkened for WCAG AA on light bg (was #7A8A91, 3.4:1) */
+  --color-muted-2:    #66747B;   /* darkened for WCAG AA on light bg (was #97A2A8, 2.6:1) */
+  /* Accessible "ink" variants of brand hues — for COLORED TEXT on light surfaces only.
+     Keep the bright brand hues for fills, borders and dots. */
+  --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
+  --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
+  --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
 }
 
 html {
@@ -40,10 +45,6 @@ body {
   user-select: none;
 }
 
-@keyframes crdFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16px); }
-}
 @keyframes crdFloatX {
   0%, 100% { transform: translate(0,0) rotate(-3deg); }
   50% { transform: translate(18px,-14px) rotate(4deg); }
@@ -56,16 +57,12 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(9px); }
 }
-@keyframes crdPing {
-  0% { transform: translate(-50%,-50%) scale(.5); opacity: .7; }
-  100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0; }
-}
 @keyframes crdLiveDot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .4; transform: scale(.7); }
 }
 
-/* Hero "Rutas vivas" — entrada orquestada */
+/* Hero entrance */
 @keyframes crdLogoIn {
   0%   { opacity: 0; transform: translateY(22px) scale(.92); filter: blur(8px); }
   60%  { filter: blur(0); }
@@ -76,15 +73,18 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes crdAuroraBg {
-  0%   { background-position: 50% 50%, 50% 50%; }
-  50%  { background-position: 350% 50%, 350% 50%; }
-  100% { background-position: 50% 50%, 50% 50%; }
+/* ───────────────────── Map scrollytelling ────────────────────── */
+@keyframes mapBubbleIn {
+  from { opacity: 0; transform: scale(0.7) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
 }
-@keyframes crdAuroraBgAlt {
-  0%   { background-position: 0% 0%; opacity: 1; }
-  50%  { background-position: 200% 100%; opacity: 0.6; }
-  100% { background-position: 0% 0%; opacity: 1; }
+@keyframes crdPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.6; }
+  50%      { transform: scale(1.08); opacity: 0.9; }
+}
+@keyframes slideUpIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0);    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -96,36 +96,34 @@ body {
   }
 }
 
-.crd-pol {
-  transition: transform .45s cubic-bezier(.2,.8,.3,1.1), box-shadow .45s;
+/* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
+@media (max-width: 540px) {
+  .crd-ol-panel {
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+    border-radius: 20px 20px 0 0;
+    max-height: 52vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
+  }
+  .crd-ol-panel-right { display: none !important; }
+  .crd-ol-team { max-width: 100% !important; }
+  .crd-ol-equipo {
+    padding: 72px 16px 16px !important;
+  }
+  /* Viajeros: stat markers overlap on narrow maps → swap them for the
+     in-panel chip row below the heading. */
+  .crd-stat-marker { display: none !important; }
+  .crd-stat-chips { display: flex !important; }
 }
-.crd-pol:hover {
-  transform: rotate(0deg) translateY(-16px) scale(1.05) !important;
-  box-shadow: 0 30px 64px rgba(38,70,83,.30);
-  z-index: 6;
-}
-.crd-pol-info {
-  transform: translateY(102%);
-  transition: transform .42s cubic-bezier(.2,.8,.3,1);
-}
-.crd-pol:hover .crd-pol-info { transform: translateY(0); }
 
-.crd-catpin { transition: transform .25s cubic-bezier(.2,.8,.3,1.3); }
-.crd-mappin { transition: transform .2s ease; }
-.crd-mappin:hover { z-index: 30; }
-.crd-mappin:hover .crd-catpin { transform: translateY(-5px) scale(1.09); }
-.crd-mappin .crd-mptip {
-  opacity: 0;
-  transform: translate(-50%, 8px) scale(.92);
-  transition: .25s cubic-bezier(.2,.8,.3,1.1);
-  pointer-events: none;
-}
-.crd-mappin:hover .crd-mptip { opacity: 1; transform: translate(-50%, 0) scale(1); }
-
-.crd-feat { transition: transform .3s cubic-bezier(.2,.8,.3,1.1), box-shadow .3s, border-color .3s; }
-.crd-feat:hover { transform: translateY(-7px); box-shadow: 0 24px 48px rgba(38,70,83,.16); border-color: #FFE7DF; }
-.crd-feat:hover .crd-feat-ic { transform: rotate(-8deg) scale(1.08); }
-.crd-feat-ic { transition: transform .35s cubic-bezier(.2,.8,.3,1.4); }
+/* Stat chips live only on mobile (see media query above). */
+.crd-stat-chips { display: none; }
 
 .crd-navlink {
   position: relative;
@@ -148,66 +146,25 @@ body {
 }
 .crd-navlink:hover::after { width: 100%; }
 
-.crd-store { transition: transform .35s cubic-bezier(.2,.8,.3,1.2), box-shadow .25s; }
-.crd-store:hover { transform: translateY(-3px) scale(1.02); }
-
 .crd-social { transition: transform .3s cubic-bezier(.2,.8,.3,1.3), background .25s, color .25s; }
 .crd-social:hover { transform: translateY(-4px) rotate(-6deg); background: #F76C4D !important; color: #fff !important; }
 
-.crd-rbtn { transition: background .2s, transform .2s; }
-.crd-rbtn:hover { background: #FFE7DF; transform: scale(1.04); }
+/* ── Visible keyboard focus for every interactive element ───────────── */
+/* :where() = zero specificity, so it never fights inline styles, but it
+   restores a focus ring (Web Interface Guidelines: never remove focus). */
+:where(a, button, [role="button"], input, select, textarea):focus-visible {
+  outline: 2px solid #F76C4D;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
 
-#crd-map.crd-cursorhide,
-#crd-map.crd-cursorhide * { cursor: none !important; }
-
-/* ───────────────────────── Viaje horizontal ───────────────────────── */
-.crd-panel {
-  flex-shrink: 0;
-  width: var(--pw, 100vw);
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+/* Visually-hidden but accessible to screen readers / SEO */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
   overflow: hidden;
-  box-sizing: border-box;
-  padding: 76px clamp(24px, 4vw, 72px) 56px;
-}
-
-@media (max-height: 780px) and (min-width: 901px) {
-  .crd-panel {
-    padding-top: 66px;
-    padding-bottom: 40px;
-  }
-}
-
-/* fila de polaroids: en una sola línea durante el viaje horizontal */
-.crd-pol-row { display: flex; flex-wrap: nowrap; }
-
-/* objetivo de la variante "tour": anillo mango que late */
-.crd-trace-target {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 2.5px solid #FF8D16; box-sizing: border-box;
-  animation: crdTargetPulse 1.8s ease-in-out infinite;
-}
-@keyframes crdTargetPulse {
-  0%, 100% { transform: translate(-50%,-50%) scale(.7); opacity: .35; }
-  50%      { transform: translate(-50%,-50%) scale(1.15); opacity: .8; }
-}
-
-/* Fallback vertical en móvil: se desactiva todo el pineado/horizontal */
-@media (max-width: 900px) {
-  .crd-journey-sticky { position: static !important; height: auto !important; overflow: visible !important; }
-  .crd-journey-track { flex-direction: column !important; transform: none !important; height: auto !important; }
-  .crd-panel {
-    width: 100% !important;
-    height: auto;
-    display: block;
-    overflow: visible;
-    padding: clamp(64px, 12vw, 110px) 20px;
-  }
-  .crd-pol-row { flex-wrap: wrap; justify-content: center; }
-  .crd-trace-line, .crd-trace-top { display: none !important; }
-  #crd-routepanel { display: none !important; }
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
 }
