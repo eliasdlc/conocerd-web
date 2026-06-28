@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import Button from "./Button";
+import HeroRays from "./HeroRays";
 import { Map } from "@/components/map/Map";
 import type maplibregl from "maplibre-gl";
 import { scrollToSection } from "@/lib/journeyNav";
@@ -60,39 +61,78 @@ function GlobeOrb() {
       ref={wrapRef}
       aria-hidden="true"
       style={{
+        // #2 — globo 1.5× (de ~600 a ~820 máx), reposicionado hacia arriba para
+        // no competir con la cabecera/párrafo del hero.
         position: "absolute",
         left: "50%",
-        top: "50%",
+        top: "42%",
         transform: "translate(-50%, -50%)",
-        width: "clamp(300px, 58vw, 600px)",
+        width: "clamp(440px, 74vw, 820px)",
         aspectRatio: "1",
-        borderRadius: "50%",
-        overflow: "hidden",
         zIndex: 1,
-        opacity: 0.72,
-        boxShadow:
-          "0 0 0 1.5px rgba(37,204,184,0.18), 0 24px 80px rgba(37,204,184,0.18), 0 4px 24px rgba(38,70,83,0.10)",
       }}
     >
-      <Map
-        theme="light"
-        projection={{ type: "globe" }}
-        initialViewState={{
-          longitude: -70.1627,
-          latitude: 18.7357,
-          zoom: 2.6,
-          pitch: 0,
-          bearing: -20,
+      {/* #1 — sombra de contacto: elipse difuminada debajo del orbe */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-4%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "72%",
+          height: "9%",
+          background:
+            "radial-gradient(ellipse at center, rgba(38,70,83,0.30), transparent 70%)",
+          filter: "blur(16px)",
+          zIndex: 0,
         }}
-        onLoad={handleLoad}
-        interactive={false}
-        scrollZoom={false}
-        dragPan={false}
-        dragRotate={false}
-        touchZoomRotate={false}
-        attributionControl={false}
-        style={{ width: "100%", height: "100%" }}
       />
+
+      {/* Orbe circular (recorta el canvas + el sombreado esférico) */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          overflow: "hidden",
+          opacity: 0.82,
+          // #1 — halo atmosférico (glow teal/cian) + sombra suave
+          boxShadow:
+            "0 0 0 1.5px rgba(37,204,184,0.22), 0 0 60px 8px rgba(37,204,184,0.20), 0 30px 90px rgba(38,70,83,0.16)",
+        }}
+      >
+        <Map
+          theme="light"
+          projection={{ type: "globe" }}
+          initialViewState={{
+            longitude: -70.1627,
+            latitude: 18.7357,
+            zoom: 2.6,
+            pitch: 0,
+            bearing: -20,
+          }}
+          onLoad={handleLoad}
+          interactive={false}
+          scrollZoom={false}
+          dragPan={false}
+          dragRotate={false}
+          touchZoomRotate={false}
+          attributionControl={false}
+          style={{ width: "100%", height: "100%" }}
+        />
+
+        {/* #1 — sombreado esférico: highlight superior-izq + terminador inf-der */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            borderRadius: "50%",
+            pointerEvents: "none",
+            background:
+              "radial-gradient(circle at 34% 28%, rgba(255,255,255,0.40), transparent 46%), radial-gradient(circle at 70% 74%, rgba(18,38,48,0.42), transparent 62%)",
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -122,6 +162,9 @@ export default function HeroSection() {
       <h1 className="sr-only">
         ConoceRD — Descubre lo nuestro: la app de turismo auténtico en República Dominicana
       </h1>
+
+      {/* #16 — rutas SVG de entrada, detrás del globo */}
+      <HeroRays />
 
       {/* Globe orb — replaces AnimatedRays */}
       <GlobeOrb />
