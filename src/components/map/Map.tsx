@@ -150,6 +150,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
   }, []);
 
   return (
+    // eslint-disable-next-line react-hooks/refs -- ref leído tras `ready`; valor estable post-load
     <MapContext.Provider value={ready ? mapRef.current : null}>
       <div
         ref={containerRef}
@@ -187,6 +188,7 @@ export function MapMarker({
 
   useEffect(() => {
     const div = document.createElement("div");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- portal host SSR-safe (createElement solo en cliente)
     setEl(div);
     return () => setEl(null);
   }, []);
@@ -367,6 +369,7 @@ export function MapPopup({
 
   useEffect(() => {
     const div = document.createElement("div");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- portal host SSR-safe (createElement solo en cliente)
     setContainer(div);
     return () => setContainer(null);
   }, []);
@@ -523,6 +526,120 @@ export function MapRoute({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, id, color, width, opacity]);
+
+  return null;
+}
+
+// ─── MapArc ──────────────────────────────────────────────────────────────────
+// Curva (bezier cuadrática) entre dos puntos con flujo dashed en movimiento
+// ("marching ants"). Para los arcos de "personas en camino" (#11).
+
+function arcCoords(
+  from: [number, number],
+  to: [number, number],
+  bend: number,
+  n: number
+): [number, number][] {
+  const mid = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const dist = Math.hypot(dx, dy) || 1;
+  const nx = -dy / dist;
+  const ny = dx / dist;
+  const ctrl = [mid[0] + nx * dist * bend, mid[1] + ny * dist * bend];
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const u = 1 - t;
+    pts.push([
+      u * u * from[0] + 2 * u * t * ctrl[0] + t * t * to[0],
+      u * u * from[1] + 2 * u * t * ctrl[1] + t * t * to[1],
+    ]);
+  }
+  return pts;
+}
+
+// Secuencia de dasharrays que desplaza el patrón → ilusión de flujo.
+const DASH_SEQ: number[][] = [
+  [0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5], [2, 4, 1], [2.5, 4, 0.5],
+  [3, 4, 0], [0, 0.5, 3, 3.5], [0, 1, 3, 3], [0, 1.5, 3, 2.5], [0, 2, 3, 2],
+  [0, 2.5, 3, 1.5], [0, 3, 3, 1], [0, 3.5, 3, 0.5],
+];
+
+export interface MapArcProps {
+  id: string;
+  from: [number, number];
+  to: [number, number];
+  color?: string;
+  width?: number;
+  bend?: number;
+  animated?: boolean;
+}
+
+export function MapArc({
+  id,
+  from,
+  to,
+  color = "#F47F0E",
+  width = 2.5,
+  bend = 0.25,
+  animated = true,
+}: MapArcProps) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    const sourceId = `arc-src-${id}`;
+    const layerId = `arc-${id}`;
+    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: arcCoords(from, to, bend, 48) },
+    };
+
+    if (!map.getSource(sourceId)) map.addSource(sourceId, { type: "geojson", data });
+    else (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
+
+    if (!map.getLayer(layerId)) {
+      map.addLayer({
+        id: layerId,
+        type: "line",
+        source: sourceId,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": color,
+          "line-width": width,
+          "line-opacity": 0.85,
+          "line-dasharray": [0, 4, 3],
+        },
+      });
+    }
+
+    let raf = 0;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (animated && !reduce) {
+      let i = 0;
+      let last = 0;
+      const tick = (t: number) => {
+        if (t - last > 55) {
+          last = t;
+          i = (i + 1) % DASH_SEQ.length;
+          try {
+            if (map.getLayer(layerId)) map.setPaintProperty(layerId, "line-dasharray", DASH_SEQ[i]);
+          } catch {}
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      try { if (map.getLayer(layerId)) map.removeLayer(layerId); } catch {}
+      try { if (map.getSource(sourceId)) map.removeSource(sourceId); } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, id, color, width, bend, animated]);
 
   return null;
 }

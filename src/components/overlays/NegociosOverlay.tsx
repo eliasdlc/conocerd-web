@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/context/SceneContext";
-import { MapMarker, MarkerContent } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MapArc } from "@/components/map/Map";
 import { scrollToSection } from "@/lib/journeyNav";
+import type { LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -19,10 +20,20 @@ const BARS = [
   { label: "Extranjero",  pct: 41, color: "#25CCB8", delay: ".30s"  },
 ];
 
-const HEAT_CITIES = [
-  { name: "Santiago",      lng: -70.6901, lat: 19.4517, color: "#F76C4D", size: 104 },
-  { name: "Santo Domingo", lng: -69.93,   lat: 18.47,  color: "#FF8D16", size: 84  },
+// #11 — el negocio (Santiago) y las provincias desde donde "vienen" clientes.
+// El nº de orígenes alimenta el dashboard ("Clientes en camino ahora").
+const BUSINESS: LngLat = [-70.6901, 19.4517];
+
+const ARC_ORIGINS: { name: string; coords: LngLat; color: string }[] = [
+  { name: "Santo Domingo", coords: [-69.93, 18.47], color: "#F76C4D" },
+  { name: "Puerto Plata",  coords: [-70.69, 19.79], color: "#FF8D16" },
+  { name: "La Romana",     coords: [-68.97, 18.43], color: "#25CCB8" },
+  { name: "Samaná",        coords: [-69.34, 19.20], color: "#FF8D16" },
+  { name: "Barahona",      coords: [-71.10, 18.21], color: "#F76C4D" },
+  { name: "Punta Cana",    coords: [-68.40, 18.58], color: "#25CCB8" },
 ];
+
+const ARRIVING = ARC_ORIGINS.length;
 
 // ─── Stat number with count-up (runs once on first activation) ────────────────
 
@@ -96,30 +107,59 @@ export default function NegociosOverlay() {
 
   return (
     <>
-      {/* Heat glow circles pinned at city coordinates */}
+      {/* #11 — arcos animados desde varias provincias convergiendo al negocio */}
       {isVisible &&
-        HEAT_CITIES.map((city) => (
-          <MapMarker
-            key={city.name}
-            longitude={city.lng}
-            latitude={city.lat}
-            anchor="center"
-          >
-            <MarkerContent>
+        ARC_ORIGINS.map((o, i) => (
+          <MapArc
+            key={o.name}
+            id={`negocio-arc-${i}`}
+            from={o.coords}
+            to={BUSINESS}
+            color={o.color}
+            width={2.4}
+            bend={0.22}
+          />
+        ))}
+
+      {/* #11 — pin "Tu negocio" en Santiago */}
+      {isVisible && (
+        <MapMarker longitude={BUSINESS[0]} latitude={BUSINESS[1]} anchor="bottom">
+          <MarkerContent>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div
                 style={{
-                  width: city.size,
-                  height: city.size,
-                  borderRadius: "50%",
-                  background: `radial-gradient(circle, ${city.color}55 0%, ${city.color}22 55%, transparent 80%)`,
-                  border: `2px solid ${city.color}55`,
-                  boxShadow: `0 0 ${city.size * 0.5}px ${city.color}40, 0 0 ${city.size * 0.25}px ${city.color}60`,
-                  animation: "crdPulse 2.8s ease-in-out infinite",
+                  background: "rgba(38,70,83,0.92)",
+                  color: "#fff",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 10.5,
+                  padding: "3px 9px",
+                  borderRadius: 999,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 4px 12px rgba(38,70,83,0.25)",
                 }}
-              />
-            </MarkerContent>
-          </MapMarker>
-        ))}
+              >
+                Tu negocio
+              </div>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "linear-gradient(150deg,#FF8D16,#F47F0E)",
+                  border: "2.5px solid #FBF7EF",
+                  boxShadow: "0 4px 14px rgba(244,127,14,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <span className="ms" style={{ fontSize: 22, color: "#fff" }}>storefront</span>
+              </div>
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
 
       {/* Overlay container */}
       <div
@@ -136,10 +176,11 @@ export default function NegociosOverlay() {
         <div
           className="crd-ol-panel"
           style={{
+            // #12 — anclada arriba (no centrada) para que el botón "Registrar mi
+            // negocio" no quede recortado abajo.
             position: "absolute",
             left: "clamp(16px, 3%, 40px)",
-            top: "50%",
-            transform: "translateY(-50%)",
+            top: "clamp(84px, 12%, 120px)",
             width: "clamp(240px, 26vw, 308px)",
             animation: isVisible ? "slideUpIn 0.45s cubic-bezier(0.16,1,0.3,1) both" : "none",
           }}
@@ -391,7 +432,7 @@ export default function NegociosOverlay() {
                   lineHeight: 1,
                 }}
               >
-                7
+                {ARRIVING}
               </span>
               <span style={{ fontSize: 12, opacity: 0.9 }}>personas llegando</span>
             </div>
