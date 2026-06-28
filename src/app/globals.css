@@ -120,6 +120,9 @@ body {
      in-panel chip row below the heading. */
   .crd-stat-marker { display: none !important; }
   .crd-stat-chips { display: flex !important; }
+  /* Footer: 4 columnas → 2 en móvil. */
+  .crd-footer-grid { grid-template-columns: 1fr 1fr !important; }
+  .crd-navlink { font-size: 13.5px; }
 }
 
 /* Stat chips live only on mobile (see media query above). */
