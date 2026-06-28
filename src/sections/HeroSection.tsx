@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import Button from "./Button";
+import Button from "@/components/Button";
 import HeroRays from "./HeroRays";
 import { Map } from "@/components/map/Map";
 import type maplibregl from "maplibre-gl";

@@ -6,12 +6,12 @@ import { Map } from "@/components/map/Map";
 import { SceneProvider, useScene } from "@/context/SceneContext";
 import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { SCENES, TRIGGER_TOTAL_VH, cameraAtProgress } from "@/lib/journey";
-import DestinosOverlay from "@/components/overlays/DestinosOverlay";
-import MapaOverlay from "@/components/overlays/MapaOverlay";
-import ViajerosOverlay from "@/components/overlays/ViajerosOverlay";
-import NegociosOverlay from "@/components/overlays/NegociosOverlay";
-import EquipoOverlay from "@/components/overlays/EquipoOverlay";
-import CTAOverlay from "@/components/overlays/CTAOverlay";
+import DestinosSection from "@/sections/DestinosSection";
+import MapaSection from "@/sections/MapaSection";
+import ViajerosSection from "@/sections/ViajerosSection";
+import NegociosSection from "@/sections/NegociosSection";
+import EquipoSection from "@/sections/EquipoSection";
+import CTASection from "@/sections/CTASection";
 
 // Applied once on map load — aligns water/border colors with brand palette
 function applyBrandPaint(map: maplibregl.Map) {
@@ -81,12 +81,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           touchZoomRotate={false}
           attributionControl={false}
         >
-          <DestinosOverlay />
-          <MapaOverlay />
-          <ViajerosOverlay />
-          <NegociosOverlay />
-          <EquipoOverlay />
-          <CTAOverlay />
+          <DestinosSection />
+          <MapaSection />
+          <ViajerosSection />
+          <NegociosSection />
+          <EquipoSection />
+          <CTASection />
         </Map>
       </div>
 

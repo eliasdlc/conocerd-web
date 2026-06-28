@@ -1,7 +1,7 @@
 "use client";
 
 import { useScene } from "@/context/SceneContext";
-import PhoneMockup from "@/components/PhoneMockup";
+import PhoneMockup from "@/sections/PhoneMockup";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 

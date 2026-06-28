@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { animate } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
-import PolaroidDeck from "@/components/PolaroidDeck";
+import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { SelfPin } from "@/components/map/pins";
