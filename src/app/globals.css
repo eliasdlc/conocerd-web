@@ -106,7 +106,7 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
-    border-radius: 20px 20px 0 0;
+    border-radius: 20px 20px 0 0 !important;
     max-height: 52vh;
     overflow-y: auto;
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
@@ -129,6 +129,8 @@ body {
   .crd-navlink { display: none !important; }
   /* Viajeros: el mockup de teléfono tapa el bottom-sheet → ocultarlo en móvil. */
   .crd-phone-wrap { display: none !important; }
+  /* Mapa: el panel de recorrido (derecha) ocupa demasiado espacio → solo chips. */
+  .crd-mapa-route-panel { display: none !important; }
 }
 
 /* Stat chips live only on mobile (see media query above). */

@@ -411,8 +411,9 @@ export default function MapaOverlay() {
           zIndex: 10,
         }}
       >
-        {/* Filtro de categorías (abajo-izq) */}
+        {/* Filtro de categorías (abajo-izq → bottom-sheet en móvil) */}
         <div
+          className="crd-ol-panel"
           style={{
             position: "absolute",
             left: "clamp(16px, 3%, 40px)",
@@ -464,8 +465,8 @@ export default function MapaOverlay() {
           </div>
         </div>
 
-        {/* Panel del recorrido (der) */}
-        <div style={{ pointerEvents: isVisible ? "auto" : "none" }}>
+        {/* Panel del recorrido (der) — oculto en móvil, disponible en desktop */}
+        <div className="crd-mapa-route-panel" style={{ pointerEvents: isVisible ? "auto" : "none" }}>
           <RoutePanel
             stops={stops}
             onRemove={(id) => toggleStop(id)}
