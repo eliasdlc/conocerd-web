@@ -1,33 +1,189 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const TEAM = [
+type Social = { label: string; icon: string; href: string };
+type Member = {
+  name: string;
+  role: string;
+  roleColor: string;
+  bio: string;
+  bioLong: string;
+  initials: string;
+  bg: string;
+  color: string;
+  photo?: string; // foto real cuando la manden; hoy iniciales
+  socials: Social[];
+};
+
+// Handles placeholder hasta tener los reales.
+const TEAM: Member[] = [
   {
     name: "Brauny Núñez",
     role: "Líder de Proyecto y Estrategia",
     roleColor: "#B23410",
-    bio: "Marketing, concentración en Inteligencia Estratégica. Lidera la visión, el branding y el modelo de negocio.",
+    bio: "Lidera la visión, el branding y el modelo de negocio.",
+    bioLong:
+      "Marketing con concentración en Inteligencia Estratégica. Conecta la visión de producto con el mercado dominicano y dirige el branding y el modelo de negocio de ConoceRD.",
     initials: "BN",
     bg: "#FFE7DF",
     color: "#B23410",
+    socials: [
+      { label: "Instagram", icon: "photo_camera", href: "#" },
+      { label: "LinkedIn", icon: "work", href: "#" },
+      { label: "Email", icon: "mail", href: "#" },
+    ],
   },
   {
     name: "Elías de la Cruz",
     role: "Desarrollador y Líder Tecnológico",
     roleColor: "#0C6A60",
-    bio: "Ingeniería en Ciencias de la Computación. Responsable de la arquitectura, el desarrollo y la tecnología.",
+    bio: "Responsable de la arquitectura, el desarrollo y la tecnología.",
+    bioLong:
+      "Ingeniería en Ciencias de la Computación. Diseña la arquitectura, construye la app y el sitio, y lidera todas las decisiones técnicas del proyecto.",
     initials: "EC",
     bg: "#C6F3EB",
     color: "#0C6A60",
+    socials: [
+      { label: "GitHub", icon: "code", href: "#" },
+      { label: "LinkedIn", icon: "work", href: "#" },
+      { label: "Email", icon: "mail", href: "#" },
+    ],
   },
 ];
 
 // PUCMM Santiago campus coordinates
 const PUCMM = { lng: -70.7003, lat: 19.4414 };
+
+// ─── Team card (vertical, hover = redes + bio extendida) ──────────────────────
+
+function TeamCard({ member, delay, animate }: { member: Member; delay: number; animate: boolean }) {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position: "relative",
+        background: "rgba(253,248,240,0.92)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        border: "1.5px solid #EBE6D9",
+        borderRadius: 22,
+        padding: "24px 22px 20px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+        flex: "1 1 260px",
+        maxWidth: 300,
+        transform: hover ? "translateY(-6px)" : "translateY(0)",
+        boxShadow: hover ? "0 22px 50px rgba(38,70,83,0.20)" : "0 12px 36px rgba(38,70,83,0.14)",
+        transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease",
+        animation: animate ? `slideUpIn 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s both` : "none",
+      }}
+    >
+      {/* Avatar grande */}
+      <div
+        style={{
+          width: 96,
+          height: 96,
+          borderRadius: "50%",
+          background: member.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+          position: "relative",
+          boxShadow: "0 8px 20px rgba(38,70,83,0.16)",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontWeight: 800,
+          fontSize: 30,
+          color: member.color,
+        }}
+      >
+        {member.photo ? (
+          <Image src={member.photo} alt={member.name} fill sizes="96px" style={{ objectFit: "cover" }} />
+        ) : (
+          member.initials
+        )}
+      </div>
+
+      {/* Nombre → posición → descripción */}
+      <h3
+        style={{
+          margin: "14px 0 0",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontWeight: 800,
+          fontSize: 17,
+          color: "#264653",
+          lineHeight: 1.2,
+        }}
+      >
+        {member.name}
+      </h3>
+      <div
+        style={{
+          color: member.roleColor,
+          fontWeight: 700,
+          fontSize: 12,
+          margin: "4px 0 8px",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+        }}
+      >
+        {member.role}
+      </div>
+      <p style={{ margin: 0, color: "#5B6B72", fontSize: 12.5, lineHeight: 1.5 }}>
+        {member.bio}
+      </p>
+
+      {/* Hover → bio extendida + redes */}
+      <div
+        style={{
+          width: "100%",
+          maxHeight: hover ? 180 : 0,
+          opacity: hover ? 1 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+        }}
+      >
+        <p style={{ margin: "10px 0 0", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.5, borderTop: "1px solid #EBE6D9", paddingTop: 10 }}>
+          {member.bioLong}
+        </p>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12 }}>
+          {member.socials.map((s) => (
+            <a
+              key={s.label}
+              href={s.href}
+              aria-label={s.label}
+              title={s.label}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: "#fff",
+                border: "1px solid #EBE6D9",
+                color: member.color,
+                textDecoration: "none",
+              }}
+            >
+              <span className="ms" style={{ fontSize: 16 }}>{s.icon}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -43,8 +199,8 @@ export default function EquipoOverlay() {
           <MarkerContent>
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 borderRadius: "50%",
                 background: "#fff",
                 border: "2.5px solid #F76C4D",
@@ -55,16 +211,14 @@ export default function EquipoOverlay() {
                 animation: "mapBubbleIn 0.5s cubic-bezier(0.2,0.8,0.3,1) both",
               }}
             >
-              <span className="ms" style={{ fontSize: 18, color: "#F76C4D" }}>
-                school
-              </span>
+              <span className="ms" style={{ fontSize: 19, color: "#F76C4D" }}>school</span>
             </div>
           </MarkerContent>
           <MarkerLabel position="top">PUCMM · Santiago</MarkerLabel>
         </MapMarker>
       )}
 
-      {/* Centered overlay — heading + team cards */}
+      {/* Overlay — encabezado arriba, cards abajo (deja ver el pin al centro) */}
       <div
         className="crd-ol-equipo"
         style={{
@@ -77,9 +231,8 @@ export default function EquipoOverlay() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          padding: "72px 24px 36px",
-          gap: 20,
+          justifyContent: "space-between",
+          padding: "92px 24px 44px",
         }}
       >
         {/* Heading */}
@@ -109,7 +262,6 @@ export default function EquipoOverlay() {
             <span className="ms" style={{ fontSize: 14 }}>groups</span>
             El equipo
           </div>
-
           <h2
             style={{
               margin: 0,
@@ -124,7 +276,6 @@ export default function EquipoOverlay() {
           >
             Hecho por dominicanos,<br />para descubrir lo nuestro
           </h2>
-
           <p
             style={{
               margin: "8px auto 0",
@@ -138,96 +289,21 @@ export default function EquipoOverlay() {
           </p>
         </div>
 
-        {/* Team cards */}
+        {/* Team cards (abajo) */}
         <div
           className="crd-ol-team"
           style={{
             display: "flex",
-            gap: 16,
+            gap: 18,
             flexWrap: "wrap",
             justifyContent: "center",
+            alignItems: "flex-start",
             width: "100%",
-            maxWidth: 660,
+            maxWidth: 640,
           }}
         >
           {TEAM.map((member, i) => (
-            <div
-              key={member.name}
-              style={{
-                background: "rgba(253,248,240,0.90)",
-                backdropFilter: "blur(18px)",
-                WebkitBackdropFilter: "blur(18px)",
-                border: "1.5px solid #EBE6D9",
-                borderRadius: 20,
-                padding: "22px 22px",
-                display: "flex",
-                gap: 16,
-                alignItems: "flex-start",
-                flex: "1 1 280px",
-                maxWidth: 310,
-                animation: isVisible
-                  ? `slideUpIn 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.1 + 0.15}s both`
-                  : "none",
-                boxShadow: "0 12px 36px rgba(38,70,83,0.14)",
-              }}
-            >
-              {/* Avatar */}
-              <div
-                style={{
-                  width: 70,
-                  height: 70,
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background: member.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 6px 16px rgba(38,70,83,0.14)",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 800,
-                  fontSize: 20,
-                  color: member.color,
-                }}
-              >
-                {member.initials}
-              </div>
-
-              <div>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    fontWeight: 800,
-                    fontSize: 16,
-                    color: "#264653",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {member.name}
-                </h3>
-                <div
-                  style={{
-                    color: member.roleColor,
-                    fontWeight: 700,
-                    fontSize: 11.5,
-                    margin: "3px 0 8px",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                >
-                  {member.role}
-                </div>
-                <p
-                  style={{
-                    margin: 0,
-                    color: "#5B6B72",
-                    fontSize: 12,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {member.bio}
-                </p>
-              </div>
-            </div>
+            <TeamCard key={member.name} member={member} delay={i * 0.1 + 0.15} animate={isVisible} />
           ))}
         </div>
       </div>
