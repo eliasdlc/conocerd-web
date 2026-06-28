@@ -1,14 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { animate } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
+import PolaroidDeck from "@/components/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
-import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
+import { SelfPin } from "@/components/map/pins";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
+import { pointAlongPath, type LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
 const POLAROIDS = FEATURED_DESTINATIONS;
+
+// Polilínea que une los 6 destinos en orden (para la ruta + chevron del finale).
+const ROUTE_COORDS: LngLat[] = POLAROIDS.map((d) => d.coords);
 
 // Final rotation for each card in the pile = original rotate + extra scatter
 const PILE_OFFSETS = [
@@ -45,9 +53,44 @@ export default function DestinosOverlay() {
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
   const headingVisible = visibleCount >= 1;
+  const isFinale = activeScene === "destinos-finale";
+
+  // #6 — chevron one-shot recorriendo la polilínea al entrar al pan-out.
+  const [chevron, setChevron] = useState<{ point: LngLat; bearing: number } | null>(null);
+  useEffect(() => {
+    if (!isFinale) return;
+    const controls = animate(0, 1, {
+      duration: 3.4,
+      ease: "easeInOut",
+      delay: 0.5,
+      onUpdate: (t) => setChevron(pointAlongPath(ROUTE_COORDS, t)),
+    });
+    return () => controls.stop();
+  }, [isFinale]);
 
   return (
     <>
+      {/* #6 — ruta dashed que une los 6 destinos (solo en el finale) */}
+      {isFinale && (
+        <MapRoute
+          id="destinos-route"
+          coordinates={ROUTE_COORDS}
+          color="#F76C4D"
+          width={3}
+          opacity={0.9}
+          dashArray={[2, 2]}
+        />
+      )}
+
+      {/* #6 — chevron viajando por la ruta */}
+      {isFinale && chevron && (
+        <MapMarker longitude={chevron.point[0]} latitude={chevron.point[1]}>
+          <MarkerContent>
+            <SelfPin heading={chevron.bearing} size={40} />
+          </MarkerContent>
+        </MapMarker>
+      )}
+
       {/* Map pins rendered via MapMarker portals (positioned by maplibre on the canvas) */}
       {POLAROIDS.filter((_, i) => i < visibleCount).map((pol) => (
         <MapMarker key={pol.id} longitude={pol.coords[0]} latitude={pol.coords[1]}>
@@ -140,7 +183,8 @@ export default function DestinosOverlay() {
                 padding: "12px 12px 0",
                 borderRadius: 6,
                 boxShadow: "0 14px 34px rgba(38,70,83,.22)",
-                opacity: isCardVisible ? 1 : 0,
+                // En el finale la pila desaparece para dar paso al deck interactivo (#7).
+                opacity: isFinale ? 0 : isCardVisible ? 1 : 0,
                 transform: isCardVisible
                   ? `translateY(0) rotate(${totalRotate}deg) scale(1)`
                   : `translateY(-80px) rotate(${totalRotate}deg) scale(0.88)`,
@@ -207,6 +251,19 @@ export default function DestinosOverlay() {
             </figure>
           );
         })}
+
+        {/* #7 — deck interactivo: aparece cuando la pila queda completa (finale) */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: isFinale ? 1 : 0,
+            pointerEvents: isFinale ? "auto" : "none",
+            transition: "opacity 0.5s ease",
+          }}
+        >
+          <PolaroidDeck items={POLAROIDS} />
+        </div>
       </div>
     </>
   );
