@@ -66,6 +66,14 @@ body {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+/* Flujo de rutas dashed (CTA) — marching dashes por CSS, sin JS. */
+@keyframes crdDashFlow {
+  to { stroke-dashoffset: -240; }
+}
+.crd-cta-route {
+  stroke-dasharray: 10 13;
+  animation: crdDashFlow 4s linear infinite;
+}
 
 /* Hero entrance */
 @keyframes crdLogoIn {
