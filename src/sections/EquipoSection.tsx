@@ -71,6 +71,9 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
       onMouseLeave={() => setHover(false)}
       style={{
         position: "relative",
+        // overflow visible: el panel de hover se despliega ABSOLUTO hacia abajo
+        // sin cambiar el alto de la card ⇒ la otra card no se mueve (fix del bug).
+        overflow: "visible",
         background: "rgba(253,248,240,0.92)",
         backdropFilter: "blur(18px)",
         WebkitBackdropFilter: "blur(18px)",
@@ -87,6 +90,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         boxShadow: hover ? "0 22px 50px rgba(38,70,83,0.20)" : "0 12px 36px rgba(38,70,83,0.14)",
         transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease",
         animation: animate ? `slideUpIn 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s both` : "none",
+        zIndex: hover ? 2 : 1,
       }}
     >
       {/* Avatar grande */}
@@ -143,17 +147,31 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         {member.bio}
       </p>
 
-      {/* Hover → bio extendida + redes */}
+      {/* Hover → bio extendida + redes. ABSOLUTO hacia abajo: se despliega como
+          continuación de la card sin ocupar espacio en el flujo (no reflow). El
+          solape de -16px oculta la costura contra el borde redondeado de la card. */}
       <div
         style={{
-          width: "100%",
-          maxHeight: hover ? 180 : 0,
+          position: "absolute",
+          top: "100%",
+          marginTop: -16,
+          left: 0,
+          right: 0,
+          background: "rgba(253,248,240,0.96)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          border: "1.5px solid #EBE6D9",
+          borderTop: "none",
+          borderRadius: "0 0 22px 22px",
+          padding: "26px 22px 18px",
+          boxShadow: "0 22px 40px rgba(38,70,83,0.18)",
           opacity: hover ? 1 : 0,
-          overflow: "hidden",
-          transition: "max-height 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+          transform: hover ? "translateY(0)" : "translateY(-8px)",
+          pointerEvents: hover ? "auto" : "none",
+          transition: "opacity 0.3s ease, transform 0.35s cubic-bezier(0.16,1,0.3,1)",
         }}
       >
-        <p style={{ margin: "10px 0 0", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.5, borderTop: "1px solid #EBE6D9", paddingTop: 10 }}>
+        <p style={{ margin: 0, color: "#5B6B72", fontSize: 11.5, lineHeight: 1.5, borderTop: "1px solid #EBE6D9", paddingTop: 12 }}>
           {member.bioLong}
         </p>
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12 }}>
@@ -231,8 +249,11 @@ export default function EquipoOverlay() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: "92px 24px 44px",
+          // center (no space-between): deja aire debajo de las cards para que el
+          // panel de hover se despliegue sin salirse del viewport.
+          justifyContent: "center",
+          gap: "clamp(24px, 5vh, 64px)",
+          padding: "92px 24px 64px",
         }}
       >
         {/* Heading */}
