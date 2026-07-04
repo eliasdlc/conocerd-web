@@ -9,33 +9,34 @@ import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { SelfPin } from "@/components/map/pins";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
-import { pointAlongPath, type LngLat } from "@/lib/geo";
+import { pointAlongPath, smoothPath, type LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
 const POLAROIDS = FEATURED_DESTINATIONS;
 
-// Polilínea que une los 6 destinos en orden (para la ruta + chevron del finale).
-const ROUTE_COORDS: LngLat[] = POLAROIDS.map((d) => d.coords);
+// Ruta curva que une los 6 destinos en orden (para la línea + chevron del
+// finale). smoothPath la vuelve una curva orgánica en vez de tramos rectos.
+const ROUTE_COORDS: LngLat[] = smoothPath(POLAROIDS.map((d) => d.coords));
 
 // Final rotation for each card in the pile = original rotate + extra scatter
 const PILE_OFFSETS = [
-  { left: "4%",  bottom: "8%",  extraRotate: 0    },
-  { left: "7%",  bottom: "6%",  extraRotate: -1   },
-  { left: "5%",  bottom: "10%", extraRotate: 1.5  },
-  { left: "9%",  bottom: "7%",  extraRotate: -2   },
-  { left: "3%",  bottom: "12%", extraRotate: 0.5  },
-  { left: "8%",  bottom: "9%",  extraRotate: -1   },
+  { left: "4%", bottom: "8%", extraRotate: 0 },
+  { left: "7%", bottom: "6%", extraRotate: -1 },
+  { left: "5%", bottom: "10%", extraRotate: 1.5 },
+  { left: "9%", bottom: "7%", extraRotate: -2 },
+  { left: "3%", bottom: "12%", extraRotate: 0.5 },
+  { left: "8%", bottom: "9%", extraRotate: -1 },
 ];
 
 const SCENE_TO_COUNT: Record<string, number> = {
-  "destinos-intro":  0,
-  "polaroid-0":      1,
-  "polaroid-1":      2,
-  "polaroid-2":      3,
-  "polaroid-3":      4,
-  "polaroid-4":      5,
-  "polaroid-5":      6,
+  "destinos-intro": 0,
+  "polaroid-0": 1,
+  "polaroid-1": 2,
+  "polaroid-2": 3,
+  "polaroid-3": 4,
+  "polaroid-4": 5,
+  "polaroid-5": 6,
   "destinos-finale": 6,
 };
 
@@ -126,7 +127,7 @@ export default function DestinosOverlay() {
           style={{
             position: "absolute",
             left: "4%",
-            bottom: "43%",
+            bottom: "50%",
             opacity: headingVisible ? 1 : 0,
             transform: headingVisible ? "translateY(0)" : "translateY(14px)",
             transition: "opacity 0.45s ease, transform 0.45s ease",

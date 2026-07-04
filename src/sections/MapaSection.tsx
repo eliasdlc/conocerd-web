@@ -12,7 +12,7 @@ import {
   type Category,
   type Destination,
 } from "@/data/destinations";
-import { pathLengthKm, type LngLat } from "@/lib/geo";
+import { pathLengthKm, smoothPath, type LngLat } from "@/lib/geo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  "Arma tu recorrido" (#8/#9): pines de categoría con card hover (con punta),
@@ -345,18 +345,13 @@ export default function MapaOverlay() {
   const { activeScene } = useScene();
   const isVisible = activeScene === "mapa";
 
-  const [activeCategories, setActiveCategories] = useState<Set<Category>>(
-    new Set(CATEGORIES)
-  );
+  // Single-select: "all" muestra todo, o una categoría a la vez (el toggle
+  // anterior se sentía como que "se deseleccionaba"). Click en la misma → "all".
+  const [selectedCat, setSelectedCat] = useState<Category | "all">("all");
   const [route, setRoute] = useState<string[]>([]);
 
-  function toggleCategory(id: Category) {
-    setActiveCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(id) && next.size > 1) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  function selectCategory(id: Category) {
+    setSelectedCat((prev) => (prev === id ? "all" : id));
   }
 
   function toggleStop(id: string) {
@@ -377,7 +372,11 @@ export default function MapaOverlay() {
   const stops = route
     .map((id) => DESTINATIONS.find((d) => d.id === id))
     .filter((d): d is Destination => Boolean(d));
-  const routeCoords: LngLat[] = stops.map((s) => s.coords);
+  // Curva suave entre paradas (en vez de tramos rectos que se veían raros).
+  const routeCoords: LngLat[] = smoothPath(stops.map((s) => s.coords));
+  const visibleDestinations = DESTINATIONS.filter(
+    (d) => selectedCat === "all" || d.category === selectedCat
+  );
 
   return (
     <>
@@ -388,7 +387,7 @@ export default function MapaOverlay() {
 
       {/* Pines de categoría */}
       {isVisible &&
-        DESTINATIONS.filter((d) => activeCategories.has(d.category)).map((d) => (
+        visibleDestinations.map((d) => (
           <PinMarker
             key={d.id}
             d={d}
@@ -433,13 +432,36 @@ export default function MapaOverlay() {
             Arma tu recorrido
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {/* "Todas" + una categoría a la vez (single-select) */}
+            <button
+              onClick={() => setSelectedCat("all")}
+              aria-pressed={selectedCat === "all"}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "6px 12px",
+                borderRadius: 999,
+                border: `1.5px solid ${selectedCat === "all" ? "#264653" : "#EBE6D9"}`,
+                background: selectedCat === "all" ? "rgba(38,70,83,0.08)" : "transparent",
+                color: selectedCat === "all" ? "#264653" : "#5B6B72",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                fontWeight: 700,
+                fontSize: 12.5,
+                cursor: "pointer",
+                transition: "border-color 0.2s, background 0.2s, color 0.2s",
+              }}
+            >
+              <span className="ms" style={{ fontSize: 14 }}>public</span>
+              Todas
+            </button>
             {CATEGORIES.map((cat) => {
               const meta = CATEGORY_META[cat];
-              const isActive = activeCategories.has(cat);
+              const isActive = selectedCat === cat;
               return (
                 <button
                   key={cat}
-                  onClick={() => toggleCategory(cat)}
+                  onClick={() => selectCategory(cat)}
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
