@@ -312,18 +312,24 @@ export type Viewport = {
   bearing: number;
 };
 
+// `bearing` se mantiene en 0 en todo el journey: los saltos de bearing escena a
+// escena hacían girar el globo de ida y vuelta al scrollear (la queja de
+// "rota y luego vuelve"). El volumen/3D lo da el `pitch`, no la rotación.
 export const SCENE_CAMERAS: Record<string, Viewport> = {
+  // Escena 0 — vista globo del hero. El motor interpola de aquí a
+  // "destinos-intro" (zoom 7.2) ⇒ el mismo globo baja y hace zoom a RD (#hero).
+  hero: { center: [-70.1627, 18.7357], zoom: 2.5, pitch: 0, bearing: 0 },
   "destinos-intro": { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
-  "polaroid-0": { center: [-71.77, 17.89], zoom: 11.5, pitch: 45, bearing: -20 },
-  "polaroid-1": { center: [-70.99, 19.05], zoom: 10.5, pitch: 50, bearing: 15 },
-  "polaroid-2": { center: [-69.58, 19.15], zoom: 11.0, pitch: 40, bearing: 5 },
-  "polaroid-3": { center: [-70.58, 19.62], zoom: 11.5, pitch: 35, bearing: -10 },
-  "polaroid-4": { center: [-70.72, 18.91], zoom: 11.5, pitch: 50, bearing: 20 },
+  "polaroid-0": { center: [-71.77, 17.89], zoom: 11.5, pitch: 45, bearing: 0 },
+  "polaroid-1": { center: [-70.99, 19.05], zoom: 10.5, pitch: 50, bearing: 0 },
+  "polaroid-2": { center: [-69.58, 19.15], zoom: 11.0, pitch: 40, bearing: 0 },
+  "polaroid-3": { center: [-70.58, 19.62], zoom: 11.5, pitch: 35, bearing: 0 },
+  "polaroid-4": { center: [-70.72, 18.91], zoom: 11.5, pitch: 50, bearing: 0 },
   "polaroid-5": { center: [-69.66, 19.13], zoom: 11.0, pitch: 30, bearing: 0 },
   "destinos-finale": { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
   mapa: { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
   viajeros: { center: [-70.35, 18.85], zoom: 6.5, pitch: 0, bearing: 0 },
   negocios: { center: [-70.30, 19.00], zoom: 8.5, pitch: 20, bearing: 0 },
-  equipo: { center: [-70.6901, 19.4517], zoom: 12.5, pitch: 30, bearing: 5 },
-  cta: { center: [-69.0, 17.0], zoom: 3.5, pitch: 15, bearing: -5 },
+  equipo: { center: [-70.6901, 19.4517], zoom: 12.5, pitch: 30, bearing: 0 },
+  cta: { center: [-69.0, 17.0], zoom: 3.5, pitch: 15, bearing: 0 },
 };
