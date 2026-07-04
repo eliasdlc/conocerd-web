@@ -7,6 +7,7 @@ import { SceneProvider, useScene } from "@/context/SceneContext";
 import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { SCENES, TRIGGER_TOTAL_VH, cameraAtProgress } from "@/lib/journey";
 import GlobeShading from "@/sections/GlobeShading";
+import HeroRoutes from "@/sections/HeroRoutes";
 import HeroOverlay from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
@@ -128,6 +129,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           attributionControl={false}
         >
           <GlobeShading />
+          <HeroRoutes />
           <HeroOverlay />
           <DestinosSection />
           <MapaSection />
