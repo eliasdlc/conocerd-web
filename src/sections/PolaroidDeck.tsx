@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { CATEGORY_META, type Destination } from "@/data/destinations";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,18 +14,6 @@ import { CATEGORY_META, type Destination } from "@/data/destinations";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CARD_W = 230;
-
-function useIsMobile() {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)");
-    const on = () => setMobile(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return mobile;
-}
 
 function PolaroidCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
@@ -82,7 +71,7 @@ function PolaroidCard({ d }: { d: Destination }) {
 }
 
 export default function PolaroidDeck({ items }: { items: Destination[] }) {
-  const mobile = useIsMobile();
+  const mobile = useIsMobile(640);
   // `order` = ids en orden de profundidad; order[0] = carta de enfrente.
   const [order, setOrder] = useState<string[]>(() => items.map((d) => d.id));
 
@@ -94,11 +83,13 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: "6%",
+          // Deja libre la franja del control de pasos, que flota encima.
+          bottom: "calc(4% + var(--crd-stepper-h, 74px))",
           display: "flex",
           gap: 14,
           overflowX: "auto",
           padding: "0 16px 8px",
+          touchAction: "pan-x",
           WebkitOverflowScrolling: "touch",
           scrollbarWidth: "none",
         }}

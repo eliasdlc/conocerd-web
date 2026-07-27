@@ -6,6 +6,7 @@ import { animate } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
 import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { SelfPin } from "@/components/map/pins";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
@@ -20,22 +21,22 @@ const ROUTE_COORDS: LngLat[] = POLAROIDS.map((d) => d.coords);
 
 // Final rotation for each card in the pile = original rotate + extra scatter
 const PILE_OFFSETS = [
-  { left: "4%",  bottom: "8%",  extraRotate: 0    },
-  { left: "7%",  bottom: "6%",  extraRotate: -1   },
-  { left: "5%",  bottom: "10%", extraRotate: 1.5  },
-  { left: "9%",  bottom: "7%",  extraRotate: -2   },
-  { left: "3%",  bottom: "12%", extraRotate: 0.5  },
-  { left: "8%",  bottom: "9%",  extraRotate: -1   },
+  { left: "4%", bottom: "8%", extraRotate: 0 },
+  { left: "7%", bottom: "6%", extraRotate: -1 },
+  { left: "5%", bottom: "10%", extraRotate: 1.5 },
+  { left: "9%", bottom: "7%", extraRotate: -2 },
+  { left: "3%", bottom: "12%", extraRotate: 0.5 },
+  { left: "8%", bottom: "9%", extraRotate: -1 },
 ];
 
 const SCENE_TO_COUNT: Record<string, number> = {
-  "destinos-intro":  0,
-  "polaroid-0":      1,
-  "polaroid-1":      2,
-  "polaroid-2":      3,
-  "polaroid-3":      4,
-  "polaroid-4":      5,
-  "polaroid-5":      6,
+  "destinos-intro": 0,
+  "polaroid-0": 1,
+  "polaroid-1": 2,
+  "polaroid-2": 3,
+  "polaroid-3": 4,
+  "polaroid-4": 5,
+  "polaroid-5": 6,
   "destinos-finale": 6,
 };
 
@@ -50,6 +51,7 @@ const DESTINOS_SCENES = new Set([
 
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
+  const isMobile = useIsMobile();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
   const headingVisible = visibleCount >= 1;
@@ -121,12 +123,24 @@ export default function DestinosOverlay() {
           zIndex: 10,
         }}
       >
+        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. Entra
+            con el primer destino — en la intro no hay contenido que velar y un
+            degradado sobre el mapa vacío solo se ve como un hueco. */}
+        <div
+          className="crd-mobile-scrim"
+          style={{
+            height: "66%",
+            opacity: headingVisible ? 1 : 0,
+            transition: "opacity 0.45s ease",
+          }}
+        />
+
         {/* Section heading — appears above the pile on first polaroid */}
         <div
           style={{
             position: "absolute",
             left: "4%",
-            bottom: "43%",
+            bottom: isMobile ? "calc(46% + var(--crd-stepper-h, 74px))" : "50%",
             opacity: headingVisible ? 1 : 0,
             transform: headingVisible ? "translateY(0)" : "translateY(14px)",
             transition: "opacity 0.45s ease, transform 0.45s ease",
@@ -175,8 +189,13 @@ export default function DestinosOverlay() {
               key={pol.id}
               style={{
                 position: "absolute",
-                left: offset.left,
-                bottom: offset.bottom,
+                // En 390px el desparrame de la pila (3–9%) sacaba las cartas de
+                // atrás por el borde izquierdo: en móvil se desplaza a la derecha.
+                left: isMobile ? `calc(${offset.left} + 6%)` : offset.left,
+                // El control de pasos flota abajo en móvil: la pila sube.
+                bottom: isMobile
+                  ? `calc(${offset.bottom} + var(--crd-stepper-h, 74px))`
+                  : offset.bottom,
                 margin: 0,
                 width: 220,
                 background: "#fff",

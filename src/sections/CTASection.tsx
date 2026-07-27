@@ -1,11 +1,13 @@
 "use client";
 
 import { useScene } from "@/context/SceneContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CTAOverlay() {
   const { activeScene } = useScene();
+  const isMobile = useIsMobile();
   const isVisible = activeScene === "cta";
 
   return (
@@ -18,9 +20,13 @@ export default function CTAOverlay() {
         transition: "opacity 0.7s ease",
         zIndex: 10,
         display: "flex",
-        alignItems: "center",
+        // El journey cierra volviendo al globo: en móvil la card baja para que
+        // el planeta se vea completo encima, igual que en el hero.
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        padding: "72px 24px 36px",
+        padding: isMobile
+          ? "72px 18px calc(14px + var(--crd-stepper-h, 74px))"
+          : "72px 24px 36px",
       }}
     >
       {/* Dark glassmorphism card — appears 0.6s after scene activates (map is mid-flyout) */}
@@ -31,7 +37,7 @@ export default function CTAOverlay() {
           WebkitBackdropFilter: "blur(24px)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: 28,
-          padding: "44px clamp(28px, 5vw, 60px)",
+          padding: isMobile ? "26px 20px" : "44px clamp(28px, 5vw, 60px)",
           maxWidth: 640,
           width: "100%",
           textAlign: "center",
