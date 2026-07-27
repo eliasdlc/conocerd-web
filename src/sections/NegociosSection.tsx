@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate } from "motion/react";
 import { useScene } from "@/context/SceneContext";
-import { MapMarker, MarkerContent, MapArc, arcCoords } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MapArc } from "@/components/map/Map";
 import { scrollToSection } from "@/lib/journeyNav";
-import { pointAlongPath, type LngLat } from "@/lib/geo";
+import type { LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -89,70 +88,6 @@ function StatCount({
   );
 }
 
-// Curvatura de los arcos = mismo bend que MapArc (para que el viajero siga la línea).
-const ARC_BEND = 0.22;
-
-// ─── Cliente viajando por el arco hacia el negocio ────────────────────────────
-// Un marcador (persona) recorre el arco de la provincia al negocio, en loop.
-// Reemplaza la sensación estática de las líneas: ahora "vienen personas".
-
-function TravelingClient({
-  from,
-  to,
-  color,
-  delay,
-}: {
-  from: LngLat;
-  to: LngLat;
-  color: string;
-  delay: number;
-}) {
-  const [pos, setPos] = useState<LngLat | null>(null);
-
-  useEffect(() => {
-    const path = arcCoords(from, to, ARC_BEND, 48);
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setPos(pointAlongPath(path, 0.5).point);
-      return;
-    }
-    const controls = animate(0, 1, {
-      duration: 3.4,
-      ease: "easeInOut",
-      delay,
-      repeat: Infinity,
-      repeatDelay: 0.5,
-      onUpdate: (t) => setPos(pointAlongPath(path, t).point),
-    });
-    return () => controls.stop();
-  }, [from, to, delay]);
-
-  if (!pos) return null;
-  return (
-    <MapMarker longitude={pos[0]} latitude={pos[1]}>
-      <MarkerContent>
-        <div
-          style={{
-            width: 22,
-            height: 22,
-            borderRadius: "50%",
-            background: "#fff",
-            border: `2.5px solid ${color}`,
-            boxShadow: "0 3px 8px rgba(38,70,83,0.28)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span className="ms" style={{ fontSize: 14, color }}>directions_walk</span>
-        </div>
-      </MarkerContent>
-    </MapMarker>
-  );
-}
-
 // ─── Main overlay ─────────────────────────────────────────────────────────────
 
 export default function NegociosOverlay() {
@@ -172,9 +107,7 @@ export default function NegociosOverlay() {
 
   return (
     <>
-      {/* #11 — arcos desde varias provincias hacia el negocio (línea estática
-          dashed) + un cliente "caminando" por cada uno en loop. El movimiento lo
-          dan los viajeros, no el dash → se quita el rAF por-arco (perf). */}
+      {/* #11 — arcos animados desde varias provincias convergiendo al negocio */}
       {isVisible &&
         ARC_ORIGINS.map((o, i) => (
           <MapArc
@@ -184,18 +117,7 @@ export default function NegociosOverlay() {
             to={BUSINESS}
             color={o.color}
             width={2.4}
-            bend={ARC_BEND}
-            animated={false}
-          />
-        ))}
-      {isVisible &&
-        ARC_ORIGINS.map((o, i) => (
-          <TravelingClient
-            key={`rider-${o.name}`}
-            from={o.coords}
-            to={BUSINESS}
-            color={o.color}
-            delay={i * 0.45}
+            bend={0.22}
           />
         ))}
 

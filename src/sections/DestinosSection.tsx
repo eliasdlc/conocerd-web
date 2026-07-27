@@ -1,21 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { animate } from "motion/react";
+import CategoryChip from "@/components/CategoryChip";
 import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { SelfPin } from "@/components/map/pins";
-import { FEATURED_DESTINATIONS } from "@/data/destinations";
-import { pointAlongPath, smoothPath, type LngLat } from "@/lib/geo";
+import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
+import { pointAlongPath, type LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
 const POLAROIDS = FEATURED_DESTINATIONS;
 
-// Ruta curva que une los 6 destinos en orden (para la línea + chevron del
-// finale). smoothPath la vuelve una curva orgánica en vez de tramos rectos.
-const ROUTE_COORDS: LngLat[] = smoothPath(POLAROIDS.map((d) => d.coords));
+// Polilínea que une los 6 destinos en orden (para la ruta + chevron del finale).
+const ROUTE_COORDS: LngLat[] = POLAROIDS.map((d) => d.coords);
+
+// Final rotation for each card in the pile = original rotate + extra scatter
+const PILE_OFFSETS = [
+  { left: "4%", bottom: "8%", extraRotate: 0 },
+  { left: "7%", bottom: "6%", extraRotate: -1 },
+  { left: "5%", bottom: "10%", extraRotate: 1.5 },
+  { left: "9%", bottom: "7%", extraRotate: -2 },
+  { left: "3%", bottom: "12%", extraRotate: 0.5 },
+  { left: "8%", bottom: "9%", extraRotate: -1 },
+];
 
 const SCENE_TO_COUNT: Record<string, number> = {
   "destinos-intro": 0,
@@ -39,6 +51,7 @@ const DESTINOS_SCENES = new Set([
 
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
+  const isMobile = useIsMobile();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
   const headingVisible = visibleCount >= 1;
@@ -110,12 +123,24 @@ export default function DestinosOverlay() {
           zIndex: 10,
         }}
       >
+        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. Entra
+            con el primer destino — en la intro no hay contenido que velar y un
+            degradado sobre el mapa vacío solo se ve como un hueco. */}
+        <div
+          className="crd-mobile-scrim"
+          style={{
+            height: "66%",
+            opacity: headingVisible ? 1 : 0,
+            transition: "opacity 0.45s ease",
+          }}
+        />
+
         {/* Section heading — appears above the pile on first polaroid */}
         <div
           style={{
             position: "absolute",
             left: "4%",
-            bottom: "50%",
+            bottom: isMobile ? "calc(46% + var(--crd-stepper-h, 74px))" : "50%",
             opacity: headingVisible ? 1 : 0,
             transform: headingVisible ? "translateY(0)" : "translateY(14px)",
             transition: "opacity 0.45s ease, transform 0.45s ease",
@@ -153,9 +178,111 @@ export default function DestinosOverlay() {
           </h2>
         </div>
 
-        {/* #7 — pila única: se construye con el scroll (visibleCount) y en el
-            finale se vuelve interactiva EN SU SITIO (sin cambiar de componente). */}
-        <PolaroidDeck items={POLAROIDS} visibleCount={visibleCount} interactive={isFinale} />
+        {/* Polaroid pile */}
+        {POLAROIDS.map((pol, i) => {
+          const offset = PILE_OFFSETS[i];
+          const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
+          const isCardVisible = i < visibleCount;
+
+          return (
+            <figure
+              key={pol.id}
+              style={{
+                position: "absolute",
+                // En 390px el desparrame de la pila (3–9%) sacaba las cartas de
+                // atrás por el borde izquierdo: en móvil se desplaza a la derecha.
+                left: isMobile ? `calc(${offset.left} + 6%)` : offset.left,
+                // El control de pasos flota abajo en móvil: la pila sube.
+                bottom: isMobile
+                  ? `calc(${offset.bottom} + var(--crd-stepper-h, 74px))`
+                  : offset.bottom,
+                margin: 0,
+                width: 220,
+                background: "#fff",
+                padding: "12px 12px 0",
+                borderRadius: 6,
+                boxShadow: "0 14px 34px rgba(38,70,83,.22)",
+                // En el finale la pila desaparece para dar paso al deck interactivo (#7).
+                opacity: isFinale ? 0 : isCardVisible ? 1 : 0,
+                transform: isCardVisible
+                  ? `translateY(0) rotate(${totalRotate}deg) scale(1)`
+                  : `translateY(-80px) rotate(${totalRotate}deg) scale(0.88)`,
+                transition: isCardVisible
+                  ? `transform 0.55s cubic-bezier(0.2,0.8,0.3,1) ${i * 0.06}s, opacity 0.4s ease ${i * 0.06}s`
+                  : "transform 0.3s ease, opacity 0.25s ease",
+                zIndex: i + 1,
+                cursor: "default",
+              } as React.CSSProperties}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  height: 196,
+                  borderRadius: 3,
+                  overflow: "hidden",
+                  background: "#F5EFE2",
+                }}
+              >
+                <Image src={pol.image} alt={pol.name} fill style={{ objectFit: "cover" }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0, right: 0, bottom: 0,
+                    padding: "14px 12px 12px",
+                    background:
+                      "linear-gradient(transparent,rgba(38,70,83,.55) 35%,rgba(38,70,83,.94))",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <CategoryChip icon={CATEGORY_META[pol.category].icon}>{pol.tagline}</CategoryChip>
+                  <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,.92)", lineHeight: 1.4 }}>
+                    {pol.desc}
+                  </p>
+                </div>
+              </div>
+              <figcaption style={{ padding: "12px 4px 14px" }}>
+                <div
+                  style={{
+                    fontFamily: "'Caveat', cursive",
+                    fontWeight: 700,
+                    fontSize: 24,
+                    lineHeight: 1,
+                    color: "#264653",
+                  }}
+                >
+                  {pol.name}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 11,
+                    color: "#5B6B72",
+                    marginTop: 3,
+                  }}
+                >
+                  {pol.meta}
+                </div>
+              </figcaption>
+            </figure>
+          );
+        })}
+
+        {/* #7 — deck interactivo: aparece cuando la pila queda completa (finale) */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: isFinale ? 1 : 0,
+            pointerEvents: isFinale ? "auto" : "none",
+            transition: "opacity 0.5s ease",
+          }}
+        >
+          <PolaroidDeck items={POLAROIDS} />
+        </div>
       </div>
     </>
   );

@@ -312,24 +312,102 @@ export type Viewport = {
   bearing: number;
 };
 
-// `bearing` se mantiene en 0 en todo el journey: los saltos de bearing escena a
-// escena hacían girar el globo de ida y vuelta al scrollear (la queja de
-// "rota y luego vuelve"). El volumen/3D lo da el `pitch`, no la rotación.
-export const SCENE_CAMERAS: Record<string, Viewport> = {
+/**
+ * Keyframe de escena. Los valores base están **autorizados para desktop**
+ * (referencia 1440×900); `mobile` sobreescribe solo lo que cambia en pantallas
+ * angostas. No es una derivación automática a propósito: un teléfono no es un
+ * desktop encogido — a igual zoom, un viewport de 390px muestra menos de la
+ * mitad de la isla, así que cada escena tiene su encuadre pensado.
+ * Resolución: `resolveCamera()` (lo usa `lib/journey.ts`).
+ */
+export type SceneCamera = Viewport & { mobile?: Partial<Viewport> };
+
+export function resolveCamera(c: SceneCamera, mobile: boolean): Viewport {
+  if (!mobile || !c.mobile) return c;
+  return {
+    center: c.mobile.center ?? c.center,
+    zoom: c.mobile.zoom ?? c.zoom,
+    pitch: c.mobile.pitch ?? c.pitch,
+    bearing: c.mobile.bearing ?? c.bearing,
+  };
+}
+
+// Bearings: deriva monótona y de baja amplitud a lo largo del journey
+// (-20° → 10° → 0° → -20°). Antes alternaban de signo entre escenas vecinas
+// (-20, 15, 5, -10, 20) y cada salto rotaba la isla en sentido contrario al
+// anterior: mareante, sobre todo en móvil. Ahora la cámara "gira" siempre en
+// la misma dirección dentro de un tramo.
+export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   // Escena 0 — vista globo del hero. El motor interpola de aquí a
-  // "destinos-intro" (zoom 7.2) ⇒ el mismo globo baja y hace zoom a RD (#hero).
-  hero: { center: [-70.1627, 18.7357], zoom: 2.5, pitch: 0, bearing: 0 },
-  "destinos-intro": { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
-  "polaroid-0": { center: [-71.77, 17.89], zoom: 11.5, pitch: 45, bearing: 0 },
-  "polaroid-1": { center: [-70.99, 19.05], zoom: 10.5, pitch: 50, bearing: 0 },
-  "polaroid-2": { center: [-69.58, 19.15], zoom: 11.0, pitch: 40, bearing: 0 },
-  "polaroid-3": { center: [-70.58, 19.62], zoom: 11.5, pitch: 35, bearing: 0 },
-  "polaroid-4": { center: [-70.72, 18.91], zoom: 11.5, pitch: 50, bearing: 0 },
-  "polaroid-5": { center: [-69.66, 19.13], zoom: 11.0, pitch: 30, bearing: 0 },
-  "destinos-finale": { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
-  mapa: { center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0 },
-  viajeros: { center: [-70.35, 18.85], zoom: 6.5, pitch: 0, bearing: 0 },
-  negocios: { center: [-70.30, 19.00], zoom: 8.5, pitch: 20, bearing: 0 },
-  equipo: { center: [-70.6901, 19.4517], zoom: 12.5, pitch: 30, bearing: 0 },
-  cta: { center: [-69.0, 17.0], zoom: 3.5, pitch: 15, bearing: 0 },
+  // "destinos-intro" ⇒ el mismo globo baja y hace zoom a RD (#hero).
+  // Móvil: zoom 1.15 ⇒ diámetro ≈ 512·2^z/π ≈ 360px, cabe entero en 390px de
+  // ancho. Con 2.5 el globo medía 920px y se salía por los cuatro lados.
+  hero: {
+    center: [-70.1627, 18.7357], zoom: 2.5, pitch: 0, bearing: -20,
+    mobile: { zoom: 1.15 },
+  },
+  // Isla completa. En móvil hace falta ~1.5 niveles menos para que quepan los
+  // 4.6° de longitud de RD en 390px.
+  "destinos-intro": {
+    center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: -12,
+    mobile: { zoom: 5.85 },
+  },
+  // Los closeups en móvil bajan ~1.5 niveles: a z11.5 en un teléfono solo se ve
+  // territorio sin rasgos (ni costa ni contorno) y el vuelo pierde referencia.
+  "polaroid-0": {
+    center: [-71.77, 17.89], zoom: 11.5, pitch: 42, bearing: -14,
+    mobile: { zoom: 10.0, pitch: 30 },
+  },
+  "polaroid-1": {
+    center: [-70.99, 19.05], zoom: 10.5, pitch: 46, bearing: -8,
+    mobile: { zoom: 9.4, pitch: 32 },
+  },
+  "polaroid-2": {
+    center: [-69.58, 19.15], zoom: 11.0, pitch: 40, bearing: -2,
+    mobile: { zoom: 9.8, pitch: 28 },
+  },
+  "polaroid-3": {
+    center: [-70.58, 19.62], zoom: 11.5, pitch: 38, bearing: 4,
+    mobile: { zoom: 10.0, pitch: 26 },
+  },
+  "polaroid-4": {
+    center: [-70.72, 18.91], zoom: 11.5, pitch: 44, bearing: 10,
+    mobile: { zoom: 9.6, pitch: 30 },
+  },
+  "polaroid-5": {
+    center: [-69.66, 19.13], zoom: 11.0, pitch: 34, bearing: 6,
+    mobile: { zoom: 9.7, pitch: 24 },
+  },
+  // Pan-out del recorrido: en móvil se centra en el centroide de la ruta
+  // (Águilas ↔ Los Haitises), no en el centro geográfico de la isla.
+  "destinos-finale": {
+    center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
+    mobile: { center: [-70.62, 18.85], zoom: 6.2 },
+  },
+  // Escena interactiva: los pines se tocan con el dedo, así que en móvil se
+  // acerca lo máximo que permite la isla completa para separarlos.
+  mapa: {
+    center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
+    mobile: { center: [-70.45, 18.87], zoom: 6.1 },
+  },
+  viajeros: {
+    center: [-70.35, 18.85], zoom: 6.5, pitch: 0, bearing: 0,
+    mobile: { zoom: 5.1 },
+  },
+  // El negocio (Santiago) vive al noroeste del centro de la isla: con el centro
+  // genérico quedaba pegado al borde superior, bajo el nav.
+  negocios: {
+    center: [-70.30, 19.00], zoom: 8.5, pitch: 18, bearing: 0,
+    mobile: { center: [-70.62, 19.38], zoom: 7.2, pitch: 12 },
+  },
+  equipo: {
+    center: [-70.6901, 19.4517], zoom: 12.5, pitch: 28, bearing: 6,
+    mobile: { zoom: 10.8, pitch: 20 },
+  },
+  // Cierre = apertura: vuelve al globo con el mismo bearing del hero. El
+  // journey empieza en el mundo, aterriza en RD y se despide desde el mundo.
+  cta: {
+    center: [-70.1627, 18.7357], zoom: 2.2, pitch: 0, bearing: -20,
+    mobile: { zoom: 1.05 },
+  },
 };

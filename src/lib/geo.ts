@@ -44,37 +44,6 @@ export function pathLengthKm(coords: LngLat[]): number {
 }
 
 /**
- * Suaviza una lista de waypoints en una curva (spline Catmull-Rom densificada).
- * Convierte los tramos rectos entre paradas en una ruta curva y orgánica —
- * quita el look de "líneas rectas raras" del recorrido. Con <3 puntos no hay
- * curva posible ⇒ devuelve tal cual.
- */
-export function smoothPath(pts: LngLat[], segments = 18): LngLat[] {
-  if (pts.length < 3) return pts;
-  const out: LngLat[] = [];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i === 0 ? 0 : i - 1];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
-    for (let j = 0; j < segments; j++) {
-      const t = j / segments;
-      const t2 = t * t;
-      const t3 = t2 * t;
-      const cr = (a: number, b: number, c: number, d: number) =>
-        0.5 *
-        (2 * b +
-          (-a + c) * t +
-          (2 * a - 5 * b + 4 * c - d) * t2 +
-          (-a + 3 * b - 3 * c + d) * t3);
-      out.push([cr(p0[0], p1[0], p2[0], p3[0]), cr(p0[1], p1[1], p2[1], p3[1])]);
-    }
-  }
-  out.push(pts[pts.length - 1]);
-  return out;
-}
-
-/**
  * Punto a la fracción t∈[0,1] de la longitud total de la polilínea, más el
  * rumbo del segmento en ese punto. Interpolación planar (suficiente a esta
  * escala). Para animar un marcador a lo largo de la ruta (#6).

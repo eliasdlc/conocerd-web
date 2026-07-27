@@ -61,19 +61,6 @@ body {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .4; transform: scale(.7); }
 }
-/* Nubes del globo (GlobeShading) — giro lento sobre el disco. */
-@keyframes crdGlobeClouds {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-/* Flujo de rutas dashed (CTA) — marching dashes por CSS, sin JS. */
-@keyframes crdDashFlow {
-  to { stroke-dashoffset: -240; }
-}
-.crd-cta-route {
-  stroke-dasharray: 10 13;
-  animation: crdDashFlow 4s linear infinite;
-}
 
 /* Hero entrance */
 @keyframes crdLogoIn {
@@ -109,8 +96,77 @@ body {
   }
 }
 
+/* ───────────────────── Journey: pista y modo móvil ────────────────────── */
+
+/* Altura de la pista de scroll = 100vh (capa sticky) + suma de las escenas.
+   Va en CSS y no inline para que el media query de móvil pueda ganarle. */
+.crd-journey {
+  position: relative;
+  height: calc((100 + var(--crd-track-vh, 1000)) * 1vh);
+}
+
+.crd-stepper { display: none; }
+
+@media (max-width: 767px) {
+  /* En móvil el journey no se scrollea: ocupa una pantalla exacta y avanza por
+     pasos (flechas o swipe). El bloqueo del scroll lo hace `overflow:hidden`
+     sobre el body (MapScrollJourney) y no `touch-action`, porque touch-action
+     también anularía el scroll interno de los bottom-sheets. */
+  .crd-journey {
+    height: 100dvh;
+    overscroll-behavior: none;
+  }
+  .crd-journey-anchor { display: none; }
+
+  .crd-stepper {
+    position: fixed;
+    left: 50%;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    z-index: 60;
+    width: min(420px, calc(100vw - 24px));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(253, 248, 240, 0.94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(235, 230, 217, 0.9);
+    box-shadow: 0 12px 34px rgba(38, 70, 83, 0.18);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+    touch-action: manipulation;
+  }
+}
+
+/* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
+   sobre el mapa y competía con las etiquetas de ciudades. */
+.crd-mobile-scrim { display: none; }
+@media (max-width: 767px) {
+  .crd-mobile-scrim {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to top,
+      #fdf8f0 32%,
+      rgba(253, 248, 240, 0.88) 62%,
+      rgba(253, 248, 240, 0) 100%
+    );
+    pointer-events: none;
+  }
+}
+
 /* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
-@media (max-width: 540px) {
+/* 767px y no 540px: es el mismo breakpoint que decide el modo del journey
+   (MOBILE_BREAKPOINT). Con dos umbrales distintos, entre 541 y 767 la cámara
+   encuadraba para móvil y los paneles seguían colocados como desktop. */
+@media (max-width: 767px) {
+  /* Altura reservada para el control de pasos, que flota sobre los paneles. */
+  :root { --crd-stepper-h: 74px; }
+
   .crd-ol-panel {
     left: 0 !important;
     right: 0 !important;
@@ -120,17 +176,23 @@ body {
     max-width: 100% !important;
     transform: none !important;
     border-radius: 20px 20px 0 0 !important;
-    max-height: 52vh;
+    /* 58vh = lo que reserva `padBottom` de las escenas con panel alto
+       (lib/journey): con 52vh el último elemento del sheet quedaba cortado y
+       había que descubrir que se scrollea. */
+    max-height: 58vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
-       reponerlo como padding para que el contenido no quede pegado al borde. */
-    padding: 16px 16px 20px !important;
+       reponerlo como padding para que el contenido no quede pegado al borde.
+       El padding inferior deja libre la franja del control de pasos, que flota
+       encima del sheet. */
+    padding: 16px 16px calc(16px + var(--crd-stepper-h)) !important;
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
   .crd-ol-panel-right { display: none !important; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
-    padding: 72px 16px 16px !important;
+    padding: 72px 16px calc(16px + var(--crd-stepper-h)) !important;
   }
   /* Viajeros: stat markers overlap on narrow maps → swap them for the
      in-panel chip row below the heading. */

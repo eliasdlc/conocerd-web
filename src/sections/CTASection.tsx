@@ -1,11 +1,13 @@
 "use client";
 
 import { useScene } from "@/context/SceneContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CTAOverlay() {
   const { activeScene } = useScene();
+  const isMobile = useIsMobile();
   const isVisible = activeScene === "cta";
 
   return (
@@ -18,47 +20,24 @@ export default function CTAOverlay() {
         transition: "opacity 0.7s ease",
         zIndex: 10,
         display: "flex",
-        alignItems: "center",
+        // El journey cierra volviendo al globo: en móvil la card baja para que
+        // el planeta se vea completo encima, igual que en el hero.
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        padding: "72px 24px 36px",
+        padding: isMobile
+          ? "72px 18px calc(14px + var(--crd-stepper-h, 74px))"
+          : "72px 24px 36px",
       }}
     >
-      {/* Rutas SVG dashed que fluyen detrás de la card (ask del CTA). */}
-      <svg
-        aria-hidden
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="xMidYMid slice"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none", opacity: 0.6 }}
-      >
-        {[
-          { d: "M -40 250 C 360 180 520 360 760 300 S 1180 200 1500 320", color: "#F76C4D" },
-          { d: "M -40 620 C 380 560 560 700 820 620 S 1200 520 1500 640", color: "#25CCB8" },
-          { d: "M 200 -40 C 300 260 640 300 720 520 S 900 860 1040 960", color: "#FF8D16" },
-        ].map((r, i) => (
-          <path
-            key={i}
-            className="crd-cta-route"
-            d={r.d}
-            fill="none"
-            stroke={r.color}
-            strokeWidth={3}
-            strokeLinecap="round"
-            style={{ animationDelay: `${i * 0.6}s` }}
-          />
-        ))}
-      </svg>
-
       {/* Dark glassmorphism card — appears 0.6s after scene activates (map is mid-flyout) */}
       <div
         style={{
-          position: "relative",
-          zIndex: 1,
           background: "rgba(29,58,69,0.82)",
           backdropFilter: "blur(24px)",
           WebkitBackdropFilter: "blur(24px)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: 28,
-          padding: "44px clamp(28px, 5vw, 60px)",
+          padding: isMobile ? "26px 20px" : "44px clamp(28px, 5vw, 60px)",
           maxWidth: 640,
           width: "100%",
           textAlign: "center",

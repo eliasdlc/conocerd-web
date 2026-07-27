@@ -534,7 +534,7 @@ export function MapRoute({
 // Curva (bezier cuadrática) entre dos puntos con flujo dashed en movimiento
 // ("marching ants"). Para los arcos de "personas en camino" (#11).
 
-export function arcCoords(
+function arcCoords(
   from: [number, number],
   to: [number, number],
   bend: number,

@@ -147,9 +147,10 @@ useScroll({ target: journeyRef, offset: ["start start", "end end"] })  // Framer
 - Eliminar `HEAT_CITIES` glow pulsante (`:22-25`, markers `:100-122`).
 - Pin **"Tu negocio"** (`CategoryPin`/storefront) en Santiago.
 - **Arcos animados** desde varias provincias convergiendo al negocio = "personas en camino". Nuevo helper `MapArc` (curva + flujo dashed en movimiento). El nº de arcos se refleja en el dashboard ("Clientes en camino ahora").
-- Dashboard (`:294-477`): mejorar fidelidad. **Ajuste fino pendiente del HTML real que enviarás.**
+- Dashboard (`:294-477`): mejorar fidelidad, pero version mini para que pueda caber en la pantalla sin cubrir mucho espacio. **Ajuste fino del HTML.**  [ConoceRD Dashboard.html](../../../Downloads/ConoceRD Dashboard.html) 
 
 **#12 — Subir columna izquierda (botón recortado)** · `NegociosOverlay.tsx:136-145`
+
 - Hoy `top:50%; translateY(-50%)` → el botón "Registrar mi negocio" (`:269`) se corta abajo.
 - Subir el anclaje / reflujar para que la columna completa entre en viewport.
 
@@ -169,6 +170,33 @@ useScroll({ target: journeyRef, offset: ["start start", "end end"] })  // Framer
 **#15 — Header flotante** · `Nav.tsx` (reescritura)
 - Píldora flotante **sin wordmark** (`:46-48`): solo nav links + botón Descargar.
 - Mantener/adaptar la lógica de fondo al hacer scroll (`:10-27`).
+
+---
+
+## 2.bis — Navegación móvil por pasos (decisión posterior al #3)
+
+El motor de scroll continuo se mantiene **solo en desktop**. En móvil el scroll libre
+rompe el scrollytelling: un flick se salta escenas, un scroll corto deja la cámara a
+medio vuelo y el encuadre diseñado nunca llega a verse.
+
+| Pieza | Archivo | Qué hace |
+|---|---|---|
+| Motor desktop | `hooks/useJourneyScroll.ts` | scroll → spring → progreso 0..1 |
+| Motor móvil | `hooks/useJourneySteps.ts` | flechas/swipe → `animate()` entre `center`s de escena |
+| Escritura de cámara | `lib/journeyCamera.ts` | único `jumpTo` del proyecto (los dos motores + la rotación en reposo pasan por aquí) |
+| Control móvil | `components/JourneyStepper.tsx` | píldora fija abajo: prev/next + 7 capítulos tocables |
+
+Decisiones fijadas:
+- **Keyframes móviles explícitos** (`SCENE_CAMERAS[x].mobile`): a igual zoom, 390px muestra
+  menos de la mitad de la isla. No se derivan del desktop con una fórmula.
+- **Zona segura por escena** (`padBottom`/`padLeft` en `lib/journey.ts`): la cámara centra
+  la escena en el área libre del overlay, vía `padding` de MapLibre.
+- **Perfil de vuelo tipo `flyTo`**: arco de zoom + centro a velocidad constante en pantalla,
+  para que los saltos largos entre destinos no barran el suelo a ciegas.
+- **Bloqueo de scroll** con `overflow:hidden` en `<html>` + `<body>`, no con `touch-action`
+  (anularía el scroll interno de los bottom-sheets). Se libera en la última escena para
+  bajar al footer y se re-bloquea al volver arriba.
+- Breakpoint único **767px** (`MOBILE_BREAKPOINT`) para cámara, layout de paneles y nav.
 
 ---
 
