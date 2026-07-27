@@ -34,3 +34,36 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Lista de espera
+
+La página no ofrece descarga: captura correos para la lista de espera (ver
+`WAITLIST_PLAN.md`). Piezas:
+
+- `POST /api/subscribe` — validación zod, honeypot, rate limit por IP y dedupe
+  por correo (`src/app/api/subscribe/route.ts`).
+- `SubscribeForm` — formulario único con toggle Viajero/Negocio, usado en el CTA
+  del journey, en el footer y en `/lista`.
+- `/lista` — landing ligera a la que apunta el QR del evento. Acepta `?ref=` para
+  saber de qué canal vino cada registro.
+- `/privacidad` y `/terminos` — obligatorias desde que se recolectan correos.
+
+### Variables de entorno
+
+| Variable | Efecto si falta |
+|---|---|
+| `DATABASE_URL` (Neon) | Los registros se guardan en `.waitlist/subscribers.json` (ignorado por git) en vez de en Postgres |
+| `RESEND_API_KEY` | No se da de alta el contacto en el ESP; el registro se guarda igual |
+| `RESEND_AUDIENCE_ID` | Ídem |
+
+Con las tres definidas (`vercel env`) no hay que tocar código: la selección de
+almacenamiento y el alta en el ESP dependen sólo de su presencia.
+
+### QR del evento
+
+```bash
+pnpm qr https://<dominio>/lista?ref=expo-ozrd
+```
+
+Escribe `public/assets/qr-lista.svg` y `qr-lista.png` con corrección de errores
+alta, para proyectar o imprimir.

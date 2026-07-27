@@ -198,8 +198,12 @@ body {
      in-panel chip row below the heading. */
   .crd-stat-marker { display: none !important; }
   .crd-stat-chips { display: flex !important; }
-  /* Footer: 4 columnas → 2 en móvil. */
+  /* Footer: 4 columnas → 2 en móvil. La columna de marca lleva el formulario
+     de la lista, así que ocupa el ancho completo. */
   .crd-footer-grid { grid-template-columns: 1fr 1fr !important; }
+  .crd-footer-grid > :first-child { grid-column: 1 / -1; }
+  /* Lista de espera: tipo de negocio + WhatsApp se apilan en pantallas angostas. */
+  .crd-sub-row { grid-template-columns: 1fr !important; }
   /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
   .crd-navlink { display: none !important; }
   /* Viajeros: el mockup de teléfono tapa el bottom-sheet → ocultarlo en móvil. */
@@ -253,4 +257,39 @@ body {
   clip: rect(0,0,0,0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ───────────────────── Páginas legales ────────────────────── */
+/* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
+   el contenido es markup semántico y se estila una vez desde el shell. */
+.crd-legal {
+  color: #264653;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.crd-legal h1 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.1;
+  margin: 0 0 6px;
+  color: #1D3A45;
+}
+.crd-legal h2 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  margin: 30px 0 8px;
+  color: #1D3A45;
+}
+.crd-legal p { margin: 0 0 14px; }
+.crd-legal ul { margin: 0 0 14px; padding-left: 20px; }
+.crd-legal li { margin-bottom: 7px; }
+.crd-legal a { color: #B23410; }
+.crd-legal-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: #66747B;
+  margin-bottom: 26px !important;
 }

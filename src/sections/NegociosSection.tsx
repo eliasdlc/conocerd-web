@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MapArc } from "@/components/map/Map";
-import { scrollToSection } from "@/lib/journeyNav";
+import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import type { LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -306,9 +306,9 @@ export default function NegociosOverlay() {
             </div>
           </div>
 
-          {/* CTA — jumps to the download/contact scene */}
+          {/* CTA — lleva al formulario con el toggle ya en "negocio" */}
           <button
-            onClick={() => scrollToSection("trigger-cta")}
+            onClick={() => requestSubscribe("negocio")}
             style={{
               display: "inline-flex",
               alignItems: "center",
