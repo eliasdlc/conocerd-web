@@ -1,5 +1,6 @@
 "use client";
 
+import type { Feature, FeatureCollection, LineString } from "geojson";
 import maplibregl from "maplibre-gl";
 import React, {
   createContext,
@@ -487,7 +488,7 @@ export function MapRoute({
     const sourceId = `route-source-${id}`;
     const layerId = `route-layer-${id}`;
 
-    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+    const data: Feature<LineString> = {
       type: "Feature",
       properties: {},
       geometry: { type: "LineString", coordinates },
@@ -591,7 +592,7 @@ export function MapArc({
     if (!map) return;
     const sourceId = `arc-src-${id}`;
     const layerId = `arc-${id}`;
-    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+    const data: Feature<LineString> = {
       type: "Feature",
       properties: {},
       geometry: { type: "LineString", coordinates: arcCoords(from, to, bend, 48) },
@@ -648,7 +649,7 @@ export function MapArc({
 
 export interface MapClusterLayerProps {
   id: string;
-  data: GeoJSON.FeatureCollection;
+  data: FeatureCollection;
   color?: string;
   clusterRadius?: number;
   maxZoom?: number;
