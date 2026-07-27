@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import Button from "./Button";
+import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 
 const LINKS = [
@@ -75,8 +76,15 @@ export default function Nav() {
             {l.label}
           </a>
         ))}
-        <Button variant="primary" size="sm" icon="download" onClick={() => scrollToSection("trigger-cta")}>
-          Descargar
+        {/* La app aún no está publicada: el CTA más visible del sitio lleva a la
+            lista de espera, no a una descarga que no existe. */}
+        <Button
+          variant="primary"
+          size="sm"
+          icon="notifications_active"
+          onClick={() => requestSubscribe("viajero")}
+        >
+          Unirme a la lista
         </Button>
       </div>
     </nav>
