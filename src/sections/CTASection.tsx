@@ -1,7 +1,9 @@
 "use client";
 
+import SubscribeForm from "@/components/SubscribeForm";
 import { useScene } from "@/context/SceneContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { requestSubscribe, useSubscribeIntent } from "@/hooks/useSubscribeIntent";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -9,6 +11,9 @@ export default function CTAOverlay() {
   const { activeScene } = useScene();
   const isMobile = useIsMobile();
   const isVisible = activeScene === "cta";
+  // La app aún no existe: el cierre del journey ya no promete una descarga,
+  // captura el correo. El toggle abre en la audiencia que pidió el último CTA.
+  const audience = useSubscribeIntent("viajero");
 
   return (
     <div
@@ -62,7 +67,7 @@ export default function CTAOverlay() {
         {/* Main heading */}
         <h2
           style={{
-            margin: "0 0 16px",
+            margin: "0 0 14px",
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontWeight: 800,
             letterSpacing: "-.025em",
@@ -77,100 +82,101 @@ export default function CTAOverlay() {
         {/* Subtext */}
         <p
           style={{
-            margin: "0 auto 28px",
-            maxWidth: 440,
+            margin: "0 auto 20px",
+            maxWidth: 460,
             color: "rgba(255,255,255,0.76)",
             fontSize: 15,
             lineHeight: 1.55,
           }}
         >
-          Descarga ConoceRD y empieza a explorar la República Dominicana que no aparece en las guías.
+          ConoceRD está en camino. Déjanos tu correo y entra a la lista de fundadores: serás
+          de los primeros en explorar la República Dominicana que no aparece en las guías.
         </p>
 
-        {/* Store buttons */}
+        {/* Lista de espera — la acción real de la página */}
+        <div style={{ maxWidth: 460, margin: "0 auto 18px" }}>
+          <SubscribeForm tone="dark" defaultAudience={audience} source="cta" />
+        </div>
+
+        {/* Tiendas — señal de credibilidad, no acción (§2.4). Las apps aún no
+            están publicadas, así que se muestran atenuadas y sin enlace. */}
         <div
           style={{
             display: "flex",
-            gap: 12,
+            gap: 10,
             flexWrap: "wrap",
             justifyContent: "center",
-            marginBottom: 20,
+            alignItems: "center",
+            marginBottom: 14,
           }}
         >
           {[
-            { icon: "phone_iphone", label: "Descárgalo en", store: "App Store"    },
-            { icon: "android",      label: "Disponible en", store: "Google Play"  },
+            { icon: "phone_iphone", store: "App Store"   },
+            { icon: "android",      store: "Google Play" },
           ].map((btn) => (
-            <a
+            <div
               key={btn.store}
-              href="#"
-              onClick={(e) => e.preventDefault()}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                textDecoration: "none",
-                background: "#fff",
-                color: "#264653",
-                borderRadius: 14,
-                padding: "11px 20px",
-                boxShadow: "0 10px 28px rgba(0,0,0,0.22)",
-                transition: "transform 0.2s cubic-bezier(.2,.8,.3,1.2), box-shadow 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-3px) scale(1.02)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.transform = "";
+                gap: 8,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                color: "rgba(255,255,255,0.62)",
+                borderRadius: 12,
+                padding: "8px 14px",
               }}
             >
-              <span className="ms" style={{ fontSize: 28, color: "#264653" }}>
+              <span className="ms" aria-hidden="true" style={{ fontSize: 20 }}>
                 {btn.icon}
               </span>
-              <span style={{ textAlign: "left", lineHeight: 1.15 }}>
+              <span style={{ textAlign: "left", lineHeight: 1.2 }}>
                 <span
                   style={{
                     display: "block",
-                    fontSize: 10.5,
-                    color: "#5B6B72",
-                    fontWeight: 600,
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    letterSpacing: ".08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.45)",
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >
-                  {btn.label}
+                  Próximamente en
                 </span>
                 <span
                   style={{
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                     fontWeight: 800,
-                    fontSize: 15,
-                    color: "#264653",
+                    fontSize: 13.5,
                   }}
                 >
                   {btn.store}
                 </span>
               </span>
-            </a>
+            </div>
           ))}
         </div>
 
-        {/* Secondary link — Step 14 will wire scroll target */}
+        {/* Atajo a la audiencia B2B sin salir de la card */}
         <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
           ¿Tienes un negocio?{" "}
-          <a
-            href="#trigger-negocios"
-            onClick={(e) => {
-              e.preventDefault();
-              document.getElementById("trigger-negocios")?.scrollIntoView({ behavior: "smooth" });
-            }}
+          <button
+            type="button"
+            onClick={() => requestSubscribe("negocio")}
             style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
               color: "#FF8D16",
               fontWeight: 700,
-              textDecoration: "none",
+              fontSize: 13,
+              fontFamily: "inherit",
             }}
           >
-            Súmate como aliado →
-          </a>
+            Regístralo aquí →
+          </button>
         </div>
       </div>
     </div>
