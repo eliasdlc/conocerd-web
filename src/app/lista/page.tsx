@@ -56,7 +56,7 @@ export default function ListaPage() {
             width={150}
             height={34}
             priority
-            style={{ height: 34, width: "auto" }}
+            style={{ height: 34, width: 150 }}
           />
         </Link>
 
@@ -152,7 +152,7 @@ export default function ListaPage() {
         <div
           style={{
             borderTop: "1px solid #EBE6D9",
-            paddingTop: 14,
+            paddingTop: 1,
             display: "flex",
             gap: 16,
             flexWrap: "wrap",
@@ -160,13 +160,24 @@ export default function ListaPage() {
             color: "#66747B",
           }}
         >
-          <Link href="/" style={{ color: "#66747B", textDecoration: "none" }}>
+          {/* Padding vertical en el link (no en el contenedor): el objetivo
+              táctil pasa de ~18px a 44px sin tocar el espaciado horizontal. */}
+          <Link
+            href="/"
+            style={{ color: "#66747B", textDecoration: "none", display: "inline-block", padding: "13px 0" }}
+          >
             Ver el sitio completo
           </Link>
-          <Link href="/privacidad" style={{ color: "#66747B", textDecoration: "none" }}>
+          <Link
+            href="/privacidad"
+            style={{ color: "#66747B", textDecoration: "none", display: "inline-block", padding: "13px 0" }}
+          >
             Privacidad
           </Link>
-          <Link href="/terminos" style={{ color: "#66747B", textDecoration: "none" }}>
+          <Link
+            href="/terminos"
+            style={{ color: "#66747B", textDecoration: "none", display: "inline-block", padding: "13px 0" }}
+          >
             Términos
           </Link>
         </div>
