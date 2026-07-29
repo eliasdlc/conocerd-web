@@ -93,7 +93,9 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
 
-  useImperativeHandle(ref, () => mapRef.current as maplibregl.Map, [ready]);
+  // Recompute after the `ready` render without pretending the ref itself is a
+  // hook dependency; `mapRef.current` is populated immediately before setReady.
+  useImperativeHandle(ref, () => mapRef.current as maplibregl.Map);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -326,6 +328,7 @@ export function MarkerPopup({ children, onClose }: MarkerPopupProps) {
       {children}
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           style={{
             position: "absolute",
@@ -581,7 +584,7 @@ export function MapArc({
   id,
   from,
   to,
-  color = "#F47F0E",
+  color = "#FF8D16",
   width = 2.5,
   bend = 0.25,
   animated = true,

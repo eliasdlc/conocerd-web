@@ -94,15 +94,15 @@ export default function NegociosOverlay() {
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  background: "linear-gradient(150deg,#FF8D16,#F47F0E)",
+                  background: "#FF8D16",
                   border: "2.5px solid #FBF7EF",
-                  boxShadow: "0 4px 14px rgba(244,127,14,0.5)",
+                  boxShadow: "0 4px 14px rgba(255,141,22,0.42)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <span className="ms" style={{ fontSize: 22, color: "#fff" }}>storefront</span>
+                <span className="ms" aria-hidden="true" style={{ fontSize: 22, color: "#1D3A45" }}>storefront</span>
               </div>
             </div>
           </MarkerContent>
@@ -153,7 +153,7 @@ export default function NegociosOverlay() {
               marginBottom: 10,
             }}
           >
-            <span className="ms" style={{ fontSize: 14 }}>storefront</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>storefront</span>
             Para negocios
           </div>
 
@@ -333,10 +333,10 @@ export default function NegociosOverlay() {
           {/* Clientes en camino */}
           <div
             style={{
-              background: "linear-gradient(135deg,#FF6B4A,#F76C4D)",
+              background: "#FF8D16",
               borderRadius: 14,
               padding: "14px 16px",
-              color: "#fff",
+              color: "#1D3A45",
               marginBottom: 12,
             }}
           >

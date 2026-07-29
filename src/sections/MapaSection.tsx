@@ -62,7 +62,7 @@ function HoverCard({ d }: { d: Destination }) {
             fontSize: 10.5,
           }}
         >
-          <span className="ms" style={{ fontSize: 13 }}>{meta.icon}</span>
+          <span className="ms" aria-hidden="true" style={{ fontSize: 13 }}>{meta.icon}</span>
           {meta.label}
         </span>
       </div>
@@ -139,40 +139,59 @@ function PinMarker({
         <div
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          onClick={onToggle}
-          style={{ position: "relative", cursor: "pointer", zIndex: hover ? 40 : undefined }}
+          style={{ position: "relative", zIndex: hover ? 40 : undefined }}
         >
-          {isStart ? (
-            <SelfPin heading={0} size={34} />
-          ) : isGoal ? (
-            <GoalFlag size={36} />
-          ) : (
-            <CategoryPin category={d.category} state={inRoute ? "done" : "default"} size={30} />
-          )}
+          <button
+            type="button"
+            aria-label={`${inRoute ? "Quitar" : "Agregar"} ${d.name} ${inRoute ? "de" : "a"} tu recorrido`}
+            aria-pressed={inRoute}
+            onClick={onToggle}
+            onFocus={() => setHover(true)}
+            onBlur={() => setHover(false)}
+            style={{
+              width: 44,
+              height: 44,
+              display: "grid",
+              placeItems: "center",
+              padding: 0,
+              border: 0,
+              background: "transparent",
+              cursor: "pointer",
+            }}
+          >
+            {isStart ? (
+              <SelfPin heading={0} size={34} />
+            ) : isGoal ? (
+              <GoalFlag size={36} />
+            ) : (
+              <CategoryPin category={d.category} state={inRoute ? "done" : "default"} size={30} />
+            )}
 
-          {/* Badge de orden para paradas intermedias */}
-          {inRoute && !isStart && !isGoal && (
-            <span
-              style={{
-                position: "absolute",
-                top: -6,
-                right: -6,
-                minWidth: 16,
-                height: 16,
-                padding: "0 4px",
-                borderRadius: 999,
-                background: "#264653",
-                color: "#fff",
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 800,
-                fontSize: 10,
-                lineHeight: "16px",
-                textAlign: "center",
-              }}
-            >
-              {routeIndex + 1}
-            </span>
-          )}
+            {/* Badge de orden para paradas intermedias */}
+            {inRoute && !isStart && !isGoal && (
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: -2,
+                  right: -2,
+                  minWidth: 16,
+                  height: 16,
+                  padding: "0 4px",
+                  borderRadius: 999,
+                  background: "#264653",
+                  color: "#fff",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 10,
+                  lineHeight: "16px",
+                  textAlign: "center",
+                }}
+              >
+                {routeIndex + 1}
+              </span>
+            )}
+          </button>
 
           {hover && <HoverCard d={d} />}
         </div>
@@ -223,6 +242,7 @@ function RoutePanel({
         </div>
         {stops.length > 0 && (
           <button
+            type="button"
             onClick={onClear}
             style={{
               background: "none",
@@ -315,6 +335,7 @@ function IconBtn({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
@@ -323,8 +344,8 @@ function IconBtn({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        width: 22,
-        height: 22,
+        width: 32,
+        height: 32,
         borderRadius: 6,
         border: "1px solid #EBE6D9",
         background: "#fff",
@@ -334,7 +355,7 @@ function IconBtn({
         padding: 0,
       }}
     >
-      <span className="ms" style={{ fontSize: 14 }}>{children}</span>
+      <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>{children}</span>
     </button>
   );
 }
@@ -383,7 +404,7 @@ export default function MapaOverlay() {
     <>
       {/* Polilínea del recorrido */}
       {isVisible && routeCoords.length >= 2 && (
-        <MapRoute id="route-builder" coordinates={routeCoords} color="#F47F0E" width={3.5} opacity={0.95} dashArray={[1, 1.6]} />
+        <MapRoute id="route-builder" coordinates={routeCoords} color="#FF8D16" width={3.5} opacity={0.95} dashArray={[1, 1.6]} />
       )}
 
       {/* Pines de categoría */}
@@ -441,6 +462,7 @@ export default function MapaOverlay() {
               return (
                 <button
                   key={cat}
+                  type="button"
                   onClick={() => toggleCategory(cat)}
                   style={{
                     display: "inline-flex",
@@ -455,11 +477,12 @@ export default function MapaOverlay() {
                     fontWeight: 700,
                     fontSize: 12.5,
                     cursor: "pointer",
+                    minHeight: 44,
                     transition: "border-color 0.2s, background 0.2s, color 0.2s",
                   }}
                   aria-pressed={isActive}
                 >
-                  <span className="ms" style={{ fontSize: 14 }}>{meta.icon}</span>
+                  <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>{meta.icon}</span>
                   {meta.label}
                 </button>
               );

@@ -64,8 +64,7 @@ export default function HeroOverlay() {
         alignItems: isMobile ? "center" : "flex-start",
         justifyContent: isMobile ? "flex-end" : "center",
         textAlign: isMobile ? "center" : "left",
-        // El control de pasos flota abajo: el contenido termina por encima.
-        padding: isMobile ? "0 22px calc(20px + var(--crd-stepper-h, 74px))" : "0 6vw",
+        padding: isMobile ? "0 22px 20px" : "0 6vw",
       }}
     >
       {/* Velo crema: en móvil el texto cae sobre el globo y las etiquetas del
@@ -134,8 +133,8 @@ export default function HeroOverlay() {
         </div>
       </div>
 
-      {/* Indicador de scroll — solo desktop: en móvil el afford es el control
-          de pasos, y un "Explora ↓" invitaría a un scroll que ya no existe. */}
+      {/* Desktop keeps the explicit scroll cue; mobile space is reserved for the
+          primary actions and native scrolling is already expected. */}
       <div
         style={{
           position: "absolute",

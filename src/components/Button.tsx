@@ -10,10 +10,10 @@ interface ButtonProps {
 
 const variantStyles = {
   primary: {
-    bg: "linear-gradient(135deg,#C74420,#B23410)",
-    color: "#fff",
+    bg: "var(--color-mango)",
+    color: "var(--color-ink-2)",
     border: "none",
-    shadow: "0 6px 20px rgba(247,108,77,.40)",
+    shadow: "0 6px 20px rgba(255,141,22,.34)",
   },
   outline: {
     bg: "transparent",
@@ -38,6 +38,8 @@ export default function Button({ variant = "primary", size = "sm", icon, onClick
 
   return (
     <button
+      type="button"
+      className={`crd-button crd-button-${variant}`}
       onClick={onClick}
       style={{
         display: "inline-flex",
@@ -57,10 +59,8 @@ export default function Button({ variant = "primary", size = "sm", icon, onClick
         transition: "transform .2s, box-shadow .2s",
         whiteSpace: "nowrap",
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px) scale(1.03)"; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; }}
     >
-      {icon && <span className="ms" style={{ fontSize: iconSize }}>{icon}</span>}
+      {icon && <span className="ms" aria-hidden="true" style={{ fontSize: iconSize }}>{icon}</span>}
       {children}
     </button>
   );

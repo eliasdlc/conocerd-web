@@ -180,7 +180,7 @@ export default function EquipoOverlay() {
                 animation: "mapBubbleIn 0.5s cubic-bezier(0.2,0.8,0.3,1) both",
               }}
             >
-              <span className="ms" style={{ fontSize: 19, color: "#F76C4D" }}>school</span>
+              <span className="ms" aria-hidden="true" style={{ fontSize: 19, color: "#B23410" }}>school</span>
             </div>
           </MarkerContent>
           <MarkerLabel position="top">PUCMM · Santiago</MarkerLabel>
@@ -219,7 +219,7 @@ export default function EquipoOverlay() {
               alignItems: "center",
               gap: 7,
               background: "#FFE7DF",
-              color: "#F76C4D",
+              color: "#B23410",
               fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontWeight: 800,
               fontSize: 11,
@@ -230,7 +230,7 @@ export default function EquipoOverlay() {
               marginBottom: 10,
             }}
           >
-            <span className="ms" style={{ fontSize: 14 }}>groups</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>groups</span>
             El equipo
           </div>
           <h2

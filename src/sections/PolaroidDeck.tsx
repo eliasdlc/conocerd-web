@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { CATEGORY_META, type Destination } from "@/data/destinations";
@@ -13,7 +13,7 @@ import { CATEGORY_META, type Destination } from "@/data/destinations";
 //  avanzan, cicla. Mobile: degrada a fila horizontal scrolleable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CARD_W = 230;
+const CARD_W = "clamp(220px,18vw,300px)";
 
 function PolaroidCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
@@ -31,13 +31,19 @@ function PolaroidCard({ d }: { d: Destination }) {
         style={{
           position: "relative",
           width: "100%",
-          height: 200,
+          height: "clamp(190px,15vw,240px)",
           borderRadius: 3,
           overflow: "hidden",
           background: "#F5EFE2",
         }}
       >
-        <Image src={d.image} alt={d.name} fill sizes="230px" style={{ objectFit: "cover" }} />
+        <Image
+          src={d.image}
+          alt={d.name}
+          fill
+          sizes="(max-width: 640px) 220px, (max-width: 1440px) 18vw, 300px"
+          style={{ objectFit: "cover" }}
+        />
         <div
           style={{
             position: "absolute",
@@ -58,20 +64,21 @@ function PolaroidCard({ d }: { d: Destination }) {
           </p>
         </div>
       </div>
-      <figcaption style={{ padding: "12px 4px 14px" }}>
+      <div style={{ padding: "12px 4px 14px" }}>
         <div style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: 24, lineHeight: 1, color: "#264653" }}>
           {d.name}
         </div>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#5B6B72", marginTop: 3 }}>
           {d.meta ?? d.province}
         </div>
-      </figcaption>
+      </div>
     </div>
   );
 }
 
 export default function PolaroidDeck({ items }: { items: Destination[] }) {
   const mobile = useIsMobile(640);
+  const reduceMotion = useReducedMotion();
   // `order` = ids en orden de profundidad; order[0] = carta de enfrente.
   const [order, setOrder] = useState<string[]>(() => items.map((d) => d.id));
 
@@ -79,12 +86,12 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
   if (mobile) {
     return (
       <div
+        className="crd-polaroid-deck-mobile"
         style={{
           position: "absolute",
           left: 0,
           right: 0,
-          // Deja libre la franja del control de pasos, que flota encima.
-          bottom: "calc(4% + var(--crd-stepper-h, 74px))",
+          bottom: "4%",
           display: "flex",
           gap: 14,
           overflowX: "auto",
@@ -108,6 +115,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
 
   return (
     <div
+      className="crd-polaroid-deck"
       style={{
         position: "absolute",
         left: "6%",
@@ -120,8 +128,12 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
         const d = items.find((x) => x.id === id)!;
         const isFront = depth === 0;
         return (
-          <motion.div
+          <motion.button
             key={id}
+            type="button"
+            disabled={!isFront}
+            aria-hidden={!isFront}
+            aria-label={isFront ? `Ver el próximo destino. Ahora: ${d.name}` : undefined}
             onClick={isFront ? cycle : undefined}
             initial={false}
             animate={{
@@ -132,15 +144,25 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
               zIndex: order.length - depth,
               opacity: depth > 4 ? 0.5 : 1,
             }}
-            transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 260, damping: 30 }
+            }
             style={{
               position: "absolute",
               top: 0,
               left: 0,
               cursor: isFront ? "pointer" : "default",
               transformOrigin: "bottom center",
+              appearance: "none",
+              border: 0,
+              padding: 0,
+              background: "transparent",
+              color: "inherit",
+              textAlign: "left",
             }}
-            whileHover={isFront ? { y: -18, scale: 1.02 } : undefined}
+            whileHover={isFront && !reduceMotion ? { y: -18, scale: 1.02 } : undefined}
           >
             <PolaroidCard d={d} />
             {isFront && (
@@ -163,7 +185,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
                 Click para ver más →
               </div>
             )}
-          </motion.div>
+          </motion.button>
         );
       })}
     </div>

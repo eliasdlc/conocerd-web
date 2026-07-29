@@ -52,7 +52,9 @@ export default function DestinosOverlay() {
   const isMobile = useIsMobile();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
-  const headingVisible = visibleCount >= 1;
+  // The title introduces the chapter immediately; leaving destinos-intro empty
+  // made the first full scroll interval read as a broken frame.
+  const headingVisible = isVisible;
   const isFinale = activeScene === "destinos-finale";
 
   return (
@@ -115,11 +117,12 @@ export default function DestinosOverlay() {
 
         {/* Section heading — appears above the pile on first polaroid */}
         <div
-          className="crd-destinos-heading"
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""}`}
           style={{
             position: "absolute",
+            zIndex: 20,
             left: "4%",
-            bottom: isMobile ? "calc(46% + var(--crd-stepper-h, 74px))" : "50%",
+            bottom: isMobile ? "48%" : "50%",
             opacity: headingVisible ? 1 : 0,
             transform: headingVisible ? "translateY(0)" : "translateY(14px)",
             transition: "opacity 0.45s ease, transform 0.45s ease",
@@ -172,12 +175,9 @@ export default function DestinosOverlay() {
                 // En 390px el desparrame de la pila (3–9%) sacaba las cartas de
                 // atrás por el borde izquierdo: en móvil se desplaza a la derecha.
                 left: isMobile ? `calc(${offset.left} + 6%)` : offset.left,
-                // El control de pasos flota abajo en móvil: la pila sube.
-                bottom: isMobile
-                  ? `calc(${offset.bottom} + var(--crd-stepper-h, 74px))`
-                  : offset.bottom,
+                bottom: offset.bottom,
                 margin: 0,
-                width: 220,
+                width: "clamp(210px,17vw,270px)",
                 background: "#fff",
                 padding: "12px 12px 0",
                 borderRadius: 6,
@@ -205,7 +205,13 @@ export default function DestinosOverlay() {
                   background: "#F5EFE2",
                 }}
               >
-                <Image src={pol.image} alt={pol.name} fill style={{ objectFit: "cover" }} />
+                <Image
+                  src={pol.image}
+                  alt={pol.name}
+                  fill
+                  sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
+                  style={{ objectFit: "cover" }}
+                />
                 <div
                   style={{
                     position: "absolute",

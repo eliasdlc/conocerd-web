@@ -7,7 +7,13 @@ import { SceneProvider, useScene } from "@/context/SceneContext";
 import { useJourneyScroll, scrollToSceneCenter } from "@/hooks/useJourneyScroll";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
-import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
+import {
+  SCENES,
+  SCENE_BANDS,
+  TRIGGER_TOTAL_VH,
+  MOBILE_TRACK_SCALE,
+  MOBILE_TRIGGER_TOTAL_DVH,
+} from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper } from "@/lib/journeyNav";
 import HeroOverlay from "@/sections/HeroOverlay";
@@ -87,7 +93,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     <div
       ref={outerRef}
       className="crd-journey"
-      style={{ "--crd-track-vh": TRIGGER_TOTAL_VH } as React.CSSProperties}
+      data-active-scene={activeScene}
+      style={{
+        "--crd-track-vh": TRIGGER_TOTAL_VH,
+        "--crd-mobile-track-dvh": MOBILE_TRIGGER_TOTAL_DVH,
+      } as React.CSSProperties}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
           Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
@@ -135,14 +145,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         </Map>
       </div>
 
-      {/* Anchor divs — pista de scroll en desktop (display:none en móvil) */}
+      {/* Anchor divs — pista nativa de scroll; en móvil se comprime con dvh. */}
       {SCENES.map((scene) => (
         <div
           key={scene.name}
           id={`trigger-${scene.name}`}
           className="crd-journey-anchor"
           data-scene={scene.name}
-          style={{ height: `${scene.height}vh`, pointerEvents: "none" }}
+          style={{
+            height: `${scene.height}vh`,
+            "--crd-mobile-scene-height": `${scene.height * MOBILE_TRACK_SCALE}dvh`,
+            pointerEvents: "none",
+          } as React.CSSProperties}
         />
       ))}
 

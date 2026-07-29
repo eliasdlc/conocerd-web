@@ -18,7 +18,7 @@ export default function CategoryChip({ icon, children }: CategoryChipProps) {
       borderRadius: 999,
       backdropFilter: "blur(8px)",
     }}>
-      <span className="ms" style={{ fontSize: 14 }}>{icon}</span>
+      <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>{icon}</span>
       {children}
     </span>
   );

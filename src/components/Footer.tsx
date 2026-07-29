@@ -117,11 +117,11 @@ export default function Footer() {
         <div>
           <div style={headingStyle}>Contacto</div>
           <a href="mailto:hola@conocerd.app" style={{ ...linkStyle, lineHeight: 1.8 }}>
-            <span className="ms" style={{ fontSize: 16 }}>mail</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 16 }}>mail</span>
             hola@conocerd.app
           </a>
           <div style={{ ...linkStyle, cursor: "default", lineHeight: 1.8 }}>
-            <span className="ms" style={{ fontSize: 16 }}>location_on</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 16 }}>location_on</span>
             Santiago, RD 🇩🇴
           </div>
         </div>

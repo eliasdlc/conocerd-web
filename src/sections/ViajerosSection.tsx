@@ -66,7 +66,7 @@ export default function ViajerosOverlay() {
               marginBottom: 10,
             }}
           >
-            <span className="ms" style={{ fontSize: 14 }}>hiking</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>hiking</span>
             Para viajeros
           </div>
           <h2
@@ -120,7 +120,7 @@ export default function ViajerosOverlay() {
                 flexShrink: 0,
               }}
             >
-              <span className="ms" style={{ fontSize: 20, color: f.color }}>
+              <span className="ms" aria-hidden="true" style={{ fontSize: 20, color: f.color }}>
                 {f.icon}
               </span>
             </div>
@@ -147,6 +147,7 @@ export default function ViajerosOverlay() {
       {/* #10 — mockup de teléfono a la derecha (mapa visible al centro) */}
       <div
         className="crd-phone-wrap"
+        aria-hidden="true"
         style={{
           position: "absolute",
           right: "clamp(20px, 6%, 96px)",

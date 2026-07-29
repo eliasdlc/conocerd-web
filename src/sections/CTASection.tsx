@@ -32,7 +32,7 @@ export default function CTAOverlay() {
         alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
         padding: isMobile
-          ? "72px 18px calc(14px + var(--crd-stepper-h, 74px))"
+          ? "72px 18px 14px"
           : "72px 24px 36px",
       }}
     >
@@ -140,7 +140,7 @@ export default function CTAOverlay() {
                     fontWeight: 700,
                     letterSpacing: ".08em",
                     textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.45)",
+                    color: "rgba(255,255,255,0.72)",
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >

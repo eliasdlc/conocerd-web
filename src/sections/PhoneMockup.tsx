@@ -17,7 +17,7 @@ function DefaultScreen() {
         <path d="M-10,180 C80,150 150,260 300,210" fill="none" stroke="#ffffff" strokeWidth="14" opacity="0.7" />
         <path d="M40,-10 C70,140 20,320 120,580" fill="none" stroke="#ffffff" strokeWidth="12" opacity="0.6" />
         {/* ruta activa dashed mango */}
-        <path d="M135,470 C120,360 180,300 150,180" fill="none" stroke="#F47F0E" strokeWidth="4" strokeDasharray="2 5" strokeLinecap="round" />
+        <path d="M135,470 C120,360 180,300 150,180" fill="none" stroke="#FF8D16" strokeWidth="4" strokeDasharray="2 5" strokeLinecap="round" />
       </svg>
 
       {/* barra de búsqueda */}
@@ -98,6 +98,7 @@ export default function PhoneMockup({ screen }: { screen?: React.ReactNode }) {
   return (
     <div style={{ perspective: 1500 }}>
       <div
+        className="crd-phone-frame"
         style={{
           position: "relative",
           width: 264,
