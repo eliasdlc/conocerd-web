@@ -42,7 +42,7 @@ export const CONTENT: Record<Audience, AudienceContent> = {
   viajero: {
     eyebrow: "Para viajeros",
     eyebrowIcon: "hiking",
-    headline: "Sé de los primeros en usar ConoceRD",
+    headline: "Se de los primeros en usar ConoceRD",
     sub: "Déjanos tu correo y entras a la lista de fundadores. Te avisamos antes que a nadie cuando la app esté lista.",
     perksTitle: "Lo que te llevas por entrar ahora",
     perks: [
