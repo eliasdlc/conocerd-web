@@ -23,122 +23,44 @@ export default function ViajerosOverlay() {
     <div
       aria-hidden={!isVisible}
       inert={!isVisible}
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: isVisible ? "auto" : "none",
-        opacity: isVisible ? 1 : 0,
-        transition: "opacity 0.5s ease",
-        zIndex: 10,
-      }}
+      className={`absolute inset-0 z-10 transition-opacity duration-500 ease-in-out ${
+        isVisible ? "opacity-100" : "pointer-events-none opacity-0"
+      }`}
     >
       {/* Columna izquierda: encabezado + feature cards */}
-      <div
-        className="crd-ol-panel"
-        style={{
-          position: "absolute",
-          left: "clamp(16px, 3%, 40px)",
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: "clamp(240px, 26vw, 310px)",
-        }}
-      >
-        <div
-          style={{
-            marginBottom: 14,
-            animation: isVisible ? "slideUpIn 0.45s cubic-bezier(0.16,1,0.3,1) both" : "none",
-          }}
-        >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              background: "#C6F3EB",
-              color: "#0C6A60",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              fontSize: 11,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              padding: "5px 12px",
-              borderRadius: 999,
-              marginBottom: 10,
-            }}
-          >
-            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>hiking</span>
+      <div className="crd-ol-panel absolute left-[clamp(16px,3%,40px)] top-1/2 w-[clamp(240px,26vw,310px)] -translate-y-1/2">
+        <div className={`mb-3.5 ${isVisible ? "animate-slide-up" : ""}`}>
+          <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink">
+            <span className="ms text-sm" aria-hidden="true">hiking</span>
             Para viajeros
           </div>
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              letterSpacing: "-.025em",
-              fontSize: "clamp(18px, 2.2vw, 28px)",
-              lineHeight: 1.1,
-              color: "#1D3A45",
-              textShadow: "0 1px 2px rgba(253,248,240,0.95), 0 0 16px rgba(253,248,240,0.6)",
-            }}
-          >
+          {/* El text-shadow crema despega el titular de las etiquetas del mapa. */}
+          <h2 className="m-0 font-display text-[clamp(18px,2.2vw,28px)] font-extrabold leading-[1.1] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Viaja como local,<br />descubre como nadie
           </h2>
         </div>
 
-        {/* Feature cards (glassmorphism, joined borders) */}
+        {/* Feature cards (glassmorphism, bordes unidos). first:/last: sustituyen
+            la lógica por índice que antes calculaba borde y radios. */}
         {FEATURES.map((f, i) => (
           <div
             key={f.title}
-            style={{
-              background: "rgba(253,248,240,0.88)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid #EBE6D9",
-              borderTopWidth: i === 0 ? 1 : 0,
-              borderTopLeftRadius: i === 0 ? 16 : 0,
-              borderTopRightRadius: i === 0 ? 16 : 0,
-              borderBottomLeftRadius: i === FEATURES.length - 1 ? 16 : 0,
-              borderBottomRightRadius: i === FEATURES.length - 1 ? 16 : 0,
-              padding: "13px 15px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 11,
-              animation: isVisible
-                ? `slideUpIn 0.45s cubic-bezier(0.16,1,0.3,1) ${i * 0.08 + 0.1}s both`
-                : "none",
-            }}
+            className={`flex items-start gap-[11px] border border-t-0 border-line bg-cream/88 px-[15px] py-[13px] backdrop-blur-[16px]
+              first:rounded-t-2xl first:border-t last:rounded-b-2xl
+              ${isVisible ? "animate-slide-up" : ""}`}
+            style={isVisible ? { animationDelay: `${i * 0.08 + 0.1}s` } : undefined}
           >
             <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 11,
-                background: f.bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
+              className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px]"
+              style={{ background: f.bg }}
             >
-              <span className="ms" aria-hidden="true" style={{ fontSize: 20, color: f.color }}>
+              <span className="ms text-xl" aria-hidden="true" style={{ color: f.color }}>
                 {f.icon}
               </span>
             </div>
             <div>
-              <h3
-                style={{
-                  margin: "0 0 3px",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  color: "#264653",
-                }}
-              >
-                {f.title}
-              </h3>
-              <p style={{ margin: 0, color: "#5B6B72", fontSize: 12, lineHeight: 1.45 }}>
-                {f.desc}
-              </p>
+              <h3 className="m-0 mb-[3px] font-display text-[13.5px] font-bold text-ink">{f.title}</h3>
+              <p className="m-0 text-xs leading-[1.45] text-muted">{f.desc}</p>
             </div>
           </div>
         ))}
@@ -146,16 +68,10 @@ export default function ViajerosOverlay() {
 
       {/* #10 — mockup de teléfono a la derecha (mapa visible al centro) */}
       <div
-        className="crd-phone-wrap"
+        className={`crd-phone-wrap absolute right-[clamp(20px,6%,96px)] top-1/2 -translate-y-1/2 transition-opacity duration-500 ease-in-out [transition-delay:0.1s] ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
         aria-hidden="true"
-        style={{
-          position: "absolute",
-          right: "clamp(20px, 6%, 96px)",
-          top: "50%",
-          transform: "translateY(-50%)",
-          opacity: isVisible ? 1 : 0,
-          transition: "opacity 0.5s ease 0.1s, transform 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s",
-        }}
       >
         <PhoneMockup />
       </div>
