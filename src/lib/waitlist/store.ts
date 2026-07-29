@@ -18,6 +18,7 @@ export type SubscriberInput = {
   businessName?: string;
   businessType?: BusinessType;
   whatsapp?: string;
+  instagram?: string;
   ref?: string;
   consentAt: Date;
 };
@@ -25,9 +26,26 @@ export type SubscriberInput = {
 /** `created` = correo nuevo. `already_subscribed` = ya estaba (perfil actualizado). */
 export type SaveResult = "created" | "already_subscribed";
 
+/** Una fila tal como la lee el panel interno. Fechas en ISO: cruzan el límite servidor→cliente. */
+export type Subscriber = {
+  email: string;
+  audience: Audience;
+  name: string | null;
+  businessName: string | null;
+  businessType: BusinessType | null;
+  whatsapp: string | null;
+  instagram: string | null;
+  ref: string | null;
+  consentAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export interface WaitlistStore {
   readonly kind: "neon" | "local";
   save(input: SubscriberInput): Promise<SaveResult>;
+  /** Todos los registros, del más reciente al más antiguo. */
+  list(): Promise<Subscriber[]>;
 }
 
 // ─── Neon Postgres ────────────────────────────────────────────────────────────
@@ -48,6 +66,13 @@ const CREATE_TABLE = `
   )
 `;
 
+// Migraciones idempotentes para tablas que ya existen en producción. `create
+// table if not exists` no toca una tabla creada antes de que el campo existiera,
+// así que cada columna añadida después necesita su propio `alter`.
+const MIGRATIONS = [
+  `alter table waitlist_subscribers add column if not exists instagram text`,
+];
+
 function createNeonStore(databaseUrl: string): WaitlistStore {
   // Import perezoso: el driver sólo se carga si de verdad hay base de datos.
   let ready: Promise<NeonQueryFunction<false, false>> | null = null;
@@ -58,6 +83,7 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
         const { neon } = await import("@neondatabase/serverless");
         const client = neon(databaseUrl);
         await client.query(CREATE_TABLE);
+        for (const migration of MIGRATIONS) await client.query(migration);
         return client;
       })();
     }
@@ -74,11 +100,12 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
       // viajero y luego registra su negocio conserva lo anterior.
       const rows = await q`
         insert into waitlist_subscribers
-          (email, audience, name, business_name, business_type, whatsapp, ref, consent_at)
+          (email, audience, name, business_name, business_type, whatsapp, instagram, ref, consent_at)
         values (
           ${input.email}, ${input.audience}, ${input.name ?? null},
           ${input.businessName ?? null}, ${input.businessType ?? null},
-          ${input.whatsapp ?? null}, ${input.ref ?? null}, ${input.consentAt.toISOString()}
+          ${input.whatsapp ?? null}, ${input.instagram ?? null},
+          ${input.ref ?? null}, ${input.consentAt.toISOString()}
         )
         on conflict (email) do update set
           audience      = excluded.audience,
@@ -86,13 +113,45 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
           business_name = coalesce(excluded.business_name, waitlist_subscribers.business_name),
           business_type = coalesce(excluded.business_type, waitlist_subscribers.business_type),
           whatsapp      = coalesce(excluded.whatsapp, waitlist_subscribers.whatsapp),
+          instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
           ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
           updated_at    = now()
         returning (xmax = 0) as inserted
       `;
       return rows[0]?.inserted ? "created" : "already_subscribed";
     },
+
+    async list() {
+      const q = await sql();
+      const rows = await q`
+        select email, audience, name, business_name, business_type, whatsapp,
+               instagram, ref, consent_at, created_at, updated_at
+        from waitlist_subscribers
+        order by created_at desc
+      `;
+      return (rows as Record<string, unknown>[]).map(
+        (r): Subscriber => ({
+          email: String(r.email),
+          audience: r.audience as Audience,
+          name: (r.name as string) ?? null,
+          businessName: (r.business_name as string) ?? null,
+          businessType: (r.business_type as BusinessType) ?? null,
+          whatsapp: (r.whatsapp as string) ?? null,
+          instagram: (r.instagram as string) ?? null,
+          ref: (r.ref as string) ?? null,
+          consentAt: isoDate(r.consent_at),
+          createdAt: isoDate(r.created_at),
+          updatedAt: isoDate(r.updated_at),
+        })
+      );
+    },
   };
+}
+
+/** El driver devuelve `Date` para timestamptz; el panel sólo maneja ISO. */
+function isoDate(value: unknown): string {
+  if (value instanceof Date) return value.toISOString();
+  return String(value ?? "");
 }
 
 // ─── Archivo local (desarrollo) ───────────────────────────────────────────────
@@ -108,6 +167,18 @@ function createLocalStore(): WaitlistStore {
   // archivo y el segundo pisa al primero.
   let queue: Promise<unknown> = Promise.resolve();
 
+  async function readRows(): Promise<LocalRow[]> {
+    const fs = await import("node:fs/promises");
+    const nodePath = await import("node:path");
+    const file = nodePath.join(process.cwd(), ".waitlist", "subscribers.json");
+    try {
+      return JSON.parse(await fs.readFile(file, "utf8")) as LocalRow[];
+    } catch {
+      // Aún no hay registros: el archivo no existe.
+      return [];
+    }
+  }
+
   return {
     kind: "local",
     save(input) {
@@ -116,12 +187,7 @@ function createLocalStore(): WaitlistStore {
         const nodePath = await import("node:path");
         const dir = nodePath.join(process.cwd(), ".waitlist");
         const file = nodePath.join(dir, "subscribers.json");
-        let rows: LocalRow[] = [];
-        try {
-          rows = JSON.parse(await fs.readFile(file, "utf8")) as LocalRow[];
-        } catch {
-          // Primer registro: el archivo aún no existe.
-        }
+        const rows = await readRows();
         const now = new Date().toISOString();
         const existing = rows.findIndex((r) => r.email === input.email);
         const row: LocalRow = {
@@ -141,6 +207,27 @@ function createLocalStore(): WaitlistStore {
       });
       queue = run.catch(() => {});
       return run;
+    },
+
+    async list() {
+      const rows = await readRows();
+      return rows
+        .map(
+          (r): Subscriber => ({
+            email: r.email,
+            audience: r.audience,
+            name: r.name ?? null,
+            businessName: r.businessName ?? null,
+            businessType: r.businessType ?? null,
+            whatsapp: r.whatsapp ?? null,
+            instagram: r.instagram ?? null,
+            ref: r.ref ?? null,
+            consentAt: r.consentAt,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+          })
+        )
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     },
   };
 }

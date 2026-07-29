@@ -53,6 +53,37 @@ const optionalText = (max: number) =>
     .transform((v) => (v.length ? v : undefined))
     .optional();
 
+/**
+ * La gente escribe su Instagram de cinco formas distintas: `@casona`,
+ * `casona`, `instagram.com/casona`, la URL completa y la URL con `?igsh=…`
+ * que copia la propia app al compartir. Guardamos siempre el handle canónico
+ * (sin `@`, en minúsculas) para poder deduplicar y construir la URL nosotros.
+ */
+export function normalizeInstagram(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^www\./i, "")
+    .replace(/^instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .split(/[/?#]/)[0]
+    .trim()
+    .toLowerCase();
+}
+
+/** Reglas de Instagram: 1–30 caracteres, letras, números, punto y guion bajo. */
+const INSTAGRAM_HANDLE = /^[a-z0-9._]{1,30}$/;
+
+export const instagramField = z
+  .string()
+  .max(120)
+  .transform(normalizeInstagram)
+  .transform((v) => (v.length ? v : undefined))
+  .optional()
+  .refine((v) => v === undefined || INSTAGRAM_HANDLE.test(v), {
+    message: "Usuario de Instagram inválido (ej. @conocerd)",
+  });
+
 export const subscribeSchema = z
   .object({
     audience: z.enum(AUDIENCES),
@@ -64,6 +95,12 @@ export const subscribeSchema = z
     businessType: z.enum(BUSINESS_TYPES).optional(),
     /** Solo negocio: opcional, para contactar rápido tras el evento. */
     whatsapp: optionalText(40),
+    /**
+     * Solo negocio: opcional. Hoy es la única vitrina que muchos negocios de RD
+     * tienen en línea, así que es la fuente más rápida de fotos y horarios para
+     * armar su perfil antes del lanzamiento.
+     */
+    instagram: instagramField,
     /** De dónde vino la persona: `?ref=expo-ozrd` en la landing del QR. */
     ref: optionalText(60),
     /** Consentimiento explícito; se guarda con timestamp (ver 2.5 del plan). */
