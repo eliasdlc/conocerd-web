@@ -101,6 +101,8 @@ for (const [width, height] of viewports) {
         const phoneNode = document.querySelector(".crd-phone-wrap");
         const phone = phoneNode?.getBoundingClientRect();
         const phoneVisible = phoneNode ? Number(getComputedStyle(phoneNode).opacity) > 0.5 : false;
+        const phoneFrame = document.querySelector(".crd-phone-frame");
+        const phoneFrameTransform = phoneFrame ? getComputedStyle(phoneFrame).transform : null;
         const phoneClipped = Boolean(
           phoneVisible &&
           phone &&
@@ -118,6 +120,7 @@ for (const [width, height] of viewports) {
             : null,
           headingCardOverlap,
           phoneClipped,
+          phoneFrameTransform,
         };
       });
       if (state.active !== scene) {
@@ -139,6 +142,9 @@ for (const [width, height] of viewports) {
       }
       if (scene === "viajeros" && state.phoneClipped) {
         throw new Error(`Phone clipped at ${width}x${height}`);
+      }
+      if (scene === "viajeros" && state.phoneFrameTransform !== "none") {
+        throw new Error(`Phone screen is distorted at ${width}x${height}: ${state.phoneFrameTransform}`);
       }
       await page.screenshot({ path: path.join(outputDir, `${width}x${height}-${scene}.png`) });
     }

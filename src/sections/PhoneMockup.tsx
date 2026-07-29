@@ -4,9 +4,9 @@ import Image from "next/image";
 import { SelfPin } from "@/components/map/pins";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Mockup de teléfono (#10). Frame rotado con perspectiva; la pantalla es un
-//  PLACEHOLDER SWAPPABLE: hoy una "app falsa" armada con el sistema de pines,
-//  mañana se reemplaza por el video/screenshot real vía la prop `screen`.
+//  Mockup de teléfono (#10). La pantalla se mantiene frontal y proporcionada:
+//  debe comunicar el producto, no convertirse en una pieza 3D ilegible. Sigue
+//  siendo intercambiable por un video o screenshot real mediante `screen`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DefaultScreen() {
@@ -96,21 +96,19 @@ function DefaultScreen() {
 
 export default function PhoneMockup({ screen }: { screen?: React.ReactNode }) {
   return (
-    <div style={{ perspective: 1500 }}>
+    <div className="crd-phone-device">
       <div
         className="crd-phone-frame"
         style={{
           position: "relative",
-          width: 264,
-          height: 548,
+          width: "100%",
+          aspectRatio: "264 / 548",
           borderRadius: 44,
           background: "linear-gradient(155deg,#33545F,#1D3A45)",
           padding: 12,
           boxShadow:
             "0 50px 90px rgba(38,70,83,0.38), 0 12px 30px rgba(38,70,83,0.25), inset 0 1px 2px rgba(255,255,255,0.18)",
-          // #10 — rotado a la derecha (rotateY) + hacia arriba (rotateX)
-          transform: "rotateY(-16deg) rotateX(12deg)",
-          transformStyle: "preserve-3d",
+          boxSizing: "border-box",
         }}
       >
         <div
