@@ -264,9 +264,12 @@ body {
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
   .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 99px; background: #B5C0BD; margin: -10px auto 14px; }
-  .crd-ol-panel-right { display: block !important; transform: scale(.56) translate(38%, -70%) !important; transform-origin: top right; right: -28px !important; top: 8px !important; }
+  /* Mismo criterio que .crd-phone-wrap: el panel del negocio sólo se leía
+     escalado a .56 y encajado en la esquina, donde ni sus cifras ni sus barras
+     son legibles y además tapa el mapa. El bottom-sheet ya cuenta la propuesta
+     completa, así que en móvil se omite el mockup. */
+  .crd-ol-panel-right { display: none !important; }
   .crd-business-story { max-height: min(64dvh, 560px); }
-  .crd-business-dashboard { max-height: none; overflow: visible; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
     padding: 72px 16px 16px !important;
