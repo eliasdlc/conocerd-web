@@ -16,7 +16,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           <Image
             src="/assets/wordmark.svg"
             alt="ConoceRD"
-            width={140}
+            width={101}
             height={32}
             style={{ height: 32, width: "auto" }}
           />
