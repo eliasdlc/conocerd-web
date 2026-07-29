@@ -124,105 +124,50 @@ export default function NegociosOverlay() {
       >
         {/* ── Left column ── */}
         <div
-          className="crd-ol-panel"
+          className="crd-ol-panel crd-business-story"
           style={{
-            // #12 — anclada arriba (no centrada) para que el botón "Registrar mi
-            // negocio" no quede recortado abajo.
             position: "absolute",
             left: "clamp(16px, 3%, 40px)",
-            top: "clamp(84px, 12%, 120px)",
+            top: "clamp(82px, 11dvh, 112px)",
             width: "clamp(240px, 26vw, 308px)",
             animation: isVisible ? "slideUpIn 0.45s cubic-bezier(0.16,1,0.3,1) both" : "none",
           }}
         >
-          {/* Badge */}
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              background: "#FFE7DF",
-              color: "#B23410",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              fontSize: 11,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              padding: "5px 12px",
-              borderRadius: 999,
-              marginBottom: 10,
-            }}
-          >
-            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>storefront</span>
-            Para negocios
+          <div className="crd-business-kicker">
+            <span className="ms" aria-hidden="true">storefront</span>
+            <span>ConoceRD para negocios</span>
           </div>
 
-          {/* Heading */}
-          <h2
-            style={{
-              margin: "0 0 12px",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              letterSpacing: "-.025em",
-              fontSize: "clamp(18px, 2.2vw, 26px)",
-              lineHeight: 1.1,
-              color: "#1D3A45",
-              textShadow: "0 1px 2px rgba(253,248,240,0.95), 0 0 16px rgba(253,248,240,0.6)",
-            }}
-          >
-            Más que una<br />vitrina digital
-          </h2>
+          <h2 className="crd-business-title">Tu negocio, dentro de la ruta</h2>
+          <p className="crd-business-intro">Haz que el interés de los viajeros se convierta en una visita real.</p>
 
-          {/* Benefit list inside glassmorphism card */}
-          <div
-            style={{
-              background: "rgba(253,248,240,0.88)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid #EBE6D9",
-              borderRadius: 16,
-              padding: "13px 14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              marginBottom: 12,
-            }}
-          >
+          <div className="crd-business-route" aria-label="Cómo funciona ConoceRD para tu negocio">
+            <div className="crd-business-route-label">
+              <span>La ruta del cliente</span>
+              <span aria-hidden="true">→</span>
+            </div>
             {BENEFITS.map((b, i) => (
               <div
                 key={b.title}
+                className="crd-business-benefit"
                 style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 10,
                   animation: isVisible
                     ? `slideUpIn 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 0.07 + 0.15}s both`
                     : "none",
                 }}
               >
-                <span className="ms" aria-hidden="true" style={{ fontSize: 20, color: "#0C6A60", flexShrink: 0, marginTop: 1 }}>
+                <span className="ms crd-business-benefit-icon" aria-hidden="true">
                   {b.icon}
                 </span>
                 <div>
-                  <div
-                    style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 700,
-                      fontSize: 12.5,
-                      color: "#264653",
-                    }}
-                  >
-                    {b.title}
-                  </div>
-                  <div style={{ color: "#5B6B72", fontSize: 11.5, lineHeight: 1.4 }}>
-                    {b.desc}
-                  </div>
+                  <div className="crd-business-benefit-title">{b.title}</div>
+                  <div className="crd-business-benefit-desc">{b.desc}</div>
                 </div>
               </div>
             ))}
           </div>
 
-          <p style={{ margin: "0 0 14px", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.45 }}>
+          <p className="crd-business-disclaimer">
             Panel y rutas mostrados como demostración de producto; las métricas se activarán con datos verificables.
           </p>
 
@@ -234,7 +179,7 @@ export default function NegociosOverlay() {
               alignItems: "center",
               gap: 8,
               background: "#25CCB8",
-              color: "#1D3A45",
+              color: "#fff",
               border: "none",
               borderRadius: 14,
               padding: "11px 18px",
@@ -246,19 +191,18 @@ export default function NegociosOverlay() {
               transition: "background 0.2s, transform 0.2s",
             }}
           >
-            <span className="ms" aria-hidden="true" style={{ fontSize: 18 }}>add_business</span>
+            <span className="ms" aria-hidden="true" style={{ fontSize: 18, color: "#fff" }}>add_business</span>
             Registrar mi negocio
           </button>
         </div>
 
         {/* ── Right side — dashboard mockup ── */}
         <div
-          className="crd-ol-panel-right"
+          className="crd-ol-panel-right crd-business-dashboard"
           style={{
             position: "absolute",
             right: "clamp(16px, 4%, 56px)",
-            top: "50%",
-            transform: "translateY(-50%) rotate(1.4deg)",
+            top: "clamp(86px, 14dvh, 132px)",
             width: "clamp(250px, 27vw, 340px)",
             background: "#fff",
             borderRadius: 22,
