@@ -15,29 +15,22 @@ import InstagramGlyph from "./InstagramGlyph";
 import { CONTENT, INSTAGRAM } from "./content";
 import type { Audience } from "@/lib/waitlist/schema";
 
+// La clase es una constante literal, no una plantilla: Tailwind escanea el
+// código fuente en busca de nombres de clase, así que una clase construida por
+// interpolación nunca se generaría. El retardo, que sí varía, va por style.
+const IN = "animate-[crdListaIn_.5s_cubic-bezier(.16,1,.3,1)_both]";
+
 /** Sello de fundador: el anillo se dibuja, el check entra detrás y el conjunto
  *  hace un rebote corto. Tres tiempos encadenados leen como "conseguido". */
 function AchievementSeal({ icon }: { icon: string }) {
   return (
-    <div style={{ position: "relative", width: 96, height: 96, flexShrink: 0 }}>
+    <div className="relative size-24 shrink-0">
       {/* Halo que se expande una vez y desaparece */}
       <span
         aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(37,204,184,.55), rgba(37,204,184,0) 70%)",
-          animation: "crdHalo .9s ease-out .15s both",
-        }}
+        className="absolute inset-0 animate-[crdHalo_.9s_ease-out_.15s_both] rounded-full bg-[radial-gradient(circle,rgba(37,204,184,.55),rgba(37,204,184,0)_70%)]"
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          animation: "crdBadgePop .7s cubic-bezier(.2,.9,.3,1.2) .1s both",
-        }}
-      >
+      <div className="absolute inset-0 animate-[crdBadgePop_.7s_cubic-bezier(.2,.9,.3,1.2)_.1s_both]">
         <svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true">
           <circle cx="48" cy="48" r="40" fill="#C6F3EB" />
           <circle
@@ -50,21 +43,12 @@ function AchievementSeal({ icon }: { icon: string }) {
             strokeLinecap="round"
             strokeDasharray="264"
             transform="rotate(-90 48 48)"
-            style={{ animation: "crdRingDraw .8s cubic-bezier(.3,.8,.3,1) .15s both" }}
+            className="animate-[crdRingDraw_.8s_cubic-bezier(.3,.8,.3,1)_.15s_both]"
           />
         </svg>
         <span
-          className="ms"
+          className="ms absolute inset-0 flex items-center justify-center text-[42px] text-mint-ink"
           aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 42,
-            color: "#0C6A60",
-          }}
         >
           {icon}
         </span>
@@ -85,59 +69,27 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
   const seal = audience === "negocio" ? "storefront" : "workspace_premium";
 
   return (
-    <div role="status" aria-live="polite" style={{ position: "relative", textAlign: "center" }}>
+    <div role="status" aria-live="polite" className="relative text-center">
       {/* Se monta sólo en un alta nueva: repetir la fiesta a quien ya estaba
           dentro convierte la celebración en ruido. */}
       {!alreadyIn && <Confetti />}
 
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+      <div className="mb-3.5 flex justify-center">
         <AchievementSeal icon={seal} />
       </div>
 
-      <h2
-        style={{
-          margin: "0 0 6px",
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: 24,
-          letterSpacing: "-.02em",
-          color: "#1D3A45",
-          animation: "crdListaIn .5s cubic-bezier(.16,1,.3,1) .35s both",
-        }}
-      >
+      <h2 className={`mb-1.5 font-display text-2xl font-extrabold tracking-[-.02em] text-ink-2 ${IN}`} style={{ animationDelay: ".35s" }}>
         {alreadyIn ? "Ya estabas en la lista" : copy.title}
       </h2>
-      <p
-        style={{
-          margin: "0 auto 18px",
-          maxWidth: 340,
-          color: "#5B6B72",
-          fontSize: 14,
-          lineHeight: 1.55,
-          animation: "crdListaIn .5s cubic-bezier(.16,1,.3,1) .42s both",
-        }}
-      >
+      <p className={`mx-auto mb-[18px] max-w-[340px] text-sm leading-[1.55] text-muted ${IN}`} style={{ animationDelay: ".42s" }}>
         {alreadyIn
           ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
           : copy.body}
       </p>
 
       {/* Siguiente paso */}
-      <div
-        style={{
-          borderTop: "1px dashed #EBE6D9",
-          paddingTop: 16,
-          animation: "crdListaIn .5s cubic-bezier(.16,1,.3,1) .5s both",
-        }}
-      >
-        <p
-          style={{
-            margin: "0 0 12px",
-            color: "#66747B",
-            fontSize: 13,
-            lineHeight: 1.5,
-          }}
-        >
+      <div className={`border-t border-dashed border-line pt-4 ${IN}`} style={{ animationDelay: ".5s" }}>
+        <p className="mb-3 text-[13px] leading-[1.5] text-muted-2">
           Mientras llega el lanzamiento, síguenos: ahí publicamos los destinos que vamos
           sumando y avisamos de cada avance.
         </p>
@@ -145,21 +97,8 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
           href={INSTAGRAM.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="crd-ig-cta"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "13px 22px",
-            borderRadius: 16,
-            background: "linear-gradient(135deg,#F58529 0%,#DD2A7B 55%,#8134AF 100%)",
-            color: "#fff",
-            textDecoration: "none",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 15,
-            boxShadow: "0 10px 26px rgba(221,42,123,.34)",
-          }}
+          // .crd-ig-cta aporta el hover (translate + sombra).
+          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] font-display text-[15px] font-extrabold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
         >
           <InstagramGlyph />
           Síguenos en {INSTAGRAM.handle}
@@ -169,22 +108,12 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
             también tiene un colmado, una cabaña o un tour: aquí es donde se le
             puede preguntar sin robarle protagonismo al registro que acaba de
             hacer. */}
-        <p style={{ margin: "14px 0 0", fontSize: 12.5, color: "#66747B" }}>
+        <p className="mt-3.5 text-[12.5px] text-muted-2">
           {audience === "viajero" ? "¿También tienes un negocio? " : "¿Y como viajero? "}
           <button
             type="button"
             onClick={onSwitchAudience}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              color: "#B23410",
-              fontWeight: 700,
-              fontSize: 12.5,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
+            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-[12.5px] font-bold text-coral-ink underline"
           >
             {audience === "viajero" ? "Regístralo también" : "Apúntate también"}
           </button>

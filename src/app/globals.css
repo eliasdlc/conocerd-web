@@ -390,6 +390,15 @@ body {
   margin: 0 auto;
 }
 
+/* Manchas de color del fondo de /lista: tres gradientes, ilegibles como
+   utilidad arbitraria. */
+.crd-lista-blooms {
+  background:
+    radial-gradient(620px 420px at 12% -6%, rgba(37,204,184,.20), transparent 70%),
+    radial-gradient(560px 400px at 96% 8%, rgba(247,108,77,.16), transparent 72%),
+    radial-gradient(700px 500px at 78% 104%, rgba(255,141,22,.13), transparent 74%);
+}
+
 /* En pantallas anchas el formulario se queda a la vista mientras se leen los
    beneficios; en móvil (el caso real del QR) sigue siendo una sola columna. */
 @media (min-width: 940px) {

@@ -67,16 +67,7 @@ export default function Confetti() {
   return (
     <div
       aria-hidden="true"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 0,
-        overflow: "visible",
-        pointerEvents: "none",
-        zIndex: 2,
-      }}
+      className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-0 overflow-visible"
     >
       {particles.map((p, i) => (
         <span
