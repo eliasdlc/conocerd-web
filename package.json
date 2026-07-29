@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:journey": "node scripts/journey-smoke.mjs",
     "qr": "node scripts/generate-qr.mjs"
   },
   "dependencies": {

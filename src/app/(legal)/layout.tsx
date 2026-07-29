@@ -12,7 +12,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
       }}
     >
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <Link href="/" style={{ display: "inline-block", marginBottom: 26 }}>
+        <Link href="/" style={{ display: "inline-flex", minWidth: 44, minHeight: 44, alignItems: "center", marginBottom: 26 }}>
           <Image
             src="/assets/wordmark.svg"
             alt="ConoceRD"
@@ -22,10 +22,10 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
           />
         </Link>
         <div className="crd-legal">{children}</div>
-        <div style={{ marginTop: 36, borderTop: "1px solid #EBE6D9", paddingTop: 14, display: "flex", gap: 16, fontSize: 12.5 }}>
-          <Link href="/privacidad" style={{ color: "#66747B", textDecoration: "none" }}>Privacidad</Link>
-          <Link href="/terminos" style={{ color: "#66747B", textDecoration: "none" }}>Términos</Link>
-          <Link href="/lista" style={{ color: "#66747B", textDecoration: "none" }}>Lista de espera</Link>
+        <div style={{ marginTop: 36, borderTop: "1px solid #EBE6D9", paddingTop: 14, display: "flex", gap: 8, fontSize: 12.5 }}>
+          <Link href="/privacidad" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Privacidad</Link>
+          <Link href="/terminos" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Términos</Link>
+          <Link href="/lista" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Lista de espera</Link>
         </div>
       </div>
     </main>

@@ -4,7 +4,7 @@ import { useId } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Self-pin de navegación (#4). Silueta tipo Waze con gradiente Mango
-//  (#FFAA47 → #F47F0E) + borde crema. Rota con el heading (rota con el rumbo en
+//  (mango claro → mango de marca) + borde crema. Rota con el heading (rumbo en
 //  los mockups / constructor de ruta). Portado de conocerd_map_pins.html.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,8 @@ export function SelfPin({ heading = 0, size = 48 }: SelfPinProps) {
     >
       <defs>
         <linearGradient id={gradId} x1="100" y1="30" x2="100" y2="170" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#FFAA47" />
-          <stop offset="100%" stopColor="#F47F0E" />
+          <stop offset="0%" stopColor="#F8A11C" />
+          <stop offset="100%" stopColor="#FF8D16" />
         </linearGradient>
       </defs>
       {/* borde crema (stroke ancho, detrás) */}

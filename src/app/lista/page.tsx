@@ -21,35 +21,16 @@ export const metadata: Metadata = {
 
 export default function ListaPage() {
   return (
-    <main
-      style={{
-        position: "relative",
-        minHeight: "100dvh",
-        // `clip` y no `hidden`: `hidden` convierte a <main> en contenedor de
-        // scroll y el `position:sticky` de la columna del formulario dejaría
-        // de activarse en escritorio.
-        overflowX: "clip",
-        background: "linear-gradient(180deg,#FDF8F0 0%,#F5EFE2 100%)",
-        padding: "32px clamp(18px,5vw,32px) 48px",
-      }}
-    >
+    // overflow-x-clip y no hidden: `hidden` convierte a <main> en contenedor de
+    // scroll y el `position:sticky` de la columna del formulario dejaría de
+    // activarse en escritorio.
+    <main className="relative min-h-[100dvh] overflow-x-clip bg-[linear-gradient(180deg,#FDF8F0_0%,#F5EFE2_100%)] px-[clamp(18px,5vw,32px)] pb-12 pt-8">
       {/* Manchas de color de la paleta: dan profundidad al crema sin cargar
-          una sola imagen ni animar nada en reposo. */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          background: `
-            radial-gradient(620px 420px at 12% -6%, rgba(37,204,184,.20), transparent 70%),
-            radial-gradient(560px 400px at 96% 8%, rgba(247,108,77,.16), transparent 72%),
-            radial-gradient(700px 500px at 78% 104%, rgba(255,141,22,.13), transparent 74%)
-          `,
-        }}
-      />
+          una sola imagen ni animar nada en reposo. Son tres gradientes, así que
+          viven en .crd-lista-blooms. */}
+      <div aria-hidden="true" className="crd-lista-blooms pointer-events-none absolute inset-0" />
 
-      <div style={{ position: "relative" }}>
+      <div className="relative">
         <ListaExperience />
       </div>
     </main>

@@ -5,20 +5,22 @@ import {
   useScroll,
   useSpring,
   useMotionValueEvent,
+  useReducedMotion,
   type MotionValue,
 } from "motion/react";
 import type maplibregl from "maplibre-gl";
 import { sceneAtProgress, SCENE_BANDS } from "@/lib/journey";
-import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
+import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Motor de scroll del journey — DESKTOP.
+//  Motor de scroll del journey — desktop and mobile.
 //
 //  scrollYProgress (0..1 sobre toda la pista) → useSpring (amortigua el fling)
 //  → cámara = función continua del progreso (lib/journey) → jumpTo por frame.
 //  Sin dwell muerto y sin saltos aunque se scrollee rápido.
 //
-//  En móvil este motor se apaga (`enabled: false`) y manda `useJourneySteps`.
+//  A single engine keeps scene state, navigation and camera progression aligned
+//  across viewport changes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface UseJourneyScrollOptions {
@@ -28,7 +30,7 @@ export interface UseJourneyScrollOptions {
   /** MotionValue compartido (SceneContext) con el progreso suavizado 0..1. */
   progress: MotionValue<number>;
   onSceneChange: (name: string) => void;
-  /** false en móvil: el progreso lo escribe el motor de pasos. */
+  /** Gated until viewport measurement has resolved after hydration. */
   enabled: boolean;
 }
 
@@ -58,6 +60,7 @@ export function useJourneyScroll({
     restDelta: 0.00001,
     restSpeed: 0.0001,
   });
+  const reduceMotion = useReducedMotion();
 
   const lastScene = useRef<string>("");
 
@@ -77,13 +80,13 @@ export function useJourneyScroll({
   // useMotionValueEvent re-suscribe cuando cambia el callback ⇒ el closure lee
   // siempre el `enabled` actual sin necesidad de un ref.
   //
-  // El segundo guardo no es redundante: al estrechar la ventana, el layout
-  // colapsa la pista a 100dvh y el navegador recorta el scroll a 0 ANTES de que
-  // React llegue a re-renderizar con `enabled: false`. Sin mirar el viewport ya
-  // medido, ese scroll fantasma escribía progreso 0 y el modo móvil arrancaba
-  // en el hero en vez de donde estaba el usuario.
+  // The same scroll engine drives every viewport. Camera and overlay composition
+  // still resolve mobile-specific values through `measureViewport`.
   useMotionValueEvent(smooth, "change", (p) => {
-    if (enabled && !currentViewport().mobile) apply(p);
+    if (enabled && !reduceMotion) apply(p);
+  });
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    if (enabled && reduceMotion) apply(p);
   });
 
   useEffect(() => {
@@ -93,8 +96,8 @@ export function useJourneyScroll({
     const el = containerRef.current;
     const carried = progress.get();
     if (carried > 0.001 && el) {
-      // Venimos del motor de pasos (resize a desktop): la posición de scroll no
-      // significa nada todavía, manda el progreso ya recorrido.
+      // Tras un resize, conserva el progreso ya recorrido y vuelve a alinear la
+      // posición física del track con la cámara.
       const top = el.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: top + (el.offsetHeight - window.innerHeight) * carried,
@@ -109,11 +112,11 @@ export function useJourneyScroll({
 
     const onResize = () => {
       measureViewport();
-      if (!currentViewport().mobile) apply(smooth.get());
+      apply(reduceMotion ? scrollYProgress.get() : smooth.get());
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [enabled, apply, containerRef, progress, scrollYProgress, smooth]);
+  }, [enabled, apply, containerRef, progress, reduceMotion, scrollYProgress, smooth]);
 }
 
 /**

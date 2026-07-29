@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
-:root {
+/* Design tokens. `@theme` (no `:root`) es lo que convierte cada token en una
+   utilidad de Tailwind — `bg-mint`, `text-ink`, `border-line`, `desk:` — y a la
+   vez las emite como custom properties en `:root`, así que cualquier
+   `var(--color-mint)` que quede en CSS sigue resolviendo igual. */
+@theme {
+  /* Único breakpoint del proyecto. Debe seguir igual a MOBILE_BREAKPOINT
+     (src/hooks/useIsMobile.ts): `max-desk:` = móvil, `desk:` = desktop. */
+  --breakpoint-desk: 900px;
+
+  /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
+     nombre literal ('Plus Jakarta Sans') NO resuelve, porque next/font sirve
+     cada familia bajo un nombre hasheado. */
+  --font-sans:    var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
+  --font-hand:    var(--font-caveat), cursive;
+
   --color-ink:        #264653;
   --color-ink-2:      #1D3A45;
   --color-coral:      #F76C4D;
@@ -19,6 +35,14 @@
   --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
   --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
   --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
+
+  /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
+     Los @keyframes viven más abajo en este archivo.
+     slideUpIn se usaba con 0.4s / 0.45s / 0.5s en 8 sitios distintos; aquí se
+     unifica en un solo token. El stagger sigue siendo inline (animationDelay),
+     porque depende del índice. */
+  --animate-slide-up: slideUpIn .45s cubic-bezier(.16,1,.3,1) both;
+  --animate-live-dot: crdLiveDot 1.4s ease-in-out infinite;
 }
 
 html {
@@ -29,20 +53,43 @@ body {
   margin: 0;
   background: #FDF8F0;
   color: #264653;
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
 ::selection { background: #FFE6C8; color: #264653; }
 
-.ms {
-  font-family: 'Material Symbols Rounded';
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1;
-  font-variation-settings: 'FILL' 1;
-  display: inline-block;
-  vertical-align: middle;
-  user-select: none;
+.crd-skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--color-ink-2);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform .2s ease;
+}
+.crd-skip-link:focus-visible { transform: translateY(0); }
+
+/* Va en @layer base a propósito: CSS sin capa le gana a las utilidades de
+   Tailwind (que viven en @layer utilities), así que un `.ms` sin capa imponía
+   su `display: inline-block` sobre `flex`/`grid` y rompía el centrado del
+   glifo en cada caja de icono. Dentro de base, las utilidades vuelven a
+   ganar y `display` aquí sólo actúa como valor por defecto. */
+@layer base {
+  .ms {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    font-variation-settings: 'FILL' 1;
+    display: inline-block;
+    vertical-align: middle;
+    user-select: none;
+  }
 }
 
 @keyframes crdFloatX {
@@ -105,44 +152,32 @@ body {
   height: calc((100 + var(--crd-track-vh, 1000)) * 1vh);
 }
 
-.crd-stepper { display: none; }
+/* Fondo crema con halos cálidos de marca detrás del canvas: el globo, ya sin
+   atmósfera, flota sobre este crema en el hero. En las escenas con zoom el mapa
+   es opaco y tapa el gradiente. Se queda en CSS porque son tres gradientes. */
+.crd-journey-sticky {
+  background:
+    radial-gradient(60% 50% at 18% 16%, rgba(37,204,184,.10), transparent 70%),
+    radial-gradient(55% 45% at 84% 24%, rgba(255,141,22,.10), transparent 70%),
+    radial-gradient(60% 50% at 50% 98%, rgba(247,108,77,.08), transparent 70%),
+    var(--color-cream);
+}
 
-@media (max-width: 767px) {
-  /* En móvil el journey no se scrollea: ocupa una pantalla exacta y avanza por
-     pasos (flechas o swipe). El bloqueo del scroll lo hace `overflow:hidden`
-     sobre el body (MapScrollJourney) y no `touch-action`, porque touch-action
-     también anularía el scroll interno de los bottom-sheets. */
+@media (max-width: 899px) {
+  /* Native scrolling keeps the map signature without turning phones into a
+     locked slide deck. */
   .crd-journey {
-    height: 100dvh;
-    overscroll-behavior: none;
+    height: calc((100 + var(--crd-mobile-track-dvh, 837)) * 1dvh);
   }
-  .crd-journey-anchor { display: none; }
-
-  .crd-stepper {
-    position: fixed;
-    left: 50%;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    z-index: 60;
-    width: min(420px, calc(100vw - 24px));
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 999px;
-    background: rgba(253, 248, 240, 0.94);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(235, 230, 217, 0.9);
-    box-shadow: 0 12px 34px rgba(38, 70, 83, 0.18);
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
-    touch-action: manipulation;
+  .crd-journey-anchor {
+    height: var(--crd-mobile-scene-height) !important;
   }
 }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
 .crd-mobile-scrim { display: none; }
-@media (max-width: 767px) {
+@media (max-width: 899px) {
   .crd-mobile-scrim {
     display: block;
     position: absolute;
@@ -160,13 +195,53 @@ body {
 }
 
 /* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
-/* 767px y no 540px: es el mismo breakpoint que decide el modo del journey
-   (MOBILE_BREAKPOINT). Con dos umbrales distintos, entre 541 y 767 la cámara
-   encuadraba para móvil y los paneles seguían colocados como desktop. */
-@media (max-width: 767px) {
-  /* Altura reservada para el control de pasos, que flota sobre los paneles. */
-  :root { --crd-stepper-h: 74px; }
+/* One breakpoint drives camera padding, overlays, navigation and mockups.
+   Keeping CSS aligned with MOBILE_BREAKPOINT avoids hybrid tablet layouts. */
+/* Sólo el alto scrolleable: tiene que ganarle al max-height que .crd-ol-panel
+   fija en móvil, y ese vive sin capa (ver nota de cascada más abajo). Todo el
+   aspecto de la tarjeta está en Tailwind, en el componente. */
+.crd-business-story {
+  max-height: calc(100dvh - clamp(102px, 15dvh, 144px));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* La ruta conserva clase por su ::before: la línea punteada que une los pasos. */
+.crd-business-route {
+  position: relative;
+}
+.crd-business-route::before {
+  position: absolute;
+  top: 44px;
+  bottom: 31px;
+  left: 22px;
+  width: 1px;
+  content: '';
+  background: repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 8px);
+  opacity: .65;
+}
+/* Mismo caso que .crd-business-story: sólo el alto scrolleable. */
+.crd-business-dashboard {
+  max-height: calc(100dvh - clamp(104px, 17dvh, 154px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 
+/* Viajeros: el teléfono vive en un área segura, no en una escala aplicada al
+   final. Así su relación de aspecto se conserva y nunca queda cortado por la
+   capa sticky del journey. El UI de la app se lee de frente; la profundidad la
+   aportan la sombra y el mapa, no una rotación que deforme el contenido. */
+.crd-phone-device {
+  width: min(264px, 18vw, calc((100dvh - 120px) * 0.482));
+}
+
+@media (min-width: 900px) and (max-height: 480px) {
+  /* A esta altura no existe un tamaño útil que deje leer la pantalla y respete
+     el panel de viajeros. Es preferible omitir el adorno a mostrar un recorte. */
+  .crd-phone-wrap { display: none !important; }
+}
+
+@media (max-width: 899px) {
   .crd-ol-panel {
     left: 0 !important;
     right: 0 !important;
@@ -176,23 +251,31 @@ body {
     max-width: 100% !important;
     transform: none !important;
     border-radius: 20px 20px 0 0 !important;
-    /* 58vh = lo que reserva `padBottom` de las escenas con panel alto
-       (lib/journey): con 52vh el último elemento del sheet quedaba cortado y
-       había que descubrir que se scrollea. */
-    max-height: 58vh;
+    max-height: min(62dvh, 520px);
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 24px), transparent 100%);
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
        reponerlo como padding para que el contenido no quede pegado al borde.
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
-    padding: 16px 16px calc(16px + var(--crd-stepper-h)) !important;
+    padding: 24px 16px 28px !important;
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
+  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 99px; background: #B5C0BD; margin: -10px auto 14px; }
+  /* Mismo criterio que .crd-phone-wrap: el panel del negocio sólo se leía
+     escalado a .56 y encajado en la esquina, donde ni sus cifras ni sus barras
+     son legibles y además tapa el mapa. El bottom-sheet ya cuenta la propuesta
+     completa, así que en móvil se omite el mockup. */
   .crd-ol-panel-right { display: none !important; }
+  .crd-business-story { max-height: min(64dvh, 560px); }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
-    padding: 72px 16px calc(16px + var(--crd-stepper-h)) !important;
+    padding: 72px 16px 16px !important;
+    overflow-y: auto;
+    justify-content: flex-start !important;
+    gap: 20px;
   }
   /* Viajeros: stat markers overlap on narrow maps → swap them for the
      in-panel chip row below the heading. */
@@ -206,10 +289,46 @@ body {
   .crd-sub-row { grid-template-columns: 1fr !important; }
   /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
   .crd-navlink { display: none !important; }
-  /* Viajeros: el mockup de teléfono tapa el bottom-sheet → ocultarlo en móvil. */
+  /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
+     pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
-  /* Mapa: el panel de recorrido (derecha) ocupa demasiado espacio → solo chips. */
-  .crd-mapa-route-panel { display: none !important; }
+  .crd-mapa-route-panel { display: block !important; transform: scale(.68) translate(22%, -52%); transform-origin: right center; }
+  .crd-cta-card { max-height: calc(100dvh - 42px); overflow-y: auto; padding: 24px 18px !important; }
+  .crd-destinos-heading { left: 16px !important; bottom: 48% !important; }
+  .crd-polaroid-deck-mobile { bottom: max(12px, 2dvh) !important; }
+  .crd-destinos-card { width: min(196px, calc(100vw - 116px)) !important; padding: 9px 9px 0 !important; }
+  .crd-destinos-card-media { height: 150px !important; }
+}
+
+/* Short laptop/browser viewports need vertical composition, not another width
+   breakpoint. The heading remains above the interactive deck instead of
+   competing for the same absolute region. */
+@media (min-width: 900px) and (max-height: 780px) {
+  .crd-destinos-heading {
+    top: clamp(112px, 19vh, 148px) !important;
+    bottom: auto !important;
+    padding: 12px 14px;
+    border: 1px solid rgba(235,230,217,.82);
+    border-radius: 14px;
+    background: rgba(253,248,240,.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .crd-polaroid-deck {
+    bottom: 4% !important;
+  }
+}
+
+@media (max-width: 359px) and (max-height: 640px) {
+  .crd-hero-content { max-width: 280px !important; }
+  .crd-hero-logo { width: min(64vw, 240px) !important; }
+  .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
+  .crd-destinos-heading { bottom: 54% !important; }
+  .crd-destinos-heading h2 { font-size: 24px !important; }
+  .crd-destinos-card { width: 176px !important; }
+  .crd-destinos-card-media { height: 124px !important; }
+  .crd-ol-panel { max-height: 55dvh; }
 }
 
 /* Stat chips live only on mobile (see media query above). */
@@ -219,7 +338,7 @@ body {
   position: relative;
   text-decoration: none;
   color: #264653;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 15px;
   padding: 4px 2px;
@@ -239,13 +358,24 @@ body {
 .crd-social { transition: transform .3s cubic-bezier(.2,.8,.3,1.3), background .25s, color .25s; }
 .crd-social:hover { transform: translateY(-4px) rotate(-6deg); background: #F76C4D !important; color: #fff !important; }
 
+.crd-button:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+.crd-button:active {
+  transform: translateY(0) scale(.98) !important;
+}
+
 /* ── Visible keyboard focus for every interactive element ───────────── */
-/* :where() = zero specificity, so it never fights inline styles, but it
-   restores a focus ring (Web Interface Guidelines: never remove focus). */
-:where(a, button, [role="button"], input, select, textarea):focus-visible {
-  outline: 2px solid #F76C4D;
-  outline-offset: 2px;
-  border-radius: 8px;
+/* Va en @layer base a propósito: el CSS sin capa le gana a las utilidades de
+   Tailwind (que viven en @layer utilities) por orden de capas, sin importar la
+   especificidad. Sin la capa, este anillo por defecto pisaría cualquier
+   `focus-visible:outline-*` puesto en un componente. */
+@layer base {
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 2px solid #F76C4D;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
 }
 
 /* Visually-hidden but accessible to screen readers / SEO */
@@ -268,6 +398,15 @@ body {
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
+}
+
+/* Manchas de color del fondo de /lista: tres gradientes, ilegibles como
+   utilidad arbitraria. */
+.crd-lista-blooms {
+  background:
+    radial-gradient(620px 420px at 12% -6%, rgba(37,204,184,.20), transparent 70%),
+    radial-gradient(560px 400px at 96% 8%, rgba(247,108,77,.16), transparent 72%),
+    radial-gradient(700px 500px at 78% 104%, rgba(255,141,22,.13), transparent 74%);
 }
 
 /* En pantallas anchas el formulario se queda a la vista mientras se leen los
@@ -374,7 +513,7 @@ body {
   line-height: 1.7;
 }
 .crd-legal h1 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -.025em;
   font-size: clamp(28px, 5vw, 38px);
@@ -383,7 +522,7 @@ body {
   color: #1D3A45;
 }
 .crd-legal h2 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 17px;
   margin: 30px 0 8px;
@@ -394,7 +533,7 @@ body {
 .crd-legal li { margin-bottom: 7px; }
 .crd-legal a { color: #B23410; }
 .crd-legal-date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   color: #66747B;
   margin-bottom: 26px !important;

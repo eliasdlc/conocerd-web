@@ -4,89 +4,43 @@ import Image from "next/image";
 import { SelfPin } from "@/components/map/pins";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Mockup de teléfono (#10). Frame rotado con perspectiva; la pantalla es un
-//  PLACEHOLDER SWAPPABLE: hoy una "app falsa" armada con el sistema de pines,
-//  mañana se reemplaza por el video/screenshot real vía la prop `screen`.
+//  Mockup de teléfono (#10). La pantalla se mantiene frontal y proporcionada:
+//  debe comunicar el producto, no convertirse en una pieza 3D ilegible. Sigue
+//  siendo intercambiable por un video o screenshot real mediante `screen`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DefaultScreen() {
   return (
-    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg,#EAF6F4,#DCEFEA)" }}>
+    <div className="absolute inset-0 bg-[linear-gradient(160deg,#EAF6F4,#DCEFEA)]">
       {/* trazas de calles falsas */}
-      <svg viewBox="0 0 270 560" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+      <svg viewBox="0 0 270 560" className="absolute inset-0 size-full">
         <path d="M-10,180 C80,150 150,260 300,210" fill="none" stroke="#ffffff" strokeWidth="14" opacity="0.7" />
         <path d="M40,-10 C70,140 20,320 120,580" fill="none" stroke="#ffffff" strokeWidth="12" opacity="0.6" />
         {/* ruta activa dashed mango */}
-        <path d="M135,470 C120,360 180,300 150,180" fill="none" stroke="#F47F0E" strokeWidth="4" strokeDasharray="2 5" strokeLinecap="round" />
+        <path d="M135,470 C120,360 180,300 150,180" fill="none" stroke="#FF8D16" strokeWidth="4" strokeDasharray="2 5" strokeLinecap="round" />
       </svg>
 
       {/* barra de búsqueda */}
-      <div
-        style={{
-          position: "absolute",
-          top: 44,
-          left: 16,
-          right: 16,
-          height: 38,
-          borderRadius: 999,
-          background: "#fff",
-          boxShadow: "0 6px 18px rgba(38,70,83,0.16)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "0 14px",
-        }}
-      >
-        <span className="ms" style={{ fontSize: 18, color: "#5B6B72" }}>search</span>
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 12.5, color: "#5B6B72" }}>
-          ¿A dónde vamos?
-        </span>
+      <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_6px_18px_rgba(38,70,83,0.16)]">
+        <span className="ms text-lg text-muted">search</span>
+        <span className="font-display text-[12.5px] text-muted">¿A dónde vamos?</span>
       </div>
 
       {/* self-pin en el centro */}
-      <div style={{ position: "absolute", top: 196, left: "50%", transform: "translateX(-50%)" }}>
+      <div className="absolute left-1/2 top-[196px] -translate-x-1/2">
         <SelfPin heading={18} size={44} />
       </div>
 
       {/* card inferior estilo bottom-sheet */}
-      <div
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 16,
-          background: "#fff",
-          borderRadius: 20,
-          padding: 12,
-          boxShadow: "0 -2px 20px rgba(38,70,83,0.14)",
-          display: "flex",
-          gap: 11,
-          alignItems: "center",
-        }}
-      >
-        <div style={{ position: "relative", width: 56, height: 56, borderRadius: 12, overflow: "hidden", flexShrink: 0, background: "#F5EFE2" }}>
-          <Image src="/assets/ph-playa.png" alt="" fill sizes="56px" style={{ objectFit: "cover" }} />
+      <div className="absolute inset-x-3 bottom-4 flex items-center gap-[11px] rounded-[20px] bg-white p-3 shadow-[0_-2px_20px_rgba(38,70,83,0.14)]">
+        <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-cream-2">
+          <Image src="/assets/ph-playa.png" alt="" fill sizes="56px" className="object-cover" />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 13, color: "#264653" }}>
-            Bahía de las Águilas
-          </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#5B6B72", marginTop: 2 }}>
-            ★ 4.9 · a 2.4 km
-          </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-[13px] font-extrabold text-ink">Bahía de las Águilas</div>
+          <div className="mt-0.5 font-mono text-[10px] text-muted">★ 4.9 · a 2.4 km</div>
         </div>
-        <div
-          style={{
-            flexShrink: 0,
-            background: "#F76C4D",
-            color: "#fff",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 12,
-            padding: "9px 16px",
-            borderRadius: 999,
-          }}
-        >
+        <div className="shrink-0 rounded-full bg-coral px-4 py-[9px] font-display text-xs font-extrabold text-white">
           Ir
         </div>
       </div>
@@ -96,48 +50,13 @@ function DefaultScreen() {
 
 export default function PhoneMockup({ screen }: { screen?: React.ReactNode }) {
   return (
-    <div style={{ perspective: 1500 }}>
-      <div
-        style={{
-          position: "relative",
-          width: 264,
-          height: 548,
-          borderRadius: 44,
-          background: "linear-gradient(155deg,#33545F,#1D3A45)",
-          padding: 12,
-          boxShadow:
-            "0 50px 90px rgba(38,70,83,0.38), 0 12px 30px rgba(38,70,83,0.25), inset 0 1px 2px rgba(255,255,255,0.18)",
-          // #10 — rotado a la derecha (rotateY) + hacia arriba (rotateX)
-          transform: "rotateY(-16deg) rotateX(12deg)",
-          transformStyle: "preserve-3d",
-        }}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "100%",
-            borderRadius: 33,
-            overflow: "hidden",
-            background: "#EAF6F4",
-          }}
-        >
+    <div className="crd-phone-device">
+      <div className="crd-phone-frame relative box-border aspect-[264/548] w-full rounded-[44px] bg-[linear-gradient(155deg,#33545F,#1D3A45)] p-3 shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_2px_rgba(255,255,255,0.18)]">
+        <div className="relative size-full overflow-hidden rounded-[33px] bg-[#EAF6F4]">
           {screen ?? <DefaultScreen />}
         </div>
         {/* notch */}
-        <div
-          style={{
-            position: "absolute",
-            top: 12,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 92,
-            height: 22,
-            background: "#1D3A45",
-            borderRadius: "0 0 14px 14px",
-            zIndex: 2,
-          }}
-        />
+        <div className="absolute left-1/2 top-3 z-[2] h-[22px] w-[92px] -translate-x-1/2 rounded-b-[14px] bg-ink-2" />
       </div>
     </div>
   );

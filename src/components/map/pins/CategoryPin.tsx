@@ -19,7 +19,7 @@ const STATE: Record<
   { fill?: string; fillOpacity: number; borderOpacity: number; iconOpacity: number; shadowAlpha: number }
 > = {
   default: { fillOpacity: 1, borderOpacity: 0.95, iconOpacity: 1, shadowAlpha: 0.28 },
-  upcoming: { fill: "#FF6B35", fillOpacity: 1, borderOpacity: 0.95, iconOpacity: 1, shadowAlpha: 0.28 },
+  upcoming: { fill: "#F76C4D", fillOpacity: 1, borderOpacity: 0.95, iconOpacity: 1, shadowAlpha: 0.28 },
   done: { fill: "#43A047", fillOpacity: 0.78, borderOpacity: 0.7, iconOpacity: 0.85, shadowAlpha: 0.18 },
 };
 
@@ -62,6 +62,7 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
     >
       <span
         className="ms"
+        aria-hidden="true"
         style={{
           fontSize: Math.round(size * 0.52),
           color: `rgba(255,255,255,${s.iconOpacity})`,

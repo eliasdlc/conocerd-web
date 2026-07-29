@@ -5,8 +5,13 @@ import Footer from "@/components/Footer";
 export default function JourneyHome() {
   return (
     <>
+      <a className="crd-skip-link" href="#main-content">
+        Saltar al contenido
+      </a>
       <Nav />
-      <MapScrollJourney />
+      <main id="main-content">
+        <MapScrollJourney />
+      </main>
       <Footer />
     </>
   );

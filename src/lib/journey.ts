@@ -3,8 +3,8 @@
 //
 //  La cámara es una FUNCIÓN CONTINUA del progreso 0..1 (no bandas discretas).
 //  Este módulo es la única fuente de: la pista de escenas, los capítulos, y las
-//  conversiones progreso↔escena↔cámara↔encuadre. Lo consumen los dos motores
-//  (scroll en desktop, pasos en móvil) a través de `lib/journeyCamera.ts`.
+//  conversiones progreso↔escena↔cámara↔encuadre. El motor de scroll lo consume
+//  a través de `lib/journeyCamera.ts` en todos los viewports.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SCENE_CAMERAS, resolveCamera, type SceneCamera, type Viewport } from "@/data/destinations";
@@ -13,7 +13,7 @@ export type SceneDef = {
   name: string;
   /** vh de pista de scroll = "tiempo en cámara" relativo (solo desktop). */
   height: number;
-  /** Capítulo al que pertenece (agrupa escenas en el stepper móvil). */
+  /** Capítulo de contenido al que pertenece. */
   chapter: string;
   /**
    * Zona segura del overlay, como fracción del viewport. La cámara centra la
@@ -47,10 +47,16 @@ export const SCENES: SceneDef[] = [
 
 export const TRIGGER_TOTAL_VH = SCENES.reduce((sum, s) => sum + s.height, 0);
 
+// Mobile keeps the same relative scene timing so camera bands and anchor
+// positions stay aligned, but needs less physical scrolling than desktop.
+// 0.63 turns the 1329vh desktop track into ~837dvh on phones.
+export const MOBILE_TRACK_SCALE = 0.63;
+export const MOBILE_TRIGGER_TOTAL_DVH = TRIGGER_TOTAL_VH * MOBILE_TRACK_SCALE;
+
 // ─── Bandas en espacio de progreso [0,1] ──────────────────────────────────────
 // `start/end` = banda de la escena (activeScene + progreso local).
 // `center`    = punto de progreso donde la cámara se asienta en su keyframe;
-//               es también el destino de cada paso en móvil.
+//               también es el destino de la navegación directa.
 
 export type SceneBand = {
   name: string;
@@ -73,28 +79,6 @@ export const SCENE_BANDS: SceneBand[] = (() => {
     return { name: s.name, index, start, end, center, camera: SCENE_CAMERAS[s.name], def: s };
   });
 })();
-
-export const SCENE_COUNT = SCENE_BANDS.length;
-
-// ─── Capítulos (agrupación para el stepper móvil) ─────────────────────────────
-// 14 escenas son demasiados puntos para un indicador; 7 capítulos sí se leen.
-
-export type Chapter = { label: string; first: number; last: number };
-
-export const CHAPTERS: Chapter[] = (() => {
-  const out: Chapter[] = [];
-  SCENES.forEach((s, i) => {
-    const prev = out[out.length - 1];
-    if (prev && prev.label === s.chapter) prev.last = i;
-    else out.push({ label: s.chapter, first: i, last: i });
-  });
-  return out;
-})();
-
-export function chapterIndexOfScene(sceneIndex: number): number {
-  const i = CHAPTERS.findIndex((c) => sceneIndex >= c.first && sceneIndex <= c.last);
-  return i < 0 ? 0 : i;
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -236,7 +220,7 @@ export function sceneAtProgress(p: number): string {
   return name;
 }
 
-/** Índice de escena activo (para el stepper). */
+/** Índice de escena activo. */
 export function sceneIndexAtProgress(p: number): number {
   let index = 0;
   for (const b of SCENE_BANDS) {
