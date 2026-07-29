@@ -141,7 +141,7 @@ export default function NegociosOverlay() {
                 style={isVisible ? { animationDelay: `${i * 0.07 + 0.15}s` } : undefined}
               >
                 <span
-                  className="ms grid size-[21px] shrink-0 place-items-center rounded-[7px] border border-mint-soft bg-white text-sm text-mint"
+                  className="ms flex size-[21px] shrink-0 items-center justify-center rounded-[7px] border border-mint-soft bg-white text-sm leading-none text-mint"
                   aria-hidden="true"
                 >
                   {b.icon}
