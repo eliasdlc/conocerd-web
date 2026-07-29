@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       businessName: data.businessName,
       businessType: data.businessType,
       whatsapp: data.whatsapp,
+      instagram: data.instagram,
       ref: data.ref,
       consentAt: new Date(),
     });

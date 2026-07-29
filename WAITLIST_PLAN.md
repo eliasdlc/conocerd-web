@@ -128,6 +128,7 @@ móvil; conviene avisar a quien lleve el backend de ConoceRD para que la marca d
 | **F4** | Ruta `/lista` ligera + captura de `ref` + generación del QR | Carga rápida en 4G; el `ref` llega a la base | Hecho (`pnpm qr <url>`) |
 | **F5** | Paso 2 (encuesta de chips) + estado de éxito + correo de bienvenida | Se puede completar o saltar; ambos caminos limpios | Pendiente |
 | **F6** | `/privacidad`, `/terminos`, consentimiento, `typecheck` + `lint` | Checks verdes, legal publicado | Hecho salvo el correo de baja real (depende del ESP) |
+| **F7** | Instagram del negocio + panel interno `/admin` (métricas, tabla, CSV) | El equipo puede leer las respuestas sin abrir la base | Hecho — falta `ADMIN_PASSWORD` en `vercel env` |
 
 **Alcance decidido para la competencia: F0–F4.** F6 se adelantó porque ya se
 recolectan correos: `/privacidad` y `/terminos` están publicadas y el
@@ -144,9 +145,11 @@ alta en el ESP (`src/lib/waitlist/esp.ts`) es un no-op sin `RESEND_API_KEY`.
 **Lo que falta para producción** — sólo configuración, no código:
 
 1. Crear la audiencia en Resend y añadir `RESEND_API_KEY` y `RESEND_AUDIENCE_ID`.
-2. Crear la base Neon (Vercel Marketplace) y añadir `DATABASE_URL`. La tabla
-   `waitlist_subscribers` se crea sola en el primer arranque.
+2. ~~Crear la base Neon (Vercel Marketplace) y añadir `DATABASE_URL`~~. Hecho. La
+   tabla `waitlist_subscribers` se crea y se migra sola en el primer arranque.
 3. Regenerar el QR con el dominio real: `pnpm qr https://<dominio>/lista?ref=expo-ozrd`.
+4. Añadir `ADMIN_PASSWORD` (`vercel env add ADMIN_PASSWORD`) para poder abrir
+   `/admin` en producción. Sin ella el panel no deja entrar a nadie.
 
 ---
 
