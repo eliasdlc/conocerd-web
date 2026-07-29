@@ -11,7 +11,7 @@
 //  el registro no sirve para nada.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   AUDIENCES,
   BUSINESS_TYPES,
@@ -27,40 +27,43 @@ import {
 
 type Tone = "light" | "dark";
 
+// Cada tono es un juego de clases, no de valores. Son literales en el código
+// fuente, que es lo que Tailwind escanea; una clase compuesta por interpolación
+// nunca se generaría.
 const TONES: Record<Tone, {
-  text: string; muted: string; field: string; fieldBorder: string;
-  fieldText: string; placeholder: string; toggleBg: string; toggleActive: string;
-  toggleActiveText: string; toggleText: string; error: string; success: string;
+  text: string; muted: string; field: string; prefix: string; toggleBg: string;
+  toggleActive: string; toggleInactive: string; error: string; success: string;
+  successBox: string;
 }> = {
   dark: {
-    text: "#fff",
-    muted: "rgba(255,255,255,0.66)",
-    field: "rgba(255,255,255,0.10)",
-    fieldBorder: "rgba(255,255,255,0.22)",
-    fieldText: "#fff",
-    placeholder: "rgba(255,255,255,0.72)",
-    toggleBg: "rgba(255,255,255,0.10)",
-    toggleActive: "#fff",
-    toggleActiveText: "#1D3A45",
-    toggleText: "rgba(255,255,255,0.75)",
-    error: "#FFB3A0",
-    success: "#25CCB8",
+    text: "text-white",
+    muted: "text-white/66",
+    field: "border-white/22 bg-white/10 text-white",
+    prefix: "text-white/72",
+    toggleBg: "bg-white/10",
+    toggleActive: "bg-white text-ink-2",
+    toggleInactive: "text-white/75",
+    error: "text-[#FFB3A0]",
+    success: "text-mint",
+    successBox: "border-mint/35 bg-mint/[0.14]",
   },
   light: {
-    text: "#264653",
-    muted: "#5B6B72",
-    field: "#fff",
-    fieldBorder: "#EBE6D9",
-    fieldText: "#264653",
-    placeholder: "#5B6B72",
-    toggleBg: "#F5EFE2",
-    toggleActive: "#264653",
-    toggleActiveText: "#fff",
-    toggleText: "#5B6B72",
-    error: "#B23410",
-    success: "#0C6A60",
+    text: "text-ink",
+    muted: "text-muted",
+    field: "border-line bg-white text-ink",
+    prefix: "text-muted",
+    toggleBg: "bg-cream-2",
+    toggleActive: "bg-ink text-white",
+    toggleInactive: "text-muted",
+    error: "text-coral-ink",
+    success: "text-mint-ink",
+    successBox: "border-mint bg-mint-soft",
   },
 };
+
+// Chrome común de todos los campos: sustituye al objeto fieldStyle que antes se
+// memorizaba y se extendía con spread en cada input.
+const FIELD = "h-12 w-full rounded-[14px] border px-3.5 font-sans text-[15px] outline-none";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
@@ -249,21 +252,7 @@ export default function SubscribeForm({
     [audience, isBusiness, onSuccess, source, status]
   );
 
-  const fieldStyle = useMemo<React.CSSProperties>(
-    () => ({
-      width: "100%",
-      height: 48,
-      padding: "0 14px",
-      borderRadius: 14,
-      border: `1px solid ${t.fieldBorder}`,
-      background: t.field,
-      color: t.fieldText,
-      fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
-      fontSize: 15,
-      outline: "none",
-    }),
-    [t]
-  );
+  const field = `${FIELD} ${t.field}`;
 
   // ── Éxito ──
   if (status === "success") {
@@ -273,32 +262,18 @@ export default function SubscribeForm({
       <div
         role="status"
         aria-live="polite"
-        style={{
-          display: "flex",
-          gap: 12,
-          alignItems: "flex-start",
-          textAlign: "left",
-          background: tone === "dark" ? "rgba(37,204,184,0.14)" : "#C6F3EB",
-          border: `1px solid ${tone === "dark" ? "rgba(37,204,184,0.35)" : "#25CCB8"}`,
-          borderRadius: 16,
-          padding: compact ? "12px 14px" : "16px 18px",
-        }}
+        className={`flex items-start gap-3 rounded-2xl border text-left ${t.successBox} ${
+          compact ? "px-3.5 py-3" : "px-[18px] py-4"
+        }`}
       >
-        <span className="ms" aria-hidden="true" style={{ fontSize: 24, color: t.success, flexShrink: 0 }}>
+        <span className={`ms shrink-0 text-2xl ${t.success}`} aria-hidden="true">
           check_circle
         </span>
         <div>
-          <div
-            style={{
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              fontSize: 15,
-              color: t.text,
-            }}
-          >
+          <div className={`font-display text-[15px] font-extrabold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
           </div>
-          <p style={{ margin: "3px 0 0", color: t.muted, fontSize: 13, lineHeight: 1.5 }}>
+          <p className={`mt-[3px] text-[13px] leading-[1.5] ${t.muted}`}>
             {alreadyIn
               ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
               : copy.body}
@@ -314,20 +289,13 @@ export default function SubscribeForm({
   const submitting = status === "submitting";
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate style={{ width: "100%", textAlign: "left" }}>
+    <form ref={formRef} onSubmit={onSubmit} noValidate className="w-full text-left">
       {/* Toggle de audiencia */}
       {!compact && !audienceLocked && (
         <div
           role="radiogroup"
           aria-label="¿Quién eres?"
-          style={{
-            display: "flex",
-            gap: 4,
-            padding: 4,
-            background: t.toggleBg,
-            borderRadius: 999,
-            marginBottom: 14,
-          }}
+          className={`mb-3.5 flex gap-1 rounded-full p-1 ${t.toggleBg}`}
         >
           {AUDIENCES.map((a, i) => {
             const active = a === audience;
@@ -349,19 +317,9 @@ export default function SubscribeForm({
                   setAudience(next);
                   toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
                 }}
-                style={{
-                  flex: 1,
-                  height: 44,
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: "pointer",
-                  background: active ? t.toggleActive : "transparent",
-                  color: active ? t.toggleActiveText : t.toggleText,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  transition: "background .2s, color .2s",
-                }}
+                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-display text-[13.5px] font-bold transition-[background-color,color] duration-200 ${
+                  active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
+                }`}
               >
                 {AUDIENCE_LABEL[a]}
               </button>
@@ -372,7 +330,7 @@ export default function SubscribeForm({
 
       {/* Campos de negocio — sólo cuando hacen falta */}
       {!compact && isBusiness && (
-        <div style={{ display: "grid", gap: 10, marginBottom: 10 }}>
+        <div className="mb-2.5 grid gap-2.5">
           <div>
             <input
               name="businessName"
@@ -382,20 +340,20 @@ export default function SubscribeForm({
               placeholder="Nombre de tu negocio"
               aria-label="Nombre de tu negocio"
               aria-invalid={Boolean(fieldErrors.businessName)}
-              style={fieldStyle}
+              className={field}
             />
             {fieldErrors.businessName && (
-              <p style={{ margin: "5px 2px 0", color: t.error, fontSize: 12.5 }}>
+              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
                 {fieldErrors.businessName}
               </p>
             )}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} className="crd-sub-row">
+          <div className="crd-sub-row grid grid-cols-2 gap-2.5">
             <select
               name="businessType"
               defaultValue="restaurante"
               aria-label="Tipo de negocio"
-              style={{ ...fieldStyle, cursor: "pointer" }}
+              className={`${field} cursor-pointer`}
             >
               {BUSINESS_TYPES.map((b) => (
                 <option key={b} value={b} style={{ color: "#264653" }}>
@@ -410,7 +368,7 @@ export default function SubscribeForm({
               autoComplete="tel"
               placeholder="WhatsApp (opcional)"
               aria-label="WhatsApp (opcional)"
-              style={fieldStyle}
+              className={field}
             />
           </div>
           {/* Instagram: para muchos negocios de RD es su única vitrina en línea,
@@ -418,21 +376,10 @@ export default function SubscribeForm({
               `@` va pintado fuera del input para que nadie lo escriba dos veces
               (igual lo normalizamos en el servidor si lo hacen). */}
           <div>
-            <div style={{ position: "relative" }}>
+            <div className="relative">
               <span
                 aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: 0,
-                  height: 48,
-                  display: "flex",
-                  alignItems: "center",
-                  color: t.placeholder,
-                  fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
-                  fontSize: 15,
-                  pointerEvents: "none",
-                }}
+                className={`pointer-events-none absolute left-3.5 top-0 flex h-12 items-center font-sans text-[15px] ${t.prefix}`}
               >
                 @
               </span>
@@ -448,11 +395,11 @@ export default function SubscribeForm({
                 placeholder="instagram del negocio (opcional)"
                 aria-label="Usuario de Instagram del negocio (opcional)"
                 aria-invalid={Boolean(fieldErrors.instagram)}
-                style={{ ...fieldStyle, paddingLeft: 28 }}
+                className={`${field} pl-7`}
               />
             </div>
             {fieldErrors.instagram && (
-              <p style={{ margin: "5px 2px 0", color: t.error, fontSize: 12.5 }}>
+              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
                 {fieldErrors.instagram}
               </p>
             )}
@@ -461,7 +408,7 @@ export default function SubscribeForm({
       )}
 
       {/* Correo + enviar */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="flex flex-wrap gap-2">
         <input
           id={emailId}
           name="email"
@@ -477,53 +424,31 @@ export default function SubscribeForm({
           aria-label="Tu correo electrónico"
           aria-invalid={Boolean(fieldErrors.email)}
           aria-describedby={error ? errorId : undefined}
-          // `minWidth: 0` es lo que permite que el campo encoja: un input como
-          // flex item toma su ancho intrínseco (~200px) como mínimo, y en la
-          // columna estrecha del footer eso empujaba el botón a otra línea.
-          style={{
-            ...fieldStyle,
-            flex: compact ? "1 1 130px" : "1 1 200px",
-            width: "auto",
-            minWidth: 0,
-          }}
+          // min-w-0 es lo que permite que el campo encoja: un input como flex
+          // item toma su ancho intrínseco (~200px) como mínimo, y en la columna
+          // estrecha del footer eso empujaba el botón a otra línea.
+          className={`${field} w-auto min-w-0 ${compact ? "flex-[1_1_130px]" : "flex-[1_1_200px]"}`}
         />
         <button
           type="submit"
           disabled={submitting}
-          style={{
-            height: 48,
-            padding: compact ? "0 16px" : "0 22px",
-            borderRadius: 14,
-            border: "none",
-            background: "var(--color-mango)",
-            color: "#fff",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: submitting ? "progress" : "pointer",
-            opacity: submitting ? 0.75 : 1,
-            boxShadow: "0 8px 22px rgba(255,141,22,.30)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            whiteSpace: "nowrap",
-          }}
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-white shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
+            compact ? "px-4" : "px-[22px]"
+          } ${submitting ? "" : "cursor-pointer"}`}
         >
           {submitting ? "Enviando…" : isBusiness ? "Registrar negocio" : "Unirme"}
           {!submitting && !compact && (
-            <span className="ms" aria-hidden="true" style={{ fontSize: 18 }}>
-              arrow_forward
-            </span>
+            <span className="ms text-lg" aria-hidden="true">arrow_forward</span>
           )}
         </button>
       </div>
 
       {fieldErrors.email && (
-        <p style={{ margin: "6px 2px 0", color: t.error, fontSize: 12.5 }}>{fieldErrors.email}</p>
+        <p className={`mx-0.5 mt-1.5 text-[12.5px] ${t.error}`}>{fieldErrors.email}</p>
       )}
 
       {/* Honeypot: fuera de la vista pero dentro del DOM, sin aria y sin tab. */}
-      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
+      <div aria-hidden="true" className="absolute left-[-9999px] size-px overflow-hidden">
         <label htmlFor={`${uid}-hp`}>No llenar</label>
         <input id={`${uid}-hp`} name={HONEYPOT_FIELD} type="text" tabIndex={-1} autoComplete="off" />
       </div>
@@ -531,16 +456,7 @@ export default function SubscribeForm({
       {/* Consentimiento explícito (§2.5) */}
       <label
         htmlFor={consentId}
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 8,
-          margin: "10px 2px 0",
-          color: t.muted,
-          fontSize: 12,
-          lineHeight: 1.45,
-          cursor: "pointer",
-        }}
+        className={`mx-0.5 mt-2.5 flex cursor-pointer items-start gap-2 text-xs leading-[1.45] ${t.muted}`}
       >
         <input
           id={consentId}
@@ -548,7 +464,7 @@ export default function SubscribeForm({
           type="checkbox"
           required
           aria-invalid={Boolean(fieldErrors.consent)}
-          style={{ marginTop: 2, width: 16, height: 16, accentColor: "#F76C4D", flexShrink: 0 }}
+          className="mt-0.5 size-4 shrink-0 accent-coral"
         />
         <span>
           Acepto recibir correos de ConoceRD sobre el lanzamiento. Puedo darme de baja cuando
@@ -556,20 +472,15 @@ export default function SubscribeForm({
         </span>
       </label>
       {fieldErrors.consent && (
-        <p style={{ margin: "4px 2px 0", color: t.error, fontSize: 12.5 }}>{fieldErrors.consent}</p>
+        <p className={`mx-0.5 mt-1 text-[12.5px] ${t.error}`}>{fieldErrors.consent}</p>
       )}
 
-      {/* Error general */}
+      {/* Error general — sin error no ocupa alto, para no reservar hueco vacío. */}
       <p
         id={errorId}
         role="alert"
         aria-live="assertive"
-        style={{
-          margin: error ? "8px 2px 0" : 0,
-          color: t.error,
-          fontSize: 13,
-          minHeight: error ? undefined : 0,
-        }}
+        className={`text-[13px] ${t.error} ${error ? "mx-0.5 mt-2" : "m-0 min-h-0"}`}
       >
         {error}
       </p>
