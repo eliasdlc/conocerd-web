@@ -7,7 +7,6 @@ import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-type Social = { label: string; icon: string; href: string };
 type Member = {
   name: string;
   role: string;
@@ -18,7 +17,6 @@ type Member = {
   bg: string;
   color: string;
   photo?: string; // foto real cuando la manden; hoy iniciales
-  socials: Social[];
 };
 
 // Handles placeholder hasta tener los reales.
@@ -33,11 +31,6 @@ const TEAM: Member[] = [
     initials: "BN",
     bg: "#FFE7DF",
     color: "#B23410",
-    socials: [
-      { label: "Instagram", icon: "photo_camera", href: "#" },
-      { label: "LinkedIn", icon: "work", href: "#" },
-      { label: "Email", icon: "mail", href: "#" },
-    ],
   },
   {
     name: "Elías de la Cruz",
@@ -49,137 +42,66 @@ const TEAM: Member[] = [
     initials: "EC",
     bg: "#C6F3EB",
     color: "#0C6A60",
-    socials: [
-      { label: "GitHub", icon: "code", href: "#" },
-      { label: "LinkedIn", icon: "work", href: "#" },
-      { label: "Email", icon: "mail", href: "#" },
-    ],
   },
 ];
 
 // PUCMM Santiago campus coordinates
 const PUCMM = { lng: -70.7003, lat: 19.4414 };
 
-// ─── Team card (vertical, hover = redes + bio extendida) ──────────────────────
+// ─── Team card (disclosure explícito con la bio extendida) ────────────────────
 
 function TeamCard({ member, delay, animate }: { member: Member; delay: number; animate: boolean }) {
-  const [hover, setHover] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: "relative",
-        background: "rgba(253,248,240,0.92)",
-        backdropFilter: "blur(18px)",
-        WebkitBackdropFilter: "blur(18px)",
-        border: "1.5px solid #EBE6D9",
-        borderRadius: 22,
-        padding: "24px 22px 20px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        flex: "1 1 260px",
-        maxWidth: 300,
-        transform: hover ? "translateY(-6px)" : "translateY(0)",
-        boxShadow: hover ? "0 22px 50px rgba(38,70,83,0.20)" : "0 12px 36px rgba(38,70,83,0.14)",
-        transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease",
-        animation: animate ? `slideUpIn 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s both` : "none",
-      }}
+      className={`relative flex max-w-[300px] flex-[1_1_260px] flex-col items-center rounded-[22px] border-[1.5px] border-line bg-cream/92 px-[22px] pb-5 pt-6 text-center backdrop-blur-[18px] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${expanded ? "shadow-[0_22px_50px_rgba(38,70,83,0.20)]" : "shadow-[0_12px_36px_rgba(38,70,83,0.14)]"}
+        ${animate ? "animate-slide-up" : ""}`}
+      style={animate ? { animationDelay: `${delay}s` } : undefined}
     >
       {/* Avatar grande */}
       <div
-        style={{
-          width: 96,
-          height: 96,
-          borderRadius: "50%",
-          background: member.bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          position: "relative",
-          boxShadow: "0 8px 20px rgba(38,70,83,0.16)",
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: 30,
-          color: member.color,
-        }}
+        className="relative flex size-24 items-center justify-center overflow-hidden rounded-full font-display text-3xl font-extrabold shadow-[0_8px_20px_rgba(38,70,83,0.16)]"
+        style={{ background: member.bg, color: member.color }}
       >
         {member.photo ? (
-          <Image src={member.photo} alt={member.name} fill sizes="96px" style={{ objectFit: "cover" }} />
+          <Image src={member.photo} alt={member.name} fill sizes="96px" className="object-cover" />
         ) : (
           member.initials
         )}
       </div>
 
       {/* Nombre → posición → descripción */}
-      <h3
-        style={{
-          margin: "14px 0 0",
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: 17,
-          color: "#264653",
-          lineHeight: 1.2,
-        }}
-      >
+      <h3 className="m-0 mt-3.5 font-display text-[17px] font-extrabold leading-[1.2] text-ink">
         {member.name}
       </h3>
       <div
-        style={{
-          color: member.roleColor,
-          fontWeight: 700,
-          fontSize: 12,
-          margin: "4px 0 8px",
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-        }}
+        className="mb-2 mt-1 font-display text-xs font-bold"
+        style={{ color: member.roleColor }}
       >
         {member.role}
       </div>
-      <p style={{ margin: 0, color: "#5B6B72", fontSize: 12.5, lineHeight: 1.5 }}>
-        {member.bio}
-      </p>
+      <p className="m-0 text-[12.5px] leading-[1.5] text-muted">{member.bio}</p>
 
-      {/* Hover → bio extendida + redes */}
-      <div
-        style={{
-          width: "100%",
-          maxHeight: hover ? 180 : 0,
-          opacity: hover ? 1 : 0,
-          overflow: "hidden",
-          transition: "max-height 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
-        }}
+      {/* The extended profile is an explicit disclosure, not hover-only. */}
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        className="mt-3 min-h-[44px] cursor-pointer border-none bg-transparent font-display font-extrabold"
+        style={{ color: member.color }}
       >
-        <p style={{ margin: "10px 0 0", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.5, borderTop: "1px solid #EBE6D9", paddingTop: 10 }}>
+        {expanded ? "Ver menos" : "Más sobre el equipo"}
+      </button>
+      <div
+        className={`w-full overflow-hidden transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.16,1,0.3,1),ease] ${
+          expanded ? "max-h-[180px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <p className="m-0 mt-2.5 border-t border-line pt-2.5 text-[11.5px] leading-[1.5] text-muted">
           {member.bioLong}
         </p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12 }}>
-          {member.socials.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              aria-label={s.label}
-              title={s.label}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "#fff",
-                border: "1px solid #EBE6D9",
-                color: member.color,
-                textDecoration: "none",
-              }}
-            >
-              <span className="ms" style={{ fontSize: 16 }}>{s.icon}</span>
-            </a>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -197,21 +119,8 @@ export default function EquipoOverlay() {
       {isVisible && (
         <MapMarker longitude={PUCMM.lng} latitude={PUCMM.lat} anchor="bottom">
           <MarkerContent>
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: "50%",
-                background: "#fff",
-                border: "2.5px solid #F76C4D",
-                boxShadow: "0 4px 14px rgba(247,108,77,0.40)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                animation: "mapBubbleIn 0.5s cubic-bezier(0.2,0.8,0.3,1) both",
-              }}
-            >
-              <span className="ms" style={{ fontSize: 19, color: "#F76C4D" }}>school</span>
+            <div className="flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full border-[2.5px] border-coral bg-white shadow-[0_4px_14px_rgba(247,108,77,0.40)]">
+              <span className="ms text-[19px] text-coral-ink" aria-hidden="true">school</span>
             </div>
           </MarkerContent>
           <MarkerLabel position="top">PUCMM · Santiago</MarkerLabel>
@@ -220,88 +129,28 @@ export default function EquipoOverlay() {
 
       {/* Overlay — encabezado arriba, cards abajo (deja ver el pin al centro) */}
       <div
-        className="crd-ol-equipo"
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: isVisible ? "auto" : "none",
-          opacity: isVisible ? 1 : 0,
-          transition: "opacity 0.5s ease",
-          zIndex: 10,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "92px 24px 44px",
-        }}
+        className={`crd-ol-equipo absolute inset-0 z-10 flex flex-col items-center justify-between px-6 pb-11 pt-[92px] transition-opacity duration-500 ease-in-out ${
+          isVisible ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        aria-hidden={!isVisible}
+        inert={!isVisible}
       >
         {/* Heading */}
-        <div
-          style={{
-            textAlign: "center",
-            animation: isVisible ? "slideUpIn 0.45s cubic-bezier(0.16,1,0.3,1) both" : "none",
-          }}
-        >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 7,
-              background: "#FFE7DF",
-              color: "#F76C4D",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              fontSize: 11,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              padding: "5px 12px",
-              borderRadius: 999,
-              marginBottom: 10,
-            }}
-          >
-            <span className="ms" style={{ fontSize: 14 }}>groups</span>
+        <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
+          <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-coral-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-coral-ink">
+            <span className="ms text-sm" aria-hidden="true">groups</span>
             El equipo
           </div>
-          <h2
-            style={{
-              margin: 0,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              letterSpacing: "-.025em",
-              fontSize: "clamp(20px, 2.8vw, 34px)",
-              lineHeight: 1.08,
-              color: "#1D3A45",
-              textShadow: "0 1px 2px rgba(253,248,240,0.95), 0 0 16px rgba(253,248,240,0.6)",
-            }}
-          >
+          <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Hecho por dominicanos,<br />para descubrir lo nuestro
           </h2>
-          <p
-            style={{
-              margin: "8px auto 0",
-              color: "#3A5560",
-              fontSize: 14,
-              lineHeight: 1.5,
-              textShadow: "0 1px 2px rgba(253,248,240,0.9)",
-            }}
-          >
+          <p className="mx-auto mt-2 text-sm leading-[1.5] text-[#3A5560] [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
             Un equipo multidisciplinario de la PUCMM, Campus Santiago.
           </p>
         </div>
 
         {/* Team cards (abajo) */}
-        <div
-          className="crd-ol-team"
-          style={{
-            display: "flex",
-            gap: 18,
-            flexWrap: "wrap",
-            justifyContent: "center",
-            alignItems: "flex-start",
-            width: "100%",
-            maxWidth: 640,
-          }}
-        >
+        <div className="crd-ol-team flex w-full max-w-[640px] flex-wrap items-start justify-center gap-[18px]">
           {TEAM.map((member, i) => (
             <TeamCard key={member.name} member={member} delay={i * 0.1 + 0.15} animate={isVisible} />
           ))}

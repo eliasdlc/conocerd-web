@@ -8,59 +8,31 @@ interface ButtonProps {
   children: React.ReactNode;
 }
 
-const variantStyles = {
-  primary: {
-    bg: "linear-gradient(135deg,#FF6B4A,#F76C4D)",
-    color: "#fff",
-    border: "none",
-    shadow: "0 6px 20px rgba(247,108,77,.40)",
-  },
-  outline: {
-    bg: "transparent",
-    color: "#264653",
-    border: "2px solid #264653",
-    shadow: "none",
-  },
-  mint: {
-    bg: "#25CCB8",
-    color: "#fff",
-    border: "none",
-    shadow: "0 6px 20px rgba(37,204,184,.35)",
-  },
+const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
+  primary: "bg-mango text-white shadow-[0_6px_20px_rgba(255,141,22,.34)]",
+  outline: "border-2 border-ink bg-transparent text-ink",
+  mint: "bg-mint text-ink-2 shadow-[0_6px_20px_rgba(37,204,184,.35)]",
+};
+
+const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
+  sm: "h-10 px-[18px] text-sm",
+  lg: "h-14 px-[26px] text-base",
 };
 
 export default function Button({ variant = "primary", size = "sm", icon, onClick, children }: ButtonProps) {
-  const v = variantStyles[variant];
-  const height = size === "lg" ? 56 : 40;
-  const fontSize = size === "lg" ? 16 : 14;
-  const px = size === "lg" ? 26 : 18;
-  const iconSize = size === "lg" ? 22 : 18;
-
   return (
     <button
+      type="button"
+      // .crd-button aporta el hover/active (translate + scale); vive en CSS
+      // porque el :active necesita ganarle al hover.
+      className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
       onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        height,
-        padding: `0 ${px}px`,
-        borderRadius: 999,
-        background: v.bg,
-        color: v.color,
-        border: v.border,
-        boxShadow: v.shadow,
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontWeight: 700,
-        fontSize,
-        cursor: "pointer",
-        transition: "transform .2s, box-shadow .2s",
-        whiteSpace: "nowrap",
-      }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px) scale(1.03)"; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; }}
     >
-      {icon && <span className="ms" style={{ fontSize: iconSize }}>{icon}</span>}
+      {icon && (
+        <span className={`ms ${size === "lg" ? "text-[22px]" : "text-lg"}`} aria-hidden="true">
+          {icon}
+        </span>
+      )}
       {children}
     </button>
   );
