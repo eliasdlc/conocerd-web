@@ -11,7 +11,7 @@
 //  el registro no sirve para nada.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AUDIENCES,
   BUSINESS_TYPES,
@@ -110,10 +110,24 @@ function readReferral(): string | undefined {
 
 type Status = "idle" | "submitting" | "success" | "error";
 
+/** Lo que la página anfitriona necesita saber cuando el registro sale bien. */
+export interface SubscribeSuccess {
+  audience: Audience;
+  /** El correo ya estaba en la lista: no es un alta nueva. */
+  alreadyIn: boolean;
+}
+
 export interface SubscribeFormProps {
   tone?: Tone;
   /** Audiencia con la que abre el toggle. */
   defaultAudience?: Audience;
+  /**
+   * Audiencia controlada desde fuera. Cuando se pasa junto a `onAudienceChange`,
+   * el toggle deja de tener estado propio y la página puede reaccionar al cambio
+   * (en /lista los beneficios de la página cambian con él).
+   */
+  audience?: Audience;
+  onAudienceChange?: (a: Audience) => void;
   /** `compact` = una línea (footer). `full` = toggle + campos (CTA, /lista). */
   layout?: "full" | "compact";
   /** Se rellena solo en la variante compacta, donde no cabe el toggle. */
@@ -121,21 +135,38 @@ export interface SubscribeFormProps {
   autoFocus?: boolean;
   /** Identifica de dónde salió el registro en los logs/analítica futura. */
   source?: string;
+  /** Efectos de la página al registrarse (confeti, scroll, analítica). */
+  onSuccess?: (info: SubscribeSuccess) => void;
+  /** Sustituye el aviso de éxito por defecto por el de la página anfitriona. */
+  renderSuccess?: (info: SubscribeSuccess) => ReactNode;
 }
 
 export default function SubscribeForm({
   tone = "light",
   defaultAudience = "viajero",
+  audience: audienceProp,
+  onAudienceChange,
   layout = "full",
   audienceLocked = false,
   autoFocus = false,
   source,
+  onSuccess,
+  renderSuccess,
 }: SubscribeFormProps) {
   const t = TONES[tone];
   const compact = layout === "compact";
   const uid = useId();
 
-  const [audience, setAudience] = useState<Audience>(defaultAudience);
+  const controlled = audienceProp !== undefined;
+  const [innerAudience, setInnerAudience] = useState<Audience>(defaultAudience);
+  const audience = controlled ? audienceProp : innerAudience;
+  const setAudience = useCallback(
+    (a: Audience) => {
+      if (!controlled) setInnerAudience(a);
+      onAudienceChange?.(a);
+    },
+    [controlled, onAudienceChange]
+  );
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -149,9 +180,9 @@ export default function SubscribeForm({
   // reflejarse aunque el componente ya esté montado. Se ajusta durante el
   // render —no en un efecto— para no encadenar un segundo render.
   const [lastDefault, setLastDefault] = useState<Audience>(defaultAudience);
-  if (lastDefault !== defaultAudience) {
+  if (!controlled && lastDefault !== defaultAudience) {
     setLastDefault(defaultAudience);
-    setAudience(defaultAudience);
+    setInnerAudience(defaultAudience);
   }
 
   const isBusiness = audience === "negocio";
@@ -190,14 +221,16 @@ export default function SubscribeForm({
           setStatus("error");
           return;
         }
-        setAlreadyIn(data.status === "already_subscribed");
+        const already = data.status === "already_subscribed";
+        setAlreadyIn(already);
         setStatus("success");
+        onSuccess?.({ audience, alreadyIn: already });
       } catch {
         setError("No hay conexión. Revisa tu señal e inténtalo de nuevo.");
         setStatus("error");
       }
     },
-    [audience, isBusiness, source, status]
+    [audience, isBusiness, onSuccess, source, status]
   );
 
   const fieldStyle = useMemo<React.CSSProperties>(
@@ -218,6 +251,7 @@ export default function SubscribeForm({
 
   // ── Éxito ──
   if (status === "success") {
+    if (renderSuccess) return <>{renderSuccess({ audience, alreadyIn })}</>;
     const copy = SUCCESS_COPY[audience];
     return (
       <div

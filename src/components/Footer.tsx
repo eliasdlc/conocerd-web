@@ -77,7 +77,7 @@ export default function Footer() {
           <Image
             src="/assets/wordmark.svg"
             alt="ConoceRD"
-            width={150}
+            width={127}
             height={40}
             style={{ height: 40, width: "auto", filter: "brightness(0) invert(1)", opacity: 0.95 }}
           />
