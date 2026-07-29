@@ -13,70 +13,39 @@ import { CATEGORY_META, type Destination } from "@/data/destinations";
 //  avanzan, cicla. Mobile: degrada a fila horizontal scrolleable.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CARD_W = "clamp(220px,18vw,300px)";
+// El ancho de carta se comparte entre la carta y el contenedor del deck, así que
+// vive como constante y no como utilidad repetida.
+const CARD_W = "w-[clamp(220px,18vw,300px)]";
 
 function PolaroidCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
   return (
-    <div
-      style={{
-        width: CARD_W,
-        background: "#fff",
-        padding: "12px 12px 0",
-        borderRadius: 6,
-        boxShadow: "0 14px 34px rgba(38,70,83,.24)",
-      }}
-    >
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "clamp(190px,15vw,240px)",
-          borderRadius: 3,
-          overflow: "hidden",
-          background: "#F5EFE2",
-        }}
-      >
+    <div className={`${CARD_W} rounded-md bg-white px-3 pb-0 pt-3 shadow-[0_14px_34px_rgba(38,70,83,.24)]`}>
+      <div className="relative h-[clamp(190px,15vw,240px)] w-full overflow-hidden rounded-[3px] bg-cream-2">
         <Image
           src={d.image}
           alt={d.name}
           fill
           sizes="(max-width: 640px) 220px, (max-width: 1440px) 18vw, 300px"
-          style={{ objectFit: "cover" }}
+          className="object-cover"
         />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            padding: "14px 12px 12px",
-            background: "linear-gradient(transparent,rgba(38,70,83,.55) 35%,rgba(38,70,83,.94))",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-            alignItems: "flex-start",
-          }}
-        >
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5">
           <CategoryChip icon={meta.icon}>{d.tagline ?? meta.label}</CategoryChip>
-          <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,.92)", lineHeight: 1.4 }}>
-            {d.desc}
-          </p>
+          <p className="m-0 text-xs leading-[1.4] text-white/92">{d.desc}</p>
         </div>
       </div>
-      <div style={{ padding: "12px 4px 14px" }}>
-        <div style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: 24, lineHeight: 1, color: "#264653" }}>
-          {d.name}
-        </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#5B6B72", marginTop: 3 }}>
-          {d.meta ?? d.province}
-        </div>
+      <div className="px-1 pb-3.5 pt-3">
+        <div className="font-hand text-2xl font-bold leading-none text-ink">{d.name}</div>
+        <div className="mt-[3px] font-mono text-[11px] text-muted">{d.meta ?? d.province}</div>
       </div>
     </div>
   );
 }
 
 export default function PolaroidDeck({ items }: { items: Destination[] }) {
+  // 640 y no MOBILE_BREAKPOINT: aquí no es un ajuste de estilo, es otro
+  // componente (fila scrolleable vs deck con estado y spring), así que la rama
+  // sigue en JS.
   const mobile = useIsMobile(640);
   const reduceMotion = useReducedMotion();
   // `order` = ids en orden de profundidad; order[0] = carta de enfrente.
@@ -85,24 +54,9 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
   // ── Mobile: fila horizontal scrolleable ────────────────────────────────────
   if (mobile) {
     return (
-      <div
-        className="crd-polaroid-deck-mobile"
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: "4%",
-          display: "flex",
-          gap: 14,
-          overflowX: "auto",
-          padding: "0 16px 8px",
-          touchAction: "pan-x",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-        }}
-      >
+      <div className="crd-polaroid-deck-mobile absolute inset-x-0 bottom-[4%] flex touch-pan-x gap-3.5 overflow-x-auto px-4 pb-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none]">
         {items.map((d) => (
-          <div key={d.id} style={{ flex: "0 0 auto" }}>
+          <div key={d.id} className="flex-none">
             <PolaroidCard d={d} />
           </div>
         ))}
@@ -114,16 +68,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
   const cycle = () => setOrder((prev) => [...prev.slice(1), prev[0]]);
 
   return (
-    <div
-      className="crd-polaroid-deck"
-      style={{
-        position: "absolute",
-        left: "6%",
-        bottom: "12%",
-        width: CARD_W,
-        height: 320,
-      }}
-    >
+    <div className={`crd-polaroid-deck absolute bottom-[12%] left-[6%] h-80 ${CARD_W}`}>
       {order.map((id, depth) => {
         const d = items.find((x) => x.id === id)!;
         const isFront = depth === 0;
@@ -135,6 +80,9 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
             aria-hidden={!isFront}
             aria-label={isFront ? `Ver el próximo destino. Ahora: ${d.name}` : undefined}
             onClick={isFront ? cycle : undefined}
+            className={`absolute left-0 top-0 origin-bottom appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${
+              isFront ? "cursor-pointer" : "cursor-default"
+            }`}
             initial={false}
             animate={{
               x: depth * 16,
@@ -149,39 +97,11 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
                 ? { duration: 0 }
                 : { type: "spring", stiffness: 260, damping: 30 }
             }
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              cursor: isFront ? "pointer" : "default",
-              transformOrigin: "bottom center",
-              appearance: "none",
-              border: 0,
-              padding: 0,
-              background: "transparent",
-              color: "inherit",
-              textAlign: "left",
-            }}
             whileHover={isFront && !reduceMotion ? { y: -18, scale: 1.02 } : undefined}
           >
             <PolaroidCard d={d} />
             {isFront && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 14,
-                  right: 14,
-                  background: "rgba(38,70,83,0.82)",
-                  color: "#fff",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 10,
-                  letterSpacing: ".06em",
-                  padding: "4px 8px",
-                  borderRadius: 999,
-                  pointerEvents: "none",
-                }}
-              >
+              <div className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 font-display text-[10px] font-bold tracking-[.06em] text-white">
                 Click para ver más →
               </div>
             )}
