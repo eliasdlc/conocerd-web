@@ -29,7 +29,7 @@ import CTASection from "@/sections/CTASection";
 // before the WebGL runtime arrives.
 const Map = dynamic(() => import("@/components/map/Map").then((mod) => mod.Map), {
   ssr: false,
-  loading: () => <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "#FDF8F0" }} />,
+  loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
 
 // Applied once on map load — aligns water/border colors with brand palette
@@ -103,19 +103,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
           ya sin atmósfera, flota sobre este crema en el hero. En las escenas con
           zoom el mapa es opaco y tapa el gradiente. */}
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          // dvh: en móvil la barra de URL cambia el 100vh y el globo se movía
-          // verticalmente al aparecer/desaparecer.
-          height: "100dvh",
-          width: "100%",
-          overflow: "hidden",
-          background:
-            "radial-gradient(60% 50% at 18% 16%,rgba(37,204,184,.10),transparent 70%),radial-gradient(55% 45% at 84% 24%,rgba(255,141,22,.10),transparent 70%),radial-gradient(60% 50% at 50% 98%,rgba(247,108,77,.08),transparent 70%), #FDF8F0",
-        }}
-      >
+      {/* h-[100dvh] y no 100vh: en móvil la barra de URL cambia el 100vh y el
+          globo se movía verticalmente al aparecer/desaparecer. El fondo son tres
+          radial-gradients de marca; como utilidad arbitraria sería ilegible, así
+          que vive en .crd-journey-sticky. */}
+      <div className="crd-journey-sticky sticky top-0 h-[100dvh] w-full overflow-hidden">
         <Map
           ref={mapRef}
           theme="light"
@@ -150,12 +142,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         <div
           key={scene.name}
           id={`trigger-${scene.name}`}
-          className="crd-journey-anchor"
+          className="crd-journey-anchor pointer-events-none"
           data-scene={scene.name}
+          // Altura por escena: es dato, no estilo, así que sigue inline.
           style={{
             height: `${scene.height}vh`,
             "--crd-mobile-scene-height": `${scene.height * MOBILE_TRACK_SCALE}dvh`,
-            pointerEvents: "none",
           } as React.CSSProperties}
         />
       ))}

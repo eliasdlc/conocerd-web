@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
-:root {
+/* Design tokens. `@theme` (no `:root`) es lo que convierte cada token en una
+   utilidad de Tailwind — `bg-mint`, `text-ink`, `border-line`, `desk:` — y a la
+   vez las emite como custom properties en `:root`, así que cualquier
+   `var(--color-mint)` que quede en CSS sigue resolviendo igual. */
+@theme {
+  /* Único breakpoint del proyecto. Debe seguir igual a MOBILE_BREAKPOINT
+     (src/hooks/useIsMobile.ts): `max-desk:` = móvil, `desk:` = desktop. */
+  --breakpoint-desk: 900px;
+
+  /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
+     nombre literal ('Plus Jakarta Sans') NO resuelve, porque next/font sirve
+     cada familia bajo un nombre hasheado. */
+  --font-sans:    var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
+  --font-hand:    var(--font-caveat), cursive;
+
   --color-ink:        #264653;
   --color-ink-2:      #1D3A45;
   --color-coral:      #F76C4D;
@@ -19,6 +35,14 @@
   --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
   --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
   --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
+
+  /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
+     Los @keyframes viven más abajo en este archivo.
+     slideUpIn se usaba con 0.4s / 0.45s / 0.5s en 8 sitios distintos; aquí se
+     unifica en un solo token. El stagger sigue siendo inline (animationDelay),
+     porque depende del índice. */
+  --animate-slide-up: slideUpIn .45s cubic-bezier(.16,1,.3,1) both;
+  --animate-live-dot: crdLiveDot 1.4s ease-in-out infinite;
 }
 
 html {
@@ -29,7 +53,7 @@ body {
   margin: 0;
   background: #FDF8F0;
   color: #264653;
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
 }
 ::selection { background: #FFE6C8; color: #264653; }
@@ -121,6 +145,17 @@ body {
   height: calc((100 + var(--crd-track-vh, 1000)) * 1vh);
 }
 
+/* Fondo crema con halos cálidos de marca detrás del canvas: el globo, ya sin
+   atmósfera, flota sobre este crema en el hero. En las escenas con zoom el mapa
+   es opaco y tapa el gradiente. Se queda en CSS porque son tres gradientes. */
+.crd-journey-sticky {
+  background:
+    radial-gradient(60% 50% at 18% 16%, rgba(37,204,184,.10), transparent 70%),
+    radial-gradient(55% 45% at 84% 24%, rgba(255,141,22,.10), transparent 70%),
+    radial-gradient(60% 50% at 50% 98%, rgba(247,108,77,.08), transparent 70%),
+    var(--color-cream);
+}
+
 @media (max-width: 899px) {
   /* Native scrolling keeps the map signature without turning phones into a
      locked slide deck. */
@@ -155,64 +190,17 @@ body {
 /* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
 /* One breakpoint drives camera padding, overlays, navigation and mockups.
    Keeping CSS aligned with MOBILE_BREAKPOINT avoids hybrid tablet layouts. */
+/* Sólo el alto scrolleable: tiene que ganarle al max-height que .crd-ol-panel
+   fija en móvil, y ese vive sin capa (ver nota de cascada más abajo). Todo el
+   aspecto de la tarjeta está en Tailwind, en el componente. */
 .crd-business-story {
-  box-sizing: border-box;
   max-height: calc(100dvh - clamp(102px, 15dvh, 144px));
   overflow-y: auto;
   scrollbar-width: thin;
-  background: rgba(255, 255, 255, .96);
-  border: 1px solid rgba(235, 230, 217, .96);
-  border-radius: 22px;
-  padding: 18px;
-  box-shadow: 0 24px 56px rgba(38, 70, 83, .18), 0 2px 6px rgba(38, 70, 83, .06);
 }
-.crd-business-kicker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  color: #0C6A60;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: .085em;
-  text-transform: uppercase;
-}
-.crd-business-kicker .ms {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  color: #fff;
-  background: #25CCB8;
-  border-radius: 9px 9px 9px 2px;
-  font-size: 16px;
-  box-shadow: 4px 4px 0 #C6F3EB;
-}
-.crd-business-title {
-  margin: 0;
-  color: #1D3A45;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: clamp(20px, 2.2vw, 27px);
-  font-weight: 800;
-  letter-spacing: -.035em;
-  line-height: 1.04;
-}
-.crd-business-intro {
-  margin: 8px 0 15px;
-  color: #5B6B72;
-  font-size: 12px;
-  line-height: 1.45;
-}
+/* La ruta conserva clase por su ::before: la línea punteada que une los pasos. */
 .crd-business-route {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  padding: 11px 12px 13px;
-  border: 1px solid #EBE6D9;
-  border-radius: 14px;
-  background: #FDF8F0;
 }
 .crd-business-route::before {
   position: absolute;
@@ -224,59 +212,8 @@ body {
   background: repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 8px);
   opacity: .65;
 }
-.crd-business-route-label {
-  display: flex;
-  justify-content: space-between;
-  color: #985409;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-}
-.crd-business-benefit {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.crd-business-benefit-icon {
-  display: grid;
-  width: 21px;
-  height: 21px;
-  place-items: center;
-  flex: 0 0 21px;
-  color: #25CCB8;
-  background: #fff;
-  border: 1px solid #C6F3EB;
-  border-radius: 7px;
-  font-size: 14px;
-}
-.crd-business-benefit-title {
-  color: #264653;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-.crd-business-benefit-desc {
-  margin-top: 2px;
-  color: #5B6B72;
-  font-size: 10.5px;
-  line-height: 1.35;
-}
-.crd-business-disclaimer {
-  margin: 12px 0 14px;
-  color: #5B6B72;
-  font-size: 10.5px;
-  line-height: 1.45;
-}
-.crd-business-story button:focus-visible {
-  outline: 3px solid #1D3A45;
-  outline-offset: 3px;
-}
+/* Mismo caso que .crd-business-story: sólo el alto scrolleable. */
 .crd-business-dashboard {
-  box-sizing: border-box;
   max-height: calc(100dvh - clamp(104px, 17dvh, 154px));
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -391,7 +328,7 @@ body {
   position: relative;
   text-decoration: none;
   color: #264653;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: 15px;
   padding: 4px 2px;
@@ -419,12 +356,16 @@ body {
 }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */
-/* :where() = zero specificity, so it never fights inline styles, but it
-   restores a focus ring (Web Interface Guidelines: never remove focus). */
-:where(a, button, [role="button"], input, select, textarea):focus-visible {
-  outline: 2px solid #F76C4D;
-  outline-offset: 2px;
-  border-radius: 8px;
+/* Va en @layer base a propósito: el CSS sin capa le gana a las utilidades de
+   Tailwind (que viven en @layer utilities) por orden de capas, sin importar la
+   especificidad. Sin la capa, este anillo por defecto pisaría cualquier
+   `focus-visible:outline-*` puesto en un componente. */
+@layer base {
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 2px solid #F76C4D;
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
 }
 
 /* Visually-hidden but accessible to screen readers / SEO */
@@ -553,7 +494,7 @@ body {
   line-height: 1.7;
 }
 .crd-legal h1 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -.025em;
   font-size: clamp(28px, 5vw, 38px);
@@ -562,7 +503,7 @@ body {
   color: #1D3A45;
 }
 .crd-legal h2 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 17px;
   margin: 30px 0 8px;
@@ -573,7 +514,7 @@ body {
 .crd-legal li { margin-bottom: 7px; }
 .crd-legal a { color: #B23410; }
 .crd-legal-date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   color: #66747B;
   margin-bottom: 26px !important;

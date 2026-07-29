@@ -17,16 +17,13 @@ export default function Nav() {
   const pillRef = useRef<HTMLDivElement>(null);
 
   // Mantiene la lógica de fondo al hacer scroll: la píldora se vuelve más
-  // sólida (y con más sombra) una vez te alejas del tope.
+  // sólida (y con más sombra) una vez te alejas del tope. Sólo conmuta un
+  // data-attribute; el aspecto de los dos estados vive en las clases de abajo.
   useEffect(() => {
     const pill = pillRef.current;
     if (!pill) return;
     const onScroll = () => {
-      const solid = window.scrollY > 36;
-      pill.style.background = solid ? "rgba(253,248,240,0.92)" : "rgba(253,248,240,0.6)";
-      pill.style.boxShadow = solid
-        ? "0 10px 30px rgba(38,70,83,.16)"
-        : "0 6px 20px rgba(38,70,83,.08)";
+      pill.dataset.solid = String(window.scrollY > 36);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -34,44 +31,23 @@ export default function Nav() {
   }, []);
 
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 16,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 100,
-        maxWidth: "calc(100vw - 24px)",
-      }}
-    >
+    <nav className="fixed left-1/2 top-4 z-[100] max-w-[calc(100vw-24px)] -translate-x-1/2">
       <div
         ref={pillRef}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "clamp(8px, 1.4vw, 18px)",
-          padding: "8px 8px 8px clamp(12px, 1.8vw, 22px)",
-          borderRadius: 999,
-          border: "1px solid rgba(235,230,217,0.9)",
-          background: "rgba(253,248,240,0.6)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
-          boxShadow: "0 6px 20px rgba(38,70,83,.08)",
-          transition: "background .3s, box-shadow .3s",
-          overflowX: "auto",
-          scrollbarWidth: "none",
-        }}
+        className="flex items-center gap-[clamp(8px,1.4vw,18px)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [scrollbar-width:none]
+          bg-cream/60 shadow-[0_6px_20px_rgba(38,70,83,.08)]
+          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-[0_10px_30px_rgba(38,70,83,.16)]"
       >
         {LINKS.map((l) => (
           <a
             key={l.target}
-            className="crd-navlink"
+            // .crd-navlink: subrayado animado con ::after y oculto en móvil.
+            className="crd-navlink whitespace-nowrap"
             href={`#${l.target}`}
             onClick={(e) => {
               e.preventDefault();
               scrollToSection(l.target);
             }}
-            style={{ whiteSpace: "nowrap" }}
           >
             {l.label}
           </a>
