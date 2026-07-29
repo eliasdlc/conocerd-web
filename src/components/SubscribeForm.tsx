@@ -496,7 +496,7 @@ export default function SubscribeForm({
             borderRadius: 14,
             border: "none",
             background: "var(--color-mango)",
-            color: "var(--color-ink-2)",
+            color: "#fff",
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontWeight: 800,
             fontSize: 15,

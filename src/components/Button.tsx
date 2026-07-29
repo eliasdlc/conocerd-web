@@ -11,7 +11,7 @@ interface ButtonProps {
 const variantStyles = {
   primary: {
     bg: "var(--color-mango)",
-    color: "var(--color-ink-2)",
+    color: "#fff",
     border: "none",
     shadow: "0 6px 20px rgba(255,141,22,.34)",
   },

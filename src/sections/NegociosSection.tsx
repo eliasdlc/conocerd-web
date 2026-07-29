@@ -102,7 +102,7 @@ export default function NegociosOverlay() {
                   justifyContent: "center",
                 }}
               >
-                <span className="ms" aria-hidden="true" style={{ fontSize: 22, color: "#1D3A45" }}>storefront</span>
+                <span className="ms" aria-hidden="true" style={{ fontSize: 22, color: "#fff" }}>storefront</span>
               </div>
             </div>
           </MarkerContent>
@@ -336,7 +336,7 @@ export default function NegociosOverlay() {
               background: "#FF8D16",
               borderRadius: 14,
               padding: "14px 16px",
-              color: "#1D3A45",
+              color: "#fff",
               marginBottom: 12,
             }}
           >
