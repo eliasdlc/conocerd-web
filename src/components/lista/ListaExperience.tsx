@@ -25,16 +25,7 @@ import { AUDIENCES, type Audience } from "@/lib/waitlist/schema";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2
-      style={{
-        margin: "0 0 12px",
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        fontWeight: 800,
-        fontSize: 17,
-        letterSpacing: "-.015em",
-        color: "#1D3A45",
-      }}
-    >
+    <h2 className="mb-3 font-display text-[17px] font-extrabold tracking-[-.015em] text-ink-2">
       {children}
     </h2>
   );
@@ -44,77 +35,40 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; index: number }) {
   return (
     <li
-      style={{
-        display: "flex",
-        gap: 13,
-        alignItems: "flex-start",
-        background: unlocked ? "#EAFBF7" : "#fff",
-        border: `1px solid ${unlocked ? "#25CCB8" : "#EBE6D9"}`,
-        borderRadius: 16,
-        padding: "14px 15px",
-        transition: "background .35s ease, border-color .35s ease",
-      }}
+      className={`flex items-start gap-[13px] rounded-2xl border px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
+        unlocked ? "border-mint bg-[#EAFBF7]" : "border-line bg-white"
+      }`}
     >
       <span
         aria-hidden="true"
-        style={{
-          position: "relative",
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          background: unlocked ? "#25CCB8" : "#FFE6C8",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "background .35s ease",
-        }}
+        className={`relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-[350ms] ease-in-out ${
+          unlocked ? "bg-mint" : "bg-mango-soft"
+        }`}
       >
-        <span className="ms" style={{ fontSize: 22, color: unlocked ? "#fff" : "#985409" }}>
+        <span className={`ms text-[22px] ${unlocked ? "text-white" : "text-mango-ink"}`}>
           {unlocked ? "check" : item.icon}
         </span>
       </span>
-      <div style={{ minWidth: 0, flex: 1 }}>
+      <div className="min-w-0 flex-1">
         {/* El distintivo se ancla arriba a la derecha en vez de seguir al
             título: si lo arrastra, con títulos de distinto largo cae a una
             segunda línea en unas tarjetas sí y en otras no. */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-          <span
-            style={{
-              flex: 1,
-              minWidth: 0,
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 700,
-              fontSize: 14.5,
-              color: "#264653",
-            }}
-          >
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 font-display text-[14.5px] font-bold text-ink">
             {item.title}
           </span>
           {unlocked && (
             <span
-              style={{
-                flexShrink: 0,
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: ".08em",
-                textTransform: "uppercase",
-                color: "#0C6A60",
-                background: "#C6F3EB",
-                borderRadius: 999,
-                padding: "3px 8px",
-                marginTop: 1,
-                // Escalonado: los tres tics no deben aparecer a la vez.
-                animation: `crdPerkTick .45s cubic-bezier(.2,.9,.3,1.3) ${index * 0.12 + 0.15}s both`,
-              }}
+              // Escalonado: los tres tics no deben aparecer a la vez, y el
+              // retardo depende del índice → va por style.
+              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[.08em] text-mint-ink"
+              style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
             >
               Desbloqueado
             </span>
           )}
         </div>
-        <p style={{ margin: "2px 0 0", color: "#5B6B72", fontSize: 13, lineHeight: 1.5 }}>
-          {item.desc}
-        </p>
+        <p className="mt-0.5 text-[13px] leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
   );
@@ -122,28 +76,13 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
 
 function FeatureRow({ item }: { item: Item }) {
   return (
-    <li style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <span
-        className="ms"
-        aria-hidden="true"
-        style={{ fontSize: 22, color: "#0C6A60", flexShrink: 0, marginTop: 1 }}
-      >
+    <li className="flex items-start gap-3">
+      <span className="ms mt-px shrink-0 text-[22px] text-mint-ink" aria-hidden="true">
         {item.icon}
       </span>
       <div>
-        <div
-          style={{
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 700,
-            fontSize: 14.5,
-            color: "#264653",
-          }}
-        >
-          {item.title}
-        </div>
-        <p style={{ margin: "1px 0 0", color: "#5B6B72", fontSize: 13, lineHeight: 1.5 }}>
-          {item.desc}
-        </p>
+        <div className="font-display text-[14.5px] font-bold text-ink">{item.title}</div>
+        <p className="mt-px text-[13px] leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
   );
@@ -155,6 +94,8 @@ const AUDIENCE_TAB_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
   negocio: "Tengo un negocio",
 };
+
+const FOOT_LINK = "text-xs text-muted-2 no-underline";
 
 export default function ListaExperience() {
   const [audience, setAudience] = useState<Audience>("viajero");
@@ -190,8 +131,7 @@ export default function ListaExperience() {
         <Link
           href="/"
           aria-label="ConoceRD — ir al inicio"
-          className="crd-lista-in"
-          style={{ display: "inline-block", marginBottom: 18 }}
+          className="crd-lista-in mb-[18px] inline-block"
         >
           <Image
             src="/assets/logo.png"
@@ -199,77 +139,37 @@ export default function ListaExperience() {
             width={210}
             height={100}
             priority
-            style={{ height: "clamp(62px,14vw,84px)", width: "auto" }}
+            className="h-[clamp(62px,14vw,84px)] w-auto"
           />
         </Link>
 
-        <div
-          className="crd-lista-in"
-          style={{ marginBottom: 10, animationDelay: ".06s" }}
-        >
+        <div className="crd-lista-in mb-2.5 [animation-delay:.06s]">
           <span
             key={audience}
-            className="crd-lista-swap"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#C6F3EB",
-              color: "#0C6A60",
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              fontWeight: 800,
-              fontSize: 11,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              padding: "5px 12px",
-              borderRadius: 999,
-            }}
+            className="crd-lista-swap inline-flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink"
           >
-            <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>
-              {c.eyebrowIcon}
-            </span>
+            <span className="ms text-sm" aria-hidden="true">{c.eyebrowIcon}</span>
             {c.eyebrow}
           </span>
         </div>
 
         <h1
           key={`h-${audience}`}
-          className="crd-lista-swap"
-          style={{
-            margin: "0 0 10px",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            letterSpacing: "-.028em",
-            fontSize: "clamp(28px,6.6vw,42px)",
-            lineHeight: 1.06,
-            color: "#1D3A45",
-          }}
+          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-extrabold leading-[1.06] tracking-[-.028em] text-ink-2"
         >
           {c.headline}
         </h1>
 
         <p
           key={`p-${audience}`}
-          className="crd-lista-swap"
-          style={{ margin: "0 0 20px", color: "#5B6B72", fontSize: 15.5, lineHeight: 1.55 }}
+          className="crd-lista-swap mb-5 text-[15.5px] leading-[1.55] text-muted"
         >
           {c.sub}
         </p>
 
-        {/* El formulario es la única acción de la página: siempre sobre el fold. */}
-        <div
-          className="crd-lista-in"
-          style={{
-            background: "#fff",
-            border: "1px solid #EBE6D9",
-            borderRadius: 22,
-            padding: "20px 20px 18px",
-            boxShadow: "0 18px 44px rgba(38,70,83,.10)",
-            animationDelay: ".12s",
-            // El confeti del panel de éxito se sale de la tarjeta.
-            overflow: "visible",
-          }}
-        >
+        {/* El formulario es la única acción de la página: siempre sobre el fold.
+            overflow-visible porque el confeti del panel de éxito se sale. */}
+        <div className="crd-lista-in overflow-visible rounded-[22px] border border-line bg-white px-5 pb-[18px] pt-5 shadow-[0_18px_44px_rgba(38,70,83,.10)] [animation-delay:.12s]">
           <SubscribeForm
             key={formKey}
             tone="light"
@@ -282,21 +182,9 @@ export default function ListaExperience() {
           />
         </div>
 
-        <div
-          className="crd-lista-in"
-          style={{
-            display: "flex",
-            gap: 8,
-            flexWrap: "wrap",
-            alignItems: "center",
-            color: "#66747B",
-            fontSize: 12.5,
-            margin: "16px 0 0",
-            animationDelay: ".18s",
-          }}
-        >
-          <span className="ms" aria-hidden="true" style={{ fontSize: 18 }}>phone_iphone</span>
-          <span className="ms" aria-hidden="true" style={{ fontSize: 18 }}>android</span>
+        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-[12.5px] text-muted-2 [animation-delay:.18s]">
+          <span className="ms text-lg" aria-hidden="true">phone_iphone</span>
+          <span className="ms text-lg" aria-hidden="true">android</span>
           Próximamente en App Store y Google Play
         </div>
 
@@ -308,59 +196,21 @@ export default function ListaExperience() {
           href={INSTAGRAM.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="crd-lista-in crd-lista-ig-card"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginTop: 16,
-            padding: "13px 15px",
-            borderRadius: 16,
-            background: "rgba(255,255,255,.72)",
-            border: "1px solid #EBE6D9",
-            textDecoration: "none",
-            animationDelay: ".22s",
-          }}
+          className="crd-lista-in crd-lista-ig-card mt-4 flex items-center gap-3 rounded-2xl border border-line bg-white/72 px-[15px] py-[13px] no-underline [animation-delay:.22s]"
         >
           <span
             aria-hidden="true"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              color: "#fff",
-              background: "linear-gradient(135deg,#F58529 0%,#DD2A7B 55%,#8134AF 100%)",
-            }}
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] text-white"
           >
             <InstagramGlyph size={20} />
           </span>
           <span>
-            <span
-              style={{
-                display: "block",
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: 14,
-                color: "#264653",
-              }}
-            >
-              {INSTAGRAM.handle}
-            </span>
-            <span style={{ display: "block", color: "#5B6B72", fontSize: 12.5, lineHeight: 1.4 }}>
+            <span className="block font-display text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
+            <span className="block text-[12.5px] leading-[1.4] text-muted">
               Los destinos que vamos sumando, antes de que salga la app.
             </span>
           </span>
-          <span
-            className="ms"
-            aria-hidden="true"
-            style={{ fontSize: 20, color: "#66747B", marginLeft: "auto" }}
-          >
-            arrow_outward
-          </span>
+          <span className="ms ml-auto text-xl text-muted-2" aria-hidden="true">arrow_outward</span>
         </a>
       </aside>
 
@@ -370,53 +220,36 @@ export default function ListaExperience() {
             de "descargar la app cuando salga". Va antes que el producto. */}
         <section
           key={`perks-${audience}`}
-          className="crd-lista-swap"
-          style={{ marginBottom: 28 }}
+          className="crd-lista-swap mb-7"
           aria-live="polite"
         >
           <SectionTitle>{c.perksTitle}</SectionTitle>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 10 }}>
+          <ul className="m-0 grid list-none gap-2.5 p-0">
             {c.perks.map((p, i) => (
               <PerkCard key={p.title} item={p} unlocked={Boolean(unlocked)} index={i} />
             ))}
           </ul>
         </section>
 
-        <section key={`feat-${audience}`} className="crd-lista-swap" style={{ marginBottom: 26 }}>
+        <section key={`feat-${audience}`} className="crd-lista-swap mb-[26px]">
           <SectionTitle>{c.featuresTitle}</SectionTitle>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 16 }}>
+          <ul className="m-0 grid list-none gap-4 p-0">
             {c.features.map((f) => (
               <FeatureRow key={f.title} item={f} />
             ))}
           </ul>
 
           {c.stats.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 22,
-                flexWrap: "wrap",
-                marginTop: 20,
-                paddingTop: 18,
-                borderTop: "1px solid #EBE6D9",
-              }}
-            >
+            <div className="mt-5 flex flex-wrap gap-[22px] border-t border-line pt-[18px]">
               {c.stats.map((s) => (
-                <div key={s.label} style={{ maxWidth: 150 }}>
+                <div key={s.label} className="max-w-[150px]">
                   <div
-                    style={{
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 800,
-                      fontSize: 26,
-                      letterSpacing: "-.02em",
-                      color: s.color,
-                    }}
+                    className="font-display text-[26px] font-extrabold tracking-[-.02em]"
+                    style={{ color: s.color }}
                   >
                     {s.value}
                   </div>
-                  <p style={{ margin: "2px 0 0", color: "#5B6B72", fontSize: 12, lineHeight: 1.4 }}>
-                    {s.label}
-                  </p>
+                  <p className="mt-0.5 text-xs leading-[1.4] text-muted">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -427,68 +260,31 @@ export default function ListaExperience() {
         <button
           type="button"
           onClick={() => setAudience(audience === "viajero" ? "negocio" : "viajero")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            width: "100%",
-            textAlign: "left",
-            background: "#FFF4EE",
-            border: "1px dashed #F7B39D",
-            borderRadius: 16,
-            padding: "13px 15px",
-            cursor: "pointer",
-            marginBottom: 24,
-            fontFamily: "inherit",
-          }}
+          className="mb-6 flex w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-dashed border-[#F7B39D] bg-[#FFF4EE] px-[15px] py-[13px] text-left font-[inherit]"
         >
-          <span className="ms" aria-hidden="true" style={{ fontSize: 22, color: "#B23410" }}>
+          <span className="ms text-[22px] text-coral-ink" aria-hidden="true">
             {audience === "viajero" ? "storefront" : "hiking"}
           </span>
-          <span style={{ fontSize: 13.5, color: "#5B6B72", lineHeight: 1.45 }}>
+          <span className="text-[13.5px] leading-[1.45] text-muted">
             {audience === "viajero" ? (
               <>
                 ¿Tienes un negocio en RD?{" "}
-                <strong style={{ color: "#B23410" }}>
-                  Mira lo que ConoceRD hace por ti
-                </strong>
+                <strong className="text-coral-ink">Mira lo que ConoceRD hace por ti</strong>
               </>
             ) : (
               <>
                 ¿También viajas por el país?{" "}
-                <strong style={{ color: "#B23410" }}>Mira la app del viajero</strong>
+                <strong className="text-coral-ink">Mira la app del viajero</strong>
               </>
             )}
           </span>
-          <span
-            className="ms"
-            aria-hidden="true"
-            style={{ fontSize: 20, color: "#B23410", marginLeft: "auto" }}
-          >
-            arrow_forward
-          </span>
+          <span className="ms ml-auto text-xl text-coral-ink" aria-hidden="true">arrow_forward</span>
         </button>
 
-        <div
-          style={{
-            borderTop: "1px solid #EBE6D9",
-            paddingTop: 14,
-            display: "flex",
-            gap: 16,
-            flexWrap: "wrap",
-            fontSize: 12,
-            color: "#66747B",
-          }}
-        >
-          <Link href="/" style={{ color: "#66747B", textDecoration: "none" }}>
-            Ver el sitio completo
-          </Link>
-          <Link href="/privacidad" style={{ color: "#66747B", textDecoration: "none" }}>
-            Privacidad
-          </Link>
-          <Link href="/terminos" style={{ color: "#66747B", textDecoration: "none" }}>
-            Términos
-          </Link>
+        <div className="flex flex-wrap gap-4 border-t border-line pt-3.5">
+          <Link href="/" className={FOOT_LINK}>Ver el sitio completo</Link>
+          <Link href="/privacidad" className={FOOT_LINK}>Privacidad</Link>
+          <Link href="/terminos" className={FOOT_LINK}>Términos</Link>
         </div>
       </div>
 
