@@ -47,6 +47,23 @@ La página no ofrece descarga: captura correos para la lista de espera (ver
 - `/lista` — landing ligera a la que apunta el QR del evento. Acepta `?ref=` para
   saber de qué canal vino cada registro.
 - `/privacidad` y `/terminos` — obligatorias desde que se recolectan correos.
+- `/admin` — panel interno con las respuestas de `/lista` (ver abajo).
+
+Los negocios dan además su Instagram: para muchos es su única vitrina en línea,
+así que es de donde saldrán las fotos y horarios de su perfil. Se guarda
+normalizado como handle (`lacasona_rd`), acepte lo que acepte el formulario:
+`@handle`, la URL completa o la que copia la app al compartir.
+
+### Panel interno (`/admin`)
+
+Totales por audiencia, altas por día de los últimos 14 días, negocios por tipo,
+origen (`ref`), cobertura de contacto, tabla filtrable y exportación a CSV
+(`GET /api/admin/export`).
+
+El acceso es una contraseña compartida (`ADMIN_PASSWORD`) que canja una cookie
+firmada con HMAC-SHA256 y una semana de vigencia. Cambiar la contraseña invalida
+todas las sesiones abiertas. No es multiusuario ni tiene roles: si algún día
+entra más gente al panel, hay que sustituirlo por auth de verdad.
 
 ### Variables de entorno
 
@@ -55,9 +72,15 @@ La página no ofrece descarga: captura correos para la lista de espera (ver
 | `DATABASE_URL` (Neon) | Los registros se guardan en `.waitlist/subscribers.json` (ignorado por git) en vez de en Postgres |
 | `RESEND_API_KEY` | No se da de alta el contacto en el ESP; el registro se guarda igual |
 | `RESEND_AUDIENCE_ID` | Ídem |
+| `ADMIN_PASSWORD` | `/admin` no se puede abrir: el login queda deshabilitado con un aviso |
 
-Con las tres definidas (`vercel env`) no hay que tocar código: la selección de
-almacenamiento y el alta en el ESP dependen sólo de su presencia.
+Con las cuatro definidas (`vercel env`) no hay que tocar código: la selección de
+almacenamiento, el alta en el ESP y el acceso al panel dependen sólo de su
+presencia.
+
+La tabla `waitlist_subscribers` se crea y se migra sola al primer arranque
+(`src/lib/waitlist/store.ts`); las columnas añadidas después de la creación
+inicial viven en el array `MIGRATIONS`.
 
 ### QR del evento
 

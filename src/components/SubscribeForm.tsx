@@ -96,6 +96,19 @@ function persistReferral() {
   }
 }
 
+/**
+ * El campo de Instagram ya pinta un `@` fijo a la izquierda, así que quien
+ * escriba o pegue el suyo con arroba —o pegue la URL entera— vería `@@casona`.
+ * Se limpia mientras escribe; el servidor vuelve a normalizar de todas formas,
+ * esto es sólo para que lo que se ve sea lo que se guarda.
+ */
+function stripInstagramPrefix(value: string): string {
+  return value
+    .replace(/^\s+/, "")
+    .replace(/^(https?:\/\/)?(www\.)?instagram\.com\//i, "")
+    .replace(/^@+/, "");
+}
+
 /** Se lee en el submit, no en render: no hay nada que pintar con este valor. */
 function readReferral(): string | undefined {
   try {
@@ -171,6 +184,8 @@ export default function SubscribeForm({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadyIn, setAlreadyIn] = useState(false);
+  // Controlado sólo este campo: es el único que se reescribe mientras se teclea.
+  const [instagram, setInstagram] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const toggleRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -203,6 +218,7 @@ export default function SubscribeForm({
         businessName: isBusiness ? String(fd.get("businessName") ?? "") : undefined,
         businessType: isBusiness ? String(fd.get("businessType") ?? "") : undefined,
         whatsapp: isBusiness ? String(fd.get("whatsapp") ?? "") : undefined,
+        instagram: isBusiness ? String(fd.get("instagram") ?? "") : undefined,
         consent: fd.get("consent") === "on",
         ref: source && !ref ? source : ref,
         [HONEYPOT_FIELD]: String(fd.get(HONEYPOT_FIELD) ?? ""),
@@ -396,6 +412,50 @@ export default function SubscribeForm({
               aria-label="WhatsApp (opcional)"
               style={fieldStyle}
             />
+          </div>
+          {/* Instagram: para muchos negocios de RD es su única vitrina en línea,
+              así que es de donde saldrán las fotos y horarios de su perfil. El
+              `@` va pintado fuera del input para que nadie lo escriba dos veces
+              (igual lo normalizamos en el servidor si lo hacen). */}
+          <div>
+            <div style={{ position: "relative" }}>
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: 14,
+                  top: 0,
+                  height: 48,
+                  display: "flex",
+                  alignItems: "center",
+                  color: t.placeholder,
+                  fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
+                  fontSize: 15,
+                  pointerEvents: "none",
+                }}
+              >
+                @
+              </span>
+              <input
+                name="instagram"
+                type="text"
+                inputMode="text"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                value={instagram}
+                onChange={(e) => setInstagram(stripInstagramPrefix(e.target.value))}
+                placeholder="instagram del negocio (opcional)"
+                aria-label="Usuario de Instagram del negocio (opcional)"
+                aria-invalid={Boolean(fieldErrors.instagram)}
+                style={{ ...fieldStyle, paddingLeft: 28 }}
+              />
+            </div>
+            {fieldErrors.instagram && (
+              <p style={{ margin: "5px 2px 0", color: t.error, fontSize: 12.5 }}>
+                {fieldErrors.instagram}
+              </p>
+            )}
           </div>
         </div>
       )}
