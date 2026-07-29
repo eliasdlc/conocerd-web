@@ -17,6 +17,8 @@ export default function CTAOverlay() {
 
   return (
     <div
+      aria-hidden={!isVisible}
+      inert={!isVisible}
       style={{
         position: "absolute",
         inset: 0,
@@ -34,12 +36,12 @@ export default function CTAOverlay() {
           : "72px 24px 36px",
       }}
     >
-      {/* Dark glassmorphism card — appears 0.6s after scene activates (map is mid-flyout) */}
       <div
+        className="crd-cta-card"
         style={{
           background: "rgba(29,58,69,0.82)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          backdropFilter: isMobile ? undefined : "blur(12px)",
+          WebkitBackdropFilter: isMobile ? undefined : "blur(12px)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: 28,
           padding: isMobile ? "26px 20px" : "44px clamp(28px, 5vw, 60px)",
@@ -47,7 +49,7 @@ export default function CTAOverlay() {
           width: "100%",
           textAlign: "center",
           boxShadow: "0 32px 80px rgba(0,0,0,0.40)",
-          animation: isVisible ? "slideUpIn 0.55s cubic-bezier(0.16,1,0.3,1) 0.6s both" : "none",
+          animation: isVisible ? "slideUpIn 0.4s cubic-bezier(0.16,1,0.3,1) both" : "none",
         }}
       >
         {/* Handwritten kicker */}

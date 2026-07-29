@@ -131,12 +131,12 @@ export default function JourneyStepper({
                 aria-label={`Ir a ${c.label}`}
                 aria-current={isActive ? "step" : undefined}
                 style={{
-                  width: isActive ? (span > 1 ? 30 : 16) : 7,
-                  height: 7,
+                  width: 44,
+                  height: 44,
                   padding: 0,
                   border: "none",
                   borderRadius: 999,
-                  background: isActive ? "rgba(247,108,77,0.24)" : i < activeChapter ? "#F9BFB0" : LINE,
+                  background: "transparent",
                   cursor: "pointer",
                   transition: "width .35s cubic-bezier(.2,.8,.3,1), background .3s",
                   overflow: "hidden",
@@ -146,13 +146,16 @@ export default function JourneyStepper({
                 <span
                   style={{
                     display: "block",
-                    height: "100%",
-                    width: `${Math.round(fill * 100)}%`,
-                    background: CORAL,
+                    height: 7,
+                    width: isActive ? (span > 1 ? 30 : 16) : 7,
+                    margin: "auto",
+                    background: isActive ? CORAL : i < activeChapter ? "#F9BFB0" : LINE,
                     borderRadius: 999,
-                    transition: "width .45s cubic-bezier(.2,.8,.3,1)",
+                    transition: "width .45s cubic-bezier(.2,.8,.3,1), background .3s",
                   }}
-                />
+                >
+                  {isActive && <span style={{ display: "block", height: "100%", width: `${Math.round(fill * 100)}%`, background: CORAL, borderRadius: 999 }} />}
+                </span>
               </button>
             );
           })}

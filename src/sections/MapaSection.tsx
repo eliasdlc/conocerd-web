@@ -400,6 +400,8 @@ export default function MapaOverlay() {
 
       {/* Capa de UI */}
       <div
+        aria-hidden={!isVisible}
+        inert={!isVisible}
         style={{
           position: "absolute",
           inset: 0,

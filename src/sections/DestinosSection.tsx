@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+
 import Image from "next/image";
-import { animate } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
 import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
-import { SelfPin } from "@/components/map/pins";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
-import { pointAlongPath, type LngLat } from "@/lib/geo";
+import { type LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
@@ -57,19 +55,6 @@ export default function DestinosOverlay() {
   const headingVisible = visibleCount >= 1;
   const isFinale = activeScene === "destinos-finale";
 
-  // #6 — chevron one-shot recorriendo la polilínea al entrar al pan-out.
-  const [chevron, setChevron] = useState<{ point: LngLat; bearing: number } | null>(null);
-  useEffect(() => {
-    if (!isFinale) return;
-    const controls = animate(0, 1, {
-      duration: 3.4,
-      ease: "easeInOut",
-      delay: 0.5,
-      onUpdate: (t) => setChevron(pointAlongPath(ROUTE_COORDS, t)),
-    });
-    return () => controls.stop();
-  }, [isFinale]);
-
   return (
     <>
       {/* #6 — ruta dashed que une los 6 destinos (solo en el finale) */}
@@ -82,15 +67,6 @@ export default function DestinosOverlay() {
           opacity={0.9}
           dashArray={[2, 2]}
         />
-      )}
-
-      {/* #6 — chevron viajando por la ruta */}
-      {isFinale && chevron && (
-        <MapMarker longitude={chevron.point[0]} latitude={chevron.point[1]}>
-          <MarkerContent>
-            <SelfPin heading={chevron.bearing} size={40} />
-          </MarkerContent>
-        </MapMarker>
       )}
 
       {/* Map pins rendered via MapMarker portals (positioned by maplibre on the canvas) */}
@@ -114,6 +90,8 @@ export default function DestinosOverlay() {
 
       {/* Visual overlay — polaroid pile + heading */}
       <div
+        aria-hidden={!isVisible}
+        inert={!isVisible}
         style={{
           position: "absolute",
           inset: 0,
@@ -137,6 +115,7 @@ export default function DestinosOverlay() {
 
         {/* Section heading — appears above the pile on first polaroid */}
         <div
+          className="crd-destinos-heading"
           style={{
             position: "absolute",
             left: "4%",
@@ -187,6 +166,7 @@ export default function DestinosOverlay() {
           return (
             <figure
               key={pol.id}
+              className="crd-destinos-card"
               style={{
                 position: "absolute",
                 // En 390px el desparrame de la pila (3–9%) sacaba las cartas de
@@ -215,6 +195,7 @@ export default function DestinosOverlay() {
               } as React.CSSProperties}
             >
               <div
+                className="crd-destinos-card-media"
                 style={{
                   position: "relative",
                   width: "100%",

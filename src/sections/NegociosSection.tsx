@@ -35,59 +35,6 @@ const ARC_ORIGINS: { name: string; coords: LngLat; color: string }[] = [
 
 const ARRIVING = ARC_ORIGINS.length;
 
-// ─── Stat number with count-up (runs once on first activation) ────────────────
-
-function StatCount({
-  target,
-  dec,
-  suffix,
-  color,
-  active,
-}: {
-  target: number;
-  dec: number;
-  suffix: string;
-  color: string;
-  active: boolean;
-}) {
-  const [display, setDisplay] = useState(`0${suffix}`);
-  const animated = useRef(false);
-
-  useEffect(() => {
-    if (!active || animated.current) return;
-    animated.current = true;
-    const fmt0 = (v: number) => (dec ? v.toFixed(dec) : Math.round(v).toString());
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      requestAnimationFrame(() => setDisplay(fmt0(target) + suffix));
-      return;
-    }
-    const dur = 1300;
-    const t0 = performance.now();
-    const fmt = (v: number) => (dec ? v.toFixed(dec) : Math.round(v).toString());
-    const step = (t: number) => {
-      const k = Math.min(1, (t - t0) / dur);
-      const ease = 1 - Math.pow(1 - k, 3);
-      setDisplay(fmt(target * ease) + suffix);
-      if (k < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [active, target, dec, suffix]);
-
-  return (
-    <span
-      style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontWeight: 700,
-        fontSize: 30,
-        color,
-        lineHeight: 1,
-      }}
-    >
-      {display}
-    </span>
-  );
-}
-
 // ─── Main overlay ─────────────────────────────────────────────────────────────
 
 export default function NegociosOverlay() {
@@ -118,6 +65,7 @@ export default function NegociosOverlay() {
             color={o.color}
             width={2.4}
             bend={0.22}
+            animated={false}
           />
         ))}
 
@@ -163,6 +111,8 @@ export default function NegociosOverlay() {
 
       {/* Overlay container */}
       <div
+        aria-hidden={!isVisible}
+        inert={!isVisible}
         style={{
           position: "absolute",
           inset: 0,
@@ -272,39 +222,9 @@ export default function NegociosOverlay() {
             ))}
           </div>
 
-          {/* Stat numbers */}
-          <div style={{ display: "flex", gap: 20, marginBottom: 14 }}>
-            <div>
-              <StatCount target={74.6} dec={1} suffix="%" color="#B23410" active={isVisible} />
-              <p
-                style={{
-                  margin: "3px 0 0",
-                  color: "#1D3A45",
-                  fontSize: 11,
-                  lineHeight: 1.35,
-                  textShadow: "0 1px 2px rgba(253,248,240,0.9)",
-                  maxWidth: 118,
-                }}
-              >
-                quiere aparecer en la app
-              </p>
-            </div>
-            <div>
-              <StatCount target={60.6} dec={1} suffix="%" color="#985409" active={isVisible} />
-              <p
-                style={{
-                  margin: "3px 0 0",
-                  color: "#1D3A45",
-                  fontSize: 11,
-                  lineHeight: 1.35,
-                  textShadow: "0 1px 2px rgba(253,248,240,0.9)",
-                  maxWidth: 118,
-                }}
-              >
-                aún depende del boca a boca
-              </p>
-            </div>
-          </div>
+          <p style={{ margin: "0 0 14px", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.45 }}>
+            Panel y rutas mostrados como demostración de producto; las métricas se activarán con datos verificables.
+          </p>
 
           {/* CTA — lleva al formulario con el toggle ya en "negocio" */}
           <button
@@ -314,7 +234,7 @@ export default function NegociosOverlay() {
               alignItems: "center",
               gap: 8,
               background: "#25CCB8",
-              color: "#fff",
+              color: "#1D3A45",
               border: "none",
               borderRadius: 14,
               padding: "11px 18px",

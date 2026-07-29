@@ -107,42 +107,18 @@ body {
 
 .crd-stepper { display: none; }
 
-@media (max-width: 767px) {
-  /* En móvil el journey no se scrollea: ocupa una pantalla exacta y avanza por
-     pasos (flechas o swipe). El bloqueo del scroll lo hace `overflow:hidden`
-     sobre el body (MapScrollJourney) y no `touch-action`, porque touch-action
-     también anularía el scroll interno de los bottom-sheets. */
+@media (max-width: 899px) {
+  /* Native scrolling keeps the map signature without turning phones into a
+     locked slide deck. */
   .crd-journey {
-    height: 100dvh;
-    overscroll-behavior: none;
-  }
-  .crd-journey-anchor { display: none; }
-
-  .crd-stepper {
-    position: fixed;
-    left: 50%;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    z-index: 60;
-    width: min(420px, calc(100vw - 24px));
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 999px;
-    background: rgba(253, 248, 240, 0.94);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(235, 230, 217, 0.9);
-    box-shadow: 0 12px 34px rgba(38, 70, 83, 0.18);
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
-    touch-action: manipulation;
+    height: calc((100 + var(--crd-track-vh, 1000)) * 1vh);
   }
 }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
 .crd-mobile-scrim { display: none; }
-@media (max-width: 767px) {
+@media (max-width: 899px) {
   .crd-mobile-scrim {
     display: block;
     position: absolute;
@@ -164,8 +140,7 @@ body {
    (MOBILE_BREAKPOINT). Con dos umbrales distintos, entre 541 y 767 la cámara
    encuadraba para móvil y los paneles seguían colocados como desktop. */
 @media (max-width: 767px) {
-  /* Altura reservada para el control de pasos, que flota sobre los paneles. */
-  :root { --crd-stepper-h: 74px; }
+  :root { --crd-stepper-h: 0px; }
 
   .crd-ol-panel {
     left: 0 !important;
@@ -176,23 +151,26 @@ body {
     max-width: 100% !important;
     transform: none !important;
     border-radius: 20px 20px 0 0 !important;
-    /* 58vh = lo que reserva `padBottom` de las escenas con panel alto
-       (lib/journey): con 52vh el último elemento del sheet quedaba cortado y
-       había que descubrir que se scrollea. */
-    max-height: 58vh;
+    max-height: min(62dvh, 520px);
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 24px), transparent 100%);
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
        reponerlo como padding para que el contenido no quede pegado al borde.
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
-    padding: 16px 16px calc(16px + var(--crd-stepper-h)) !important;
+    padding: 24px 16px 28px !important;
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
-  .crd-ol-panel-right { display: none !important; }
+  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 99px; background: #B5C0BD; margin: -10px auto 14px; }
+  .crd-ol-panel-right { display: block !important; transform: scale(.56) translate(38%, -70%) !important; transform-origin: top right; right: -28px !important; top: 8px !important; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
     padding: 72px 16px calc(16px + var(--crd-stepper-h)) !important;
+    overflow-y: auto;
+    justify-content: flex-start !important;
+    gap: 20px;
   }
   /* Viajeros: stat markers overlap on narrow maps → swap them for the
      in-panel chip row below the heading. */
@@ -206,10 +184,24 @@ body {
   .crd-sub-row { grid-template-columns: 1fr !important; }
   /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
   .crd-navlink { display: none !important; }
-  /* Viajeros: el mockup de teléfono tapa el bottom-sheet → ocultarlo en móvil. */
-  .crd-phone-wrap { display: none !important; }
-  /* Mapa: el panel de recorrido (derecha) ocupa demasiado espacio → solo chips. */
-  .crd-mapa-route-panel { display: none !important; }
+  .crd-phone-wrap { display: block !important; transform: translateY(-50%) scale(.48) !important; transform-origin: right center; right: -8px !important; top: 28% !important; }
+  .crd-mapa-route-panel { display: block !important; transform: scale(.68) translate(22%, -52%); transform-origin: right center; }
+  .crd-cta-card { max-height: calc(100dvh - 42px); overflow-y: auto; padding: 24px 18px !important; }
+  .crd-destinos-heading { left: 16px !important; bottom: 48% !important; }
+  .crd-destinos-card { width: min(196px, calc(100vw - 116px)) !important; padding: 9px 9px 0 !important; }
+  .crd-destinos-card-media { height: 150px !important; }
+}
+
+@media (max-width: 359px) and (max-height: 640px) {
+  .crd-hero-content { max-width: 280px !important; }
+  .crd-hero-logo { width: min(64vw, 240px) !important; }
+  .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
+  .crd-destinos-heading { bottom: 52% !important; }
+  .crd-destinos-heading h2 { font-size: 24px !important; }
+  .crd-destinos-card { width: 176px !important; }
+  .crd-destinos-card-media { height: 124px !important; }
+  .crd-ol-panel { max-height: 55dvh; }
 }
 
 /* Stat chips live only on mobile (see media query above). */

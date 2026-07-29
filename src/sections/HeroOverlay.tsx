@@ -48,6 +48,8 @@ export default function HeroOverlay() {
       </MapMarker>
 
       <div
+      aria-hidden={!isVisible}
+      inert={!isVisible}
       style={{
         position: "absolute",
         inset: 0,
@@ -75,6 +77,7 @@ export default function HeroOverlay() {
       </h1>
 
       <div
+        className="crd-hero-content"
         style={{
           // Sobre el velo: el velo es un elemento posicionado y pintaría encima
           // de este bloque (que es un hijo estático del flex).
@@ -93,14 +96,14 @@ export default function HeroOverlay() {
           width={760}
           height={280}
           priority
-          unoptimized
+          className="crd-hero-logo"
           style={{
             width: isMobile ? "min(82vw, 460px)" : "min(42vw, 480px)",
             height: "auto",
             display: "block",
           }}
         />
-        <p
+        <p className="crd-hero-copy"
           style={{
             maxWidth: 520,
             margin: "14px 0 0",
@@ -111,9 +114,9 @@ export default function HeroOverlay() {
           }}
         >
           La app que te lleva a la República Dominicana{" "}
-          <strong style={{ color: "#F76C4D" }}>autentica</strong>: negocios locales y experiencias reales, en una sola ruta.
+          <strong style={{ color: "#B23410" }}>auténtica</strong>: negocios locales y experiencias reales, en una sola ruta.
         </p>
-        <div
+        <div className="crd-hero-actions"
           style={{
             display: "flex",
             gap: 14,

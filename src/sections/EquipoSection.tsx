@@ -7,7 +7,6 @@ import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-type Social = { label: string; icon: string; href: string };
 type Member = {
   name: string;
   role: string;
@@ -18,7 +17,6 @@ type Member = {
   bg: string;
   color: string;
   photo?: string; // foto real cuando la manden; hoy iniciales
-  socials: Social[];
 };
 
 // Handles placeholder hasta tener los reales.
@@ -33,11 +31,6 @@ const TEAM: Member[] = [
     initials: "BN",
     bg: "#FFE7DF",
     color: "#B23410",
-    socials: [
-      { label: "Instagram", icon: "photo_camera", href: "#" },
-      { label: "LinkedIn", icon: "work", href: "#" },
-      { label: "Email", icon: "mail", href: "#" },
-    ],
   },
   {
     name: "Elías de la Cruz",
@@ -49,11 +42,6 @@ const TEAM: Member[] = [
     initials: "EC",
     bg: "#C6F3EB",
     color: "#0C6A60",
-    socials: [
-      { label: "GitHub", icon: "code", href: "#" },
-      { label: "LinkedIn", icon: "work", href: "#" },
-      { label: "Email", icon: "mail", href: "#" },
-    ],
   },
 ];
 
@@ -63,12 +51,10 @@ const PUCMM = { lng: -70.7003, lat: 19.4414 };
 // ─── Team card (vertical, hover = redes + bio extendida) ──────────────────────
 
 function TeamCard({ member, delay, animate }: { member: Member; delay: number; animate: boolean }) {
-  const [hover, setHover] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       style={{
         position: "relative",
         background: "rgba(253,248,240,0.92)",
@@ -83,8 +69,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         textAlign: "center",
         flex: "1 1 260px",
         maxWidth: 300,
-        transform: hover ? "translateY(-6px)" : "translateY(0)",
-        boxShadow: hover ? "0 22px 50px rgba(38,70,83,0.20)" : "0 12px 36px rgba(38,70,83,0.14)",
+        boxShadow: expanded ? "0 22px 50px rgba(38,70,83,0.20)" : "0 12px 36px rgba(38,70,83,0.14)",
         transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease",
         animation: animate ? `slideUpIn 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s both` : "none",
       }}
@@ -143,12 +128,20 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         {member.bio}
       </p>
 
-      {/* Hover → bio extendida + redes */}
+      {/* The extended profile is an explicit disclosure, not hover-only. */}
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
+        style={{ marginTop: 12, minHeight: 44, border: "none", background: "transparent", color: member.color, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, cursor: "pointer" }}
+      >
+        {expanded ? "Ver menos" : "Más sobre el equipo"}
+      </button>
       <div
         style={{
           width: "100%",
-          maxHeight: hover ? 180 : 0,
-          opacity: hover ? 1 : 0,
+          maxHeight: expanded ? 180 : 0,
+          opacity: expanded ? 1 : 0,
           overflow: "hidden",
           transition: "max-height 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
         }}
@@ -156,30 +149,6 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         <p style={{ margin: "10px 0 0", color: "#5B6B72", fontSize: 11.5, lineHeight: 1.5, borderTop: "1px solid #EBE6D9", paddingTop: 10 }}>
           {member.bioLong}
         </p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12 }}>
-          {member.socials.map((s) => (
-            <a
-              key={s.label}
-              href={s.href}
-              aria-label={s.label}
-              title={s.label}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "#fff",
-                border: "1px solid #EBE6D9",
-                color: member.color,
-                textDecoration: "none",
-              }}
-            >
-              <span className="ms" style={{ fontSize: 16 }}>{s.icon}</span>
-            </a>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -221,6 +190,8 @@ export default function EquipoOverlay() {
       {/* Overlay — encabezado arriba, cards abajo (deja ver el pin al centro) */}
       <div
         className="crd-ol-equipo"
+        aria-hidden={!isVisible}
+        inert={!isVisible}
         style={{
           position: "absolute",
           inset: 0,

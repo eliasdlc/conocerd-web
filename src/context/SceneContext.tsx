@@ -13,7 +13,9 @@ type SceneContextValue = {
 const SceneContext = createContext<SceneContextValue | null>(null);
 
 export function SceneProvider({ children }: { children: React.ReactNode }) {
-  const [activeScene, setActiveScene] = useState<string>("");
+  // The first server and client frame is always the Hero. Viewport detection
+  // may decide how to drive the journey, but it never decides its first scene.
+  const [activeScene, setActiveScene] = useState<string>("hero");
   const progress = useMotionValue(0);
   return (
     <SceneContext.Provider value={{ activeScene, setActiveScene, progress }}>

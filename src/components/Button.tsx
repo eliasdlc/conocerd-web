@@ -10,7 +10,7 @@ interface ButtonProps {
 
 const variantStyles = {
   primary: {
-    bg: "linear-gradient(135deg,#FF6B4A,#F76C4D)",
+    bg: "linear-gradient(135deg,#C74420,#B23410)",
     color: "#fff",
     border: "none",
     shadow: "0 6px 20px rgba(247,108,77,.40)",
@@ -23,7 +23,7 @@ const variantStyles = {
   },
   mint: {
     bg: "#25CCB8",
-    color: "#fff",
+    color: "#1D3A45",
     border: "none",
     shadow: "0 6px 20px rgba(37,204,184,.35)",
   },

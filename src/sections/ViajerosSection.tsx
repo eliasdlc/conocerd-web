@@ -21,6 +21,8 @@ export default function ViajerosOverlay() {
 
   return (
     <div
+      aria-hidden={!isVisible}
+      inert={!isVisible}
       style={{
         position: "absolute",
         inset: 0,

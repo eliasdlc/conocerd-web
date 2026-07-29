@@ -18,10 +18,11 @@ const DEG_PER_SECOND = 1.2;
 // cámara volvía de golpe al valor de la escena (salto visible).
 export function useHeroIdleMotion(
   mapRef: RefObject<maplibregl.Map | null>,
-  progress: MotionValue<number>
+  progress: MotionValue<number>,
+  active: boolean
 ) {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!active || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let raf = 0;
     let last = 0;
@@ -32,12 +33,12 @@ export function useHeroIdleMotion(
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
       last = now;
 
-      // Fuera del hero no hay nada que rotar: el offset ya está desvanecido y
-      // seguir escribiendo frames pelearía con el motor activo.
       if (heroFactorAtProgress(progress.get()) > 0.01 && !document.hidden) {
         setIdleBearing((getIdleBearing() + DEG_PER_SECOND * dt) % 360);
         applyJourneyFrame(mapRef.current, progress.get());
       }
+      // The loop belongs exclusively to the active Hero and is stopped by the
+      // effect cleanup as soon as the journey moves on.
       raf = requestAnimationFrame(tick);
     };
 
@@ -46,5 +47,5 @@ export function useHeroIdleMotion(
       running = false;
       cancelAnimationFrame(raf);
     };
-  }, [mapRef, progress]);
+  }, [active, mapRef, progress]);
 }

@@ -23,11 +23,6 @@ const COMING_SOON = [
   { label: "Android · próximamente", icon: "android" },
 ];
 
-const SOCIALS = [
-  { icon: "photo_camera", label: "Instagram", href: "#" },
-  { icon: "music_note", label: "TikTok", href: "#" },
-  { icon: "chat", label: "WhatsApp", href: "#" },
-];
 
 const linkStyle: React.CSSProperties = {
   color: "rgba(255,255,255,.72)",
@@ -128,29 +123,6 @@ export default function Footer() {
           <div style={{ ...linkStyle, cursor: "default", lineHeight: 1.8 }}>
             <span className="ms" style={{ fontSize: 16 }}>location_on</span>
             Santiago, RD 🇩🇴
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-            {SOCIALS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                aria-label={s.label}
-                title={s.label}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  background: "rgba(255,255,255,.1)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textDecoration: "none",
-                }}
-              >
-                <span className="ms" style={{ fontSize: 20 }}>{s.icon}</span>
-              </a>
-            ))}
           </div>
         </div>
       </div>

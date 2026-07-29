@@ -351,7 +351,7 @@ export default function SubscribeForm({
                 }}
                 style={{
                   flex: 1,
-                  height: 38,
+                  height: 44,
                   borderRadius: 999,
                   border: "none",
                   cursor: "pointer",
