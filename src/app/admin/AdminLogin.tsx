@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { login, type LoginState } from "./actions";
 
@@ -8,6 +8,12 @@ const INITIAL: LoginState = { error: null };
 
 export default function AdminLogin({ configured }: { configured: boolean }) {
   const [state, formAction, pending] = useActionState(login, INITIAL);
+  // Controlado a propósito: React 19 vacía los campos no controlados de un
+  // `<form action>` cuando la acción termina, también si terminó en error. Sin
+  // esto, tras fallar una vez el campo queda vacío y el segundo intento lo
+  // bloquea el navegador con "Please fill out this field" mientras sigue
+  // visible el "Contraseña incorrecta" del intento anterior.
+  const [password, setPassword] = useState("");
 
   return (
     <main
@@ -77,6 +83,8 @@ export default function AdminLogin({ configured }: { configured: boolean }) {
           required
           disabled={!configured}
           autoFocus
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           placeholder="Contraseña"
           aria-label="Contraseña del panel"
           aria-invalid={Boolean(state.error)}
