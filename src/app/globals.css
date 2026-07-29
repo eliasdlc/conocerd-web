@@ -259,6 +259,112 @@ body {
   border: 0;
 }
 
+/* ───────────────────── /lista — landing del QR ────────────────────── */
+/* Esta página no monta el journey ni GSAP: todo su movimiento vive aquí, en
+   keyframes CSS de una sola pasada. Nada se anima en reposo (sólo entradas y la
+   celebración del registro), así que el coste en el 4G de un salón es nulo. */
+
+.crd-lista-grid {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* En pantallas anchas el formulario se queda a la vista mientras se leen los
+   beneficios; en móvil (el caso real del QR) sigue siendo una sola columna. */
+@media (min-width: 940px) {
+  .crd-lista-grid {
+    max-width: 1060px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+  }
+  .crd-lista-aside {
+    position: sticky;
+    top: 32px;
+  }
+  /* En una sola columna el argumento va debajo del formulario y necesita aire;
+     en dos columnas arranca a la misma altura que la marca. */
+  .crd-lista-main { margin-top: 0; }
+}
+
+.crd-lista-main { margin-top: 32px; }
+
+.crd-lista-ig-card { transition: background .2s, border-color .2s, transform .2s; }
+.crd-lista-ig-card:hover {
+  background: #fff;
+  border-color: #D9D2C1;
+  transform: translateY(-2px);
+}
+
+/* Entradas: se disparan al montar, con retardo por índice (inline). */
+@keyframes crdListaIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+.crd-lista-in {
+  animation: crdListaIn .55s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* Cambio de audiencia: el bloque de beneficios se repinta, no se desliza de
+   lado, para que el toggle no parezca un carrusel. */
+@keyframes crdListaSwap {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.crd-lista-swap { animation: crdListaSwap .34s cubic-bezier(.16,1,.3,1) both; }
+
+/* ── Celebración del registro ── */
+
+@keyframes crdBadgePop {
+  0%   { opacity: 0; transform: scale(.3) rotate(-14deg); }
+  55%  { opacity: 1; transform: scale(1.14) rotate(4deg); }
+  75%  { transform: scale(.96) rotate(-2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes crdHalo {
+  0%   { opacity: .55; transform: scale(.5); }
+  100% { opacity: 0;   transform: scale(2.1); }
+}
+@keyframes crdCheckDraw {
+  from { stroke-dashoffset: 34; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes crdRingDraw {
+  from { stroke-dashoffset: 264; }
+  to   { stroke-dashoffset: 0; }
+}
+/* Cada partícula recibe su propio destino por custom properties inline. */
+@keyframes crdConfettiFly {
+  0%   { opacity: 0; transform: translate(0,0) rotate(0deg) scale(.4); }
+  10%  { opacity: 1; }
+  45%  { transform: translate(calc(var(--dx) * .72), var(--peak)) rotate(calc(var(--rot) * .5)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(.9); }
+}
+.crd-confetti {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: crdConfettiFly 1.5s cubic-bezier(.2,.6,.35,1) both;
+}
+
+.crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3), box-shadow .2s; }
+.crd-ig-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(221,42,123,.42); }
+
+/* Los beneficios se marcan como conseguidos cuando el registro entra. */
+@keyframes crdPerkTick {
+  0%   { opacity: 0; transform: scale(.2); }
+  60%  { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* La celebración es de una sola pasada, pero sigue siendo movimiento: con
+   `reduce` el bloque global de arriba la reduce a nada y el confeti ni se
+   monta (lo decide el componente con matchMedia). */
+
 /* ───────────────────── Páginas legales ────────────────────── */
 /* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
    el contenido es markup semántico y se estila una vez desde el shell. */
