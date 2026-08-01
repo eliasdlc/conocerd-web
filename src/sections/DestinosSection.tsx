@@ -97,10 +97,13 @@ export default function DestinosOverlay() {
         />
 
         {/* Section heading — appears above the pile on first polaroid.
-            El bottom de móvil (48%) lo fija .crd-destinos-heading en globals.css,
-            así que aquí basta el valor de desktop. */}
+            El bottom de móvil (43%) lo fija .crd-destinos-heading en globals.css,
+            así que aquí basta el valor de desktop. En desktop lleva el chip
+            crema con blur: sin él, el H2 caía sobre la toponimia del mapa y
+            competían píxel a píxel (audit 2.1). En móvil el velo crema de la
+            escena ya hace ese trabajo. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-[14px] desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
