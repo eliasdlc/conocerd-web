@@ -152,7 +152,7 @@ export default function NegociosOverlay() {
             onClick={() => requestSubscribe("negocio")}
             className="inline-flex cursor-pointer items-center gap-2 rounded-card border-none bg-mint px-[18px] py-[11px] text-copy font-bold text-ink-2 crd-sticker transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
           >
-            <Icon name="add_business" className="text-lg text-white" />
+            <Icon name="add_business" className="text-lg text-ink-2" />
             Registrar mi negocio
           </button>
         </div>
