@@ -19,7 +19,7 @@ const CARD_W = "w-[clamp(220px,18vw,300px)]";
 function PolaroidCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
   return (
-    <div className={`${CARD_W} ${POLAROID_PAPER}`}>
+    <div className={`relative ${CARD_W} ${POLAROID_PAPER}`}>
       <PolaroidMedia
         image={d.image}
         alt={d.name}

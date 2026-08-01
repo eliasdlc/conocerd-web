@@ -15,8 +15,14 @@ import type { IconName } from "@/components/Icon";
 /** Papel de la polaroid: fondo, márgenes desiguales (más aire abajo) y sombra.
  *  `crd-tape` le pega la cinta adhesiva del ::before (audit §3, movimiento 5):
  *  la polaroid deja de ser una card blanca con foto y pasa a ser una foto
- *  pegada al papel. Necesita `relative` para anclar la cinta. */
-export const POLAROID_PAPER = "crd-tape relative rounded-md bg-white px-3 pb-0 pt-3 shadow-panel";
+ *  pegada al papel.
+ *
+ *  Sin `relative` aquí: la pila de Destinos añade su propio `absolute` y las
+ *  dos utilidades escriben la misma propiedad, así que gana la que Tailwind
+ *  emita después —no la que se escriba después en el className— y las cartas
+ *  se salían del posicionamiento. Cada consumidor declara su posición; lo que
+ *  el papel garantiza es que haya una (la cinta se ancla a ella).*/
+export const POLAROID_PAPER = "crd-tape rounded-md bg-white px-3 pb-0 pt-3 shadow-panel";
 
 export function PolaroidMedia({
   image,
