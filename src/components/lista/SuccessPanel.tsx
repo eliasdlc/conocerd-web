@@ -47,10 +47,11 @@ function AchievementSeal({ icon }: { icon: IconName }) {
             className="animate-[crdRingDraw_.8s_cubic-bezier(.3,.8,.3,1)_.15s_both]"
           />
         </svg>
-        <Icon
-          name={icon}
-          className="absolute inset-0 flex items-center justify-center text-[42px] text-mint-ink"
-        />
+        {/* El centrado vive en el contenedor: si va sobre el <Icon>, `inset-0`
+            estira el SVG a toda la caja en vez de centrarlo dentro. */}
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Icon name={icon} className="text-[42px] text-mint-ink" />
+        </span>
       </div>
     </div>
   );
