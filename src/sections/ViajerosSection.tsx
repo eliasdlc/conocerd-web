@@ -3,6 +3,8 @@
 import { useScene } from "@/context/SceneContext";
 import Icon, { type IconName } from "@/components/Icon";
 import PhoneMockup from "@/sections/PhoneMockup";
+import Kicker from "@/components/Kicker";
+import { PANEL_GLASS } from "@/lib/surfaces";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -34,12 +36,9 @@ export default function ViajerosOverlay() {
             "DOMINICAN / HAITI" (audit 2.1) → chip crema con blur, como el del
             heading de Destinos en desktop. */}
         <div
-          className={`mb-3.5 max-desk:w-fit max-desk:rounded-[14px] max-desk:border max-desk:border-line/80 max-desk:bg-cream/88 max-desk:px-3.5 max-desk:py-3 max-desk:backdrop-blur-[8px] ${isVisible ? "animate-slide-up" : ""}`}
+          className={`mb-3.5 max-desk:w-fit max-desk:rounded-card max-desk:border max-desk:border-line/80 max-desk:bg-cream/88 max-desk:px-3.5 max-desk:py-3 max-desk:backdrop-blur-[8px] ${isVisible ? "animate-slide-up" : ""}`}
         >
-          <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink">
-            <Icon name="hiking" className="text-sm" />
-            Para viajeros
-          </div>
+          <Kicker icon="hiking" className="mb-2.5">Para viajeros</Kicker>
           {/* El text-shadow crema despega el titular de las etiquetas del mapa. */}
           <h2 className="m-0 font-display text-[clamp(18px,2.2vw,28px)] font-extrabold leading-[1.1] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Viaja como local,<br />descubre como nadie
@@ -51,19 +50,19 @@ export default function ViajerosOverlay() {
         {FEATURES.map((f, i) => (
           <div
             key={f.title}
-            className={`flex items-start gap-[11px] border border-t-0 border-line bg-cream/88 px-[15px] py-[13px] backdrop-blur-[16px]
+            className={`flex items-start gap-[11px] border-t-0 ${PANEL_GLASS} px-[15px] py-[13px]
               first:rounded-t-2xl first:border-t last:rounded-b-2xl
               ${isVisible ? "animate-slide-up" : ""}`}
             style={isVisible ? { animationDelay: `${i * 0.08 + 0.1}s` } : undefined}
           >
             <div
-              className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px]"
+              className="flex size-[38px] shrink-0 items-center justify-center rounded-tile"
               style={{ background: f.bg }}
             >
               <Icon name={f.icon} className="text-xl" style={{ color: f.color }} />
             </div>
             <div>
-              <h3 className="m-0 mb-[3px] font-display text-[13.5px] font-bold text-ink">{f.title}</h3>
+              <h3 className="m-0 mb-[3px] font-display text-copy font-bold text-ink">{f.title}</h3>
               <p className="m-0 text-xs leading-[1.45] text-muted">{f.desc}</p>
             </div>
           </div>

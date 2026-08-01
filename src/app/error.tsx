@@ -25,13 +25,13 @@ export default function ErrorPage({
         aria-hidden="true"
         className="mb-6 block size-3.5 rounded-full border-[2.5px] border-white bg-coral shadow-[0_0_0_6px_rgba(247,108,77,0.25)]"
       />
-      <p className="m-0 font-mono text-[11px] font-bold uppercase tracking-[.16em] text-coral-ink">
+      <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-coral-ink">
         Error inesperado
       </p>
       <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-extrabold leading-[1.1] tracking-[-.025em] text-ink-2">
         Algo se salió de la ruta
       </h1>
-      <p className="m-0 max-w-[420px] text-[15px] leading-[1.6] text-muted">
+      <p className="m-0 max-w-[420px] text-body leading-[1.6] text-muted">
         No fue tu culpa: algo falló de nuestro lado. Prueba a reintentar y, si
         sigue pasando, vuelve al inicio.
       </p>
@@ -39,13 +39,13 @@ export default function ErrorPage({
         <button
           type="button"
           onClick={() => unstable_retry()}
-          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-mango px-6 font-display text-[15px] font-bold text-ink-2 shadow-[0_6px_20px_rgba(255,141,22,.34)] transition-[transform,box-shadow] duration-200"
+          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-mango px-6 font-display text-body font-bold text-ink-2 shadow-glow-mango transition-[transform,box-shadow] duration-200"
         >
           Reintentar
         </button>
         <Link
           href="/"
-          className="inline-flex h-12 items-center rounded-full border-2 border-ink px-6 font-display text-[15px] font-bold text-ink no-underline"
+          className="inline-flex h-12 items-center rounded-full border-2 border-ink px-6 font-display text-body font-bold text-ink no-underline"
         >
           Volver al inicio
         </Link>

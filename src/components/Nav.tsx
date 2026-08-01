@@ -63,8 +63,8 @@ export default function Nav() {
       <div
         ref={pillRef}
         className="flex items-center gap-[clamp(8px,1.4vw,18px)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [scrollbar-width:none]
-          bg-cream/60 shadow-[0_6px_20px_rgba(38,70,83,.08)]
-          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-[0_10px_30px_rgba(38,70,83,.16)]"
+          bg-cream/60 shadow-card
+          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-panel"
       >
         {LINKS.map((l) => (
           <a

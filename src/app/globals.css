@@ -36,6 +36,46 @@
   --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
   --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
 
+  /* ── Elevación ────────────────────────────────────────────────────────────
+     Había 18 sombras ad-hoc sobre el mismo ink para lo que en realidad son
+     tres niveles (audit 4.3). Cada token es el centro de su grupo, así que
+     migrar una sombra concreta mueve como mucho un par de píxeles de blur.
+     Se mantienen fuera de la escala, por ser efectos y no elevación: el
+     mockup del teléfono (tres capas), el anillo de foco coral, el offset
+     duro de la baldosa mint y el rosa de Instagram. */
+  --shadow-card:  0 6px 18px rgba(38,70,83,.14);
+  --shadow-panel: 0 12px 32px rgba(38,70,83,.18);
+  --shadow-modal: 0 26px 58px rgba(38,70,83,.20);
+  /* Halo de marca bajo los CTA. Es un efecto de color, no un nivel de
+     elevación, por eso no entra en la escala de arriba. */
+  --shadow-glow-mango: 0 6px 20px rgba(255,141,22,.34);
+  --shadow-glow-mint:  0 6px 20px rgba(37,204,184,.35);
+  --shadow-glow-coral: 0 6px 20px rgba(247,108,77,.34);
+
+  /* ── Radios ───────────────────────────────────────────────────────────────
+     13 radios arbitrarios convivían con la escala de Tailwind, y las baldosas
+     de icono usaban cuatro tratamientos distintos para el mismo elemento
+     (9px asimétrico / 7px / 11px / full — audit 4.6). Nombres propios para no
+     pisar `rounded-md|xl|2xl`, que el proyecto sí usa. */
+  --radius-chip:  10px;
+  --radius-tile:  11px;
+  --radius-card:  14px;
+  --radius-panel: 22px;
+
+  /* ── Tipografía ───────────────────────────────────────────────────────────
+     17 tamaños arbitrarios con saltos de medio píxel (9.5→10→10.5→…), fruto
+     de ajustar cada caso a ojo (audit 4.4). Siete tokens cubren ~70 usos; el
+     mayor desplazamiento al migrar es de 0.5px. Los tamaños realmente únicos
+     (19, 26, 38, 42) siguen inline. Nombres propios para no pisar la escala
+     `text-xs…text-3xl` de Tailwind, que el proyecto usa en 56 sitios. */
+  --text-micro:   10px;    /* absorbe 9.5 / 10 / 10.5 */
+  --text-mini:    11px;    /* absorbe 11 / 11.5 */
+  --text-tiny:    12.5px;
+  --text-copy:    13.5px;  /* absorbe 13 / 13.5 */
+  --text-body:    15px;    /* absorbe 14.5 / 15 / 15.5 */
+  --text-lead:    17px;
+  --text-feature: 22px;
+
   /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
      Los @keyframes viven más abajo en este archivo.
      slideUpIn se usaba con 0.4s / 0.45s / 0.5s en 8 sitios distintos; aquí se

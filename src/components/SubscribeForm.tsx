@@ -67,7 +67,7 @@ const TONES: Record<Tone, {
 // Sin `outline-none`: las utilities le ganan al anillo de focus global de
 // @layer base (globals.css) y los campos del embudo quedaban sin focus visible
 // al navegar con teclado (audit 5.2).
-const FIELD = "h-12 w-full rounded-[14px] border px-3.5 font-sans text-[15px]";
+const FIELD = "h-12 w-full rounded-card border px-3.5 font-sans text-body";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
@@ -272,10 +272,10 @@ export default function SubscribeForm({
       >
         <Icon name="check_circle" className={`shrink-0 text-2xl ${t.success}`} />
         <div>
-          <div className={`font-display text-[15px] font-extrabold ${t.text}`}>
+          <div className={`font-display text-body font-extrabold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
           </div>
-          <p className={`mt-[3px] text-[13px] leading-[1.5] ${t.muted}`}>
+          <p className={`mt-[3px] text-copy leading-[1.5] ${t.muted}`}>
             {alreadyIn
               ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
               : copy.body}
@@ -319,7 +319,7 @@ export default function SubscribeForm({
                   setAudience(next);
                   toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
                 }}
-                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-display text-[13.5px] font-bold transition-[background-color,color] duration-200 ${
+                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-display text-copy font-bold transition-[background-color,color] duration-200 ${
                   active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
                 }`}
               >
@@ -345,7 +345,7 @@ export default function SubscribeForm({
               className={field}
             />
             {fieldErrors.businessName && (
-              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
+              <p className={`mx-0.5 mt-[5px] text-tiny ${t.error}`}>
                 {fieldErrors.businessName}
               </p>
             )}
@@ -381,7 +381,7 @@ export default function SubscribeForm({
             <div className="relative">
               <span
                 aria-hidden="true"
-                className={`pointer-events-none absolute left-3.5 top-0 flex h-12 items-center font-sans text-[15px] ${t.prefix}`}
+                className={`pointer-events-none absolute left-3.5 top-0 flex h-12 items-center font-sans text-body ${t.prefix}`}
               >
                 @
               </span>
@@ -401,7 +401,7 @@ export default function SubscribeForm({
               />
             </div>
             {fieldErrors.instagram && (
-              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
+              <p className={`mx-0.5 mt-[5px] text-tiny ${t.error}`}>
                 {fieldErrors.instagram}
               </p>
             )}
@@ -437,7 +437,7 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-ink-2 shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango font-display text-body font-extrabold text-ink-2 shadow-glow-mango disabled:cursor-progress disabled:opacity-75 ${
             compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >
@@ -447,7 +447,7 @@ export default function SubscribeForm({
       </div>
 
       {fieldErrors.email && (
-        <p className={`mx-0.5 mt-1.5 text-[12.5px] ${t.error}`}>{fieldErrors.email}</p>
+        <p className={`mx-0.5 mt-1.5 text-tiny ${t.error}`}>{fieldErrors.email}</p>
       )}
 
       {/* Honeypot: fuera de la vista pero dentro del DOM, sin aria y sin tab. */}
@@ -477,7 +477,7 @@ export default function SubscribeForm({
         </span>
       </label>
       {fieldErrors.consent && (
-        <p className={`mx-0.5 mt-1 text-[12.5px] ${t.error}`}>{fieldErrors.consent}</p>
+        <p className={`mx-0.5 mt-1 text-tiny ${t.error}`}>{fieldErrors.consent}</p>
       )}
 
       {/* Error general — sin error no ocupa alto, para no reservar hueco vacío. */}
@@ -485,7 +485,7 @@ export default function SubscribeForm({
         id={errorId}
         role="alert"
         aria-live="assertive"
-        className={`text-[13px] ${t.error} ${error ? "mx-0.5 mt-2" : "m-0 min-h-0"}`}
+        className={`text-copy ${t.error} ${error ? "mx-0.5 mt-2" : "m-0 min-h-0"}`}
       >
         {error}
       </p>

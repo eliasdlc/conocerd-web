@@ -14,6 +14,7 @@ import {
   type Destination,
 } from "@/data/destinations";
 import { pathLengthKm, type LngLat } from "@/lib/geo";
+import { PANEL_GLASS } from "@/lib/surfaces";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  "Arma tu recorrido" (#8/#9): pines de categoría con card hover (con punta),
@@ -25,22 +26,21 @@ import { pathLengthKm, type LngLat } from "@/lib/geo";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Chrome compartido por los dos paneles flotantes de la escena.
-const PANEL =
-  "border border-line bg-cream/92 backdrop-blur-[16px] rounded-[20px]";
+const PANEL = `${PANEL_GLASS} rounded-panel`;
 
 // ─── Card hover con punta (#8) ────────────────────────────────────────────────
 
 function HoverCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
   return (
-    <div className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-50 w-[220px] -translate-x-1/2 overflow-hidden rounded-[14px] border border-line bg-white shadow-[0_12px_32px_rgba(38,70,83,0.22)]">
+    <div className="pointer-events-none absolute bottom-[calc(100%+12px)] left-1/2 z-50 w-[220px] -translate-x-1/2 overflow-hidden rounded-card border border-line bg-white shadow-panel">
       <div className="relative h-[104px] w-full bg-cream-2">
         <Image src={d.image} alt={d.name} fill sizes="220px" className="object-cover" />
         <span
-          className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/92 px-2 py-[3px] font-display text-[10.5px] font-bold"
+          className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/92 px-2 py-[3px] font-display text-micro font-bold"
           style={{ color: meta.ink }}
         >
-          <Icon name={meta.icon} className="text-[13px]" />
+          <Icon name={meta.icon} className="text-copy" />
           {meta.label}
         </span>
       </div>
@@ -51,12 +51,12 @@ function HoverCard({ d }: { d: Destination }) {
             ★ {d.rating.toFixed(1)}
           </div>
         </div>
-        <div className="mt-0.5 font-mono text-[10.5px] text-muted">{d.province}</div>
+        <div className="mt-0.5 font-mono text-micro text-muted">{d.province}</div>
         <div className="mt-2 flex flex-wrap gap-1">
           {d.activities.map((a) => (
             <span
               key={a}
-              className="rounded-md bg-cream-2 px-[7px] py-0.5 font-display text-[10px] font-semibold text-muted"
+              className="rounded-md bg-cream-2 px-[7px] py-0.5 font-display text-micro font-semibold text-muted"
             >
               {a}
             </span>
@@ -116,7 +116,7 @@ function PinMarker({
             {inRoute && !isStart && !isGoal && (
               <span
                 aria-hidden="true"
-                className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full bg-ink px-1 text-center font-display text-[10px] font-extrabold leading-4 text-white"
+                className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full bg-ink px-1 text-center font-display text-micro font-extrabold leading-4 text-white"
               >
                 {routeIndex + 1}
               </span>
@@ -148,15 +148,15 @@ function RoutePanel({
 
   return (
     <div
-      className={`${PANEL} absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[264px] -translate-y-1/2 flex-col px-[18px] py-4 shadow-[0_8px_32px_rgba(38,70,83,0.12)]`}
+      className={`${PANEL} absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[264px] -translate-y-1/2 flex-col px-[18px] py-4 shadow-panel`}
     >
       <div className="flex items-center justify-between">
-        <div className="font-display text-[13px] font-extrabold text-ink">Tu recorrido</div>
+        <div className="font-display text-copy font-extrabold text-ink">Tu recorrido</div>
         {stops.length > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="cursor-pointer border-none bg-transparent font-display text-[11px] font-bold text-coral-ink"
+            className="cursor-pointer border-none bg-transparent font-display text-mini font-bold text-coral-ink"
           >
             Limpiar
           </button>
@@ -164,23 +164,23 @@ function RoutePanel({
       </div>
 
       {stops.length === 0 ? (
-        <p className="mb-0.5 mt-3 text-[12.5px] leading-[1.5] text-muted">
+        <p className="mb-0.5 mt-3 text-tiny leading-[1.5] text-muted">
           Toca los pines del mapa para armar tu ruta. Reordena las paradas y mira la distancia total.
         </p>
       ) : (
         <>
           <div className="my-3 flex flex-col gap-1.5 overflow-y-auto">
             {stops.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2 rounded-[10px] bg-white px-2 py-1.5">
+              <div key={s.id} className="flex items-center gap-2 rounded-chip bg-white px-2 py-1.5">
                 <span
-                  className="size-[18px] flex-none rounded-full text-center font-display text-[10px] font-extrabold leading-[18px] text-white"
+                  className="size-[18px] flex-none rounded-full text-center font-display text-micro font-extrabold leading-[18px] text-white"
                   style={{ background: CATEGORY_META[s.category].color }}
                 >
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-display text-xs font-bold text-ink">{s.name}</div>
-                  <div className="font-mono text-[9.5px] text-muted">{s.province}</div>
+                  <div className="font-mono text-micro text-muted">{s.province}</div>
                 </div>
                 <div className="flex gap-0.5">
                   <IconBtn name="arrow_upward" label="Subir" disabled={i === 0} onClick={() => onMove(s.id, -1)} />
@@ -296,11 +296,11 @@ export default function MapaOverlay() {
       >
         {/* Filtro de categorías (abajo-izq → bottom-sheet en móvil) */}
         <div
-          className={`crd-ol-panel ${PANEL} absolute bottom-[clamp(24px,4%,48px)] left-[clamp(16px,3%,40px)] min-w-[240px] px-5 py-[18px] shadow-[0_8px_32px_rgba(38,70,83,0.10)] ${
+          className={`crd-ol-panel ${PANEL} absolute bottom-[clamp(24px,4%,48px)] left-[clamp(16px,3%,40px)] min-w-[240px] px-5 py-[18px] shadow-panel ${
             isVisible ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
-          <div className="mb-3.5 font-display text-[13px] font-extrabold text-ink">Arma tu recorrido</div>
+          <div className="mb-3.5 font-display text-copy font-extrabold text-ink">Arma tu recorrido</div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => {
               const meta = CATEGORY_META[cat];
@@ -310,7 +310,7 @@ export default function MapaOverlay() {
                   key={cat}
                   type="button"
                   onClick={() => toggleCategory(cat)}
-                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-[5px] rounded-full border-[1.5px] px-3 py-1.5 font-display text-[12.5px] font-bold transition-[border-color,background-color,color] duration-200"
+                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-[5px] rounded-full border-[1.5px] px-3 py-1.5 font-display text-tiny font-bold transition-[border-color,background-color,color] duration-200"
                   style={{
                     borderColor: isActive ? meta.color : "var(--color-line)",
                     background: isActive ? `${meta.color}1A` : "transparent",

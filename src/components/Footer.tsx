@@ -26,7 +26,7 @@ const COMING_SOON: { label: string; icon: IconName }[] = [
 // Los dos estilos que se repetían como objetos y se extendían con spread; como
 // clases se componen igual, añadiendo utilidades después.
 const LINK =
-  "flex w-fit cursor-pointer items-center gap-[7px] border-none bg-transparent p-0 text-left font-display text-[13.5px] leading-[2] text-white/72 no-underline";
+  "flex w-fit cursor-pointer items-center gap-[7px] border-none bg-transparent p-0 text-left font-display text-copy leading-[2] text-white/72 no-underline";
 const HEADING =
   "mb-2.5 font-display text-xs font-extrabold uppercase tracking-[.12em] text-white/50";
 

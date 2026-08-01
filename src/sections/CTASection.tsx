@@ -45,7 +45,7 @@ export default function CTAOverlay() {
         </h2>
 
         {/* Subtext */}
-        <p className="mx-auto mb-5 max-w-[460px] text-[15px] leading-[1.55] text-white/76">
+        <p className="mx-auto mb-5 max-w-[460px] text-body leading-[1.55] text-white/76">
           ConoceRD está en camino. Déjanos tu correo y entra a la lista de fundadores: serás
           de los primeros en explorar la República Dominicana que no aparece en las guías.
         </p>
@@ -65,22 +65,22 @@ export default function CTAOverlay() {
             >
               <Icon name={btn.icon} className="text-xl" />
               <span className="text-left leading-[1.2]">
-                <span className="block font-display text-[9.5px] font-bold uppercase tracking-[.08em] text-white/72">
+                <span className="block font-display text-micro font-bold uppercase tracking-[.08em] text-white/72">
                   Próximamente en
                 </span>
-                <span className="font-display text-[13.5px] font-extrabold">{btn.store}</span>
+                <span className="font-display text-copy font-extrabold">{btn.store}</span>
               </span>
             </div>
           ))}
         </div>
 
         {/* Atajo a la audiencia B2B sin salir de la card */}
-        <div className="text-[13px] text-white/55">
+        <div className="text-copy text-white/55">
           ¿Tienes un negocio?{" "}
           <button
             type="button"
             onClick={() => requestSubscribe("negocio")}
-            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-[13px] font-bold text-mango"
+            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-copy font-bold text-mango"
           >
             Regístralo aquí →
           </button>

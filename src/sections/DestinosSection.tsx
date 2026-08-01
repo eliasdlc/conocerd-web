@@ -1,13 +1,12 @@
 "use client";
 
 
-import Image from "next/image";
-import CategoryChip from "@/components/CategoryChip";
 import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
+import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
@@ -103,11 +102,11 @@ export default function DestinosOverlay() {
             competían píxel a píxel (audit 2.1). En móvil el velo crema de la
             escena ya hace ese trabajo. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-[14px] desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-card desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
-          <div className="mb-2 font-display text-[11px] font-extrabold uppercase tracking-[.16em] text-mint-ink [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
+          <div className="mb-2 font-display text-mini font-extrabold uppercase tracking-[.16em] text-mint-ink [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
             Hidden gems · Lo nuestro
           </div>
           <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
@@ -134,7 +133,7 @@ export default function DestinosOverlay() {
               // carta, así que transform/transition/z-index siguen inline.
               // --pile-left permite el corrimiento móvil sin pasar por JS: en
               // 390px el rango 3–9% sacaba las cartas de atrás por el borde.
-              className="crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] cursor-default rounded-md bg-white px-3 pb-0 pt-3 shadow-[0_14px_34px_rgba(38,70,83,.22)] left-[var(--pile-left)] max-desk:left-[calc(var(--pile-left)+6%)]"
+              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] cursor-default ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(var(--pile-left)+6%)]`}
               style={{
                 "--pile-left": offset.left,
                 bottom: offset.bottom,
@@ -149,30 +148,22 @@ export default function DestinosOverlay() {
                 zIndex: i + 1,
               } as React.CSSProperties}
             >
-              <div className="crd-destinos-card-media relative h-[196px] w-full overflow-hidden rounded-[3px] bg-cream-2">
-                <Image
-                  src={pol.image}
-                  alt={pol.name}
-                  fill
-                  sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
-                  className="object-cover"
-                />
-                <div
-                  className={`absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5 transition-opacity duration-300 ${
-                    isFront ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <CategoryChip icon={CATEGORY_META[pol.category].icon}>{pol.tagline}</CategoryChip>
-                  <p className="m-0 text-xs leading-[1.4] text-white/92">{pol.desc}</p>
-                </div>
-              </div>
+              <PolaroidMedia
+                image={pol.image}
+                alt={pol.name}
+                sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
+                icon={CATEGORY_META[pol.category].icon}
+                chip={pol.tagline}
+                desc={pol.desc}
+                className="crd-destinos-card-media h-[196px]"
+                overlayClassName={`transition-opacity duration-300 ${isFront ? "opacity-100" : "opacity-0"}`}
+              />
               <figcaption
                 className={`px-1 pb-3.5 pt-3 transition-opacity duration-300 ${
                   isFront ? "opacity-100" : "opacity-0"
                 }`}
               >
-                <div className="font-hand text-2xl font-bold leading-none text-ink">{pol.name}</div>
-                <div className="mt-[3px] font-mono text-[11px] text-muted">{pol.meta}</div>
+                <PolaroidCaption name={pol.name} meta={pol.meta} />
               </figcaption>
             </figure>
           );

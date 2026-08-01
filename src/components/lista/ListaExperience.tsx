@@ -21,12 +21,13 @@ import SuccessPanel from "./SuccessPanel";
 import InstagramGlyph from "./InstagramGlyph";
 import { CONTENT, INSTAGRAM, type Item } from "./content";
 import { AUDIENCES, type Audience } from "@/lib/waitlist/schema";
+import Kicker from "@/components/Kicker";
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-display text-[17px] font-extrabold tracking-[-.015em] text-ink-2">
+    <h2 className="mb-3 font-display text-lead font-extrabold tracking-[-.015em] text-ink-2">
       {children}
     </h2>
   );
@@ -48,7 +49,7 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
       >
         <Icon
           name={unlocked ? "check" : item.icon}
-          className={`text-[22px] ${unlocked ? "text-white" : "text-mango-ink"}`}
+          className={`text-feature ${unlocked ? "text-white" : "text-mango-ink"}`}
         />
       </span>
       <div className="min-w-0 flex-1">
@@ -56,21 +57,21 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
             título: si lo arrastra, con títulos de distinto largo cae a una
             segunda línea en unas tarjetas sí y en otras no. */}
         <div className="flex items-start gap-2">
-          <span className="min-w-0 flex-1 font-display text-[14.5px] font-bold text-ink">
+          <span className="min-w-0 flex-1 font-display text-body font-bold text-ink">
             {item.title}
           </span>
           {unlocked && (
             <span
               // Escalonado: los tres tics no deben aparecer a la vez, y el
               // retardo depende del índice → va por style.
-              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[.08em] text-mint-ink"
+              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-micro font-extrabold uppercase tracking-[.08em] text-mint-ink"
               style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
             >
               Desbloqueado
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-[13px] leading-[1.5] text-muted">{item.desc}</p>
+        <p className="mt-0.5 text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
   );
@@ -79,10 +80,10 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
 function FeatureRow({ item }: { item: Item }) {
   return (
     <li className="flex items-start gap-3">
-      <Icon name={item.icon} className="mt-px shrink-0 text-[22px] text-mint-ink" />
+      <Icon name={item.icon} className="mt-px shrink-0 text-feature text-mint-ink" />
       <div>
-        <div className="font-display text-[14.5px] font-bold text-ink">{item.title}</div>
-        <p className="mt-px text-[13px] leading-[1.5] text-muted">{item.desc}</p>
+        <div className="font-display text-body font-bold text-ink">{item.title}</div>
+        <p className="mt-px text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
   );
@@ -144,13 +145,9 @@ export default function ListaExperience() {
         </Link>
 
         <div className="crd-lista-in mb-2.5 [animation-delay:.06s]">
-          <span
-            key={audience}
-            className="crd-lista-swap inline-flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink"
-          >
-            <Icon name={c.eyebrowIcon} className="text-sm" />
+          <Kicker key={audience} icon={c.eyebrowIcon} className="crd-lista-swap">
             {c.eyebrow}
-          </span>
+          </Kicker>
         </div>
 
         <h1
@@ -162,14 +159,14 @@ export default function ListaExperience() {
 
         <p
           key={`p-${audience}`}
-          className="crd-lista-swap mb-5 text-[15.5px] leading-[1.55] text-muted"
+          className="crd-lista-swap mb-5 text-body leading-[1.55] text-muted"
         >
           {c.sub}
         </p>
 
         {/* El formulario es la única acción de la página: siempre sobre el fold.
             overflow-visible porque el confeti del panel de éxito se sale. */}
-        <div className="crd-lista-in overflow-visible rounded-[22px] border border-line bg-white px-5 pb-[18px] pt-5 shadow-[0_18px_44px_rgba(38,70,83,.10)] [animation-delay:.12s]">
+        <div className="crd-lista-in overflow-visible rounded-panel border border-line bg-white px-5 pb-[18px] pt-5 shadow-modal [animation-delay:.12s]">
           <SubscribeForm
             key={formKey}
             tone="light"
@@ -182,7 +179,7 @@ export default function ListaExperience() {
           />
         </div>
 
-        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-[12.5px] text-muted-2 [animation-delay:.18s]">
+        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-tiny text-muted-2 [animation-delay:.18s]">
           <Icon name="phone_iphone" className="text-lg" />
           <Icon name="android" className="text-lg" />
           Próximamente en App Store y Google Play
@@ -200,13 +197,13 @@ export default function ListaExperience() {
         >
           <span
             aria-hidden="true"
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] text-white"
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] text-white"
           >
             <InstagramGlyph size={20} />
           </span>
           <span>
             <span className="block font-display text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
-            <span className="block text-[12.5px] leading-[1.4] text-muted">
+            <span className="block text-tiny leading-[1.4] text-muted">
               Los destinos que vamos sumando, antes de que salga la app.
             </span>
           </span>
@@ -264,9 +261,9 @@ export default function ListaExperience() {
         >
           <Icon
             name={audience === "viajero" ? "storefront" : "hiking"}
-            className="text-[22px] text-coral-ink"
+            className="text-feature text-coral-ink"
           />
-          <span className="text-[13.5px] leading-[1.45] text-muted">
+          <span className="text-copy leading-[1.45] text-muted">
             {audience === "viajero" ? (
               <>
                 ¿Tienes un negocio en RD?{" "}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Icon from "@/components/Icon";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
+import Kicker from "@/components/Kicker";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -56,14 +57,14 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
 
   return (
     <div
-      className={`relative flex max-w-[300px] flex-[1_1_260px] flex-col items-center rounded-[22px] border-[1.5px] border-line bg-cream/92 px-[22px] pb-5 pt-6 text-center backdrop-blur-[18px] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-        ${expanded ? "shadow-[0_22px_50px_rgba(38,70,83,0.20)]" : "shadow-[0_12px_36px_rgba(38,70,83,0.14)]"}
+      className={`relative flex max-w-[300px] flex-[1_1_260px] flex-col items-center rounded-panel border-[1.5px] border-line bg-cream/92 px-[22px] pb-5 pt-6 text-center backdrop-blur-[18px] transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${expanded ? "shadow-modal" : "shadow-panel"}
         ${animate ? "animate-slide-up" : ""}`}
       style={animate ? { animationDelay: `${delay}s` } : undefined}
     >
       {/* Avatar grande */}
       <div
-        className="relative flex size-24 items-center justify-center overflow-hidden rounded-full font-display text-3xl font-extrabold shadow-[0_8px_20px_rgba(38,70,83,0.16)]"
+        className="relative flex size-24 items-center justify-center overflow-hidden rounded-full font-display text-3xl font-extrabold shadow-panel"
         style={{ background: member.bg, color: member.color }}
       >
         {member.photo ? (
@@ -74,7 +75,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
       </div>
 
       {/* Nombre → posición → descripción */}
-      <h3 className="m-0 mt-3.5 font-display text-[17px] font-extrabold leading-[1.2] text-ink">
+      <h3 className="m-0 mt-3.5 font-display text-lead font-extrabold leading-[1.2] text-ink">
         {member.name}
       </h3>
       <div
@@ -83,7 +84,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
       >
         {member.role}
       </div>
-      <p className="m-0 text-[12.5px] leading-[1.5] text-muted">{member.bio}</p>
+      <p className="m-0 text-tiny leading-[1.5] text-muted">{member.bio}</p>
 
       {/* The extended profile is an explicit disclosure, not hover-only. */}
       <button
@@ -100,7 +101,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
           expanded ? "max-h-[180px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <p className="m-0 mt-2.5 border-t border-line pt-2.5 text-[11.5px] leading-[1.5] text-muted">
+        <p className="m-0 mt-2.5 border-t border-line pt-2.5 text-mini leading-[1.5] text-muted">
           {member.bioLong}
         </p>
       </div>
@@ -120,7 +121,7 @@ export default function EquipoOverlay() {
       {isVisible && (
         <MapMarker longitude={PUCMM.lng} latitude={PUCMM.lat} anchor="bottom">
           <MarkerContent>
-            <div className="flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full border-[2.5px] border-coral bg-white shadow-[0_4px_14px_rgba(247,108,77,0.40)]">
+            <div className="flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full border-[2.5px] border-coral bg-white shadow-glow-coral">
               <Icon name="school" className="text-[19px] text-coral-ink" />
             </div>
           </MarkerContent>
@@ -140,10 +141,7 @@ export default function EquipoOverlay() {
       >
         {/* Heading */}
         <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
-          <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-coral-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-coral-ink">
-            <Icon name="groups" className="text-sm" />
-            El equipo
-          </div>
+          <Kicker icon="groups" tone="coral" className="mb-2.5">El equipo</Kicker>
           <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Hecho por dominicanos,<br />para descubrir lo nuestro
           </h2>

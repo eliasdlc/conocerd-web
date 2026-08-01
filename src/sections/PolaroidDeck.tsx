@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
-import CategoryChip from "@/components/CategoryChip";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { CATEGORY_META, type Destination } from "@/data/destinations";
+import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PolaroidDeck (#7) — la pila de polaroids se vuelve un deck interactivo.
@@ -20,23 +19,18 @@ const CARD_W = "w-[clamp(220px,18vw,300px)]";
 function PolaroidCard({ d }: { d: Destination }) {
   const meta = CATEGORY_META[d.category];
   return (
-    <div className={`${CARD_W} rounded-md bg-white px-3 pb-0 pt-3 shadow-[0_14px_34px_rgba(38,70,83,.24)]`}>
-      <div className="relative h-[clamp(190px,15vw,240px)] w-full overflow-hidden rounded-[3px] bg-cream-2">
-        <Image
-          src={d.image}
-          alt={d.name}
-          fill
-          sizes="(max-width: 640px) 220px, (max-width: 1440px) 18vw, 300px"
-          className="object-cover"
-        />
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5">
-          <CategoryChip icon={meta.icon}>{d.tagline ?? meta.label}</CategoryChip>
-          <p className="m-0 text-xs leading-[1.4] text-white/92">{d.desc}</p>
-        </div>
-      </div>
+    <div className={`${CARD_W} ${POLAROID_PAPER}`}>
+      <PolaroidMedia
+        image={d.image}
+        alt={d.name}
+        sizes="(max-width: 640px) 220px, (max-width: 1440px) 18vw, 300px"
+        icon={meta.icon}
+        chip={d.tagline ?? meta.label}
+        desc={d.desc}
+        className="h-[clamp(190px,15vw,240px)]"
+      />
       <div className="px-1 pb-3.5 pt-3">
-        <div className="font-hand text-2xl font-bold leading-none text-ink">{d.name}</div>
-        <div className="mt-[3px] font-mono text-[11px] text-muted">{d.meta ?? d.province}</div>
+        <PolaroidCaption name={d.name} meta={d.meta ?? d.province} />
       </div>
     </div>
   );
@@ -120,7 +114,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
           >
             <PolaroidCard d={d} />
             {isFront && (
-              <div className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 font-display text-[10px] font-bold tracking-[.06em] text-white">
+              <div className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 font-display text-micro font-bold tracking-[.06em] text-white">
                 Click para ver más →
               </div>
             )}

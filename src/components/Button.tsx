@@ -11,9 +11,9 @@ interface ButtonProps {
 }
 
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-mango text-ink-2 shadow-[0_6px_20px_rgba(255,141,22,.34)]",
+  primary: "bg-mango text-ink-2 shadow-glow-mango",
   outline: "border-2 border-ink bg-transparent text-ink",
-  mint: "bg-mint text-ink-2 shadow-[0_6px_20px_rgba(37,204,184,.35)]",
+  mint: "bg-mint text-ink-2 shadow-glow-mint",
 };
 
 const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
@@ -30,7 +30,7 @@ export default function Button({ variant = "primary", size = "sm", icon, onClick
       className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
       onClick={onClick}
     >
-      {icon && <Icon name={icon} className={size === "lg" ? "text-[22px]" : "text-lg"} />}
+      {icon && <Icon name={icon} className={size === "lg" ? "text-feature" : "text-lg"} />}
       {children}
     </button>
   );

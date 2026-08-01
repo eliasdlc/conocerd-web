@@ -22,9 +22,9 @@ function DefaultScreen() {
       </svg>
 
       {/* barra de búsqueda */}
-      <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_6px_18px_rgba(38,70,83,0.16)]">
+      <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-card">
         <Icon name="search" className="text-lg text-muted" />
-        <span className="font-display text-[12.5px] text-muted">¿A dónde vamos?</span>
+        <span className="font-display text-tiny text-muted">¿A dónde vamos?</span>
       </div>
 
       {/* self-pin en el centro */}
@@ -33,13 +33,13 @@ function DefaultScreen() {
       </div>
 
       {/* card inferior estilo bottom-sheet */}
-      <div className="absolute inset-x-3 bottom-4 flex items-center gap-[11px] rounded-[20px] bg-white p-3 shadow-[0_-2px_20px_rgba(38,70,83,0.14)]">
+      <div className="absolute inset-x-3 bottom-4 flex items-center gap-[11px] rounded-panel bg-white p-3 shadow-card">
         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-cream-2">
           <Image src="/assets/ph-playa.png" alt="" fill sizes="56px" className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-[13px] font-extrabold text-ink">Bahía de las Águilas</div>
-          <div className="mt-0.5 font-mono text-[10px] text-muted">★ 4.9 · a 2.4 km</div>
+          <div className="font-display text-copy font-extrabold text-ink">Bahía de las Águilas</div>
+          <div className="mt-0.5 font-mono text-micro text-muted">★ 4.9 · a 2.4 km</div>
         </div>
         <div className="shrink-0 rounded-full bg-coral-ink px-4 py-[9px] font-display text-xs font-extrabold text-white">
           Ir

@@ -88,7 +88,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
 
       {/* Siguiente paso */}
       <div className={`border-t border-dashed border-line pt-4 ${IN}`} style={{ animationDelay: ".5s" }}>
-        <p className="mb-3 text-[13px] leading-[1.5] text-muted-2">
+        <p className="mb-3 text-copy leading-[1.5] text-muted-2">
           Mientras llega el lanzamiento, síguenos: ahí publicamos los destinos que vamos
           sumando y avisamos de cada avance.
         </p>
@@ -97,7 +97,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
           target="_blank"
           rel="noopener noreferrer"
           // .crd-ig-cta aporta el hover (translate + sombra).
-          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] font-display text-[15px] font-extrabold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
+          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] font-display text-body font-extrabold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
         >
           <InstagramGlyph />
           Síguenos en {INSTAGRAM.handle}
@@ -107,12 +107,12 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
             también tiene un colmado, una cabaña o un tour: aquí es donde se le
             puede preguntar sin robarle protagonismo al registro que acaba de
             hacer. */}
-        <p className="mt-3.5 text-[12.5px] text-muted-2">
+        <p className="mt-3.5 text-tiny text-muted-2">
           {audience === "viajero" ? "¿También tienes un negocio? " : "¿Y como viajero? "}
           <button
             type="button"
             onClick={onSwitchAudience}
-            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-[12.5px] font-bold text-coral-ink underline"
+            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-tiny font-bold text-coral-ink underline"
           >
             {audience === "viajero" ? "Regístralo también" : "Apúntate también"}
           </button>
