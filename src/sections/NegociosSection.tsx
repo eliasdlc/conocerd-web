@@ -107,7 +107,7 @@ export default function NegociosOverlay() {
             .crd-ol-panel en la cascada. El resto —posición, ancho y chrome— va
             en Tailwind. */}
         <div
-          className={`crd-ol-panel crd-business-story absolute box-border rounded-[22px] border border-line/96 bg-white/96 p-[18px] shadow-[0_24px_56px_rgba(38,70,83,.18),0_2px_6px_rgba(38,70,83,.06)]
+          className={`crd-ol-panel crd-business-story absolute box-border rounded-[22px] border border-line/96 bg-white p-[18px] shadow-[0_24px_56px_rgba(38,70,83,.18),0_2px_6px_rgba(38,70,83,.06)]
             left-[clamp(16px,3%,40px)] top-[clamp(82px,11dvh,112px)] w-[clamp(240px,26vw,308px)]
             ${isVisible ? "animate-slide-up" : ""}`}
         >

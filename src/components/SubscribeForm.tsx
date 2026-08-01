@@ -63,7 +63,10 @@ const TONES: Record<Tone, {
 
 // Chrome común de todos los campos: sustituye al objeto fieldStyle que antes se
 // memorizaba y se extendía con spread en cada input.
-const FIELD = "h-12 w-full rounded-[14px] border px-3.5 font-sans text-[15px] outline-none";
+// Sin `outline-none`: las utilities le ganan al anillo de focus global de
+// @layer base (globals.css) y los campos del embudo quedaban sin focus visible
+// al navegar con teclado (audit 5.2).
+const FIELD = "h-12 w-full rounded-[14px] border px-3.5 font-sans text-[15px]";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",

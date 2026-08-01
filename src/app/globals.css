@@ -292,7 +292,12 @@ body {
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
-  .crd-mapa-route-panel { display: block !important; transform: scale(.68) translate(22%, -52%); transform-origin: right center; }
+  /* El transform convierte este wrapper en containing block del panel interno
+     (absolute + top-1/2). Sin posición propia, el wrapper era una caja de alto
+     cero al tope del viewport y el panel quedaba con la mitad superior fuera
+     de pantalla (audit 1.4). Anclado a mitad de altura, el centrado vertical
+     del panel interno cae sobre esta línea y queda completo en pantalla. */
+  .crd-mapa-route-panel { display: block !important; position: absolute; top: 50%; right: 0; transform: scale(.68); transform-origin: right center; }
   .crd-cta-card { max-height: calc(100dvh - 42px); overflow-y: auto; padding: 24px 18px !important; }
   .crd-destinos-heading { left: 16px !important; bottom: 48% !important; }
   .crd-polaroid-deck-mobile { bottom: max(12px, 2dvh) !important; }

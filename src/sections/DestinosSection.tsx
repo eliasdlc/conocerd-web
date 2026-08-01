@@ -119,6 +119,10 @@ export default function DestinosOverlay() {
           const offset = PILE_OFFSETS[i];
           const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
           const isCardVisible = i < visibleCount;
+          // Solo la carta del frente lleva texto: las traseras asoman rebanadas
+          // por la carta superior y sus títulos quedaban cortados a media altura
+          // de los glifos (audit 1.5). Atrás: solo foto, borde y sombra.
+          const isFront = i === visibleCount - 1;
 
           return (
             <figure
@@ -150,12 +154,20 @@ export default function DestinosOverlay() {
                   sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
                   className="object-cover"
                 />
-                <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5">
+                <div
+                  className={`absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5 transition-opacity duration-300 ${
+                    isFront ? "opacity-100" : "opacity-0"
+                  }`}
+                >
                   <CategoryChip icon={CATEGORY_META[pol.category].icon}>{pol.tagline}</CategoryChip>
                   <p className="m-0 text-xs leading-[1.4] text-white/92">{pol.desc}</p>
                 </div>
               </div>
-              <figcaption className="px-1 pb-3.5 pt-3">
+              <figcaption
+                className={`px-1 pb-3.5 pt-3 transition-opacity duration-300 ${
+                  isFront ? "opacity-100" : "opacity-0"
+                }`}
+              >
                 <div className="font-hand text-2xl font-bold leading-none text-ink">{pol.name}</div>
                 <div className="mt-[3px] font-mono text-[11px] text-muted">{pol.meta}</div>
               </figcaption>
