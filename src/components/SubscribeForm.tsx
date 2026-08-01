@@ -432,11 +432,14 @@ export default function SubscribeForm({
           // estrecha del footer eso empujaba el botón a otra línea.
           className={`${field} w-auto min-w-0 ${compact ? "flex-[1_1_130px]" : "flex-[1_1_200px]"}`}
         />
+        {/* En móvil el botón baja a su propia línea al 44% del ancho, con un
+            vacío enorme a la derecha (audit 2.2) → ancho completo, como el
+            resto de los CTA. El footer (compact) sí cabe en una línea. */}
         <button
           type="submit"
           disabled={submitting}
           className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-white shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
-            compact ? "px-4" : "px-[22px]"
+            compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >
           {submitting ? "Enviando…" : isBusiness ? "Registrar negocio" : "Unirme"}
