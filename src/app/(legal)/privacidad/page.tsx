@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de privacidad — ConoceRD",
+  title: "Política de privacidad",
   description: "Qué datos recoge ConoceRD en su lista de espera, para qué los usa y cómo darte de baja.",
 };
 

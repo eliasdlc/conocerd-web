@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, Caveat, JetBrains_Mono } from "next/font/google";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -31,9 +32,36 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "La app que te lleva a la República Dominicana que no sale en las guías: destinos auténticos, negocios locales y experiencias reales.";
+
 export const metadata: Metadata = {
-  title: "ConoceRD — Descubre Lo Nuestro",
-  description: "La app que te lleva a la República Dominicana que no sale en las guías: destinos auténticos, negocios locales y experiencias reales.",
+  // Resuelve las rutas relativas de OG (la imagen la genera
+  // opengraph-image.tsx). En preview de Vercel apunta al deployment, así que la
+  // preview del enlace ya funciona antes de producción.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "ConoceRD — Descubre Lo Nuestro",
+    template: "%s — ConoceRD",
+  },
+  description: DESCRIPTION,
+  applicationName: "ConoceRD",
+  // La waitlist se difunde por WhatsApp e Instagram: sin esto el enlace sale
+  // sin imagen ni marca, que es la primera impresión del sitio (audit 5.5).
+  openGraph: {
+    type: "website",
+    siteName: "ConoceRD",
+    locale: "es_DO",
+    url: "/",
+    title: "ConoceRD — Descubre Lo Nuestro",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ConoceRD — Descubre Lo Nuestro",
+    description: DESCRIPTION,
+  },
+  alternates: { canonical: "/" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

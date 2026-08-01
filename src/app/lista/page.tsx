@@ -13,10 +13,30 @@ import ListaExperience from "@/components/lista/ListaExperience";
 //  cuerpo es cliente, porque el toggle de audiencia gobierna todo el contenido.
 // ─────────────────────────────────────────────────────────────────────────────
 
+const TITLE = "Lista de espera";
+const DESCRIPTION =
+  "Entra a la lista de fundadores de ConoceRD. Viajeros: badge de fundador y acceso anticipado a la beta. Negocios: perfil destacado gratis los primeros meses tras el lanzamiento.";
+
 export const metadata: Metadata = {
-  title: "Lista de espera — ConoceRD",
-  description:
-    "Entra a la lista de fundadores de ConoceRD. Viajeros: badge de fundador y acceso anticipado a la beta. Negocios: perfil destacado gratis los primeros meses tras el lanzamiento.",
+  title: TITLE,
+  description: DESCRIPTION,
+  // Es el destino del QR: el enlace se reenvía por WhatsApp más que la home,
+  // así que necesita su propia preview (audit 5.5). La imagen la genera
+  // ./opengraph-image.tsx.
+  openGraph: {
+    type: "website",
+    siteName: "ConoceRD",
+    locale: "es_DO",
+    url: "/lista",
+    title: "Lista de fundadores de ConoceRD",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lista de fundadores de ConoceRD",
+    description: DESCRIPTION,
+  },
+  alternates: { canonical: "/lista" },
 };
 
 export default function ListaPage() {
