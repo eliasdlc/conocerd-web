@@ -9,7 +9,7 @@ export const contentType = OG_CONTENT_TYPE;
 export default async function Image() {
   return new ImageResponse(
     await OgCard({
-      eyebrow: "18.73°N · 70.16°W",
+      eyebrow: "Descubre lo nuestro",
       title: ["La República Dominicana", "que no sale en las guías"],
       subtitle:
         "Destinos auténticos, negocios locales y experiencias reales, hechas por gente de aquí.",

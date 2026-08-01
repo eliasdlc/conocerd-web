@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 
-import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
@@ -10,13 +10,16 @@ import { type LngLat } from "@/lib/geo";
 import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
 import Kicker from "@/components/Kicker";
 import { PIN_CHROME } from "@/components/map/pins";
+import featuredRoute from "@/data/routes/featured-route.json";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
 const POLAROIDS = FEATURED_DESTINATIONS;
 
-// Polilínea que une los 6 destinos en orden (para la ruta + chevron del finale).
-const ROUTE_COORDS: LngLat[] = POLAROIDS.map((d) => d.coords);
+// Ruta REAL por carretera entre los 6 destinos (OSRM, precalculada y
+// simplificada en src/data/routes/featured-route.json): las líneas del finale
+// siguen las calles del país, no cuerdas rectas entre pines.
+const ROUTE_COORDS: LngLat[] = (featuredRoute.legs as [number, number][][]).flat();
 
 // Final rotation for each card in the pile = original rotate + extra scatter
 const PILE_OFFSETS = [
@@ -29,7 +32,6 @@ const PILE_OFFSETS = [
 ];
 
 const SCENE_TO_COUNT: Record<string, number> = {
-  "destinos-intro": 0,
   "polaroid-0": 1,
   "polaroid-1": 2,
   "polaroid-2": 3,
@@ -40,39 +42,64 @@ const SCENE_TO_COUNT: Record<string, number> = {
 };
 
 const DESTINOS_SCENES = new Set([
-  "destinos-intro",
   "polaroid-0", "polaroid-1", "polaroid-2",
   "polaroid-3", "polaroid-4", "polaroid-5",
   "destinos-finale",
 ]);
 
 // ─── Component ────────────────────────────────────────────────────────────────
+//
+// La pila es EL componente de Destinos, de principio a fin: el scroll la va
+// construyendo carta a carta y un tap/click en la carta del frente la manda al
+// fondo y revela la siguiente (cicla). No hay deck aparte ni carrusel móvil:
+// la interacción es la misma con dedo y con mouse (decisión del dueño, jul
+// 2026 — sustituye al abanico del finale, que rompía la pila).
 
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
+  const reduceMotion = useReducedMotion();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
-  // The title introduces the chapter immediately; leaving destinos-intro empty
-  // made the first full scroll interval read as a broken frame.
   const headingVisible = isVisible;
   const isFinale = activeScene === "destinos-finale";
 
-  // Las 6 polaroids se dibujan dos veces —la pila y el deck del finale— y
-  // ambas viven en la capa sticky, que está en el viewport desde el primer
-  // píxel aunque su opacidad sea 0. El navegador las daba por visibles y se
-  // bajaba las 12 imágenes compitiendo con el logo del hero, que es el LCP
-  // (audit 5.6). Estos pestillos las montan la primera vez que su escena entra
-  // y ya no las desmontan: sin ellos no hay animación de entrada que valga.
-  // El ajuste va en render y no en un efecto: así el montaje ocurre en el mismo
-  // commit en que la escena entra, sin un frame intermedio con la pila vacía.
+  // Las 6 polaroids viven en la capa sticky, que está en el viewport desde el
+  // primer píxel aunque su opacidad sea 0. El navegador las daba por visibles
+  // y se bajaba las imágenes compitiendo con el logo del hero, que es el LCP
+  // (audit 5.6). El pestillo las monta la primera vez que su escena entra y ya
+  // no las desmonta. Va en render y no en un efecto: así el montaje ocurre en
+  // el mismo commit en que la escena entra.
   const [pileSeen, setPileSeen] = useState(false);
-  const [deckSeen, setDeckSeen] = useState(false);
   if (isVisible && !pileSeen) setPileSeen(true);
-  if (isFinale && !deckSeen) setDeckSeen(true);
+
+  // `k` = cuántas veces se cicló la pila; la carta del frente es la de índice
+  // (n-1-k) mod n y cada tap manda el frente al fondo. Se resetea cuando el
+  // scroll cambia el nº de cartas visibles, para que la narrativa (la carta
+  // recién llegada arriba) siempre gane al estado del juego.
+  const [k, setK] = useState(0);
+  const [lastCycled, setLastCycled] = useState<number | null>(null);
+  const [lastCount, setLastCount] = useState(visibleCount);
+  if (lastCount !== visibleCount) {
+    setLastCount(visibleCount);
+    setK(0);
+    setLastCycled(null);
+  }
+
+  const n = Math.max(visibleCount, 1);
+  const frontIndex = visibleCount > 0 ? (((visibleCount - 1 - k) % n) + n) % n : -1;
+
+  const cycle = () => {
+    if (visibleCount < 2) return;
+    setLastCycled(frontIndex);
+    setK((prev) => prev + 1);
+    // Al soltar el flag, `x` vuelve a 0 (donde ya está) y el próximo ciclo de
+    // la misma carta re-dispara los keyframes (si no, framer los deduplica).
+    setTimeout(() => setLastCycled(null), 600);
+  };
 
   return (
     <>
-      {/* #6 — ruta dashed que une los 6 destinos (solo en el finale) */}
+      {/* Ruta real por carretera que une los 6 destinos (solo en el finale) */}
       {isFinale && (
         <MapRoute
           id="destinos-route"
@@ -102,9 +129,7 @@ export default function DestinosOverlay() {
           isVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. Entra
-            con el primer destino — en la intro no hay contenido que velar y un
-            degradado sobre el mapa vacío solo se ve como un hueco. */}
+        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. */}
         <div
           className={`crd-mobile-scrim h-[66%] transition-opacity duration-[450ms] ease-in-out ${
             headingVisible ? "opacity-100" : "opacity-0"
@@ -132,37 +157,66 @@ export default function DestinosOverlay() {
           </h2>
         </div>
 
-        {/* Polaroid pile */}
+        {/* Polaroid pile — interactiva: tap/click cicla la carta del frente */}
         {pileSeen && POLAROIDS.map((pol, i) => {
           const offset = PILE_OFFSETS[i];
           const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
           const isCardVisible = i < visibleCount;
-          // Solo la carta del frente lleva texto: las traseras asoman rebanadas
-          // por la carta superior y sus títulos quedaban cortados a media altura
-          // de los glifos (audit 1.5). Atrás: solo foto, borde y sombra.
-          const isFront = i === visibleCount - 1;
+          const isFront = i === frontIndex && isCardVisible;
+          const justCycled = lastCycled === i;
+          // z-index rota con `k`: el frente baja al fondo y las demás suben un
+          // nivel. Fórmula estable para cartas aún no visibles (quedan abajo).
+          const z = isCardVisible ? ((((i + k) % n) + n) % n) + 1 : i + 1;
 
           return (
-            <figure
+            <motion.button
               key={pol.id}
-              // El desparrame de la pila y su entrada escalonada son datos por
-              // carta, así que transform/transition/z-index siguen inline.
-              // --pile-left permite el corrimiento móvil sin pasar por JS: en
-              // 390px el rango 3–9% sacaba las cartas de atrás por el borde.
-              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] cursor-default ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(var(--pile-left)+6%)]`}
+              type="button"
+              disabled={!isFront || visibleCount < 2}
+              aria-hidden={!isFront}
+              aria-label={
+                isFront ? `Ver el próximo destino. Ahora: ${pol.name}` : undefined
+              }
+              onClick={isFront ? cycle : undefined}
+              // El desparrame de la pila es dato por carta (--pile-left permite
+              // el corrimiento móvil sin pasar por JS).
+              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(var(--pile-left)+6%)] ${
+                isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
+              }`}
               style={{
                 "--pile-left": offset.left,
                 bottom: offset.bottom,
-                // En el finale la pila desaparece para dar paso al deck interactivo (#7).
-                opacity: isFinale ? 0 : isCardVisible ? 1 : 0,
-                transform: isCardVisible
-                  ? `translateY(0) rotate(${totalRotate}deg) scale(1)`
-                  : `translateY(-80px) rotate(${totalRotate}deg) scale(0.88)`,
-                transition: isCardVisible
-                  ? `transform 0.55s cubic-bezier(0.2,0.8,0.3,1) ${i * 0.06}s, opacity 0.4s ease ${i * 0.06}s`
-                  : "transform 0.3s ease, opacity 0.25s ease",
-                zIndex: i + 1,
               } as React.CSSProperties}
+              initial={false}
+              animate={{
+                opacity: isCardVisible ? 1 : 0,
+                y: isCardVisible ? 0 : -80,
+                scale: isCardVisible ? 1 : 0.88,
+                rotate: totalRotate,
+                // La carta ciclada sale por la derecha, cambia de capa a mitad
+                // de vuelo y aterriza debajo de la pila.
+                x: justCycled ? [0, 150, 0] : 0,
+                zIndex: z,
+              }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : justCycled
+                    ? {
+                        x: { duration: 0.5, times: [0, 0.5, 1], ease: "easeInOut" },
+                        zIndex: { duration: 0.5 },
+                        default: { type: "spring", stiffness: 260, damping: 30 },
+                      }
+                    : {
+                        zIndex: { duration: 0 },
+                        default: { type: "spring", stiffness: 260, damping: 30 },
+                      }
+              }
+              whileHover={
+                isFront && visibleCount > 1 && !reduceMotion
+                  ? { y: -10, scale: 1.02 }
+                  : undefined
+              }
             >
               <PolaroidMedia
                 image={pol.image}
@@ -174,25 +228,25 @@ export default function DestinosOverlay() {
                 className="crd-destinos-card-media h-[196px]"
                 overlayClassName={`transition-opacity duration-300 ${isFront ? "opacity-100" : "opacity-0"}`}
               />
-              <figcaption
+              {/* Solo la carta del frente lleva texto: las traseras asoman
+                  rebanadas y sus títulos quedaban cortados (audit 1.5).
+                  (div y no figcaption: el contenedor ahora es un botón.) */}
+              <div
                 className={`px-1 pb-3.5 pt-3 transition-opacity duration-300 ${
                   isFront ? "opacity-100" : "opacity-0"
                 }`}
               >
                 <PolaroidCaption name={pol.name} meta={pol.meta} />
-              </figcaption>
-            </figure>
+              </div>
+              {/* Affordance: con la pila completa, el frente invita a ciclar. */}
+              {isFront && isFinale && (
+                <span className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 text-micro font-bold tracking-[.06em] text-white">
+                  Toca para ver más →
+                </span>
+              )}
+            </motion.button>
           );
         })}
-
-        {/* #7 — deck interactivo: aparece cuando la pila queda completa (finale) */}
-        <div
-          className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-            isFinale ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
-        >
-          {deckSeen && <PolaroidDeck items={POLAROIDS} />}
-        </div>
       </div>
     </>
   );

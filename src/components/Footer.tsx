@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import Icon, { type IconName } from "@/components/Icon";
+import Icon from "@/components/Icon";
+import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 
@@ -9,7 +10,7 @@ import { scrollToSection } from "@/lib/journeyNav";
 // contacto) + social (placeholder hasta tener handles reales) + legal.
 
 const NAV_LINKS = [
-  { label: "Destinos", target: "trigger-destinos-intro" },
+  { label: "Destinos", target: "trigger-polaroid-0" },
   { label: "Mapa", target: "trigger-mapa" },
   { label: "Viajeros", target: "trigger-viajeros" },
   { label: "Negocios", target: "trigger-negocios" },
@@ -18,9 +19,11 @@ const NAV_LINKS = [
 
 // Las apps aún no están publicadas: aquí sólo se anuncian (§2.4). La única
 // acción del footer es "Registrar mi negocio", que abre la lista de espera.
-const COMING_SOON: { label: string; icon: IconName }[] = [
-  { label: "iOS · próximamente", icon: "phone_iphone" },
-  { label: "Android · próximamente", icon: "android" },
+// Logos oficiales de tienda; Apple monocromo (regla de su marca) y Play mono
+// para no meter color de otra marca en el footer oscuro.
+const COMING_SOON: { label: string; glyph: React.ReactNode }[] = [
+  { label: "App Store · próximamente", glyph: <AppleGlyph size={15} /> },
+  { label: "Google Play · próximamente", glyph: <GooglePlayGlyph size={14} mono /> },
 ];
 
 // Los dos estilos que se repetían como objetos y se extendían con spread; como
@@ -64,7 +67,7 @@ export default function Footer() {
           <div className={HEADING}>Producto</div>
           {COMING_SOON.map((p) => (
             <div key={p.label} className={`${LINK} cursor-default text-white/45`}>
-              <Icon name={p.icon} className="text-base" />
+              {p.glyph}
               {p.label}
             </div>
           ))}

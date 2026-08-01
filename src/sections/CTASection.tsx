@@ -1,13 +1,13 @@
 "use client";
 
-import Icon, { type IconName } from "@/components/Icon";
 import SubscribeForm from "@/components/SubscribeForm";
+import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import { useScene } from "@/context/SceneContext";
 import { requestSubscribe, useSubscribeIntent } from "@/hooks/useSubscribeIntent";
 
-const STORES: { icon: IconName; store: string }[] = [
-  { icon: "phone_iphone", store: "App Store" },
-  { icon: "android", store: "Google Play" },
+const STORES: { glyph: React.ReactNode; store: string }[] = [
+  { glyph: <AppleGlyph size={20} />, store: "App Store" },
+  { glyph: <GooglePlayGlyph size={18} />, store: "Google Play" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ export default function CTAOverlay() {
               key={btn.store}
               className="flex items-center gap-2 rounded-xl border border-white/[0.14] bg-white/[0.07] px-3.5 py-2 text-white/62"
             >
-              <Icon name={btn.icon} className="text-xl" />
+              {btn.glyph}
               <span className="text-left leading-[1.2]">
                 <span className="block text-micro font-bold uppercase tracking-[.08em] text-white/72">
                   Próximamente en

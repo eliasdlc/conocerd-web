@@ -48,9 +48,6 @@ const TEAM: Member[] = [
   },
 ];
 
-// PUCMM Santiago campus coordinates
-const PUCMM = { lng: -70.7003, lat: 19.4414 };
-
 // ─── Team card (disclosure explícito con la bio extendida) ────────────────────
 
 function TeamCard({ member, delay, animate }: { member: Member; delay: number; animate: boolean }) {
@@ -118,17 +115,17 @@ export default function EquipoOverlay() {
 
   return (
     <>
-      {/* PUCMM campus pin */}
+      {/* Pin de origen: el equipo construye desde Santiago. */}
       {isVisible && (
-        <MapMarker longitude={PUCMM.lng} latitude={PUCMM.lat} anchor="bottom">
+        <MapMarker longitude={-70.6947} latitude={19.4508} anchor="bottom">
           <MarkerContent>
             <div className={`flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full bg-white ${PIN_CHROME}`}>
-              <Icon name="school" className="text-[19px] text-coral-ink" />
+              <Icon name="location_on" className="text-[19px] text-coral-ink" />
             </div>
           </MarkerContent>
           {/* A la derecha y no arriba: encima del pin caía justo sobre la
               etiqueta "Santiago de los Caballeros" del mapa (audit 2.7). */}
-          <MarkerLabel position="right">PUCMM · Santiago</MarkerLabel>
+          <MarkerLabel position="right">Hecho en Santiago</MarkerLabel>
         </MapMarker>
       )}
 
@@ -142,15 +139,14 @@ export default function EquipoOverlay() {
       >
         {/* Heading */}
         <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
-          {/* La única escena con coordenada propia: el campus existe y está ahí. */}
-          <Kicker icon="groups" index="05" coord="19.44°N" tone="coral" className="mb-2.5">
+          <Kicker icon="groups" index="05" tone="coral" className="mb-2.5">
             El equipo
           </Kicker>
           <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Hecho por dominicanos,<br />para descubrir <em className="crd-accent">lo nuestro</em>
           </h2>
           <p className="mx-auto mt-2 text-sm leading-[1.5] text-[#3A5560] [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
-            Un equipo multidisciplinario de la PUCMM, Campus Santiago.
+            Dos personas construyendo desde Santiago la app que le faltaba al país.
           </p>
         </div>
 

@@ -1,49 +1,57 @@
 // Sello de expedición de cada escena (audit §3, movimiento 8).
 //
-// Antes era una píldora pastel con icono —el chip de cualquier dashboard— y
-// una de ellas decía "HIDDEN GEMS" en inglés, que en un sitio sobre lo
-// dominicano es fuga de identidad. Ahora es una marca de bitácora: número de
-// capítulo, nombre en español y la latitud del país, todo en mono. La misma
-// coordenada se repite en todas las escenas a propósito: es el sello del país,
-// no la posición de la cámara.
+// Marca de bitácora: número de capítulo y nombre en español, en mono. La
+// coordenada que acompañaba al sello se retiró: repetida en cada escena no
+// aportaba información y leía como adorno.
 //
-// Estaba copiado carácter por carácter en Viajeros, Equipo y /lista (audit
-// 4.5), con `gap` distinto en cada copia.
+// `variant="pill"` recupera la píldora pastel con icono para los eyebrows que
+// funcionan como etiqueta de audiencia (/lista: "Para viajeros" / "Para
+// negocios"), donde el sello mono se sentía frío.
 
 import Icon, { type IconName } from "@/components/Icon";
 
-/** Latitud del centro geográfico de la República Dominicana. */
-const RD_LAT = "18.73°N";
-
 // Tonos ya validados para AA sobre superficie clara; `on-ink` es para la card
-// oscura del CTA.
+// oscura del CTA. `pillBg` es el pastel de la variante píldora.
 const TONES = {
-  mint: "text-mint-ink",
-  coral: "text-coral-ink",
-  mango: "text-mango-ink",
-  "on-ink": "text-white/70",
+  mint: { text: "text-mint-ink", pillBg: "bg-mint-soft" },
+  coral: { text: "text-coral-ink", pillBg: "bg-coral-soft" },
+  mango: { text: "text-mango-ink", pillBg: "bg-mango-soft" },
+  "on-ink": { text: "text-white/70", pillBg: "bg-white/10" },
 } as const;
 
 export default function Kicker({
   icon,
   index,
-  coord = RD_LAT,
   tone = "mint",
+  variant = "stamp",
   className = "",
   children,
 }: {
   icon: IconName;
   /** Número de capítulo del journey ("01"…"06"). Fuera del journey se omite. */
   index?: string;
-  /** Sustituye la latitud del país cuando la escena tiene una propia. */
-  coord?: string;
   tone?: keyof typeof TONES;
+  /** `stamp` = sello mono del journey. `pill` = píldora pastel con icono. */
+  variant?: "stamp" | "pill";
   className?: string;
   children: React.ReactNode;
 }) {
+  const t = TONES[tone];
+
+  if (variant === "pill") {
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-micro font-bold uppercase tracking-[.14em] ${t.pillBg} ${t.text} ${className}`}
+      >
+        <Icon name={icon} className="text-sm" />
+        <span>{children}</span>
+      </span>
+    );
+  }
+
   return (
     <span
-      className={`inline-flex items-center gap-[7px] font-mono text-micro font-bold uppercase tracking-[.14em] ${TONES[tone]} ${className}`}
+      className={`inline-flex items-center gap-[7px] font-mono text-micro font-bold uppercase tracking-[.14em] ${t.text} ${className}`}
     >
       <Icon name={icon} className="text-sm" />
       {index && (
@@ -53,8 +61,6 @@ export default function Kicker({
         </>
       )}
       <span>{children}</span>
-      <span aria-hidden="true" className="opacity-45">·</span>
-      <span>{coord}</span>
     </span>
   );
 }

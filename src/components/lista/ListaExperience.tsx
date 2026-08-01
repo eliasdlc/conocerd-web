@@ -16,6 +16,7 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import SubscribeForm, { type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
 import InstagramGlyph from "./InstagramGlyph";
@@ -58,20 +59,7 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
         />
       </span>
       <div className="min-w-0 flex-1">
-        {/* El distintivo se ancla arriba a la derecha en vez de seguir al
-            título: si lo arrastra, con títulos de distinto largo cae a una
-            segunda línea en unas tarjetas sí y en otras no. */}
-        <div className="flex items-start gap-2">
-          <span className="min-w-0 flex-1 text-body font-bold text-ink">
-            {item.title}
-          </span>
-          <span
-            aria-hidden="true"
-            className="mt-px shrink-0 font-mono text-micro font-bold tracking-[.1em] text-muted-2"
-          >
-            N.º {String(index + 1).padStart(2, "0")}
-          </span>
-        </div>
+        <div className="text-body font-bold text-ink">{item.title}</div>
         <p className="mt-0.5 text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
 
@@ -158,7 +146,15 @@ export default function ListaExperience() {
         </Link>
 
         <div className="crd-lista-in mb-2.5 [animation-delay:.06s]">
-          <Kicker key={audience} icon={c.eyebrowIcon} className="crd-lista-swap">
+          {/* Píldora de audiencia: cambia con el toggle (viajeros mint,
+              negocios coral) — la etiqueta pastel que abre la columna. */}
+          <Kicker
+            key={audience}
+            icon={c.eyebrowIcon}
+            variant="pill"
+            tone={audience === "negocio" ? "coral" : "mint"}
+            className="crd-lista-swap"
+          >
             {c.eyebrow}
           </Kicker>
         </div>
@@ -193,8 +189,8 @@ export default function ListaExperience() {
         </div>
 
         <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-tiny text-muted-2 [animation-delay:.18s]">
-          <Icon name="phone_iphone" className="text-lg" />
-          <Icon name="android" className="text-lg" />
+          <AppleGlyph size={15} />
+          <GooglePlayGlyph size={14} />
           Próximamente en App Store y Google Play
         </div>
 
@@ -210,10 +206,10 @@ export default function ListaExperience() {
         >
           <span
             aria-hidden="true"
-            // Monocromo ink, no el degradado oficial de Instagram: era el único
-            // sitio del sitio con la paleta de otra marca a todo color, y se
-            // comía la jerarquía de la página (audit §3, movimiento 9).
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-ink-2 text-cream"
+            // Degradado oficial de Instagram: es la única presencia real de la
+            // marca hoy y merece reconocerse al primer vistazo (decisión del
+            // dueño, jul 2026 — revierte el monocromo del audit §3).
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-[radial-gradient(circle_at_28%_110%,#FDF497_0%,#FD5949_45%,#D6249F_60%,#285AEB_90%)] text-white"
           >
             <InstagramGlyph size={20} />
           </span>
