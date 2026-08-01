@@ -281,10 +281,13 @@ body {
      in-panel chip row below the heading. */
   .crd-stat-marker { display: none !important; }
   .crd-stat-chips { display: flex !important; }
-  /* Footer: 4 columnas → 2 en móvil. La columna de marca lleva el formulario
-     de la lista, así que ocupa el ancho completo. */
-  .crd-footer-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Footer: 4 columnas → filas en móvil, con Marca a lo ancho. Explora es
+     angosta y Producto ancha: con 1fr/1fr, "iOS · próximamente" quebraba y
+     dejaba "próximamente" huérfano ×2 (audit 2.6). Contacto baja a su propia
+     fila porque el correo tampoco cabe en media pantalla. */
+  .crd-footer-grid { grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important; }
   .crd-footer-grid > :first-child { grid-column: 1 / -1; }
+  .crd-footer-grid > :last-child { grid-column: 1 / -1; }
   /* Lista de espera: tipo de negocio + WhatsApp se apilan en pantallas angostas. */
   .crd-sub-row { grid-template-columns: 1fr !important; }
   /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
@@ -319,6 +322,12 @@ body {
   .crd-polaroid-deck {
     bottom: 4% !important;
   }
+}
+
+/* En teléfonos muy angostos ni la columna ancha del footer salva la línea de
+   "próximamente" → una sola columna (audit 2.6). */
+@media (max-width: 379px) {
+  .crd-footer-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 359px) and (max-height: 640px) {
