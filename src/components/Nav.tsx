@@ -12,6 +12,24 @@ const LINKS = [
   { label: "Equipo", target: "trigger-equipo" },
 ];
 
+/**
+ * Pin del logo, reducido a glifo (audit §3, movimiento 12). Desde que empieza
+ * Destinos hasta el footer no había una sola marca en pantalla; esto la
+ * devuelve sin meter el wordmark entero en una píldora que ya va apretada.
+ * Va inline y no como <img> porque son 300 bytes y no merece una petición.
+ */
+function BrandGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[22px]" aria-hidden="true">
+      <path
+        d="M12 2c-3.9 0-7 3.1-7 7 0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"
+        fill="#FF8D16"
+      />
+      <circle cx="12" cy="9" r="2.7" fill="#FDF8F0" />
+    </svg>
+  );
+}
+
 // #15 — píldora flotante sin wordmark: solo nav + botón Descargar.
 export default function Nav() {
   const pillRef = useRef<HTMLDivElement>(null);
@@ -62,10 +80,24 @@ export default function Nav() {
     >
       <div
         ref={pillRef}
-        className="flex items-center gap-[clamp(8px,1.4vw,18px)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [scrollbar-width:none]
+        className="group flex items-center gap-[clamp(8px,1.4vw,18px)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [scrollbar-width:none]
           bg-cream/60 shadow-card
           data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-panel"
       >
+        {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
+            a tamaño completo y repetirlo sobraría. */}
+        <a
+          href="#top"
+          aria-label="ConoceRD — volver al inicio"
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity] duration-300 group-data-[solid=true]:w-[22px] group-data-[solid=true]:opacity-100"
+        >
+          <BrandGlyph />
+        </a>
+
         {LINKS.map((l) => (
           <a
             key={l.target}

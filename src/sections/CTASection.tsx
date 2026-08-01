@@ -30,8 +30,13 @@ export default function CTAOverlay() {
         ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
       <div
-        className={`crd-cta-card w-full max-w-[640px] rounded-[28px] border border-white/10 bg-ink-2/[0.82] p-[26px_20px] text-center shadow-[0_32px_80px_rgba(0,0,0,0.40)]
-          desk:p-[44px_clamp(28px,5vw,60px)] desk:backdrop-blur-[12px]
+        // Opaca, no ink al 82% (audit §3, movimiento 11): con transparencia se
+        // colaban fragmentos de toponimia del mapa por debajo del texto justo
+        // en el momento de la conversión. El borde superior claro es luz de
+        // canto —la card es un objeto sólido apoyado sobre la escena— y la
+        // textura topográfica la aporta .crd-cta-card en globals.css.
+        className={`crd-cta-card w-full max-w-[640px] rounded-[28px] border-t border-white/[0.14] bg-ink-2 p-[26px_20px] text-center shadow-[0_32px_80px_rgba(0,0,0,0.40)]
+          desk:p-[44px_clamp(28px,5vw,60px)]
           ${isVisible ? "animate-slide-up" : ""}`}
       >
         {/* Handwritten kicker */}

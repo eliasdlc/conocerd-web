@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/context/SceneContext";
 import Icon, { type IconName } from "@/components/Icon";
 import { MapMarker, MarkerContent, MapArc } from "@/components/map/Map";
+import { PIN_CHROME } from "@/components/map/pins";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import type { LngLat } from "@/lib/geo";
 import { PANEL_SOLID } from "@/lib/surfaces";
+import Kicker from "@/components/Kicker";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +87,7 @@ export default function NegociosOverlay() {
               <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-card">
                 Tu negocio
               </div>
-              <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-cream bg-mango shadow-glow-mango">
+              <div className={`flex size-10 items-center justify-center rounded-full bg-mango ${PIN_CHROME}`}>
                 <Icon name="storefront" className="text-feature text-ink-2" />
               </div>
             </div>
@@ -113,12 +115,7 @@ export default function NegociosOverlay() {
             left-[clamp(16px,3%,40px)] top-[clamp(82px,11dvh,112px)] w-[clamp(240px,26vw,308px)]
             ${isVisible ? "animate-slide-up" : ""}`}
         >
-          <div className="mb-3 flex items-center gap-2 font-mono text-micro font-bold uppercase tracking-[.085em] text-mint-ink">
-            <span className="grid size-7 place-items-center rounded-tile bg-mint shadow-[4px_4px_0_#C6F3EB]">
-              <Icon name="storefront" className="text-base text-ink-2" />
-            </span>
-            <span>ConoceRD para negocios</span>
-          </div>
+          <Kicker icon="storefront" index="04" className="mb-3">Negocios</Kicker>
 
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.04] tracking-[-.012em] text-ink-2">
             Tu negocio, <em className="crd-accent">dentro de la ruta</em>
@@ -153,7 +150,7 @@ export default function NegociosOverlay() {
           {/* CTA — lleva al formulario con el toggle ya en "negocio" */}
           <button
             onClick={() => requestSubscribe("negocio")}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-card border-none bg-mint px-[18px] py-[11px] text-copy font-bold text-ink-2 shadow-glow-mint transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-card border-none bg-mint px-[18px] py-[11px] text-copy font-bold text-ink-2 crd-sticker transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
           >
             <Icon name="add_business" className="text-lg text-white" />
             Registrar mi negocio

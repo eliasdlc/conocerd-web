@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 
 import PolaroidDeck from "@/sections/PolaroidDeck";
 import { useScene } from "@/context/SceneContext";
@@ -7,6 +8,8 @@ import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/ma
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
 import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
+import Kicker from "@/components/Kicker";
+import { PIN_CHROME } from "@/components/map/pins";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 // Los 6 destinos del journey vienen de la fuente de verdad única (#5).
@@ -54,6 +57,19 @@ export default function DestinosOverlay() {
   const headingVisible = isVisible;
   const isFinale = activeScene === "destinos-finale";
 
+  // Las 6 polaroids se dibujan dos veces —la pila y el deck del finale— y
+  // ambas viven en la capa sticky, que está en el viewport desde el primer
+  // píxel aunque su opacidad sea 0. El navegador las daba por visibles y se
+  // bajaba las 12 imágenes compitiendo con el logo del hero, que es el LCP
+  // (audit 5.6). Estos pestillos las montan la primera vez que su escena entra
+  // y ya no las desmontan: sin ellos no hay animación de entrada que valga.
+  // El ajuste va en render y no en un efecto: así el montaje ocurre en el mismo
+  // commit en que la escena entra, sin un frame intermedio con la pila vacía.
+  const [pileSeen, setPileSeen] = useState(false);
+  const [deckSeen, setDeckSeen] = useState(false);
+  if (isVisible && !pileSeen) setPileSeen(true);
+  if (isFinale && !deckSeen) setDeckSeen(true);
+
   return (
     <>
       {/* #6 — ruta dashed que une los 6 destinos (solo en el finale) */}
@@ -72,7 +88,7 @@ export default function DestinosOverlay() {
       {POLAROIDS.filter((_, i) => i < visibleCount).map((pol) => (
         <MapMarker key={pol.id} longitude={pol.coords[0]} latitude={pol.coords[1]}>
           <MarkerContent>
-            <div className="size-3.5 rounded-full border-[2.5px] border-white bg-coral shadow-[0_0_0_6px_rgba(247,108,77,0.25)]" />
+            <div className={`size-3.5 rounded-full bg-coral ${PIN_CHROME}`} />
           </MarkerContent>
           <MarkerLabel position="top">{pol.name}</MarkerLabel>
         </MapMarker>
@@ -106,9 +122,9 @@ export default function DestinosOverlay() {
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
-          <div className="mb-2 text-mini font-bold uppercase tracking-[.16em] text-mint-ink [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
-            Hidden gems · Lo nuestro
-          </div>
+          <Kicker icon="explore" index="01" className="mb-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
+            Destinos
+          </Kicker>
           <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Recuerdos que aún
             <br />
@@ -117,7 +133,7 @@ export default function DestinosOverlay() {
         </div>
 
         {/* Polaroid pile */}
-        {POLAROIDS.map((pol, i) => {
+        {pileSeen && POLAROIDS.map((pol, i) => {
           const offset = PILE_OFFSETS[i];
           const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
           const isCardVisible = i < visibleCount;
@@ -175,7 +191,7 @@ export default function DestinosOverlay() {
             isFinale ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-          <PolaroidDeck items={POLAROIDS} />
+          {deckSeen && <PolaroidDeck items={POLAROIDS} />}
         </div>
       </div>
     </>

@@ -15,6 +15,7 @@ import {
 } from "@/data/destinations";
 import { pathLengthKm, type LngLat } from "@/lib/geo";
 import { PANEL_GLASS } from "@/lib/surfaces";
+import Kicker from "@/components/Kicker";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  "Arma tu recorrido" (#8/#9): pines de categoría con card hover (con punta),
@@ -300,7 +301,8 @@ export default function MapaOverlay() {
             isVisible ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
-          <div className="mb-3.5 text-copy font-bold text-ink">Arma tu recorrido</div>
+          <Kicker icon="route" index="02" className="mb-2">Tu ruta</Kicker>
+          <div className="mb-3.5 mt-1.5 text-copy font-bold text-ink">Arma tu recorrido</div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => {
               const meta = CATEGORY_META[cat];

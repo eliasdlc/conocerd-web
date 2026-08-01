@@ -16,7 +16,7 @@ import {
 } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper } from "@/lib/journeyNav";
-import HeroOverlay from "@/sections/HeroOverlay";
+import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
 import ViajerosSection from "@/sections/ViajerosSection";
@@ -127,7 +127,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           touchZoomRotate={false}
           attributionControl={false}
         >
-          <HeroOverlay />
+          <HeroPinMarker />
           <DestinosSection />
           <MapaSection />
           <ViajerosSection />
@@ -135,6 +135,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           <EquipoSection />
           <CTASection />
         </Map>
+
+        {/* Fuera del <Map>: el mapa se carga con `ssr: false` y todo lo que
+            cuelgue de él desaparece del HTML inicial. El hero es lo primero
+            que se ve y su logo es el LCP, así que se sirve renderizado desde
+            el servidor y se pinta sin esperar a MapLibre (audit 5.6). */}
+        <HeroOverlay />
       </div>
 
       {/* Anchor divs — pista nativa de scroll; en móvil se comprime con dvh. */}

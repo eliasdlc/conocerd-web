@@ -200,7 +200,14 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         style={{ width: "100%", height: "100%", ...style }}
       />
       {!ready && !failed && loading}
-      {(ready || failed) && children}
+      {/* Los children se pintan desde el primer render, sin esperar a que
+          MapLibre cargue estilo y tiles. Antes se esperaba, y eso ataba el LCP
+          de la home —el logo del hero— a la inicialización del mapa: 8.6 s en
+          la línea base móvil de Lighthouse (audit 5.6). Los markers, rutas y
+          arcos ya se enganchan solos cuando el mapa aparece: todos consumen
+          `useMap()`, que devuelve null hasta entonces, y sus efectos dependen
+          de él. El fondo crema con halos hace de póster mientras tanto. */}
+      {children}
     </MapContext.Provider>
   );
 });

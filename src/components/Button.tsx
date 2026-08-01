@@ -10,10 +10,12 @@ interface ButtonProps {
   children: React.ReactNode;
 }
 
+// `crd-sticker` trae la sombra y sus estados (globals.css): offset duro y
+// neutro en vez del halo del mismo color que tenían antes (audit §3).
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-mango text-ink-2 shadow-glow-mango",
+  primary: "crd-sticker bg-mango text-ink-2",
   outline: "border-2 border-ink bg-transparent text-ink",
-  mint: "bg-mint text-ink-2 shadow-glow-mint",
+  mint: "crd-sticker bg-mint text-ink-2",
 };
 
 const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {

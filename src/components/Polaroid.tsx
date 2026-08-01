@@ -12,8 +12,11 @@ import Image from "next/image";
 import CategoryChip from "@/components/CategoryChip";
 import type { IconName } from "@/components/Icon";
 
-/** Papel de la polaroid: fondo, márgenes desiguales (más aire abajo) y sombra. */
-export const POLAROID_PAPER = "rounded-md bg-white px-3 pb-0 pt-3 shadow-panel";
+/** Papel de la polaroid: fondo, márgenes desiguales (más aire abajo) y sombra.
+ *  `crd-tape` le pega la cinta adhesiva del ::before (audit §3, movimiento 5):
+ *  la polaroid deja de ser una card blanca con foto y pasa a ser una foto
+ *  pegada al papel. Necesita `relative` para anclar la cinta. */
+export const POLAROID_PAPER = "crd-tape relative rounded-md bg-white px-3 pb-0 pt-3 shadow-panel";
 
 export function PolaroidMedia({
   image,
@@ -39,7 +42,16 @@ export function PolaroidMedia({
 }) {
   return (
     <div className={`relative w-full overflow-hidden rounded-[3px] bg-cream-2 ${className}`}>
-      <Image src={image} alt={alt} fill sizes={sizes} className="object-cover" />
+      {/* Grade cálido común: las fotos vienen de fuentes distintas y cada una
+          traía su propia temperatura. Un pelo de saturación, contraste y sepia
+          las mete a todas en el mismo revelado (audit §3, movimiento 5). */}
+      <Image
+        src={image}
+        alt={alt}
+        fill
+        sizes={sizes}
+        className="object-cover [filter:saturate(1.06)_contrast(1.03)_sepia(.07)]"
+      />
       <div
         className={`absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5 ${overlayClassName}`}
       >

@@ -38,7 +38,7 @@ export default function ViajerosOverlay() {
         <div
           className={`mb-3.5 max-desk:w-fit max-desk:rounded-card max-desk:border max-desk:border-line/80 max-desk:bg-cream/88 max-desk:px-3.5 max-desk:py-3 max-desk:backdrop-blur-[8px] ${isVisible ? "animate-slide-up" : ""}`}
         >
-          <Kicker icon="hiking" className="mb-2.5">Para viajeros</Kicker>
+          <Kicker icon="hiking" index="03" className="mb-2.5">Viajeros</Kicker>
           {/* El text-shadow crema despega el titular de las etiquetas del mapa. */}
           <h2 className="m-0 font-display text-[clamp(18px,2.2vw,28px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Viaja como local,<br /><em className="crd-accent">descubre como nadie</em>

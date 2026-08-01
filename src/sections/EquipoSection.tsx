@@ -5,6 +5,7 @@ import Image from "next/image";
 import Icon from "@/components/Icon";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
+import { PIN_CHROME } from "@/components/map/pins";
 import Kicker from "@/components/Kicker";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -121,7 +122,7 @@ export default function EquipoOverlay() {
       {isVisible && (
         <MapMarker longitude={PUCMM.lng} latitude={PUCMM.lat} anchor="bottom">
           <MarkerContent>
-            <div className="flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full border-[2.5px] border-coral bg-white shadow-glow-coral">
+            <div className={`flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full bg-white ${PIN_CHROME}`}>
               <Icon name="school" className="text-[19px] text-coral-ink" />
             </div>
           </MarkerContent>
@@ -141,7 +142,10 @@ export default function EquipoOverlay() {
       >
         {/* Heading */}
         <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
-          <Kicker icon="groups" tone="coral" className="mb-2.5">El equipo</Kicker>
+          {/* La única escena con coordenada propia: el campus existe y está ahí. */}
+          <Kicker icon="groups" index="05" coord="19.44°N" tone="coral" className="mb-2.5">
+            El equipo
+          </Kicker>
           <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Hecho por dominicanos,<br />para descubrir <em className="crd-accent">lo nuestro</em>
           </h2>

@@ -3,6 +3,7 @@
 import type { Category } from "@/data/destinations";
 import { CATEGORY_META } from "@/data/destinations";
 import Icon from "@/components/Icon";
+import { PIN_SHADOW } from "./chrome";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Pin de categoría (#4). Portado de conocerd_map_pins.html (app_map_markers.dart):
@@ -54,7 +55,7 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
         borderRadius: "50%",
         background: `rgba(${fillRgb},${s.fillOpacity})`,
         border: `2px solid rgba(${CREAM},${s.borderOpacity})`,
-        boxShadow: `0 2px 5px rgba(0,0,0,${s.shadowAlpha})`,
+        boxShadow: state === "done" ? `0 2px 5px rgba(0,0,0,${s.shadowAlpha})` : PIN_SHADOW,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

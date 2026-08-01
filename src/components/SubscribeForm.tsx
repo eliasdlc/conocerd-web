@@ -470,7 +470,7 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-ink-2 shadow-glow-mango disabled:cursor-progress disabled:opacity-75 ${
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-ink-2 crd-sticker disabled:cursor-progress disabled:opacity-75 ${
             compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >

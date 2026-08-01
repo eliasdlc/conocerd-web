@@ -140,6 +140,7 @@ export default function ListaExperience() {
             width={210}
             height={100}
             priority
+            sizes="176px"
             className="h-[clamp(62px,14vw,84px)] w-auto"
           />
         </Link>
