@@ -37,7 +37,7 @@ function HoverCard({ d }: { d: Destination }) {
       <div className="relative h-[104px] w-full bg-cream-2">
         <Image src={d.image} alt={d.name} fill sizes="220px" className="object-cover" />
         <span
-          className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/92 px-2 py-[3px] font-display text-micro font-bold"
+          className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/92 px-2 py-[3px] text-micro font-bold"
           style={{ color: meta.ink }}
         >
           <Icon name={meta.icon} className="text-copy" />
@@ -46,8 +46,8 @@ function HoverCard({ d }: { d: Destination }) {
       </div>
       <div className="px-3 pb-3 pt-2.5">
         <div className="flex items-baseline justify-between gap-2">
-          <div className="font-display text-sm font-extrabold text-ink">{d.name}</div>
-          <div className="whitespace-nowrap font-display text-xs font-extrabold text-mango-ink">
+          <div className="text-sm font-bold text-ink">{d.name}</div>
+          <div className="whitespace-nowrap text-xs font-bold text-mango-ink">
             ★ {d.rating.toFixed(1)}
           </div>
         </div>
@@ -56,7 +56,7 @@ function HoverCard({ d }: { d: Destination }) {
           {d.activities.map((a) => (
             <span
               key={a}
-              className="rounded-md bg-cream-2 px-[7px] py-0.5 font-display text-micro font-semibold text-muted"
+              className="rounded-md bg-cream-2 px-[7px] py-0.5 text-micro font-semibold text-muted"
             >
               {a}
             </span>
@@ -116,7 +116,7 @@ function PinMarker({
             {inRoute && !isStart && !isGoal && (
               <span
                 aria-hidden="true"
-                className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full bg-ink px-1 text-center font-display text-micro font-extrabold leading-4 text-white"
+                className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full bg-ink px-1 text-center text-micro font-bold leading-4 text-white"
               >
                 {routeIndex + 1}
               </span>
@@ -151,12 +151,12 @@ function RoutePanel({
       className={`${PANEL} absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[264px] -translate-y-1/2 flex-col px-[18px] py-4 shadow-panel`}
     >
       <div className="flex items-center justify-between">
-        <div className="font-display text-copy font-extrabold text-ink">Tu recorrido</div>
+        <div className="text-copy font-bold text-ink">Tu recorrido</div>
         {stops.length > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="cursor-pointer border-none bg-transparent font-display text-mini font-bold text-coral-ink"
+            className="cursor-pointer border-none bg-transparent text-mini font-bold text-coral-ink"
           >
             Limpiar
           </button>
@@ -173,13 +173,13 @@ function RoutePanel({
             {stops.map((s, i) => (
               <div key={s.id} className="flex items-center gap-2 rounded-chip bg-white px-2 py-1.5">
                 <span
-                  className="size-[18px] flex-none rounded-full text-center font-display text-micro font-extrabold leading-[18px] text-white"
+                  className="size-[18px] flex-none rounded-full text-center text-micro font-bold leading-[18px] text-white"
                   style={{ background: CATEGORY_META[s.category].color }}
                 >
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-display text-xs font-bold text-ink">{s.name}</div>
+                  <div className="truncate text-xs font-bold text-ink">{s.name}</div>
                   <div className="font-mono text-micro text-muted">{s.province}</div>
                 </div>
                 <div className="flex gap-0.5">
@@ -191,7 +191,7 @@ function RoutePanel({
             ))}
           </div>
 
-          <div className="border-t border-line pt-2.5 font-display text-xs font-bold text-ink">
+          <div className="border-t border-line pt-2.5 text-xs font-bold text-ink">
             {stops.length} {stops.length === 1 ? "parada" : "paradas"}
             {km > 0 && <span className="font-semibold text-muted"> · ~{km} km</span>}
           </div>
@@ -300,7 +300,7 @@ export default function MapaOverlay() {
             isVisible ? "pointer-events-auto" : "pointer-events-none"
           }`}
         >
-          <div className="mb-3.5 font-display text-copy font-extrabold text-ink">Arma tu recorrido</div>
+          <div className="mb-3.5 text-copy font-bold text-ink">Arma tu recorrido</div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => {
               const meta = CATEGORY_META[cat];
@@ -310,7 +310,7 @@ export default function MapaOverlay() {
                   key={cat}
                   type="button"
                   onClick={() => toggleCategory(cat)}
-                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-[5px] rounded-full border-[1.5px] px-3 py-1.5 font-display text-tiny font-bold transition-[border-color,background-color,color] duration-200"
+                  className="inline-flex min-h-[44px] cursor-pointer items-center gap-[5px] rounded-full border-[1.5px] px-3 py-1.5 text-tiny font-bold transition-[border-color,background-color,color] duration-200"
                   style={{
                     borderColor: isActive ? meta.color : "var(--color-line)",
                     background: isActive ? `${meta.color}1A` : "transparent",

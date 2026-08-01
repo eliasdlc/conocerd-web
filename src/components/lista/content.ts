@@ -26,6 +26,8 @@ export interface AudienceContent {
   eyebrow: string;
   eyebrowIcon: IconName;
   headline: string;
+  /** Cola del titular en itálica coral: el acento editorial de Fase D. */
+  headlineAccent: string;
   sub: string;
   /** Lo que se gana *por entrar ahora* — el argumento de la lista de espera. */
   perksTitle: string;
@@ -42,7 +44,8 @@ export const CONTENT: Record<Audience, AudienceContent> = {
   viajero: {
     eyebrow: "Para viajeros",
     eyebrowIcon: "hiking",
-    headline: "Se de los primeros en usar ConoceRD",
+    headline: "Se de los primeros",
+    headlineAccent: "en usar ConoceRD",
     sub: "Déjanos tu correo y entras a la lista de fundadores. Te avisamos antes que a nadie cuando la app esté lista.",
     perksTitle: "Lo que te llevas por entrar ahora",
     perks: [
@@ -95,7 +98,8 @@ export const CONTENT: Record<Audience, AudienceContent> = {
   negocio: {
     eyebrow: "Para negocios",
     eyebrowIcon: "storefront",
-    headline: "Pon tu negocio en el mapa antes que nadie",
+    headline: "Pon tu negocio en el mapa",
+    headlineAccent: "antes que nadie",
     sub: "Regístralo hoy y entras al lanzamiento con perfil destacado. Sin costo y sin compromiso.",
     perksTitle: "Lo que te llevas por entrar ahora",
     perks: [

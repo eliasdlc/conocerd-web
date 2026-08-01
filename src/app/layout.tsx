@@ -1,21 +1,34 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter, Caveat, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Instrument_Sans, Caveat, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
-const plusJakarta = Plus_Jakarta_Sans({
+// Tipografía de marca (audit §3). Inter + Plus Jakarta ExtraBold con tracking
+// negativo era la fórmula del titular SaaS genérico y no decía nada del Caribe
+// ni conectaba con el logo, que es rotulación a mano. Fraunces sí: es el serif
+// de las guías de viaje, y su itálica hace de acento donde antes había un
+// <strong> coral.
+//
+// Presupuesto (audit 5.6c): entran cuando salen las otras dos, nunca conviven.
+// Medido sobre el subset latin en woff2 — Fraunces 700 romana (17.8 KB) +
+// itálica (22.5 KB) + Instrument variable 400..700 (29.4 KB) = 69.7 KB, contra
+// los 73.8 KB de Inter + Plus Jakarta. El neto baja.
+//
+// Fraunces sólo en un peso: 700 cubre todos los titulares y ahorra los 17.7 KB
+// del 600, que a estos tamaños casi no se distingue.
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["600", "800"],
-  variable: "--font-plus-jakarta",
+  weight: "700",
+  style: ["normal", "italic"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
-const inter = Inter({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-inter",
+  variable: "--font-instrument",
   display: "swap",
 });
 
@@ -69,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      className={`${plusJakarta.variable} ${inter.variable} ${caveat.variable} ${jetbrainsMono.variable}`}
+      className={`${fraunces.variable} ${instrumentSans.variable} ${caveat.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         {/* Unregister any stale service workers from other projects on this port */}

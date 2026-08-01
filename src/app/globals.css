@@ -10,10 +10,15 @@
   --breakpoint-desk: 900px;
 
   /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
-     nombre literal ('Plus Jakarta Sans') NO resuelve, porque next/font sirve
-     cada familia bajo un nombre hasheado. */
-  --font-sans:    var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
+     nombre literal ('Fraunces') NO resuelve, porque next/font sirve cada
+     familia bajo un nombre hasheado. */
+  /* `display` es el serif editorial y sólo se usa en titulares (≥20px) y en el
+     acento itálico; todo lo demás —cuerpo, botones, nav, etiquetas— es `sans`.
+     Mezclarlos era lo que hacía el sitio antes, y de ahí salía el look de
+     plantilla. Fraunces sólo tiene el peso 700 cargado: `font-extrabold` no
+     existe en esta paleta tipográfica. */
+  --font-sans:    var(--font-instrument), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
   --font-hand:    var(--font-caveat), cursive;
 
@@ -377,11 +382,32 @@ body {
 /* Stat chips live only on mobile (see media query above). */
 .crd-stat-chips { display: none; }
 
+/* ── Acento editorial ─────────────────────────────────────────────────────────
+   La itálica de Fraunces sustituye al <strong> coral (audit §3): antes el
+   énfasis era negrita de color, que es lo que hace cualquier plantilla. En los
+   titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
+   —que va en Instrument— también trae la familia, y ahí es donde se nota que
+   el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
+.crd-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--color-coral-ink);
+}
+/* Sobre la card ink del CTA el coral accesible se apaga; ahí manda el vivo. */
+.crd-accent-on-ink {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--color-mango);
+}
+
 .crd-navlink {
   position: relative;
   text-decoration: none;
   color: #264653;
-  font-family: var(--font-display);
+  /* El nav es UI, no titular: sans 600. El serif se reserva a los titulares. */
+  font-family: var(--font-sans);
   font-weight: 600;
   font-size: var(--text-body);
   padding: 4px 2px;
@@ -557,8 +583,8 @@ body {
 }
 .crd-legal h1 {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -.025em;
+  font-weight: 700;
+  letter-spacing: -.012em;
   font-size: clamp(28px, 5vw, 38px);
   line-height: 1.1;
   margin: 0 0 6px;

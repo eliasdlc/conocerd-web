@@ -106,13 +106,13 @@ export default function DestinosOverlay() {
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
-          <div className="mb-2 font-display text-mini font-extrabold uppercase tracking-[.16em] text-mint-ink [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
+          <div className="mb-2 text-mini font-bold uppercase tracking-[.16em] text-mint-ink [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
             Hidden gems · Lo nuestro
           </div>
-          <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
+          <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Recuerdos que aún
             <br />
-            no has vivido
+            <em className="crd-accent">no has vivido</em>
           </h2>
         </div>
 

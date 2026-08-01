@@ -89,7 +89,7 @@ export default function HeroOverlay() {
           />
           <p className="crd-hero-copy m-0 mt-3.5 max-w-[520px] text-[clamp(17px,2.2vw,21px)] font-medium leading-[1.5] text-ink">
             La app que te lleva a la República Dominicana{" "}
-            <strong className="text-coral-ink">auténtica</strong>: negocios locales y experiencias reales, en una sola ruta.
+            <em className="crd-accent">auténtica</em>: negocios locales y experiencias reales, en una sola ruta.
           </p>
           <div className="crd-hero-actions mt-[26px] flex flex-wrap justify-center gap-3.5 desk:justify-start">
             <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>
@@ -104,7 +104,7 @@ export default function HeroOverlay() {
         {/* Desktop keeps the explicit scroll cue; mobile space is reserved for the
             primary actions and native scrolling is already expected. */}
         <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1.5 text-muted desk:flex">
-          <span className="font-display text-mini font-bold uppercase tracking-[.14em]">Explora</span>
+          <span className="text-mini font-bold uppercase tracking-[.14em]">Explora</span>
           <svg viewBox="0 0 24 24" className="size-[22px] animate-[crdBob_1.6s_ease-in-out_infinite]">
             <polyline points="5,8 12,16 19,8" fill="none" stroke="#F76C4D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

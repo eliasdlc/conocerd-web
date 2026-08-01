@@ -82,7 +82,7 @@ export default function NegociosOverlay() {
         <MapMarker longitude={BUSINESS[0]} latitude={BUSINESS[1]} anchor="bottom">
           <MarkerContent>
             <div className="flex flex-col items-center gap-1">
-              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] font-display text-micro font-extrabold text-white shadow-card">
+              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-card">
                 Tu negocio
               </div>
               <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-cream bg-mango shadow-glow-mango">
@@ -120,8 +120,8 @@ export default function NegociosOverlay() {
             <span>ConoceRD para negocios</span>
           </div>
 
-          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-extrabold leading-[1.04] tracking-[-.035em] text-ink-2">
-            Tu negocio, dentro de la ruta
+          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.04] tracking-[-.012em] text-ink-2">
+            Tu negocio, <em className="crd-accent">dentro de la ruta</em>
           </h2>
           <p className="mb-[15px] mt-2 text-xs leading-[1.45] text-muted">
             Haz que el interés de los viajeros se convierta en una visita real.
@@ -143,7 +143,7 @@ export default function NegociosOverlay() {
                   <Icon name={b.icon} className="text-sm text-mint-ink" />
                 </span>
                 <div>
-                  <div className="font-display text-xs font-bold leading-[1.25] text-ink">{b.title}</div>
+                  <div className="text-xs font-bold leading-[1.25] text-ink">{b.title}</div>
                   <div className="mt-0.5 text-micro leading-[1.35] text-muted">{b.desc}</div>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export default function NegociosOverlay() {
           {/* CTA — lleva al formulario con el toggle ya en "negocio" */}
           <button
             onClick={() => requestSubscribe("negocio")}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-card border-none bg-mint px-[18px] py-[11px] font-display text-copy font-extrabold text-ink-2 shadow-glow-mint transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-card border-none bg-mint px-[18px] py-[11px] text-copy font-bold text-ink-2 shadow-glow-mint transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
           >
             <Icon name="add_business" className="text-lg text-white" />
             Registrar mi negocio
@@ -169,12 +169,12 @@ export default function NegociosOverlay() {
           {/* Header */}
           <div className="mb-3.5 flex items-center justify-between">
             <div>
-              <div className="font-display text-sm font-extrabold text-ink">Panel de tu negocio</div>
+              <div className="text-sm font-bold text-ink">Panel de tu negocio</div>
               <div className="font-mono text-micro text-muted-2">Datos de demostración</div>
             </div>
             <div className="flex items-center gap-[5px] rounded-full bg-mint-soft px-2.5 py-1">
               <span className="block size-[7px] animate-live-dot rounded-full bg-mint" />
-              <span className="font-display text-micro font-bold text-mint-ink">EN VIVO</span>
+              <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
             </div>
           </div>
 
@@ -199,7 +199,7 @@ export default function NegociosOverlay() {
 
           {/* Bar chart — procedencia */}
           <div className="rounded-card bg-cream px-[13px] py-3">
-            <div className="mb-[9px] font-display text-mini font-bold text-ink">Procedencia de clientes</div>
+            <div className="mb-[9px] text-mini font-bold text-ink">Procedencia de clientes</div>
             <div className="flex flex-col gap-[7px]">
               {BARS.map((b) => (
                 <div key={b.label} className="flex items-center gap-[9px]">

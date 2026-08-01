@@ -14,7 +14,7 @@ export default function NotFound() {
       <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-muted">
         404 · Esta ruta no existe
       </p>
-      <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-extrabold leading-[1.1] tracking-[-.025em] text-ink-2">
+      <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2">
         Este lugar no está en el mapa
       </h1>
       <p className="m-0 max-w-[420px] text-body leading-[1.6] text-muted">
@@ -23,7 +23,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-7 inline-flex h-12 items-center rounded-full bg-mango px-6 font-display text-body font-bold text-ink-2 no-underline shadow-glow-mango"
+        className="mt-7 inline-flex h-12 items-center rounded-full bg-mango px-6 text-body font-bold text-ink-2 no-underline shadow-glow-mango"
       >
         Volver al inicio
       </Link>

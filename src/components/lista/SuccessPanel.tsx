@@ -78,7 +78,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
         <AchievementSeal icon={seal} />
       </div>
 
-      <h2 className={`mb-1.5 font-display text-2xl font-extrabold tracking-[-.02em] text-ink-2 ${IN}`} style={{ animationDelay: ".35s" }}>
+      <h2 className={`mb-1.5 font-display text-2xl font-bold tracking-[-.012em] text-ink-2 ${IN}`} style={{ animationDelay: ".35s" }}>
         {alreadyIn ? "Ya estabas en la lista" : copy.title}
       </h2>
       <p className={`mx-auto mb-[18px] max-w-[340px] text-sm leading-[1.55] text-muted ${IN}`} style={{ animationDelay: ".42s" }}>
@@ -98,7 +98,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
           target="_blank"
           rel="noopener noreferrer"
           // .crd-ig-cta aporta el hover (translate + sombra).
-          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] font-display text-body font-extrabold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
+          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] text-body font-bold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
         >
           <InstagramGlyph />
           Síguenos en {INSTAGRAM.handle}

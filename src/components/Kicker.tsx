@@ -26,7 +26,7 @@ export default function Kicker({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-[7px] rounded-full px-3 py-[5px] font-display text-mini font-extrabold uppercase tracking-[.12em] ${TONES[tone]} ${className}`}
+      className={`inline-flex items-center gap-[7px] rounded-full px-3 py-[5px] text-mini font-bold uppercase tracking-[.12em] ${TONES[tone]} ${className}`}
     >
       <Icon name={icon} className="text-sm" />
       {children}

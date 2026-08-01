@@ -27,7 +27,7 @@ import Kicker from "@/components/Kicker";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-display text-lead font-extrabold tracking-[-.015em] text-ink-2">
+    <h2 className="mb-3 text-lead font-bold tracking-[-.015em] text-ink-2">
       {children}
     </h2>
   );
@@ -57,14 +57,14 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
             título: si lo arrastra, con títulos de distinto largo cae a una
             segunda línea en unas tarjetas sí y en otras no. */}
         <div className="flex items-start gap-2">
-          <span className="min-w-0 flex-1 font-display text-body font-bold text-ink">
+          <span className="min-w-0 flex-1 text-body font-bold text-ink">
             {item.title}
           </span>
           {unlocked && (
             <span
               // Escalonado: los tres tics no deben aparecer a la vez, y el
               // retardo depende del índice → va por style.
-              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-micro font-extrabold uppercase tracking-[.08em] text-mint-ink"
+              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-micro font-bold uppercase tracking-[.08em] text-mint-ink"
               style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
             >
               Desbloqueado
@@ -82,7 +82,7 @@ function FeatureRow({ item }: { item: Item }) {
     <li className="flex items-start gap-3">
       <Icon name={item.icon} className="mt-px shrink-0 text-feature text-mint-ink" />
       <div>
-        <div className="font-display text-body font-bold text-ink">{item.title}</div>
+        <div className="text-body font-bold text-ink">{item.title}</div>
         <p className="mt-px text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
@@ -152,9 +152,9 @@ export default function ListaExperience() {
 
         <h1
           key={`h-${audience}`}
-          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-extrabold leading-[1.06] tracking-[-.028em] text-ink-2"
+          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2"
         >
-          {c.headline}
+          {c.headline} <em className="crd-accent">{c.headlineAccent}</em>
         </h1>
 
         <p
@@ -202,7 +202,7 @@ export default function ListaExperience() {
             <InstagramGlyph size={20} />
           </span>
           <span>
-            <span className="block font-display text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
+            <span className="block text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
             <span className="block text-tiny leading-[1.4] text-muted">
               Los destinos que vamos sumando, antes de que salga la app.
             </span>
@@ -241,7 +241,7 @@ export default function ListaExperience() {
               {c.stats.map((s) => (
                 <div key={s.label} className="max-w-[150px]">
                   <div
-                    className="font-display text-[26px] font-extrabold tracking-[-.02em]"
+                    className="font-display text-[26px] font-bold tracking-[-.012em]"
                     style={{ color: s.color }}
                   >
                     {s.value}

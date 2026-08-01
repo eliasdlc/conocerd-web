@@ -305,7 +305,7 @@ export default function SubscribeForm({
       >
         <Icon name="check_circle" className={`shrink-0 text-2xl ${t.success}`} />
         <div>
-          <div className={`font-display text-body font-extrabold ${t.text}`}>
+          <div className={`text-body font-bold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
           </div>
           <p className={`mt-[3px] text-copy leading-[1.5] ${t.muted}`}>
@@ -352,7 +352,7 @@ export default function SubscribeForm({
                   setAudience(next);
                   toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
                 }}
-                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-display text-copy font-bold transition-[background-color,color] duration-200 ${
+                className={`h-11 flex-1 cursor-pointer rounded-full border-none text-copy font-bold transition-[background-color,color] duration-200 ${
                   active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
                 }`}
               >
@@ -470,7 +470,7 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango font-display text-body font-extrabold text-ink-2 shadow-glow-mango disabled:cursor-progress disabled:opacity-75 ${
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-ink-2 shadow-glow-mango disabled:cursor-progress disabled:opacity-75 ${
             compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >

@@ -40,8 +40,8 @@ export default function ViajerosOverlay() {
         >
           <Kicker icon="hiking" className="mb-2.5">Para viajeros</Kicker>
           {/* El text-shadow crema despega el titular de las etiquetas del mapa. */}
-          <h2 className="m-0 font-display text-[clamp(18px,2.2vw,28px)] font-extrabold leading-[1.1] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
-            Viaja como local,<br />descubre como nadie
+          <h2 className="m-0 font-display text-[clamp(18px,2.2vw,28px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
+            Viaja como local,<br /><em className="crd-accent">descubre como nadie</em>
           </h2>
         </div>
 
@@ -62,7 +62,7 @@ export default function ViajerosOverlay() {
               <Icon name={f.icon} className="text-xl" style={{ color: f.color }} />
             </div>
             <div>
-              <h3 className="m-0 mb-[3px] font-display text-copy font-bold text-ink">{f.title}</h3>
+              <h3 className="m-0 mb-[3px] text-copy font-bold text-ink">{f.title}</h3>
               <p className="m-0 text-xs leading-[1.45] text-muted">{f.desc}</p>
             </div>
           </div>

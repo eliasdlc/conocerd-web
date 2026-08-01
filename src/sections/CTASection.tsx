@@ -40,8 +40,8 @@ export default function CTAOverlay() {
         </div>
 
         {/* Main heading */}
-        <h2 className="m-0 mb-3.5 font-display text-[clamp(28px,5vw,50px)] font-extrabold leading-[1.04] tracking-[-.025em] text-white">
-          Tu próxima aventura<br />empieza aquí
+        <h2 className="m-0 mb-3.5 font-display text-[clamp(28px,5vw,50px)] font-bold leading-[1.04] tracking-[-.012em] text-white">
+          Tu próxima aventura<br />empieza <em className="crd-accent-on-ink">aquí</em>
         </h2>
 
         {/* Subtext */}
@@ -65,10 +65,10 @@ export default function CTAOverlay() {
             >
               <Icon name={btn.icon} className="text-xl" />
               <span className="text-left leading-[1.2]">
-                <span className="block font-display text-micro font-bold uppercase tracking-[.08em] text-white/72">
+                <span className="block text-micro font-bold uppercase tracking-[.08em] text-white/72">
                   Próximamente en
                 </span>
-                <span className="font-display text-copy font-extrabold">{btn.store}</span>
+                <span className="text-copy font-bold">{btn.store}</span>
               </span>
             </div>
           ))}

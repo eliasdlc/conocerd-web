@@ -27,7 +27,7 @@ export default function Button({ variant = "primary", size = "sm", icon, onClick
       type="button"
       // .crd-button aporta el hover/active (translate + scale); vive en CSS
       // porque el :active necesita ganarle al hover.
-      className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
+      className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
       onClick={onClick}
     >
       {icon && <Icon name={icon} className={size === "lg" ? "text-feature" : "text-lg"} />}

@@ -24,7 +24,7 @@ function DefaultScreen() {
       {/* barra de búsqueda */}
       <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-card">
         <Icon name="search" className="text-lg text-muted" />
-        <span className="font-display text-tiny text-muted">¿A dónde vamos?</span>
+        <span className="text-tiny text-muted">¿A dónde vamos?</span>
       </div>
 
       {/* self-pin en el centro */}
@@ -38,10 +38,10 @@ function DefaultScreen() {
           <Image src="/assets/ph-playa.png" alt="" fill sizes="56px" className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-copy font-extrabold text-ink">Bahía de las Águilas</div>
+          <div className="text-copy font-bold text-ink">Bahía de las Águilas</div>
           <div className="mt-0.5 font-mono text-micro text-muted">★ 4.9 · a 2.4 km</div>
         </div>
-        <div className="shrink-0 rounded-full bg-coral-ink px-4 py-[9px] font-display text-xs font-extrabold text-white">
+        <div className="shrink-0 rounded-full bg-coral-ink px-4 py-[9px] text-xs font-bold text-white">
           Ir
         </div>
       </div>

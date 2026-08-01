@@ -114,7 +114,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
           >
             <PolaroidCard d={d} />
             {isFront && (
-              <div className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 font-display text-micro font-bold tracking-[.06em] text-white">
+              <div className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 text-micro font-bold tracking-[.06em] text-white">
                 Click para ver más →
               </div>
             )}

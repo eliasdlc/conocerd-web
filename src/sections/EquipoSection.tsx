@@ -64,7 +64,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
     >
       {/* Avatar grande */}
       <div
-        className="relative flex size-24 items-center justify-center overflow-hidden rounded-full font-display text-3xl font-extrabold shadow-panel"
+        className="relative flex size-24 items-center justify-center overflow-hidden rounded-full font-display text-3xl font-bold shadow-panel"
         style={{ background: member.bg, color: member.color }}
       >
         {member.photo ? (
@@ -75,11 +75,11 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
       </div>
 
       {/* Nombre → posición → descripción */}
-      <h3 className="m-0 mt-3.5 font-display text-lead font-extrabold leading-[1.2] text-ink">
+      <h3 className="m-0 mt-3.5 text-lead font-bold leading-[1.2] text-ink">
         {member.name}
       </h3>
       <div
-        className="mb-2 mt-1 font-display text-xs font-bold"
+        className="mb-2 mt-1 text-xs font-bold"
         style={{ color: member.roleColor }}
       >
         {member.role}
@@ -91,7 +91,7 @@ function TeamCard({ member, delay, animate }: { member: Member; delay: number; a
         type="button"
         onClick={() => setExpanded((value) => !value)}
         aria-expanded={expanded}
-        className="mt-3 min-h-[44px] cursor-pointer border-none bg-transparent font-display font-extrabold"
+        className="mt-3 min-h-[44px] cursor-pointer border-none bg-transparent font-bold"
         style={{ color: member.color }}
       >
         {expanded ? "Ver menos" : "Más sobre el equipo"}
@@ -142,8 +142,8 @@ export default function EquipoOverlay() {
         {/* Heading */}
         <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
           <Kicker icon="groups" tone="coral" className="mb-2.5">El equipo</Kicker>
-          <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
-            Hecho por dominicanos,<br />para descubrir lo nuestro
+          <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
+            Hecho por dominicanos,<br />para descubrir <em className="crd-accent">lo nuestro</em>
           </h2>
           <p className="mx-auto mt-2 text-sm leading-[1.5] text-[#3A5560] [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
             Un equipo multidisciplinario de la PUCMM, Campus Santiago.
