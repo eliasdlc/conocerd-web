@@ -39,7 +39,7 @@ export default function ErrorPage({
         <button
           type="button"
           onClick={() => unstable_retry()}
-          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-mango px-6 font-display text-[15px] font-bold text-white shadow-[0_6px_20px_rgba(255,141,22,.34)] transition-[transform,box-shadow] duration-200"
+          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-mango px-6 font-display text-[15px] font-bold text-ink-2 shadow-[0_6px_20px_rgba(255,141,22,.34)] transition-[transform,box-shadow] duration-200"
         >
           Reintentar
         </button>

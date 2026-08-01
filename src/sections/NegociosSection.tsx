@@ -85,7 +85,7 @@ export default function NegociosOverlay() {
                 Tu negocio
               </div>
               <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-[#FBF7EF] bg-mango shadow-[0_4px_14px_rgba(255,141,22,0.42)]">
-                <Icon name="storefront" className="text-[22px] text-white" />
+                <Icon name="storefront" className="text-[22px] text-ink-2" />
               </div>
             </div>
           </MarkerContent>
@@ -113,10 +113,9 @@ export default function NegociosOverlay() {
             ${isVisible ? "animate-slide-up" : ""}`}
         >
           <div className="mb-3 flex items-center gap-2 font-mono text-[9.5px] font-bold uppercase tracking-[.085em] text-mint-ink">
-            <Icon
-              name="storefront"
-              className="grid size-7 place-items-center rounded-[9px_9px_9px_2px] bg-mint text-base text-white shadow-[4px_4px_0_#C6F3EB]"
-            />
+            <span className="grid size-7 place-items-center rounded-[9px_9px_9px_2px] bg-mint shadow-[4px_4px_0_#C6F3EB]">
+              <Icon name="storefront" className="text-base text-ink-2" />
+            </span>
             <span>ConoceRD para negocios</span>
           </div>
 
@@ -139,10 +138,9 @@ export default function NegociosOverlay() {
                 className={`relative flex items-start gap-2.5 ${isVisible ? "animate-slide-up" : ""}`}
                 style={isVisible ? { animationDelay: `${i * 0.07 + 0.15}s` } : undefined}
               >
-                <Icon
-                  name={b.icon}
-                  className="flex size-[21px] shrink-0 items-center justify-center rounded-[7px] border border-mint-soft bg-white text-sm leading-none text-mint"
-                />
+                <span className="flex size-[21px] shrink-0 items-center justify-center rounded-[7px] border border-mint-soft bg-white leading-none">
+                  <Icon name={b.icon} className="text-sm text-mint-ink" />
+                </span>
                 <div>
                   <div className="font-display text-xs font-bold leading-[1.25] text-ink">{b.title}</div>
                   <div className="mt-0.5 text-[10.5px] leading-[1.35] text-muted">{b.desc}</div>
@@ -154,7 +152,7 @@ export default function NegociosOverlay() {
           {/* CTA — lleva al formulario con el toggle ya en "negocio" */}
           <button
             onClick={() => requestSubscribe("negocio")}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] border-none bg-mint px-[18px] py-[11px] font-display text-[13.5px] font-extrabold text-white shadow-[0_8px_24px_rgba(37,204,184,0.38)] transition-[background-color,transform] duration-200 hover:bg-mint-ink hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] border-none bg-mint px-[18px] py-[11px] font-display text-[13.5px] font-extrabold text-ink-2 shadow-[0_8px_24px_rgba(37,204,184,0.38)] transition-[background-color,color,transform] duration-200 hover:bg-mint-ink hover:text-white hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
           >
             <Icon name="add_business" className="text-lg text-white" />
             Registrar mi negocio
@@ -175,12 +173,12 @@ export default function NegociosOverlay() {
             </div>
             <div className="flex items-center gap-[5px] rounded-full bg-mint-soft px-2.5 py-1">
               <span className="block size-[7px] animate-live-dot rounded-full bg-mint" />
-              <span className="font-display text-[10px] font-bold text-[#1a9b8c]">EN VIVO</span>
+              <span className="font-display text-[10px] font-bold text-mint-ink">EN VIVO</span>
             </div>
           </div>
 
           {/* Clientes en camino */}
-          <div className="mb-3 rounded-[14px] bg-mango px-4 py-3.5 text-white">
+          <div className="mb-3 rounded-[14px] bg-mango px-4 py-3.5 text-ink-2">
             <div className="text-xs font-semibold opacity-[0.92]">Clientes en camino ahora</div>
             <div className="mt-[3px] flex items-baseline gap-2">
               <span className="font-mono text-[38px] font-bold leading-none">{ARRIVING}</span>

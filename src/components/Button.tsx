@@ -11,7 +11,7 @@ interface ButtonProps {
 }
 
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-mango text-white shadow-[0_6px_20px_rgba(255,141,22,.34)]",
+  primary: "bg-mango text-ink-2 shadow-[0_6px_20px_rgba(255,141,22,.34)]",
   outline: "border-2 border-ink bg-transparent text-ink",
   mint: "bg-mint text-ink-2 shadow-[0_6px_20px_rgba(37,204,184,.35)]",
 };

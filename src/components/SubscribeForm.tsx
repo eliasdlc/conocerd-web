@@ -437,7 +437,7 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-white shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-ink-2 shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
             compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >

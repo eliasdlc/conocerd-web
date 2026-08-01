@@ -23,7 +23,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-7 inline-flex h-12 items-center rounded-full bg-mango px-6 font-display text-[15px] font-bold text-white no-underline shadow-[0_6px_20px_rgba(255,141,22,.34)]"
+        className="mt-7 inline-flex h-12 items-center rounded-full bg-mango px-6 font-display text-[15px] font-bold text-ink-2 no-underline shadow-[0_6px_20px_rgba(255,141,22,.34)]"
       >
         Volver al inicio
       </Link>

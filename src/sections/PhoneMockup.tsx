@@ -41,7 +41,7 @@ function DefaultScreen() {
           <div className="font-display text-[13px] font-extrabold text-ink">Bahía de las Águilas</div>
           <div className="mt-0.5 font-mono text-[10px] text-muted">★ 4.9 · a 2.4 km</div>
         </div>
-        <div className="shrink-0 rounded-full bg-coral px-4 py-[9px] font-display text-xs font-extrabold text-white">
+        <div className="shrink-0 rounded-full bg-coral-ink px-4 py-[9px] font-display text-xs font-extrabold text-white">
           Ir
         </div>
       </div>
