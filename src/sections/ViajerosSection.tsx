@@ -29,7 +29,12 @@ export default function ViajerosOverlay() {
     >
       {/* Columna izquierda: encabezado + feature cards */}
       <div className="crd-ol-panel absolute left-[clamp(16px,3%,40px)] top-1/2 w-[clamp(240px,26vw,310px)] -translate-y-1/2">
-        <div className={`mb-3.5 ${isVisible ? "animate-slide-up" : ""}`}>
+        {/* En móvil el sheet no tiene fondo propio y el H2 caía directo sobre
+            "DOMINICAN / HAITI" (audit 2.1) → chip crema con blur, como el del
+            heading de Destinos en desktop. */}
+        <div
+          className={`mb-3.5 max-desk:w-fit max-desk:rounded-[14px] max-desk:border max-desk:border-line/80 max-desk:bg-cream/88 max-desk:px-3.5 max-desk:py-3 max-desk:backdrop-blur-[8px] ${isVisible ? "animate-slide-up" : ""}`}
+        >
           <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink">
             <span className="ms text-sm" aria-hidden="true">hiking</span>
             Para viajeros
