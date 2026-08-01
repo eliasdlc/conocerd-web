@@ -123,7 +123,9 @@ export default function EquipoOverlay() {
               <span className="ms text-[19px] text-coral-ink" aria-hidden="true">school</span>
             </div>
           </MarkerContent>
-          <MarkerLabel position="top">PUCMM · Santiago</MarkerLabel>
+          {/* A la derecha y no arriba: encima del pin caía justo sobre la
+              etiqueta "Santiago de los Caballeros" del mapa (audit 2.7). */}
+          <MarkerLabel position="right">PUCMM · Santiago</MarkerLabel>
         </MapMarker>
       )}
 
