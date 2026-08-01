@@ -85,7 +85,7 @@ export default function NegociosOverlay() {
               <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] font-display text-micro font-extrabold text-white shadow-card">
                 Tu negocio
               </div>
-              <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-[#FBF7EF] bg-mango shadow-glow-mango">
+              <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-cream bg-mango shadow-glow-mango">
                 <Icon name="storefront" className="text-feature text-ink-2" />
               </div>
             </div>

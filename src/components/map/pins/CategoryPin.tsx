@@ -24,7 +24,7 @@ const STATE: Record<
   done: { fill: "#43A047", fillOpacity: 0.78, borderOpacity: 0.7, iconOpacity: 0.85, shadowAlpha: 0.18 },
 };
 
-const CREAM = "251,247,239"; // #FBF7EF en RGB (borde crema)
+const CREAM = "253,248,240"; // --color-cream (#FDF8F0) en RGB, para el borde
 
 function hexToRgb(hex: string): string {
   const h = hex.replace("#", "");

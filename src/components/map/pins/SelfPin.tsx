@@ -45,7 +45,7 @@ export function SelfPin({ heading = 0, size = 48 }: SelfPinProps) {
         </linearGradient>
       </defs>
       {/* borde crema (stroke ancho, detrás) */}
-      <path d={ARROW_PATH} fill="none" stroke="#FBF7EF" strokeWidth={20} strokeLinejoin="round" />
+      <path d={ARROW_PATH} fill="none" stroke="#FDF8F0" strokeWidth={20} strokeLinejoin="round" />
       {/* relleno mango gradiente */}
       <path d={ARROW_PATH} fill={`url(#${gradId})`} />
     </svg>
