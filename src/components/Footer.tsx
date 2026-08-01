@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import SubscribeForm from "@/components/SubscribeForm";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 
@@ -16,8 +15,8 @@ const NAV_LINKS = [
   { label: "Equipo", target: "trigger-equipo" },
 ];
 
-// Las apps aún no están publicadas: aquí sólo se anuncian (§2.4). La acción
-// real del footer es el formulario de la lista.
+// Las apps aún no están publicadas: aquí sólo se anuncian (§2.4). La única
+// acción del footer es "Registrar mi negocio", que abre la lista de espera.
 const COMING_SOON = [
   { label: "iOS · próximamente", icon: "phone_iphone" },
   { label: "Android · próximamente", icon: "android" },
@@ -33,9 +32,11 @@ const HEADING =
 export default function Footer() {
   return (
     <footer className="bg-ink-2 text-white">
-      {/* La primera columna lleva el formulario de la lista: necesita ancho
-          suficiente para que el campo y el botón quepan en una sola línea. */}
-      <div className="crd-footer-grid mx-auto grid max-w-[1100px] grid-cols-[1.6fr_1fr_1fr_1.1fr] gap-x-[clamp(20px,4vw,48px)] gap-y-8 px-[clamp(20px,5vw,56px)] pb-7 pt-14">
+      {/* La columna de marca sólo lleva el wordmark: el formulario de la lista
+          vive en CTASection, justo encima, y aquí se duplicaba entero (mismo
+          kicker "Descubre lo nuestro" incluido). Contacto pide algo más de
+          ancho porque el correo es la línea más larga del bloque. */}
+      <div className="crd-footer-grid mx-auto grid max-w-[1100px] grid-cols-[0.8fr_1fr_1fr_1.2fr] gap-x-[clamp(20px,4vw,48px)] gap-y-8 px-[clamp(20px,5vw,56px)] pb-7 pt-14">
         {/* Marca */}
         <div>
           <Image
@@ -45,14 +46,6 @@ export default function Footer() {
             height={40}
             className="h-10 w-auto opacity-95 [filter:brightness(0)_invert(1)]"
           />
-          <div className="mb-3 mt-1.5 font-hand text-[22px] text-mint">Descubre lo nuestro</div>
-          <p className="mb-3.5 max-w-[260px] text-[13px] leading-[1.6] text-white/62">
-            La app que te lleva a la República Dominicana auténtica: lugares locales y experiencias reales, en una sola ruta.
-          </p>
-          <div className="max-w-[320px]">
-            <div className={`${HEADING} mb-2`}>Lista de espera</div>
-            <SubscribeForm tone="dark" layout="compact" source="footer" />
-          </div>
         </div>
 
         {/* Explora */}
@@ -83,9 +76,9 @@ export default function Footer() {
         {/* Contacto */}
         <div>
           <div className={HEADING}>Contacto</div>
-          <a href="mailto:hola@conocerd.app" className={`${LINK} leading-[1.8]`}>
+          <a href="mailto:contacto@conocerd.app" className={`${LINK} leading-[1.8]`}>
             <span className="ms text-base" aria-hidden="true">mail</span>
-            hola@conocerd.app
+            contacto@conocerd.app
           </a>
           <div className={`${LINK} cursor-default leading-[1.8]`}>
             <span className="ms text-base" aria-hidden="true">location_on</span>
