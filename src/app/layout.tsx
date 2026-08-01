@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, Caveat, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
@@ -74,7 +75,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Unregister any stale service workers from other projects on this port */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));` }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Vistas de página y los cuatro eventos del embudo (src/lib/analytics).
+            En local no envía nada: el script sólo se carga en Vercel. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

@@ -14,6 +14,12 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import Icon from "@/components/Icon";
 import {
+  trackWaitlistError,
+  trackWaitlistSubmit,
+  trackWaitlistSuccess,
+  trackWaitlistView,
+} from "@/lib/analytics";
+import {
   AUDIENCES,
   BUSINESS_TYPES,
   BUSINESS_TYPE_LABELS,
@@ -198,6 +204,28 @@ export default function SubscribeForm({
 
   useEffect(persistReferral, []);
 
+  // Vista del formulario (audit 5.7). Se cuenta cuando entra en pantalla, no al
+  // montar: en la home el formulario está al final de un journey largo y
+  // contarlo al montar inflaría la tasa vista→envío hasta hacerla inútil.
+  // El efecto se resuscribe si cambia la audiencia —para registrar el valor
+  // vigente— pero `viewed` garantiza un solo evento por montaje.
+  const viewed = useRef(false);
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el || viewed.current) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (viewed.current || !entries.some((e) => e.isIntersecting)) return;
+        viewed.current = true;
+        io.disconnect();
+        trackWaitlistView({ source, audience });
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [source, audience]);
+
   // Un cambio de audiencia desde fuera (p. ej. "Registra tu negocio") debe
   // reflejarse aunque el componente ya esté montado. Se ajusta durante el
   // render —no en un efecto— para no encadenar un segundo render.
@@ -231,6 +259,8 @@ export default function SubscribeForm({
         [HONEYPOT_FIELD]: String(fd.get(HONEYPOT_FIELD) ?? ""),
       };
 
+      trackWaitlistSubmit({ source, audience });
+
       try {
         const res = await fetch("/api/subscribe", {
           method: "POST",
@@ -242,15 +272,18 @@ export default function SubscribeForm({
           setError(data.error);
           setFieldErrors(data.fields ?? {});
           setStatus("error");
+          trackWaitlistError({ source, audience, reason: "validacion" });
           return;
         }
         const already = data.status === "already_subscribed";
         setAlreadyIn(already);
         setStatus("success");
+        trackWaitlistSuccess({ source, audience, already });
         onSuccess?.({ audience, alreadyIn: already });
       } catch {
         setError("No hay conexión. Revisa tu señal e inténtalo de nuevo.");
         setStatus("error");
+        trackWaitlistError({ source, audience, reason: "red" });
       }
     },
     [audience, isBusiness, onSuccess, source, status]
