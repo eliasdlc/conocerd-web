@@ -147,8 +147,8 @@ function buildSegments(v: JourneyViewport): Segment[] {
   const fitPx = Math.max(220, Math.min(v.width, v.height) * 0.62);
 
   return SCENE_BANDS.slice(0, -1).map((band, i) => {
-    const a = resolveCamera(band.camera, v.mobile);
-    const b = resolveCamera(SCENE_BANDS[i + 1].camera, v.mobile);
+    const a = resolveCamera(band.camera, v.mobile, v.width);
+    const b = resolveCamera(SCENE_BANDS[i + 1].camera, v.mobile, v.width);
 
     const dx = (b.center[0] - a.center[0]) / 360;
     const dy = mercY(b.center[1]) - mercY(a.center[1]);
@@ -265,7 +265,7 @@ export function cameraAtProgress(p: number, v: JourneyViewport): Viewport {
   const at = segmentAt(p);
   if (!at) {
     const band = p <= bands[0].center ? bands[0] : bands[bands.length - 1];
-    return resolveCamera(band.camera, v.mobile);
+    return resolveCamera(band.camera, v.mobile, v.width);
   }
 
   const seg = segmentsFor(v)[at.i];

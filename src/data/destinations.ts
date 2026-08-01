@@ -322,11 +322,19 @@ export type Viewport = {
  */
 export type SceneCamera = Viewport & { mobile?: Partial<Viewport> };
 
-export function resolveCamera(c: SceneCamera, mobile: boolean): Viewport {
+/** Ancho de pantalla para el que están afinados los overrides `mobile`. */
+export const MOBILE_CAMERA_REF_WIDTH = 390;
+
+export function resolveCamera(c: SceneCamera, mobile: boolean, width = MOBILE_CAMERA_REF_WIDTH): Viewport {
   if (!mobile || !c.mobile) return c;
+  // "Mobile" cubre 320–899px pero cada zoom está pensado en 390: a igual zoom,
+  // una tablet de 834px muestra la isla diminuta rodeada de océano vacío
+  // (audit 2.4). El corrimiento log2 mantiene constante la fracción de
+  // pantalla que ocupa la escena en todo el rango del breakpoint.
+  const zoomShift = Math.log2(width / MOBILE_CAMERA_REF_WIDTH);
   return {
     center: c.mobile.center ?? c.center,
-    zoom: c.mobile.zoom ?? c.zoom,
+    zoom: (c.mobile.zoom ?? c.zoom) + zoomShift,
     pitch: c.mobile.pitch ?? c.pitch,
     bearing: c.mobile.bearing ?? c.bearing,
   };
