@@ -577,6 +577,20 @@ export function MapRoute({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, id, color, width, opacity]);
 
+  // Actualiza la geometría cuando cambian las coordenadas SIN rehacer la capa:
+  // el efecto de arriba no depende de `coordinates` a propósito (rehacer capa
+  // y source por cada parada añadida parpadea). El route-builder cambia la
+  // polilínea en vivo y sin esto la línea se quedaba con la primera versión.
+  useEffect(() => {
+    if (!map || coordinates.length < 2) return;
+    const src = map.getSource(`route-source-${id}`) as maplibregl.GeoJSONSource | undefined;
+    src?.setData({
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates },
+    });
+  }, [map, id, coordinates]);
+
   return null;
 }
 

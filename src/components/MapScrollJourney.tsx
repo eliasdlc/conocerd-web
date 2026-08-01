@@ -23,6 +23,7 @@ import ViajerosSection from "@/sections/ViajerosSection";
 import NegociosSection from "@/sections/NegociosSection";
 import EquipoSection from "@/sections/EquipoSection";
 import CTASection from "@/sections/CTASection";
+import { VariantSlot } from "@/variants/registry";
 
 // MapLibre is the journey's signature but not a prerequisite for readable Hero
 // HTML. Keep it in a separate client chunk so text and navigation can paint
@@ -129,10 +130,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         >
           <HeroPinMarker />
           <DestinosSection />
-          <MapaSection />
-          <ViajerosSection />
-          <NegociosSection />
-          <EquipoSection />
+          {/* Áreas en rework: ?var-mapa=N / ?var-vn=N / ?var-equipo=N montan
+              la variante N; sin query se rinde la sección actual. */}
+          <VariantSlot area="mapa">
+            <MapaSection />
+          </VariantSlot>
+          <VariantSlot area="vn">
+            <ViajerosSection />
+            <NegociosSection />
+          </VariantSlot>
+          <VariantSlot area="equipo">
+            <EquipoSection />
+          </VariantSlot>
           <CTASection />
         </Map>
 
