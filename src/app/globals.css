@@ -299,7 +299,9 @@ body {
      del panel interno cae sobre esta línea y queda completo en pantalla. */
   .crd-mapa-route-panel { display: block !important; position: absolute; top: 50%; right: 0; transform: scale(.68); transform-origin: right center; }
   .crd-cta-card { max-height: calc(100dvh - 42px); overflow-y: auto; padding: 24px 18px !important; }
-  .crd-destinos-heading { left: 16px !important; bottom: 48% !important; }
+  /* 43% y no 48%: a 48% quedaba una franja muerta de ~100px entre el titular
+     y las cartas (audit 2.4); 43% las acerca sin que la pila lo alcance. */
+  .crd-destinos-heading { left: 16px !important; bottom: 43% !important; }
   .crd-polaroid-deck-mobile { bottom: max(12px, 2dvh) !important; }
   .crd-destinos-card { width: min(196px, calc(100vw - 116px)) !important; padding: 9px 9px 0 !important; }
   .crd-destinos-card-media { height: 150px !important; }
