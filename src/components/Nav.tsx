@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Button from "./Button";
+import BrandPin from "./BrandPin";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 
@@ -11,24 +12,6 @@ const LINKS = [
   { label: "Negocios", target: "trigger-negocios" },
   { label: "Equipo", target: "trigger-equipo" },
 ];
-
-/**
- * Pin del logo, reducido a glifo (audit §3, movimiento 12). Desde que empieza
- * Destinos hasta el footer no había una sola marca en pantalla; esto la
- * devuelve sin meter el wordmark entero en una píldora que ya va apretada.
- * Va inline y no como <img> porque son 300 bytes y no merece una petición.
- */
-function BrandGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-[22px]" aria-hidden="true">
-      <path
-        d="M12 2c-3.9 0-7 3.1-7 7 0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"
-        fill="#FF8D16"
-      />
-      <circle cx="12" cy="9" r="2.7" fill="#FDF8F0" />
-    </svg>
-  );
-}
 
 // #15 — píldora flotante sin wordmark: solo nav + botón Descargar.
 export default function Nav() {
@@ -95,7 +78,7 @@ export default function Nav() {
           }}
           className="grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity] duration-300 group-data-[solid=true]:w-[22px] group-data-[solid=true]:opacity-100"
         >
-          <BrandGlyph />
+          <BrandPin />
         </a>
 
         {LINKS.map((l) => (

@@ -33,17 +33,22 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Beneficio de la lista de espera. Al registrarse pasa a estado conseguido. */
+/**
+ * Beneficio de la lista de espera, dibujado como cupón de pasaporte (audit §3,
+ * movimiento 9): borde troquelado, número de sello en mono y, al registrarse,
+ * el sello estampado en diagonal. Antes era una card blanca con borde gris e
+ * icono en cuadradito pastel — el momento más genérico del sitio.
+ */
 function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; index: number }) {
   return (
     <li
-      className={`flex items-start gap-[13px] rounded-2xl border px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
-        unlocked ? "border-mint bg-[#EAFBF7]" : "border-line bg-white"
+      className={`relative flex items-start gap-[13px] overflow-hidden rounded-card border border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
+        unlocked ? "border-mint bg-[#EAFBF7]" : "border-muted-2/35 bg-white"
       }`}
     >
       <span
         aria-hidden="true"
-        className={`relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-[350ms] ease-in-out ${
+        className={`relative flex size-10 shrink-0 items-center justify-center rounded-tile transition-colors duration-[350ms] ease-in-out ${
           unlocked ? "bg-mint" : "bg-mango-soft"
         }`}
       >
@@ -60,19 +65,26 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
           <span className="min-w-0 flex-1 text-body font-bold text-ink">
             {item.title}
           </span>
-          {unlocked && (
-            <span
-              // Escalonado: los tres tics no deben aparecer a la vez, y el
-              // retardo depende del índice → va por style.
-              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-micro font-bold uppercase tracking-[.08em] text-mint-ink"
-              style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
-            >
-              Desbloqueado
-            </span>
-          )}
+          <span
+            aria-hidden="true"
+            className="mt-px shrink-0 font-mono text-micro font-bold tracking-[.1em] text-muted-2"
+          >
+            N.º {String(index + 1).padStart(2, "0")}
+          </span>
         </div>
         <p className="mt-0.5 text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
+
+      {unlocked && (
+        <span
+          // Escalonado: los tres sellos no deben caer a la vez, y el retardo
+          // depende del índice → va por style.
+          className="crd-sello absolute -right-3 bottom-2 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both]"
+          style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
+        >
+          Sellado
+        </span>
+      )}
     </li>
   );
 }
@@ -198,7 +210,10 @@ export default function ListaExperience() {
         >
           <span
             aria-hidden="true"
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] text-white"
+            // Monocromo ink, no el degradado oficial de Instagram: era el único
+            // sitio del sitio con la paleta de otra marca a todo color, y se
+            // comía la jerarquía de la página (audit §3, movimiento 9).
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-ink-2 text-cream"
           >
             <InstagramGlyph size={20} />
           </span>

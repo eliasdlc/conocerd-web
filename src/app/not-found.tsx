@@ -3,14 +3,13 @@
 // existe" — y sin dependencias externas.
 
 import Link from "next/link";
+import BrandPin from "@/components/BrandPin";
 
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-cream px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="mb-6 block size-3.5 rounded-full border-[2.5px] border-white bg-coral shadow-[0_0_0_6px_rgba(247,108,77,0.25)]"
-      />
+      {/* El pin que se cayó del mapa: la misma gota del logo, volcada. */}
+      <BrandPin size={44} color="#F76C4D" className="mb-5 rotate-[18deg] [filter:drop-shadow(0_5px_6px_rgba(38,70,83,.22))]" />
       <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-muted">
         404 · Esta ruta no existe
       </p>

@@ -98,7 +98,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
           target="_blank"
           rel="noopener noreferrer"
           // .crd-ig-cta aporta el hover (translate + sombra).
-          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] text-body font-bold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
+          className="crd-ig-cta crd-sticker inline-flex items-center gap-2.5 rounded-card bg-ink-2 px-[22px] py-[13px] text-body font-bold text-cream no-underline"
         >
           <InstagramGlyph />
           Síguenos en {INSTAGRAM.handle}
