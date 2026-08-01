@@ -1,10 +1,11 @@
 "use client";
 
+import Icon, { type IconName } from "@/components/Icon";
 import SubscribeForm from "@/components/SubscribeForm";
 import { useScene } from "@/context/SceneContext";
 import { requestSubscribe, useSubscribeIntent } from "@/hooks/useSubscribeIntent";
 
-const STORES = [
+const STORES: { icon: IconName; store: string }[] = [
   { icon: "phone_iphone", store: "App Store" },
   { icon: "android", store: "Google Play" },
 ];
@@ -62,7 +63,7 @@ export default function CTAOverlay() {
               key={btn.store}
               className="flex items-center gap-2 rounded-xl border border-white/[0.14] bg-white/[0.07] px-3.5 py-2 text-white/62"
             >
-              <span className="ms text-xl" aria-hidden="true">{btn.icon}</span>
+              <Icon name={btn.icon} className="text-xl" />
               <span className="text-left leading-[1.2]">
                 <span className="block font-display text-[9.5px] font-bold uppercase tracking-[.08em] text-white/72">
                   Próximamente en

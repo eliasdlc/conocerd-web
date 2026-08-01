@@ -74,24 +74,6 @@ body {
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
 
-/* Va en @layer base a propósito: CSS sin capa le gana a las utilidades de
-   Tailwind (que viven en @layer utilities), así que un `.ms` sin capa imponía
-   su `display: inline-block` sobre `flex`/`grid` y rompía el centrado del
-   glifo en cada caja de icono. Dentro de base, las utilidades vuelven a
-   ganar y `display` aquí sólo actúa como valor por defecto. */
-@layer base {
-  .ms {
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    line-height: 1;
-    font-variation-settings: 'FILL' 1;
-    display: inline-block;
-    vertical-align: middle;
-    user-select: none;
-  }
-}
-
 @keyframes crdFloatX {
   0%, 100% { transform: translate(0,0) rotate(-3deg); }
   50% { transform: translate(18px,-14px) rotate(4deg); }

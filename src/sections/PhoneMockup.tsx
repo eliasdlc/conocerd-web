@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Icon from "@/components/Icon";
 import { SelfPin } from "@/components/map/pins";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +23,7 @@ function DefaultScreen() {
 
       {/* barra de búsqueda */}
       <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_6px_18px_rgba(38,70,83,0.16)]">
-        <span className="ms text-lg text-muted">search</span>
+        <Icon name="search" className="text-lg text-muted" />
         <span className="font-display text-[12.5px] text-muted">¿A dónde vamos?</span>
       </div>
 

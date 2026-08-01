@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
+import Icon, { type IconName } from "@/components/Icon";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 
@@ -17,7 +18,7 @@ const NAV_LINKS = [
 
 // Las apps aún no están publicadas: aquí sólo se anuncian (§2.4). La única
 // acción del footer es "Registrar mi negocio", que abre la lista de espera.
-const COMING_SOON = [
+const COMING_SOON: { label: string; icon: IconName }[] = [
   { label: "iOS · próximamente", icon: "phone_iphone" },
   { label: "Android · próximamente", icon: "android" },
 ];
@@ -63,12 +64,12 @@ export default function Footer() {
           <div className={HEADING}>Producto</div>
           {COMING_SOON.map((p) => (
             <div key={p.label} className={`${LINK} cursor-default text-white/45`}>
-              <span className="ms text-base" aria-hidden="true">{p.icon}</span>
+              <Icon name={p.icon} className="text-base" />
               {p.label}
             </div>
           ))}
           <button className={LINK} onClick={() => requestSubscribe("negocio")}>
-            <span className="ms text-base" aria-hidden="true">storefront</span>
+            <Icon name="storefront" className="text-base" />
             Registrar mi negocio
           </button>
         </div>
@@ -77,11 +78,11 @@ export default function Footer() {
         <div>
           <div className={HEADING}>Contacto</div>
           <a href="mailto:contacto@conocerd.app" className={`${LINK} leading-[1.8]`}>
-            <span className="ms text-base" aria-hidden="true">mail</span>
+            <Icon name="mail" className="text-base" />
             contacto@conocerd.app
           </a>
           <div className={`${LINK} cursor-default leading-[1.8]`}>
-            <span className="ms text-base" aria-hidden="true">location_on</span>
+            <Icon name="location_on" className="text-base" />
             Santiago, RD 🇩🇴
           </div>
         </div>

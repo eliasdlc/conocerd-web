@@ -2,6 +2,7 @@
 
 import type { Category } from "@/data/destinations";
 import { CATEGORY_META } from "@/data/destinations";
+import Icon from "@/components/Icon";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Pin de categoría (#4). Portado de conocerd_map_pins.html (app_map_markers.dart):
@@ -60,16 +61,13 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
         lineHeight: 0,
       }}
     >
-      <span
-        className="ms"
-        aria-hidden="true"
+      <Icon
+        name={meta.icon}
         style={{
           fontSize: Math.round(size * 0.52),
           color: `rgba(255,255,255,${s.iconOpacity})`,
         }}
-      >
-        {meta.icon}
-      </span>
+      />
     </div>
   );
 }

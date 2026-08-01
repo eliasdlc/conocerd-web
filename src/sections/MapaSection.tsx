@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
+import Icon, { type IconName } from "@/components/Icon";
 import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
 import { CategoryPin, SelfPin, GoalFlag } from "@/components/map/pins";
 import {
@@ -39,7 +40,7 @@ function HoverCard({ d }: { d: Destination }) {
           className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/92 px-2 py-[3px] font-display text-[10.5px] font-bold"
           style={{ color: meta.ink }}
         >
-          <span className="ms text-[13px]" aria-hidden="true">{meta.icon}</span>
+          <Icon name={meta.icon} className="text-[13px]" />
           {meta.label}
         </span>
       </div>
@@ -182,9 +183,9 @@ function RoutePanel({
                   <div className="font-mono text-[9.5px] text-muted">{s.province}</div>
                 </div>
                 <div className="flex gap-0.5">
-                  <IconBtn label="Subir" disabled={i === 0} onClick={() => onMove(s.id, -1)}>arrow_upward</IconBtn>
-                  <IconBtn label="Bajar" disabled={i === stops.length - 1} onClick={() => onMove(s.id, 1)}>arrow_downward</IconBtn>
-                  <IconBtn label="Quitar" onClick={() => onRemove(s.id)}>close</IconBtn>
+                  <IconBtn name="arrow_upward" label="Subir" disabled={i === 0} onClick={() => onMove(s.id, -1)} />
+                  <IconBtn name="arrow_downward" label="Bajar" disabled={i === stops.length - 1} onClick={() => onMove(s.id, 1)} />
+                  <IconBtn name="close" label="Quitar" onClick={() => onRemove(s.id)} />
                 </div>
               </div>
             ))}
@@ -201,12 +202,12 @@ function RoutePanel({
 }
 
 function IconBtn({
-  children,
+  name,
   label,
   onClick,
   disabled,
 }: {
-  children: string;
+  name: IconName;
   label: string;
   onClick: () => void;
   disabled?: boolean;
@@ -220,7 +221,7 @@ function IconBtn({
       title={label}
       className="inline-flex size-8 items-center justify-center rounded-md border border-line bg-white p-0 text-muted disabled:cursor-default disabled:opacity-40"
     >
-      <span className="ms text-sm" aria-hidden="true">{children}</span>
+      <Icon name={name} className="text-sm" />
     </button>
   );
 }
@@ -317,7 +318,7 @@ export default function MapaOverlay() {
                   }}
                   aria-pressed={isActive}
                 >
-                  <span className="ms text-sm" aria-hidden="true">{meta.icon}</span>
+                  <Icon name={meta.icon} className="text-sm" />
                   {meta.label}
                 </button>
               );

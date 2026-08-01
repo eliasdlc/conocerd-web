@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import Icon from "@/components/Icon";
 import {
   AUDIENCES,
   BUSINESS_TYPES,
@@ -269,9 +270,7 @@ export default function SubscribeForm({
           compact ? "px-3.5 py-3" : "px-[18px] py-4"
         }`}
       >
-        <span className={`ms shrink-0 text-2xl ${t.success}`} aria-hidden="true">
-          check_circle
-        </span>
+        <Icon name="check_circle" className={`shrink-0 text-2xl ${t.success}`} />
         <div>
           <div className={`font-display text-[15px] font-extrabold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
@@ -443,9 +442,7 @@ export default function SubscribeForm({
           } ${submitting ? "" : "cursor-pointer"}`}
         >
           {submitting ? "Enviando…" : isBusiness ? "Registrar negocio" : "Unirme"}
-          {!submitting && !compact && (
-            <span className="ms text-lg" aria-hidden="true">arrow_forward</span>
-          )}
+          {!submitting && !compact && <Icon name="arrow_forward" className="text-lg" />}
         </button>
       </div>
 

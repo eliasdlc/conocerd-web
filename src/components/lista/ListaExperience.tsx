@@ -15,6 +15,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Icon from "@/components/Icon";
 import SubscribeForm, { type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
 import InstagramGlyph from "./InstagramGlyph";
@@ -45,9 +46,10 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
           unlocked ? "bg-mint" : "bg-mango-soft"
         }`}
       >
-        <span className={`ms text-[22px] ${unlocked ? "text-white" : "text-mango-ink"}`}>
-          {unlocked ? "check" : item.icon}
-        </span>
+        <Icon
+          name={unlocked ? "check" : item.icon}
+          className={`text-[22px] ${unlocked ? "text-white" : "text-mango-ink"}`}
+        />
       </span>
       <div className="min-w-0 flex-1">
         {/* El distintivo se ancla arriba a la derecha en vez de seguir al
@@ -77,9 +79,7 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
 function FeatureRow({ item }: { item: Item }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="ms mt-px shrink-0 text-[22px] text-mint-ink" aria-hidden="true">
-        {item.icon}
-      </span>
+      <Icon name={item.icon} className="mt-px shrink-0 text-[22px] text-mint-ink" />
       <div>
         <div className="font-display text-[14.5px] font-bold text-ink">{item.title}</div>
         <p className="mt-px text-[13px] leading-[1.5] text-muted">{item.desc}</p>
@@ -148,7 +148,7 @@ export default function ListaExperience() {
             key={audience}
             className="crd-lista-swap inline-flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink"
           >
-            <span className="ms text-sm" aria-hidden="true">{c.eyebrowIcon}</span>
+            <Icon name={c.eyebrowIcon} className="text-sm" />
             {c.eyebrow}
           </span>
         </div>
@@ -183,8 +183,8 @@ export default function ListaExperience() {
         </div>
 
         <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-[12.5px] text-muted-2 [animation-delay:.18s]">
-          <span className="ms text-lg" aria-hidden="true">phone_iphone</span>
-          <span className="ms text-lg" aria-hidden="true">android</span>
+          <Icon name="phone_iphone" className="text-lg" />
+          <Icon name="android" className="text-lg" />
           Próximamente en App Store y Google Play
         </div>
 
@@ -210,7 +210,7 @@ export default function ListaExperience() {
               Los destinos que vamos sumando, antes de que salga la app.
             </span>
           </span>
-          <span className="ms ml-auto text-xl text-muted-2" aria-hidden="true">arrow_outward</span>
+          <Icon name="arrow_outward" className="ml-auto text-xl text-muted-2" />
         </a>
       </aside>
 
@@ -262,9 +262,10 @@ export default function ListaExperience() {
           onClick={() => setAudience(audience === "viajero" ? "negocio" : "viajero")}
           className="mb-6 flex w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-dashed border-[#F7B39D] bg-[#FFF4EE] px-[15px] py-[13px] text-left font-[inherit]"
         >
-          <span className="ms text-[22px] text-coral-ink" aria-hidden="true">
-            {audience === "viajero" ? "storefront" : "hiking"}
-          </span>
+          <Icon
+            name={audience === "viajero" ? "storefront" : "hiking"}
+            className="text-[22px] text-coral-ink"
+          />
           <span className="text-[13.5px] leading-[1.45] text-muted">
             {audience === "viajero" ? (
               <>
@@ -278,7 +279,7 @@ export default function ListaExperience() {
               </>
             )}
           </span>
-          <span className="ms ml-auto text-xl text-coral-ink" aria-hidden="true">arrow_forward</span>
+          <Icon name="arrow_forward" className="ml-auto text-xl text-coral-ink" />
         </button>
 
         <div className="flex flex-wrap gap-4 border-t border-line pt-3.5">

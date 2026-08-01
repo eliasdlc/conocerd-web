@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 
+import Icon from "@/components/Icon";
 import { login, type LoginState } from "./actions";
 
 const INITIAL: LoginState = { error: null };
@@ -52,9 +53,7 @@ export default function AdminLogin({ configured }: { configured: boolean }) {
             borderRadius: 999,
           }}
         >
-          <span className="ms" aria-hidden="true" style={{ fontSize: 14 }}>
-            lock
-          </span>
+          <Icon name="lock" style={{ fontSize: 14 }} />
           Interno
         </span>
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useScene } from "@/context/SceneContext";
+import Icon, { type IconName } from "@/components/Icon";
 import PhoneMockup from "@/sections/PhoneMockup";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 // `color` is the icon ink — accessible on its tinted surface.
-const FEATURES = [
+const FEATURES: { icon: IconName; bg: string; color: string; title: string; desc: string }[] = [
   { icon: "explore",      bg: "#FFE7DF", color: "#B23410", title: "Lugares auténticos",  desc: "Destinos poco conocidos fuera del circuito tradicional, recomendados de verdad." },
   { icon: "verified",     bg: "#C6F3EB", color: "#0C6A60", title: "Info confiable",       desc: "Datos actualizados y reseñas reales de otros exploradores como tú." },
   { icon: "auto_stories", bg: "#FFE6C8", color: "#985409", title: "Diario de viaje",      desc: "Guarda tu historial, sube fotos y gana insignias por cada destino visitado." },
@@ -36,7 +37,7 @@ export default function ViajerosOverlay() {
           className={`mb-3.5 max-desk:w-fit max-desk:rounded-[14px] max-desk:border max-desk:border-line/80 max-desk:bg-cream/88 max-desk:px-3.5 max-desk:py-3 max-desk:backdrop-blur-[8px] ${isVisible ? "animate-slide-up" : ""}`}
         >
           <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink">
-            <span className="ms text-sm" aria-hidden="true">hiking</span>
+            <Icon name="hiking" className="text-sm" />
             Para viajeros
           </div>
           {/* El text-shadow crema despega el titular de las etiquetas del mapa. */}
@@ -59,9 +60,7 @@ export default function ViajerosOverlay() {
               className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px]"
               style={{ background: f.bg }}
             >
-              <span className="ms text-xl" aria-hidden="true" style={{ color: f.color }}>
-                {f.icon}
-              </span>
+              <Icon name={f.icon} className="text-xl" style={{ color: f.color }} />
             </div>
             <div>
               <h3 className="m-0 mb-[3px] font-display text-[13.5px] font-bold text-ink">{f.title}</h3>

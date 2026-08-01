@@ -13,10 +13,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Audience } from "@/lib/waitlist/schema";
+import type { IconName } from "@/components/Icon";
 
 export interface Item {
-  /** Nombre de Material Symbols Rounded (clase `.ms`). */
-  icon: string;
+  icon: IconName;
   title: string;
   desc: string;
 }
@@ -24,7 +24,7 @@ export interface Item {
 export interface AudienceContent {
   /** Etiqueta corta del chip que abre la columna de contenido. */
   eyebrow: string;
-  eyebrowIcon: string;
+  eyebrowIcon: IconName;
   headline: string;
   sub: string;
   /** Lo que se gana *por entrar ahora* — el argumento de la lista de espera. */

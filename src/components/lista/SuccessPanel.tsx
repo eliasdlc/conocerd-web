@@ -12,6 +12,7 @@
 
 import Confetti from "./Confetti";
 import InstagramGlyph from "./InstagramGlyph";
+import Icon, { type IconName } from "@/components/Icon";
 import { CONTENT, INSTAGRAM } from "./content";
 import type { Audience } from "@/lib/waitlist/schema";
 
@@ -22,7 +23,7 @@ const IN = "animate-[crdListaIn_.5s_cubic-bezier(.16,1,.3,1)_both]";
 
 /** Sello de fundador: el anillo se dibuja, el check entra detrás y el conjunto
  *  hace un rebote corto. Tres tiempos encadenados leen como "conseguido". */
-function AchievementSeal({ icon }: { icon: string }) {
+function AchievementSeal({ icon }: { icon: IconName }) {
   return (
     <div className="relative size-24 shrink-0">
       {/* Halo que se expande una vez y desaparece */}
@@ -46,12 +47,10 @@ function AchievementSeal({ icon }: { icon: string }) {
             className="animate-[crdRingDraw_.8s_cubic-bezier(.3,.8,.3,1)_.15s_both]"
           />
         </svg>
-        <span
-          className="ms absolute inset-0 flex items-center justify-center text-[42px] text-mint-ink"
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
+        <Icon
+          name={icon}
+          className="absolute inset-0 flex items-center justify-center text-[42px] text-mint-ink"
+        />
       </div>
     </div>
   );

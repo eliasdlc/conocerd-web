@@ -1,9 +1,11 @@
 "use client";
 
+import Icon, { type IconName } from "@/components/Icon";
+
 interface ButtonProps {
   variant?: "primary" | "outline" | "mint";
   size?: "sm" | "lg";
-  icon?: string;
+  icon?: IconName;
   onClick?: () => void;
   children: React.ReactNode;
 }
@@ -28,11 +30,7 @@ export default function Button({ variant = "primary", size = "sm", icon, onClick
       className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
       onClick={onClick}
     >
-      {icon && (
-        <span className={`ms ${size === "lg" ? "text-[22px]" : "text-lg"}`} aria-hidden="true">
-          {icon}
-        </span>
-      )}
+      {icon && <Icon name={icon} className={size === "lg" ? "text-[22px]" : "text-lg"} />}
       {children}
     </button>
   );

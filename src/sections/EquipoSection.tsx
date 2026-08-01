@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Icon from "@/components/Icon";
 import { useScene } from "@/context/SceneContext";
 import { MapMarker, MarkerContent, MarkerLabel } from "@/components/map/Map";
 
@@ -120,7 +121,7 @@ export default function EquipoOverlay() {
         <MapMarker longitude={PUCMM.lng} latitude={PUCMM.lat} anchor="bottom">
           <MarkerContent>
             <div className="flex size-[38px] animate-[mapBubbleIn_0.5s_cubic-bezier(0.2,0.8,0.3,1)_both] items-center justify-center rounded-full border-[2.5px] border-coral bg-white shadow-[0_4px_14px_rgba(247,108,77,0.40)]">
-              <span className="ms text-[19px] text-coral-ink" aria-hidden="true">school</span>
+              <Icon name="school" className="text-[19px] text-coral-ink" />
             </div>
           </MarkerContent>
           {/* A la derecha y no arriba: encima del pin caía justo sobre la
@@ -140,7 +141,7 @@ export default function EquipoOverlay() {
         {/* Heading */}
         <div className={`text-center ${isVisible ? "animate-slide-up" : ""}`}>
           <div className="mb-2.5 inline-flex items-center gap-[7px] rounded-full bg-coral-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-coral-ink">
-            <span className="ms text-sm" aria-hidden="true">groups</span>
+            <Icon name="groups" className="text-sm" />
             El equipo
           </div>
           <h2 className="m-0 font-display text-[clamp(20px,2.8vw,34px)] font-extrabold leading-[1.08] tracking-[-.025em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">

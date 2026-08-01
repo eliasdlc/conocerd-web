@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/context/SceneContext";
+import Icon, { type IconName } from "@/components/Icon";
 import { MapMarker, MarkerContent, MapArc } from "@/components/map/Map";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import type { LngLat } from "@/lib/geo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const BENEFITS = [
+const BENEFITS: { icon: IconName; title: string; desc: string }[] = [
   { icon: "visibility", title: "Más visibilidad ante viajeros reales", desc: "Perfil digital con fotos, reseñas y contacto directo." },
   { icon: "insights", title: "Decisiones basadas en datos", desc: "Visitas, flujo de clientes y procedencia, en tiempo real." },
   { icon: "qr_code_2", title: "Trato especial con QR", desc: "Reconoce a tus clientes de ConoceRD al escanear." },
@@ -84,7 +85,7 @@ export default function NegociosOverlay() {
                 Tu negocio
               </div>
               <div className="flex size-10 items-center justify-center rounded-full border-[2.5px] border-[#FBF7EF] bg-mango shadow-[0_4px_14px_rgba(255,141,22,0.42)]">
-                <span className="ms text-[22px] text-white" aria-hidden="true">storefront</span>
+                <Icon name="storefront" className="text-[22px] text-white" />
               </div>
             </div>
           </MarkerContent>
@@ -112,12 +113,10 @@ export default function NegociosOverlay() {
             ${isVisible ? "animate-slide-up" : ""}`}
         >
           <div className="mb-3 flex items-center gap-2 font-mono text-[9.5px] font-bold uppercase tracking-[.085em] text-mint-ink">
-            <span
-              className="ms grid size-7 place-items-center rounded-[9px_9px_9px_2px] bg-mint text-base text-white shadow-[4px_4px_0_#C6F3EB]"
-              aria-hidden="true"
-            >
-              storefront
-            </span>
+            <Icon
+              name="storefront"
+              className="grid size-7 place-items-center rounded-[9px_9px_9px_2px] bg-mint text-base text-white shadow-[4px_4px_0_#C6F3EB]"
+            />
             <span>ConoceRD para negocios</span>
           </div>
 
@@ -140,12 +139,10 @@ export default function NegociosOverlay() {
                 className={`relative flex items-start gap-2.5 ${isVisible ? "animate-slide-up" : ""}`}
                 style={isVisible ? { animationDelay: `${i * 0.07 + 0.15}s` } : undefined}
               >
-                <span
-                  className="ms flex size-[21px] shrink-0 items-center justify-center rounded-[7px] border border-mint-soft bg-white text-sm leading-none text-mint"
-                  aria-hidden="true"
-                >
-                  {b.icon}
-                </span>
+                <Icon
+                  name={b.icon}
+                  className="flex size-[21px] shrink-0 items-center justify-center rounded-[7px] border border-mint-soft bg-white text-sm leading-none text-mint"
+                />
                 <div>
                   <div className="font-display text-xs font-bold leading-[1.25] text-ink">{b.title}</div>
                   <div className="mt-0.5 text-[10.5px] leading-[1.35] text-muted">{b.desc}</div>
@@ -159,7 +156,7 @@ export default function NegociosOverlay() {
             onClick={() => requestSubscribe("negocio")}
             className="inline-flex cursor-pointer items-center gap-2 rounded-[14px] border-none bg-mint px-[18px] py-[11px] font-display text-[13.5px] font-extrabold text-white shadow-[0_8px_24px_rgba(37,204,184,0.38)] transition-[background-color,transform] duration-200 hover:bg-mint-ink hover:-translate-y-0.5 focus-visible:outline-[3px] focus-visible:outline-offset-[3px] focus-visible:outline-ink-2"
           >
-            <span className="ms text-lg text-white" aria-hidden="true">add_business</span>
+            <Icon name="add_business" className="text-lg text-white" />
             Registrar mi negocio
           </button>
         </div>

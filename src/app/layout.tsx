@@ -3,9 +3,6 @@ import { Plus_Jakarta_Sans, Inter, Caveat, JetBrains_Mono } from "next/font/goog
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 
-/* Material Symbols has no next/font loader; this is one global App Router link. */
-/* eslint-disable @next/next/no-page-custom-font */
-
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["600", "800"],
@@ -46,13 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${plusJakarta.variable} ${inter.variable} ${caveat.variable} ${jetbrainsMono.variable}`}
     >
       <head>
-        {/* Material Symbols Rounded — not available in next/font, loaded as a stylesheet */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap"
-        />
         {/* Unregister any stale service workers from other projects on this port */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));` }} />
       </head>

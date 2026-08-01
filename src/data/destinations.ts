@@ -1,3 +1,4 @@
+import type { IconName } from "@/components/Icon";
 // ─────────────────────────────────────────────────────────────────────────────
 //  Fuente de verdad única de datos geográficos de ConoceRD (#5).
 //
@@ -39,11 +40,11 @@ export type Destination = {
 // ─── Presentación por categoría ───────────────────────────────────────────────
 // Único lugar para color/ícono/label de cada categoría. `color` = hue de marca
 // (relleno de pin + tinte de chip). `ink` = variante accesible WCAG AA solo para
-// texto/ícono sobre fondo claro. Íconos = Material Symbols (alineados con la app).
+// texto/ícono sobre fondo claro. `icon` se valida contra el set de `Icon`.
 
 export type CategoryMeta = {
   label: string;
-  icon: string;
+  icon: IconName;
   color: string;
   ink: string;
 };
