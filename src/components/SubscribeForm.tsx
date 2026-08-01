@@ -459,10 +459,12 @@ export default function SubscribeForm({
         <input id={`${uid}-hp`} name={HONEYPOT_FIELD} type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      {/* Consentimiento explícito (§2.5) */}
+      {/* Consentimiento explícito (§2.5). El checkbox es obligatorio para
+          convertir: 22px de caja + padding vertical del label (todo él
+          clicable) llevan el target táctil a ≥44px de alto (audit 2.3). */}
       <label
         htmlFor={consentId}
-        className={`mx-0.5 mt-2.5 flex cursor-pointer items-start gap-2 text-xs leading-[1.45] ${t.muted}`}
+        className={`mx-0.5 mt-1.5 flex cursor-pointer items-start gap-2.5 py-1.5 text-xs leading-[1.45] ${t.muted}`}
       >
         <input
           id={consentId}
@@ -470,7 +472,7 @@ export default function SubscribeForm({
           type="checkbox"
           required
           aria-invalid={Boolean(fieldErrors.consent)}
-          className="mt-0.5 size-4 shrink-0 accent-coral"
+          className="size-[22px] shrink-0 accent-coral"
         />
         <span>
           Acepto recibir correos de ConoceRD sobre el lanzamiento. Puedo darme de baja cuando
