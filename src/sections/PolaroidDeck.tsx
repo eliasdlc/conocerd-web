@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import CategoryChip from "@/components/CategoryChip";
@@ -42,6 +42,33 @@ function PolaroidCard({ d }: { d: Destination }) {
   );
 }
 
+// La última carta se cortaba a ras del borde sin ninguna pista de que la fila
+// se desliza (audit 2.5). El fade del borde derecho (.crd-deck-fade, en
+// globals.css) es la affordance; se quita al llegar al final para que la
+// última carta no quede desvanecida sin motivo.
+function MobileDeckRow({ items }: { items: Destination[] }) {
+  const [atEnd, setAtEnd] = useState(false);
+  const onScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 12);
+  }, []);
+
+  return (
+    <div
+      onScroll={onScroll}
+      className={`crd-polaroid-deck-mobile absolute inset-x-0 bottom-[4%] flex touch-pan-x gap-3.5 overflow-x-auto px-4 pb-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] ${
+        atEnd ? "" : "crd-deck-fade"
+      }`}
+    >
+      {items.map((d) => (
+        <div key={d.id} className="flex-none">
+          <PolaroidCard d={d} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PolaroidDeck({ items }: { items: Destination[] }) {
   // 640 y no MOBILE_BREAKPOINT: aquí no es un ajuste de estilo, es otro
   // componente (fila scrolleable vs deck con estado y spring), así que la rama
@@ -53,15 +80,7 @@ export default function PolaroidDeck({ items }: { items: Destination[] }) {
 
   // ── Mobile: fila horizontal scrolleable ────────────────────────────────────
   if (mobile) {
-    return (
-      <div className="crd-polaroid-deck-mobile absolute inset-x-0 bottom-[4%] flex touch-pan-x gap-3.5 overflow-x-auto px-4 pb-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none]">
-        {items.map((d) => (
-          <div key={d.id} className="flex-none">
-            <PolaroidCard d={d} />
-          </div>
-        ))}
-      </div>
-    );
+    return <MobileDeckRow items={items} />;
   }
 
   // ── Desktop: deck apilado, click cicla la carta de enfrente al fondo ────────

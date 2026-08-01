@@ -333,6 +333,14 @@ body {
   .crd-ol-panel { max-height: 55dvh; }
 }
 
+/* Affordance de scroll del deck móvil (audit 2.5): desvanece el borde derecho
+   de la fila para insinuar que hay más cartas. El componente quita la clase al
+   llegar al final del scroll. */
+.crd-deck-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+}
+
 /* Stat chips live only on mobile (see media query above). */
 .crd-stat-chips { display: none; }
 
