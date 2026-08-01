@@ -92,6 +92,11 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
+  // El contenido del sitio vive como children de este componente: si el mapa no
+  // puede arrancar (sin WebGL, style.json del CDN caído), `failed` suelta los
+  // children igual y la página fluye sobre el fondo crema en vez de quedar en
+  // blanco.
+  const [failed, setFailed] = useState(false);
 
   // Recompute after the `ready` render without pretending the ref itself is a
   // hook dependency; `mapRef.current` is populated immediately before setReady.
@@ -108,22 +113,52 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         ? [initialViewState.longitude, initialViewState.latitude ?? 0]
         : (viewport?.center ?? [-70.1627, 18.7357]);
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: styleUrl,
-      center,
-      zoom: initialViewState?.zoom ?? viewport?.zoom ?? 5,
-      bearing: initialViewState?.bearing ?? viewport?.bearing ?? 0,
-      pitch: initialViewState?.pitch ?? viewport?.pitch ?? 0,
-      interactive,
-      attributionControl: attributionControl ? undefined : false,
-      scrollZoom,
-      dragPan,
-      dragRotate,
-      touchZoomRotate,
+    let map: maplibregl.Map | null = null;
+    let removed = false;
+
+    const fail = (err: unknown) => {
+      console.error("[Map] el mapa no pudo inicializar — contenido sin mapa:", err);
+      if (map && !removed) {
+        removed = true;
+        try {
+          map.remove();
+        } catch {}
+      }
+      map = null;
+      mapRef.current = null;
+      setFailed(true);
+    };
+
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: styleUrl,
+        center,
+        zoom: initialViewState?.zoom ?? viewport?.zoom ?? 5,
+        bearing: initialViewState?.bearing ?? viewport?.bearing ?? 0,
+        pitch: initialViewState?.pitch ?? viewport?.pitch ?? 0,
+        interactive,
+        attributionControl: attributionControl ? undefined : false,
+        scrollZoom,
+        dragPan,
+        dragRotate,
+        touchZoomRotate,
+      });
+    } catch (err) {
+      // WebGL no disponible: maplibre lanza durante la construcción.
+      fail(err);
+      return;
+    }
+
+    // Fallo del estilo (CDN caído): llega como evento `error` antes de que el
+    // estilo cargue y `load` no va a disparar nunca. Los errores de tiles
+    // sueltos ocurren con el estilo ya cargado y no entran aquí.
+    map.on("error", (e) => {
+      if (map && !mapRef.current && !map.isStyleLoaded()) fail(e.error ?? e);
     });
 
     map.on("load", () => {
+      if (!map) return;
       if (projection?.type) {
         map.setProjection({ type: projection.type as "mercator" | "globe" });
       }
@@ -134,6 +169,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
 
     if (onViewportChange) {
       map.on("moveend", () => {
+        if (!map) return;
         const c = map.getCenter();
         onViewportChange({
           center: [c.lng, c.lat],
@@ -147,7 +183,10 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     return () => {
       setReady(false);
       mapRef.current = null;
-      map.remove();
+      if (map && !removed) {
+        removed = true;
+        map.remove();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -160,8 +199,8 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         className={className}
         style={{ width: "100%", height: "100%", ...style }}
       />
-      {!ready && loading}
-      {ready && children}
+      {!ready && !failed && loading}
+      {(ready || failed) && children}
     </MapContext.Provider>
   );
 });
