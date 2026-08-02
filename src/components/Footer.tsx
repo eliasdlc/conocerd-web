@@ -5,6 +5,14 @@ import Icon from "@/components/Icon";
 import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
+import { DESTINATIONS } from "@/data/destinations";
+
+// Atribución obligatoria de las fotos CC BY / BY-SA (Wikimedia Commons). Se
+// deriva de los datos para que añadir o cambiar una foto no desincronice el
+// crédito.
+const PHOTO_CREDITS = [
+  ...new Set(DESTINATIONS.map((d) => d.imageCredit).filter(Boolean)),
+].join(" · ");
 
 // #14 — footer rediseñado: columnas con info útil (marca, nav, producto,
 // contacto) + social (placeholder hasta tener handles reales) + legal.
@@ -93,6 +101,9 @@ export default function Footer() {
 
       {/* Legal */}
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-white/10 px-[clamp(20px,5vw,56px)] py-4">
+        <p className="m-0 w-full font-mono text-[10px] leading-[1.7] text-white/35">
+          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}.
+        </p>
         <div className="font-mono text-xs text-white/45">
           © 2026 ConoceRD · Hecho con orgullo en RD
         </div>

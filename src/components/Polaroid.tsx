@@ -30,7 +30,7 @@ export function PolaroidMedia({
   sizes,
   icon,
   chip,
-  desc,
+  action,
   className = "",
   overlayClassName = "",
 }: {
@@ -40,7 +40,8 @@ export function PolaroidMedia({
   icon: IconName;
   /** La pila de Destinos puede no traer tagline para una carta. */
   chip?: string;
-  desc: string;
+  /** Affordance opcional en la esquina opuesta al chip (p. ej. "ver más →"). */
+  action?: React.ReactNode;
   /** Alto del recorte: fijo en la pila, fluido en el deck. */
   className?: string;
   /** La pila sólo revela el texto de la carta del frente. */
@@ -58,11 +59,14 @@ export function PolaroidMedia({
         sizes={sizes}
         className="object-cover [filter:saturate(1.06)_contrast(1.03)_sepia(.07)]"
       />
+      {/* Sólo el chip sobre la foto, con un velo corto: la descripción vive en
+          el papel de la polaroid — el velo alto tapaba el 62% de la imagen
+          (decisión del dueño, ago 2026). */}
       <div
-        className={`absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 bg-[linear-gradient(transparent,rgba(38,70,83,.55)_35%,rgba(38,70,83,.94))] px-3 pb-3 pt-3.5 ${overlayClassName}`}
+        className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-[linear-gradient(transparent,rgba(38,70,83,.38)_55%,rgba(38,70,83,.62))] px-2.5 pb-2.5 pt-7 ${overlayClassName}`}
       >
         <CategoryChip icon={icon}>{chip}</CategoryChip>
-        <p className="m-0 text-xs leading-[1.4] text-white/92">{desc}</p>
+        {action}
       </div>
     </div>
   );

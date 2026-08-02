@@ -19,11 +19,10 @@
 //  Para captura headless: `&demo-flip=BN|EC|all` monta esa carta ya volteada.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useReducedMotion } from "motion/react";
 import Icon from "@/components/Icon";
-import Kicker from "@/components/Kicker";
 import { useScene } from "@/context/SceneContext";
 import { PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/variants/stamp";
@@ -151,6 +150,28 @@ function TeamPolaroid({
   const [flipped, setFlipped] = useState(demoFlipped);
   const reducedMotion = useReducedMotion();
 
+  // El pulso de "papel que se levanta" se re-dispara con WAAPI sobre el MISMO
+  // nodo. Antes iba con un key={flipped} que remontaba el subárbol entero y el
+  // botón nuevo nacía ya rotado: la transición del volteo nunca corría y el
+  // cambio se veía instantáneo.
+  const popRef = useRef<HTMLSpanElement | null>(null);
+  const primeraVez = useRef(true);
+  useEffect(() => {
+    if (primeraVez.current) {
+      primeraVez.current = false;
+      return;
+    }
+    if (reducedMotion) return;
+    popRef.current?.animate(
+      [
+        { transform: "scale(1) translateY(0)" },
+        { transform: "scale(1.04) translateY(-6px)", offset: 0.45 },
+        { transform: "scale(1) translateY(0)" },
+      ],
+      { duration: 620, easing: "ease-in-out" }
+    );
+  }, [flipped, reducedMotion]);
+
   return (
     <div
       className={`w-[clamp(150px,42vw,224px)] desk:w-[clamp(170px,16vw,224px)] ${animate ? "equipo6-drop" : "opacity-0"}`}
@@ -162,7 +183,7 @@ function TeamPolaroid({
       {/* El lift de hover vive AQUÍ, fuera del elemento que rota en Y: mover
           la carta bajo el cursor con rotateY era el "bug rarísimo" del peek. */}
       <div className="transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.3,1)] hover:-translate-y-1 [perspective:1100px]">
-        <span key={String(flipped)} className={reducedMotion ? "block" : "equipo6-flip-pop block"}>
+        <span ref={popRef} className="block">
           <button
             type="button"
             onClick={() => setFlipped((value) => !value)}
@@ -175,9 +196,11 @@ function TeamPolaroid({
             className="relative block w-full cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 text-left text-[inherit] [transform-style:preserve-3d] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-coral-ink"
             style={{
               transform: `rotateY(${flipped ? 180 : 0}deg)`,
+              // Sin overshoot: con 180° el rebote enseñaba el dorso espejado
+              // un instante. El "rebote" vive en el pulso del wrapper.
               transition: reducedMotion
                 ? "none"
-                : "transform .68s cubic-bezier(0.32, 1.15, 0.35, 1)",
+                : "transform .62s cubic-bezier(0.2, 0.85, 0.25, 1)",
             }}
           >
             {/* Frente: la foto pegada al papel, con sus cintitas */}
@@ -294,11 +317,11 @@ function RoadmapCard({ visible }: { visible: boolean }) {
       style={visible ? { animationDelay: "0.55s" } : undefined}
     >
       {/* La estampa ConoceRD, pegada a la card */}
-      <div aria-hidden="true" className="absolute -top-7 right-2 desk:-right-5">
-        <StampCRD size={84} rotate={8} line1="EST. 2026" line2="· STGO. RD ·" />
+      <div aria-hidden="true" className="absolute -top-9 right-1 desk:-right-7">
+        <StampCRD size={106} rotate={8} line1="EST. 2026" line2="· STGO. RD ·" />
       </div>
 
-      <div className="flex items-center gap-2 pr-20">
+      <div className="flex items-center gap-2 pr-24">
         <span className="flex items-center gap-1 rounded-full bg-mint-soft px-2 py-[3px]">
           <span className="block size-[6px] animate-live-dot rounded-full bg-mint" />
           <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
@@ -308,7 +331,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         </span>
       </div>
 
-      <h3 className="m-0 mt-2 font-display text-[19px] font-bold leading-tight text-ink">
+      <h3 className="m-0 mt-2 pr-16 font-display text-[19px] font-bold leading-tight text-ink">
         En esto estamos <em className="crd-accent">ahora mismo</em>
       </h3>
 
@@ -375,12 +398,8 @@ const EQ6_CSS = `
   100% { opacity: 1; transform: none; }
 }
 .equipo6-drop { animation: equipo6-drop .62s cubic-bezier(.25,.9,.3,1.1) both; }
-@keyframes equipo6-flip-pop {
-  0% { transform: scale(1); } 45% { transform: scale(1.035); } 100% { transform: scale(1); }
-}
-.equipo6-flip-pop { animation: equipo6-flip-pop .68s ease-in-out; }
 @media (prefers-reduced-motion: reduce) {
-  .equipo6-line, .equipo6-drop, .equipo6-flip-pop { animation: none; opacity: 1; }
+  .equipo6-line, .equipo6-drop { animation: none; opacity: 1; }
 }
 `;
 
@@ -419,14 +438,6 @@ export default function EquipoFinal() {
 
         {/* La frase manifiesto (v5), con entrada suave línea a línea */}
         <div className="relative max-w-[780px] text-center">
-          <Kicker
-            icon="groups"
-            index="05"
-            tone="coral"
-            className={`mb-4 ${isVisible ? "equipo6-line" : "opacity-0"}`}
-          >
-            El equipo
-          </Kicker>
           <h2 className="m-0 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.14] tracking-[-.014em] text-ink-2">
             {LINES.map((line, i) => (
               <span

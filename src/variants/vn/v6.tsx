@@ -32,7 +32,6 @@ import Image from "next/image";
 import { useReducedMotion } from "motion/react";
 import { useScene } from "@/context/SceneContext";
 import Icon, { type IconName } from "@/components/Icon";
-import Kicker from "@/components/Kicker";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
@@ -63,23 +62,6 @@ function bearing(a: [number, number], b: [number, number]): number {
   const dx = (b[0] - a[0]) * Math.cos(((a[1] + b[1]) / 2) * rad);
   const dy = b[1] - a[1];
   return (Math.atan2(dx, dy) * 180) / Math.PI;
-}
-
-/** Rumbos por punto, DESENROLLADOS a un dominio continuo: cada rumbo se ajusta
- *  al de su vecino por el camino corto, así la transición CSS del avatar nunca
- *  da la vuelta larga (359°→1° gira 2°, no 358°). Mirar 3 puntos adelante
- *  suaviza el zigzag de la polilínea simplificada. */
-function headingsDe(pts: [number, number][]): number[] {
-  const out: number[] = [];
-  let prev = 0;
-  for (let i = 0; i < pts.length; i++) {
-    const j = Math.min(i + 3, pts.length - 1);
-    const raw = j === i ? prev : bearing(pts[i], pts[j]);
-    if (i === 0) prev = raw;
-    else prev = prev + (((raw - prev + 540) % 360) - 180);
-    out.push(prev);
-  }
-  return out;
 }
 
 const idxDe = (id: string) => pairs.ids.indexOf(id);
@@ -309,6 +291,44 @@ function Telefono({ visible, children }: { visible: boolean; children: React.Rea
 
 // ─── Pantallas de la app — Viajeros ──────────────────────────────────────────
 
+/** Tab bar inferior de la app: ancla las pantallas como una app real y llena
+ *  el tercio inferior que quedaba vacío en el mockup. */
+function TabBarApp({
+  tabs,
+  activo,
+}: {
+  tabs: { icon: IconName; label: string }[];
+  activo: string;
+}) {
+  return (
+    <div className="absolute inset-x-0 bottom-0 z-[2] flex items-start justify-around border-t border-line bg-white/95 px-2 pb-[18px] pt-1.5 backdrop-blur-[6px]">
+      {tabs.map((t) => (
+        <span
+          key={t.label}
+          className={`flex flex-col items-center gap-0.5 ${
+            t.label === activo ? "text-mango-ink" : "text-muted-2"
+          }`}
+        >
+          <Icon name={t.icon} className="text-lg" />
+          <span className="text-[8px] font-bold">{t.label}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+const TABS_VIAJERO: { icon: IconName; label: string }[] = [
+  { icon: "explore", label: "Explorar" },
+  { icon: "route", label: "Ruta" },
+  { icon: "auto_stories", label: "Diario" },
+];
+
+const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
+  { icon: "storefront", label: "Perfil" },
+  { icon: "location_on", label: "Mapa" },
+  { icon: "insights", label: "Panel" },
+];
+
 function ChipCategoria({ label, activo }: { label: string; activo?: boolean }) {
   return (
     <span
@@ -343,22 +363,27 @@ function PantallaExplorar() {
       <div className="px-3 pb-1.5 pt-3 font-mono text-micro font-bold uppercase tracking-[.12em] text-muted-2">
         Poco visitados
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-[52px]">
         {lugares.map(({ d, chip, chipCls }) => (
           <div key={d.id} className="flex items-center gap-2 rounded-xl bg-white p-1.5 shadow-card">
             <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-cream-2">
               <Image src={d.image} alt="" fill sizes="48px" className="object-cover" />
             </div>
+            {/* El chip vive bajo el nombre: a la derecha empujaba el título y
+                lo truncaba ("27 Cha…", audit desktop §5). */}
             <div className="min-w-0 flex-1">
               <div className="truncate text-tiny font-bold text-ink">{d.name}</div>
-              <div className="font-mono text-micro text-muted">
-                {d.province} · ★ {d.rating}
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="whitespace-nowrap font-mono text-micro text-muted">
+                  {d.province} · ★ {d.rating}
+                </span>
+                <span className={`truncate whitespace-nowrap rounded-full px-1.5 py-px text-[8px] font-bold ${chipCls}`}>{chip}</span>
               </div>
             </div>
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-micro font-bold ${chipCls}`}>{chip}</span>
           </div>
         ))}
       </div>
+      <TabBarApp tabs={TABS_VIAJERO} activo="Explorar" />
     </div>
   );
 }
@@ -387,7 +412,7 @@ function PantallaRuta() {
       </div>
       <div className="absolute left-[150px] top-[42px]"><GoalFlag size={26} /></div>
 
-      <div className="absolute inset-x-2 bottom-2 rounded-panel bg-white p-2.5 shadow-card">
+      <div className="absolute inset-x-2 bottom-[52px] rounded-panel bg-white p-2.5 shadow-card">
         {[
           { d: a, dato: "salida" },
           { d: b, dato: `${kmEntre(a.id, b.id)} km · ${fmtMin(minEntre(a.id, b.id))}` },
@@ -410,6 +435,7 @@ function PantallaRuta() {
           <span className="rounded-full bg-mango px-3 py-1 text-micro font-bold text-white">Empezar</span>
         </div>
       </div>
+      <TabBarApp tabs={TABS_VIAJERO} activo="Ruta" />
     </div>
   );
 }
@@ -451,13 +477,14 @@ function PantallaDiario() {
         <span className="font-mono text-micro text-muted">+9</span>
       </div>
       {/* la estampa ConoceRD cierra el diario (antes: insignia de fundador) */}
-      <div className="mx-3 mb-2 mt-auto flex items-center justify-between gap-2 rounded-card bg-white p-2 shadow-card">
+      <div className="mx-3 mb-[52px] mt-auto flex items-center justify-between gap-2 rounded-card bg-white p-2 shadow-card">
         <div className="min-w-0 pl-1">
           <div className="text-tiny font-bold leading-tight text-ink">Diario estampado</div>
           <div className="text-micro leading-[1.35] text-muted">Cada viaje deja su sello.</div>
         </div>
-        <StampCRD size={62} rotate={9} line1="MI DIARIO" line2="· DE VIAJE ·" />
+        <StampCRD size={66} rotate={9} line1="MI DIARIO" line2="· DE VIAJE ·" />
       </div>
+      <TabBarApp tabs={TABS_VIAJERO} activo="Diario" />
     </div>
   );
 }
@@ -477,13 +504,15 @@ const F_ROUTE = (() => {
     pts.push(...(i === 0 ? leg : leg.slice(1)));
     stopIdx.push(pts.length - 1);
   });
-  return { ...conCumulado(pts), stopIdx, headings: headingsDe(pts) };
+  return { ...conCumulado(pts), stopIdx };
 })();
 
 // Guion del loop: manejar tramo → pausa en la parada → … → reset y de nuevo.
-const GPS_SPEED = 26; // km/s de demo (~44 s el país completo)
-const GPS_DWELL = 1700; // ms de pausa en cada parada
-const GPS_RESET = 1800; // ms de respiro al cerrar el loop
+// Rework ago 2026: el loop de 54 s se sentía congelado (26 px/s en pantalla);
+// ahora dura ~26 s y cada tramo arranca y frena con easing propio.
+const GPS_SPEED = 62; // km/s de demo (~18 s el país completo)
+const GPS_DWELL = 1100; // ms de pausa en cada parada
+const GPS_RESET = 1400; // ms de cierre: el avatar se desvanece en la meta
 
 type GpsSeg =
   | { kind: "drive"; t0: number; t1: number; km0: number; km1: number; hacia: number }
@@ -506,6 +535,25 @@ const GPS_SEGS: GpsSeg[] = (() => {
 })();
 
 const GPS_LOOP = GPS_SEGS[GPS_SEGS.length - 1].t1 + GPS_RESET;
+
+// Rumbo por km, muestreado cada 2 km con lookahead de 8 km de DISTANCIA y
+// desenrollado en secuencia a un dominio continuo: la transición CSS del
+// avatar nunca gira por el lado largo ni hace trompos en los quiebres de la
+// polilínea simplificada (el lookahead por índices giraba hasta 250°).
+const H_STEP = 2; // km entre muestras
+const F_HEADINGS: number[] = (() => {
+  const out: number[] = [];
+  for (let km = 0; km <= F_ROUTE.total + H_STEP; km += H_STEP) {
+    const a = puntoEnKm(F_ROUTE, Math.min(km, F_ROUTE.total)).pos;
+    const b = puntoEnKm(F_ROUTE, Math.min(km + 8, F_ROUTE.total)).pos;
+    const prev = out.length ? out[out.length - 1] : 0;
+    const raw = Math.hypot(b[0] - a[0], b[1] - a[1]) > 1e-7 ? bearing(a, b) : prev;
+    out.push(out.length === 0 ? raw : prev + (((raw - prev + 540) % 360) - 180));
+  }
+  return out;
+})();
+const headingAtKm = (km: number) =>
+  F_HEADINGS[Math.min(F_HEADINGS.length - 1, Math.round(km / H_STEP))];
 
 type GpsFrame = {
   pos: [number, number];
@@ -530,7 +578,10 @@ function gpsFrameAt(t: number): GpsFrame {
       };
     }
     const f = (tt - seg.t0) / (seg.t1 - seg.t0);
-    const km = seg.km0 + (seg.km1 - seg.km0) * f;
+    // Ease-in-out por tramo: arranca de la parada y frena al llegar a la
+    // siguiente — velocidad constante no se lee como "manejar".
+    const eased = f < 0.5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2;
+    const km = seg.km0 + (seg.km1 - seg.km0) * eased;
     const { pos, idx } = puntoEnKm(F_ROUTE, km);
     return { pos, km, idx, enParada: null, hacia: seg.hacia };
   }
@@ -556,9 +607,13 @@ function ViajerosFinal() {
   // avatar en carretera) — sin reloj.
   const frame = reduced ? gpsFrameAt(GPS_SEGS[3].t0 + (GPS_SEGS[3].t1 - GPS_SEGS[3].t0) * 0.55) : gpsFrameAt(t);
 
-  // Rumbo continuo precalculado por punto; la transición CSS del wrapper lo
-  // suaviza entre frames (ver el marker del avatar más abajo).
-  const heading = F_ROUTE.headings[frame.idx];
+  // Cierre del loop: el avatar se desvanece en la meta en vez de
+  // teletransportarse a la salida (el salto seco medía 300 px en pantalla).
+  const enReset = !reduced && t % GPS_LOOP > GPS_SEGS[GPS_SEGS.length - 1].t1;
+
+  // Rumbo continuo precalculado por km (F_HEADINGS); la transición CSS del
+  // wrapper lo suaviza entre frames.
+  const heading = headingAtKm(frame.km);
 
   // El tramo recorrido se "apaga" detrás del avatar, como en un GPS real.
   // Cuantizado cada 6 puntos para no rehacer la línea en cada frame.
@@ -616,8 +671,8 @@ function ViajerosFinal() {
         <MapMarker longitude={frame.pos[0]} latitude={frame.pos[1]}>
           <MarkerContent>
             <div
-              className="transition-transform duration-200 ease-linear motion-reduce:transition-none"
-              style={{ transform: `rotate(${heading}deg)` }}
+              className="transition-[transform,opacity] duration-[260ms] ease-[cubic-bezier(.33,1,.68,1)] motion-reduce:transition-none"
+              style={{ transform: `rotate(${heading}deg)`, opacity: enReset ? 0 : 1 }}
             >
               <SelfPin heading={0} size={34} />
             </div>
@@ -644,14 +699,11 @@ function ViajerosFinal() {
         >
           {/* La estampa ConoceRD, pegada en la esquina (solo desktop: en el
               sheet móvil el overflow la recortaría). */}
-          <div aria-hidden="true" className="absolute -right-6 -top-7 max-[899px]:hidden">
-            <StampCRD size={92} rotate={10} line1="EST. 2026" line2="· LO NUESTRO ·" />
+          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
+            <StampCRD size={124} rotate={10} line1="EST. 2026" line2="· MODO VIAJERO ·" />
           </div>
 
-          <div className="mb-2.5">
-            <Kicker icon="hiking" index="03">Viajeros</Kicker>
-          </div>
-          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2">
+          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
             Tu próximo viaje, <em className="crd-accent">en tres paradas</em>
           </h2>
           <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
@@ -674,7 +726,12 @@ function ViajerosFinal() {
           />
 
           <div className="mt-3 border-t border-dashed border-line pt-3">
-            <Button variant="primary" icon="notifications_active" onClick={() => requestSubscribe("viajero")}>
+            <Button
+              variant="primary"
+              icon="notifications_active"
+              className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
+              onClick={() => requestSubscribe("viajero")}
+            >
               Unirme a la lista
             </Button>
           </div>
@@ -724,6 +781,17 @@ function PantallaRegistro() {
             </span>
           </div>
         </div>
+        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
+          <div className="text-micro text-muted-2">Horario</div>
+          <div className="text-tiny font-bold text-ink">Lun–Dom · 9 a. m. – 8 p. m.</div>
+        </div>
+        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
+          <div className="text-micro text-muted-2">WhatsApp</div>
+          <div className="flex items-center gap-1.5 text-tiny font-bold text-ink">
+            <Icon name="chat" className="text-sm text-mint-ink" />
+            (809) 555-0173
+          </div>
+        </div>
       </div>
       <div className="mx-3 mb-3 mt-auto flex h-10 items-center justify-center rounded-full bg-mango text-tiny font-bold text-white shadow-card">
         Publicar mi perfil
@@ -754,7 +822,7 @@ function PantallaEnElMapa() {
           <Icon name="storefront" className="text-base text-white" />
         </div>
       </div>
-      <div className="absolute inset-x-2 bottom-2 rounded-panel bg-white p-2.5 shadow-card">
+      <div className="absolute inset-x-2 bottom-[52px] rounded-panel bg-white p-2.5 shadow-card">
         <div className="flex items-center gap-2">
           <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-cream-2">
             <Image src="/assets/ph-sunset.png" alt="" fill sizes="44px" className="object-cover" />
@@ -768,6 +836,7 @@ function PantallaEnElMapa() {
           </span>
         </div>
       </div>
+      <TabBarApp tabs={TABS_NEGOCIO} activo="Mapa" />
     </div>
   );
 }
@@ -810,7 +879,7 @@ function PantallaPanel({ llegadas, total }: { llegadas: Llegada[]; total: number
           </div>
         ))}
       </div>
-      <div className="mx-3 mb-3 mt-auto grid grid-cols-2 gap-1.5">
+      <div className="mx-3 mb-[52px] mt-auto grid grid-cols-2 gap-1.5">
         {[
           { label: "Hoy", val: String(28 + total) },
           { label: "Semana", val: "212" },
@@ -821,6 +890,7 @@ function PantallaPanel({ llegadas, total }: { llegadas: Llegada[]; total: number
           </div>
         ))}
       </div>
+      <TabBarApp tabs={TABS_NEGOCIO} activo="Panel" />
     </div>
   );
 }
@@ -829,25 +899,78 @@ function PantallaPanel({ llegadas, total }: { llegadas: Llegada[]; total: number
 
 const NEGOCIO: LngLat = [-70.6901, 19.4517]; // Santiago
 
-// Cada cliente sale de un destino real y maneja hasta el negocio por la
-// carretera de pairs.json. Fases negativas ⇒ al entrar a la escena ya hubo
-// llegadas y el panel nunca se ve vacío.
-const CLIENTES = (() => {
-  const speed = 11; // km/s de demo
-  const defs = [
-    { id: "puerto-plata", nombre: "María", color: "#F76C4D", phase: -46000 },
-    { id: "cabarete", nombre: "Luis", color: "#FF8D16", phase: -32000 },
-    { id: "jarabacoa", nombre: "Carmen", color: "#25CCB8", phase: -12000 },
-    { id: "zona-colonial", nombre: "Joel", color: "#2D9CDB", phase: -2500 },
-    { id: "charcos", nombre: "Ana", color: "#B23410", phase: 4000 },
-  ];
-  return defs.map((c) => {
-    const line = conCumulado([dest(c.id).coords, ...tramo(c.id, "santiago"), NEGOCIO as [number, number]]);
-    const travel = (line.total / speed) * 1000;
-    const rest = 9000;
-    return { ...c, line, travel, period: travel + rest, origen: dest(c.id).province };
-  });
-})();
+// Rework ago 2026 — roster grande, ventana chica. Antes eran 5 rutas fijas
+// siempre pintadas, con periodos libres casi coprimos: llegadas en cluster de
+// 135 ms, huecos de 9,5 s y hasta 4,5 s con el mapa vacío. Ahora 12 orígenes
+// reales (Pedernales, Samaná, Barahona, Jarabacoa…) entran por turno con una
+// agenda explícita: una llegada cada ~2,6 s con jitter determinista. Cada
+// cliente vive un ciclo corto — su carretera SE DIBUJA desde el origen, el
+// avatar maneja ~6 s (mismo tiempo para todos: se lee como tráfico, no como
+// geografía), llega (ping + toast) y la carretera se desvanece y cede el
+// turno. Con viaje de 6,2 s y cadencia de 2,6 s siempre hay 2–3 en camino.
+type ClienteDef = { id: string; nombre: string; origen: string; color: string };
+
+const ROSTER: ClienteDef[] = [
+  { id: "aguilas", nombre: "Yeni", origen: "Pedernales", color: "#F76C4D" },
+  { id: "jarabacoa", nombre: "Carmen", origen: "Jarabacoa", color: "#25CCB8" },
+  { id: "puerto-plata", nombre: "María", origen: "Puerto Plata", color: "#FF8D16" },
+  { id: "zona-colonial", nombre: "Joel", origen: "Sto. Domingo", color: "#2D9CDB" },
+  { id: "las-terrenas", nombre: "Rosa", origen: "Samaná", color: "#B23410" },
+  { id: "constanza", nombre: "Pedro", origen: "Constanza", color: "#2E7D32" },
+  { id: "barahona", nombre: "Luisa", origen: "Barahona", color: "#985409" },
+  { id: "cabarete", nombre: "Luis", origen: "Cabarete", color: "#FF8D16" },
+  { id: "la-romana", nombre: "Ana", origen: "La Romana", color: "#B23410" },
+  { id: "charcos", nombre: "Diego", origen: "Imbert", color: "#25CCB8" },
+  { id: "lago-enriquillo", nombre: "Wanda", origen: "Independencia", color: "#2D9CDB" },
+  { id: "limon", nombre: "Samuel", origen: "El Limón", color: "#F76C4D" },
+];
+
+const LLEGADA_CADA = 2600; // ms entre llegadas (cadencia del negocio)
+const JITTER = [300, -250, 150, -80, 420, -300, 90, 260, -180, 40, 350, -120];
+const VIAJE = 6200; // ms de manejo en pantalla, igual para todos
+const ROAD_IN = 550; // la carretera se dibuja antes de arrancar
+const ROAD_OUT = 700; // …y se desvanece tras la llegada
+const CICLO = ROSTER.length * LLEGADA_CADA; // ~31 s y vuelve a empezar
+
+type Cliente = ClienteDef & {
+  line: ReturnType<typeof conCumulado>;
+  llegada: number; // momento de SU llegada dentro del ciclo
+};
+
+const CLIENTES: Cliente[] = ROSTER.map((c, i) => ({
+  ...c,
+  line: conCumulado([dest(c.id).coords, ...tramo(c.id, "santiago"), NEGOCIO as [number, number]]),
+  llegada: i * LLEGADA_CADA + JITTER[i],
+}));
+
+type FaseCliente =
+  | { fase: "entrando"; f: number } // la carretera se dibuja
+  | { fase: "viajando"; km: number } // el avatar maneja
+  | { fase: "saliendo"; f: number } // llegó; la carretera se apaga
+  | null; // fuera de su turno: ni carretera ni avatar
+
+function faseDe(c: Cliente, tt: number): FaseCliente {
+  const inicio = c.llegada - VIAJE - ROAD_IN;
+  const rel = (((tt - inicio) % CICLO) + CICLO) % CICLO;
+  if (rel < ROAD_IN) return { fase: "entrando", f: rel / ROAD_IN };
+  if (rel < ROAD_IN + VIAJE) {
+    const f = (rel - ROAD_IN) / VIAJE;
+    // Arranca del origen y frena al llegar — como se maneja de verdad.
+    const eased = f < 0.5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2;
+    return { fase: "viajando", km: eased * c.line.total };
+  }
+  if (rel < ROAD_IN + VIAJE + ROAD_OUT)
+    return { fase: "saliendo", f: (rel - ROAD_IN - VIAJE) / ROAD_OUT };
+  return null;
+}
+
+/** Trazo de la carretera: parcial (cuantizado de a 4 puntos) mientras entra. */
+function carreteraDe(c: Cliente, est: Exclude<FaseCliente, null>): [number, number][] {
+  if (est.fase !== "entrando") return c.line.pts;
+  const len = c.line.pts.length;
+  const n = Math.max(2, Math.min(len, Math.ceil((est.f * len) / 4) * 4));
+  return c.line.pts.slice(0, n);
+}
 
 function NegociosFinal() {
   const { activeScene } = useScene();
@@ -856,32 +979,24 @@ function NegociosFinal() {
   const [paso, setPaso] = useState(pasoInicial);
 
   const t = useDemoTime(visible, reduced);
-  // Reduced motion: fotograma fijo con dos clientes a medio camino.
-  const tv = reduced ? 6000 : t;
+  // Reduced motion: fotograma fijo con dos clientes a medio camino. El +CICLO
+  // arranca el reloj con un ciclo de historial: el panel nunca se ve vacío.
+  const tv = (reduced ? 6000 : t) + CICLO;
 
   // Todo se deriva del reloj — posiciones, llegadas y contador — así el mapa
   // y el panel del teléfono no pueden desincronizarse.
-  const enRuta = CLIENTES.map((c) => {
-    const local = tv - c.phase;
-    const enCiclo = local % c.period;
-    const activo = local >= 0 && enCiclo <= c.travel;
-    const km = activo ? (enCiclo / c.travel) * c.line.total : 0;
-    return { c, activo: activo && !(reduced && c.phase > 0), km };
-  });
+  const estados = CLIENTES.map((c) => ({ c, est: faseDe(c, tv) }));
 
-  const llegadas: Llegada[] = CLIENTES.flatMap((c) => {
-    const local = tv - c.phase;
-    if (local < c.travel) return [];
-    const completadas = Math.floor((local - c.travel) / c.period) + 1;
-    const ultima = c.phase + c.travel + (completadas - 1) * c.period;
-    return [{ key: `${c.id}-${completadas}`, nombre: c.nombre, origen: c.origen, color: c.color, hace: tv - ultima }];
-  })
-    .sort((a, b) => a.hace - b.hace);
+  const llegadas: Llegada[] = CLIENTES.map((c) => {
+    const completadas = Math.floor((tv - c.llegada) / CICLO) + 1; // tv ≥ llegada siempre
+    const reciente = c.llegada + (completadas - 1) * CICLO;
+    return { key: `${c.id}-${completadas}`, nombre: c.nombre, origen: c.origen, color: c.color, hace: tv - reciente };
+  }).sort((a, b) => a.hace - b.hace);
 
-  const total = CLIENTES.reduce((acc, c) => {
-    const local = tv - c.phase;
-    return acc + (local >= c.travel ? Math.floor((local - c.travel) / c.period) + 1 : 0);
-  }, 0);
+  const total = CLIENTES.reduce(
+    (acc, c) => acc + Math.floor((tv - c.llegada) / CICLO) + 1,
+    0
+  );
 
   const ultima = llegadas[0] ?? null;
   const llegadaReciente = ultima !== null && ultima.hace < 1600;
@@ -894,40 +1009,67 @@ function NegociosFinal() {
 
   return (
     <>
-      {/* Las carreteras reales hacia el negocio, con el estilo de la casa. */}
+      {/* Carreteras VIVAS: se dibujan cuando su viajero sale, se desvanecen
+          cuando llega. Solo existen las de los 2–3 clientes en camino. */}
       {visible &&
-        CLIENTES.map((c) => (
-          <MapRoute
-            key={`road-${c.id}`}
-            id={`vn6-road-${c.id}`}
-            coordinates={c.line.pts}
-            color="#FFFFFF"
-            width={5}
-            opacity={0.8}
-          />
-        ))}
+        estados.map(({ c, est }) => {
+          if (!est) return null;
+          const fade = est.fase === "saliendo" ? 1 - est.f : 1;
+          return (
+            <MapRoute
+              key={`road-${c.id}`}
+              id={`vn6-road-${c.id}`}
+              coordinates={carreteraDe(c, est)}
+              color="#FFFFFF"
+              width={5}
+              opacity={0.85 * fade}
+            />
+          );
+        })}
       {visible &&
-        CLIENTES.map((c) => (
-          <MapRoute
-            key={`road-top-${c.id}`}
-            id={`vn6-road-top-${c.id}`}
-            coordinates={c.line.pts}
-            color="#FF8D16"
-            width={2.4}
-            opacity={0.8}
-          />
-        ))}
+        estados.map(({ c, est }) => {
+          if (!est) return null;
+          const fade = est.fase === "saliendo" ? 1 - est.f : 1;
+          return (
+            <MapRoute
+              key={`road-top-${c.id}`}
+              id={`vn6-road-top-${c.id}`}
+              coordinates={carreteraDe(c, est)}
+              color="#FF8D16"
+              width={2.4}
+              opacity={0.8 * fade}
+            />
+          );
+        })}
+
+      {/* El pueblo de origen, etiquetado mientras su viajero está en camino:
+          antes el origen no existía visualmente en el mapa. */}
+      {visible &&
+        estados.map(({ c, est }) => {
+          if (!est || est.fase === "saliendo") return null;
+          const [lng, lat] = dest(c.id).coords;
+          return (
+            <MapMarker key={`orig-${c.id}`} longitude={lng} latitude={lat}>
+              <MarkerContent>
+                <span className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white/95 px-2 py-[3px] font-mono text-micro font-bold text-ink shadow-card">
+                  <span className="inline-block size-[6px] rounded-full" style={{ background: c.color }} />
+                  {c.origen}
+                </span>
+              </MarkerContent>
+            </MapMarker>
+          );
+        })}
 
       {/* Los clientes manejando hacia el negocio (avatar con inicial). */}
       {visible &&
-        enRuta.map(({ c, activo, km }) => {
-          if (!activo) return null;
-          const { pos } = puntoEnKm(c.line, km);
+        estados.map(({ c, est }) => {
+          if (!est || est.fase !== "viajando") return null;
+          const { pos } = puntoEnKm(c.line, est.km);
           return (
             <MapMarker key={`cli-${c.id}`} longitude={pos[0]} latitude={pos[1]}>
               <MarkerContent>
                 <span
-                  className={`flex size-[22px] items-center justify-center rounded-full font-mono text-[10px] font-bold text-white ${PIN_CHROME}`}
+                  className={`vn6-in flex size-[22px] items-center justify-center rounded-full font-mono text-[10px] font-bold text-white ${PIN_CHROME}`}
                   style={{ background: c.color }}
                 >
                   {c.nombre[0]}
@@ -950,12 +1092,14 @@ function NegociosFinal() {
                   <span key={ultima.key} className="vn6-ping absolute inset-[-5px] rounded-full border-2 border-mango" />
                 )}
                 <div className={`flex size-10 items-center justify-center rounded-full bg-mango ${PIN_CHROME}`}>
-                  <Icon name="storefront" className="text-feature text-ink-2" />
+                  <Icon name="storefront" className="text-feature text-white" />
                 </div>
               </div>
             </div>
             {ultima && (
-              <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2">
+              // En móvil el toast a la derecha se salía del viewport (hasta
+              // 31 px cortados): ahí va debajo del pin, centrado.
+              <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 max-[899px]:left-1/2 max-[899px]:top-[calc(100%+6px)] max-[899px]:-translate-x-1/2 max-[899px]:translate-y-0">
                 <div
                   key={ultima.key}
                   className="vn6-in whitespace-nowrap rounded-full border border-line bg-white/95 px-2.5 py-1 text-micro font-bold text-ink shadow-card"
@@ -979,18 +1123,15 @@ function NegociosFinal() {
         {/* La gran card del negocio — misma anatomía que la de viajeros
             (mismo prefijo min-[900px] para no flotar en móvil). */}
         <div
-          className={`crd-ol-panel crd-business-story absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(280px,30vw,400px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(280px,30vw,400px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
             visible ? "animate-slide-up" : ""
           }`}
         >
-          <div aria-hidden="true" className="absolute -right-6 -top-7 max-[899px]:hidden">
-            <StampCRD size={92} rotate={-9} color="#0C6A60" line1="EST. 2026" line2="· NEGOCIO LOCAL ·" />
+          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
+            <StampCRD size={124} rotate={-9} color="#0C6A60" line1="EST. 2026" line2="· NEGOCIO LOCAL ·" />
           </div>
 
-          <div className="mb-2.5">
-            <Kicker icon="storefront" index="04">Negocios</Kicker>
-          </div>
-          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2">
+          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
             Tres pasos para <em className="crd-accent">estar en la ruta</em>
           </h2>
           <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
@@ -1011,7 +1152,13 @@ function NegociosFinal() {
           />
 
           <div className="mt-3 border-t border-dashed border-line pt-3">
-            <Button variant="mint" icon="add_business" onClick={() => requestSubscribe("negocio")}>
+            <Button
+              variant="mint"
+              icon="add_business"
+              iconClassName="text-white"
+              className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
+              onClick={() => requestSubscribe("negocio")}
+            >
               Registrar mi negocio
             </Button>
           </div>

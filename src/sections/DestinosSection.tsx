@@ -4,11 +4,11 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { useScene } from "@/context/SceneContext";
+import Icon from "@/components/Icon";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
 import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
-import Kicker from "@/components/Kicker";
 import { PIN_CHROME } from "@/components/map/pins";
 import featuredRoute from "@/data/routes/featured-route.json";
 
@@ -147,9 +147,6 @@ export default function DestinosOverlay() {
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
-          <Kicker icon="explore" index="01" className="mb-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.9)]">
-            Destinos
-          </Kicker>
           <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
             Recuerdos que aún
             <br />
@@ -180,7 +177,7 @@ export default function DestinosOverlay() {
               onClick={isFront ? cycle : undefined}
               // El desparrame de la pila es dato por carta (--pile-left permite
               // el corrimiento móvil sin pasar por JS).
-              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(var(--pile-left)+6%)] ${
+              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
                 isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
               }`}
               style={{
@@ -224,26 +221,34 @@ export default function DestinosOverlay() {
                 sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
                 icon={CATEGORY_META[pol.category].icon}
                 chip={pol.tagline}
-                desc={pol.desc}
                 className="crd-destinos-card-media h-[196px]"
                 overlayClassName={`transition-opacity duration-300 ${isFront ? "opacity-100" : "opacity-0"}`}
+                action={
+                  isFront && isFinale ? (
+                    // Flecha circular y no un pill con texto: los taglines
+                    // largos ("Pueblo & valle") lo empujaban fuera de la foto.
+                    <span
+                      aria-hidden="true"
+                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/92 text-ink"
+                    >
+                      <Icon name="arrow_forward" className="text-sm" />
+                    </span>
+                  ) : undefined
+                }
               />
               {/* Solo la carta del frente lleva texto: las traseras asoman
                   rebanadas y sus títulos quedaban cortados (audit 1.5).
-                  (div y no figcaption: el contenedor ahora es un botón.) */}
+                  (div y no figcaption: el contenedor ahora es un botón.)
+                  La descripción vive aquí, en el papel — sobre la foto tapaba
+                  el 62% de la imagen. */}
               <div
                 className={`px-1 pb-3.5 pt-3 transition-opacity duration-300 ${
                   isFront ? "opacity-100" : "opacity-0"
                 }`}
               >
                 <PolaroidCaption name={pol.name} meta={pol.meta} />
+                <p className="crd-destinos-desc m-0 mt-1 text-mini leading-[1.4] text-muted">{pol.desc}</p>
               </div>
-              {/* Affordance: con la pila completa, el frente invita a ciclar. */}
-              {isFront && isFinale && (
-                <span className="pointer-events-none absolute right-3.5 top-3.5 rounded-full bg-ink/[0.82] px-2 py-1 text-micro font-bold tracking-[.06em] text-white">
-                  Toca para ver más →
-                </span>
-              )}
             </motion.button>
           );
         })}

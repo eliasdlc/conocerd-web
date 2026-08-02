@@ -3,15 +3,18 @@
 import { useId } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Estampa ConoceRD — el cuño de caucho de la marca.
+//  Estampa ConoceRD — sticker de equipaje nostálgico (rework ago 2026).
 //
-//  Un solo sello para todo el sitio en rework: la ruta guardada del mapa, la
-//  esquina de las cards de Viajeros/Negocios y la mesa de El equipo. Doble
-//  anillo, arco "CONOCERD ✶ REPÚBLICA DOMINICANA", el pin del logo al centro y
-//  hasta dos líneas mono de contexto. La "realidad" del cuño la ponen tres
-//  cosas: tinta desplazada con feTurbulence (el borde nunca es perfecto),
-//  mix-blend-multiply (la tinta se funde con el papel/mapa, no flota) y una
-//  rotación leve de tampón manual.
+//  Antes era tinta pura con mix-blend-multiply: sin fondo, al sobresalir de una
+//  card la mitad caía sobre el mapa y el cuño se leía partido en dos tonos.
+//  Ahora es una calcomanía física: base de papel crema con borde festoneado
+//  (troquel postal) y sombra propia, SIEMPRE opaca, con el cuño entintado
+//  encima. El centro lleva el wordmark real de la marca (public/assets/
+//  wordmark.svg) en vez de redibujar el logo a mano.
+//
+//  La "realidad" del cuño la siguen poniendo la tinta desplazada con
+//  feTurbulence (el trazo nunca es perfecto) y la rotación de tampón manual.
+//  El wordmark va SIN filtro: el logo se mantiene nítido a cualquier tamaño.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface StampCRDProps {
@@ -20,7 +23,7 @@ export interface StampCRDProps {
   rotate?: number;
   /** Tinta. Por defecto coral-ink (#B23410); mint-ink #0C6A60 también lee bien. */
   color?: string;
-  /** Línea mono principal bajo el pin (p. ej. "RUTA GUARDADA"). */
+  /** Línea mono principal bajo el wordmark (p. ej. "RUTA GUARDADA"). */
   line1?: string;
   /** Línea mono secundaria (p. ej. "4 PARADAS · 320 KM"). */
   line2?: string;
@@ -42,6 +45,7 @@ export default function StampCRD({
   const topArc = `${uid}-top`;
   const bottomArc = `${uid}-bot`;
   const ink = `${uid}-ink`;
+  const drop = `${uid}-drop`;
 
   return (
     <svg
@@ -49,58 +53,89 @@ export default function StampCRD({
       width={size}
       height={size}
       className={className}
-      style={{ transform: `rotate(${rotate}deg)`, mixBlendMode: "multiply", color }}
+      style={{ transform: `rotate(${rotate}deg)`, color }}
       {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
     >
       <defs>
         {/* Tinta imperfecta: un desplazamiento sutil rompe la geometría CAD. */}
         <filter id={ink} x="-6%" y="-6%" width="112%" height="112%">
           <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="7" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.7" />
         </filter>
-        <path id={topArc} d="M 16 70 A 54 54 0 0 1 124 70" fill="none" />
-        <path id={bottomArc} d="M 21.5 70 A 48.5 48.5 0 0 0 118.5 70" fill="none" />
+        {/* Sombra de pegatina: despega el sticker del papel o del mapa. */}
+        <filter id={drop} x="-14%" y="-14%" width="128%" height="132%">
+          <feDropShadow dx="0" dy="2.2" stdDeviation="2.4" floodColor="#264653" floodOpacity="0.30" />
+        </filter>
+        <path id={topArc} d="M 25 70 A 45 45 0 0 1 115 70" fill="none" />
+        <path id={bottomArc} d="M 26.5 70 A 43.5 43.5 0 0 0 113.5 70" fill="none" />
       </defs>
 
-      <g filter={`url(#${ink})`} opacity="0.88">
-        {/* Doble anillo del cuño */}
-        <circle cx="70" cy="70" r="66" fill="none" stroke="currentColor" strokeWidth="3.4" />
-        <circle cx="70" cy="70" r="60.5" fill="none" stroke="currentColor" strokeWidth="1.1" />
-        {/* Anillo interior punteado, límite del área de texto */}
-        <circle cx="70" cy="70" r="40" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="1.6 3.4" opacity="0.8" />
+      {/* Base de papel: círculo + puntos gordos en el borde = troquel
+          festoneado. El fondo nunca es transparente. */}
+      <g filter={`url(#${drop})`}>
+        <circle cx="70" cy="70" r="62" fill="#FFFDF6" />
+        <circle
+          cx="70"
+          cy="70"
+          r="62"
+          fill="none"
+          stroke="#FFFDF6"
+          strokeWidth="9"
+          strokeLinecap="round"
+          strokeDasharray="0.1 9.32"
+        />
+      </g>
 
-        {/* Arco superior: la marca (medidas contenidas: a más de fs 12 el
-            texto desborda el arco y se recorta contra el viewBox) */}
-        <text className="font-mono" fontSize="12" fontWeight="700" letterSpacing="2.4" fill="currentColor">
+      {/* El cuño entintado (todo en currentColor, con la tinta imperfecta) */}
+      <g filter={`url(#${ink})`} opacity="0.92">
+        {/* Doble anillo del cuño */}
+        <circle cx="70" cy="70" r="57" fill="none" stroke="currentColor" strokeWidth="3" />
+        <circle cx="70" cy="70" r="52.5" fill="none" stroke="currentColor" strokeWidth="1.1" />
+
+        {/* Arco superior: el país */}
+        <text className="font-mono" fontSize="9" fontWeight="700" letterSpacing="1.5" fill="currentColor">
           <textPath href={`#${topArc}`} startOffset="50%" textAnchor="middle">
-            ✶ CONOCERD ✶
-          </textPath>
-        </text>
-        {/* Arco inferior: el país */}
-        <text className="font-mono" fontSize="7.2" fontWeight="700" letterSpacing="1.6" fill="currentColor">
-          <textPath href={`#${bottomArc}`} startOffset="50%" textAnchor="middle">
             REPÚBLICA DOMINICANA
           </textPath>
         </text>
+        {/* Arco inferior: el lema */}
+        <text className="font-mono" fontSize="6.6" fontWeight="700" letterSpacing="1.2" fill="currentColor" opacity="0.9">
+          <textPath href={`#${bottomArc}`} startOffset="50%" textAnchor="middle">
+            ✶ DESCUBRE LO NUESTRO ✶
+          </textPath>
+        </text>
+        {/* Estrellas laterales, como en los cuños de pasaporte */}
+        <text x="19.5" y="73.5" textAnchor="middle" fontSize="8" fill="currentColor">✶</text>
+        <text x="120.5" y="73.5" textAnchor="middle" fontSize="8" fill="currentColor">✶</text>
 
-        {/* El pin del logo, en tinta (el hueco es papel, no crema) */}
-        <g transform="translate(70 48) scale(1.15)">
+        {/* El pin de la marca corona el wordmark */}
+        <g transform="translate(70 43) scale(0.92)">
           <path
             d="M0 -9.5c-3.7 0-6.7 3-6.7 6.7 0 5 6.7 12.3 6.7 12.3s6.7-7.3 6.7-12.3c0-3.7-3-6.7-6.7-6.7z"
             fill="currentColor"
           />
-          <circle cx="0" cy="-2.6" r="2.5" fill="#FFFFFF" fillOpacity="0.92" />
+          <circle cx="0" cy="-2.6" r="2.5" fill="#FFFDF6" />
         </g>
 
-        {/* Líneas de contexto — dentro del anillo punteado (r40): la cuerda a
-            estas alturas mide ~75px, por eso los tamaños van contenidos. */}
-        <text x="70" y="80" textAnchor="middle" className="font-mono" fontSize="7.4" fontWeight="700" letterSpacing="1.1" fill="currentColor">
+        {/* Líneas de contexto del cuño */}
+        <text x="70" y="86" textAnchor="middle" className="font-mono" fontSize="7.6" fontWeight="700" letterSpacing="1.1" fill="currentColor">
           {line1}
         </text>
-        <text x="70" y="89.5" textAnchor="middle" className="font-mono" fontSize="5.2" fontWeight="700" letterSpacing="0.8" fill="currentColor" opacity="0.85">
+        <text x="70" y="95.5" textAnchor="middle" className="font-mono" fontSize="5.4" fontWeight="700" letterSpacing="0.8" fill="currentColor" opacity="0.85">
           {line2}
         </text>
       </g>
+
+      {/* El wordmark real de la marca, nítido (sin filtro de tinta).
+          aspect 668:211 → a 66 de ancho son ~21 de alto. */}
+      <image
+        href="/assets/wordmark.svg"
+        x="37"
+        y="55"
+        width="66"
+        height="21"
+        preserveAspectRatio="xMidYMid meet"
+      />
     </svg>
   );
 }

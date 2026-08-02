@@ -7,6 +7,10 @@ interface ButtonProps {
   size?: "sm" | "lg";
   icon?: IconName;
   onClick?: () => void;
+  /** Overrides puntuales de layout (p. ej. `max-[899px]:w-full`). */
+  className?: string;
+  /** Color del icono cuando debe diferir del texto (p. ej. blanco sobre mint). */
+  iconClassName?: string;
   children: React.ReactNode;
 }
 
@@ -25,16 +29,24 @@ const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
   lg: "h-14 px-[26px] text-base",
 };
 
-export default function Button({ variant = "primary", size = "sm", icon, onClick, children }: ButtonProps) {
+export default function Button({
+  variant = "primary",
+  size = "sm",
+  icon,
+  onClick,
+  className = "",
+  iconClassName = "",
+  children,
+}: ButtonProps) {
   return (
     <button
       type="button"
       // .crd-button aporta el hover/active (translate + scale); vive en CSS
       // porque el :active necesita ganarle al hover.
-      className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
+      className={`crd-button inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       onClick={onClick}
     >
-      {icon && <Icon name={icon} className={size === "lg" ? "text-feature" : "text-lg"} />}
+      {icon && <Icon name={icon} className={`${size === "lg" ? "text-feature" : "text-lg"} ${iconClassName}`} />}
       {children}
     </button>
   );

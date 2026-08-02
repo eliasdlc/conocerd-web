@@ -34,7 +34,6 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import Kicker from "@/components/Kicker";
 import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
 import { CategoryPin } from "@/components/map/pins";
 import {
@@ -538,7 +537,7 @@ function CategoryFilter({
     <div
       role="group"
       aria-label="Filtrar destinos por categoría"
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[66px] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[84px] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];
@@ -611,11 +610,16 @@ type RouteState = { stops: string[]; history: string[][] };
 
 const V6_CSS = `
 @keyframes mapa6-stamp {
-  0%   { opacity: 0; transform: scale(1.6) rotate(-16deg); }
-  62%  { opacity: 1; transform: scale(0.94) rotate(-7deg); }
-  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+  0%   { opacity: 0; transform: scale(1.6) rotate(-8deg); }
+  62%  { opacity: 1; transform: scale(0.94) rotate(1deg); }
+  100% { opacity: 1; transform: none; }
 }
-.mapa6-stamp { animation: mapa6-stamp .5s cubic-bezier(.2,.85,.3,1) both; transform-origin: 50% 45%; }
+/* fill \`backwards\` (no \`both\`) a propósito: un fill permanente deja el
+   wrapper en un compositor layer para siempre y Chromium rasteriza el filtro
+   de tinta del sello a la escala del keyframe inicial (texto gigante y
+   recortado). Al terminar en \`none\` el layer se libera y el SVG se pinta
+   nítido; la rotación del cuño vive en el propio sello (prop rotate). */
+.mapa6-stamp { animation: mapa6-stamp .5s cubic-bezier(.2,.85,.3,1) backwards; transform-origin: 50% 45%; }
 @media (prefers-reduced-motion: reduce) {
   .mapa6-stamp { animation: none; }
 }
@@ -639,8 +643,49 @@ export default function MapaFinal() {
   const [email, setEmail] = useState("");
   // Móvil: el sheet arranca abierto; el asa lo colapsa para ver el mapa entero.
   const [sheetOpen, setSheetOpen] = useState(true);
+  // El asa se puede ARRASTRAR como en un teléfono real: el sheet sigue al dedo
+  // (con algo de elástico) y al soltar hace snap a abierto/cerrado. El tap
+  // sigue funcionando vía onClick; justDragged evita que un drag dispare
+  // también el click y togglee dos veces.
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragFrom = useRef<{ y: number; open: boolean } | null>(null);
+  const justDragged = useRef(false);
   const emailId = useId();
   const emailRef = useRef<HTMLInputElement | null>(null);
+
+  function handleDown(e: React.PointerEvent<HTMLButtonElement>) {
+    dragFrom.current = { y: e.clientY, open: sheetOpen };
+    setDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+  function handleMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragFrom.current) return;
+    const dy = e.clientY - dragFrom.current.y;
+    // Abierto sólo baja; cerrado sólo sube (con elástico corto).
+    setDragY(dragFrom.current.open ? Math.max(0, dy) : Math.max(-44, Math.min(0, dy)));
+  }
+  function handleUp(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragFrom.current) return;
+    const dy = e.clientY - dragFrom.current.y;
+    const { open } = dragFrom.current;
+    dragFrom.current = null;
+    setDragging(false);
+    setDragY(0);
+    if (Math.abs(dy) > 9) {
+      justDragged.current = true;
+      if (dy < -26) setSheetOpen(true);
+      else if (dy > 26) setSheetOpen(false);
+      else setSheetOpen(open);
+    }
+  }
+  function handleTap() {
+    if (justDragged.current) {
+      justDragged.current = false;
+      return;
+    }
+    setSheetOpen((o) => !o);
+  }
 
   const stamped = save.k !== "idle";
 
@@ -826,25 +871,25 @@ export default function MapaFinal() {
 
   const itinerary = (
     <>
-      {/* Asa (solo móvil): expande/colapsa el sheet */}
+      {/* Asa (solo móvil): se arrastra con el dedo o se toca */}
       <button
         type="button"
-        onClick={() => setSheetOpen((o) => !o)}
+        onClick={handleTap}
+        onPointerDown={handleDown}
+        onPointerMove={handleMove}
+        onPointerUp={handleUp}
+        onPointerCancel={handleUp}
         aria-expanded={sheetOpen}
         aria-label={sheetOpen ? "Contraer el panel de tu ruta" : "Expandir el panel de tu ruta"}
-        className="flex h-8 w-full flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 min-[900px]:hidden"
+        className="flex h-8 w-full flex-none cursor-grab touch-none items-center justify-center border-0 bg-transparent p-0 active:cursor-grabbing min-[900px]:hidden"
       >
-        <span aria-hidden="true" className="h-1 w-9 rounded-full bg-[#B5C0BD]" />
+        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-[#B5C0BD]" />
       </button>
 
       <div className={sheetOpen ? "contents" : "max-[899px]:hidden min-[900px]:contents"}>
         {save.k === "idle" ? (
           <>
             <div className="flex-none px-[18px] pb-2 pt-4 max-[899px]:pt-0">
-              {/* En móvil no existe la carta izquierda: el kicker vive aquí */}
-              <div className="mb-1.5 min-[900px]:hidden">
-                <Kicker icon="route" index="02">Tu ruta</Kicker>
-              </div>
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className="font-display text-[20px] font-bold text-ink">Itinerario</h3>
                 {stops.length > 0 && (
@@ -984,7 +1029,7 @@ export default function MapaFinal() {
             <div className="flex flex-col items-center text-center">
               <div className="mapa6-stamp">
                 <StampCRD
-                  size={148}
+                  size={160}
                   rotate={-8}
                   line1="RUTA GUARDADA"
                   line2={`${stops.length} PARADAS · ${totalKm} KM`}
@@ -1170,8 +1215,7 @@ export default function MapaFinal() {
         <div
           className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[300px] -translate-y-1/2 rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
         >
-          <Kicker icon="route" index="02">Tu ruta</Kicker>
-          <h2 className="mt-1.5 font-display text-[22px] font-bold leading-tight text-ink">
+          <h2 className="m-0 font-display text-[22px] font-bold leading-tight text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
           </h2>
           <p className="mt-1 text-tiny leading-[1.5] text-muted">
@@ -1197,7 +1241,8 @@ export default function MapaFinal() {
           aria-label="Tu itinerario"
           className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
             sel ? "max-[899px]:hidden" : ""
-          }`}
+          } ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
+          style={dragY !== 0 ? { transform: `translateY(${dragY}px)` } : undefined}
         >
           {itinerary}
         </section>
@@ -1232,6 +1277,19 @@ export default function MapaFinal() {
               onRemove={() => removeStop(sel.id)}
               className="mt-3 h-11 text-tiny"
             />
+            {/* El sheet del itinerario queda oculto mientras esta card está
+                abierta — "Ordena mejor" tiene que vivir también aquí o el
+                usuario nunca lo ve tras añadir una parada (audit móvil). */}
+            {showOptimize && (
+              <button
+                type="button"
+                onClick={optimize}
+                className="crd-sticker mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+              >
+                <Glyph d={GLYPH_SORT} className="text-sm" />
+                Ordena mejor · te ahorras {saveKm} km
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -21,8 +21,14 @@ export type Destination = {
   province: string;
   coords: [number, number]; // [lng, lat]
   category: Category;
-  image: string; // /assets/ph-*.png
+  image: string; // /assets/destino-*.webp
+  /** Autor y licencia de la foto (Wikimedia Commons). Obligatorio mostrarlo
+   *  para CC BY / BY-SA; se agrega en el footer. CC0 no lo exige. */
+  imageCredit?: string;
   activities: string[];
+  /** Valoración real de viajeros (Google Maps vía agregadores, ago 2026).
+   *  Donde no existe rating del destino (pueblos/municipios) se conserva una
+   *  estimación conservadora. */
   rating: number; // 0–5
   desc: string;
   /** Aparece en el journey de polaroids (Destinos). El orden lo da `featuredOrder`. */
@@ -76,7 +82,7 @@ export const DESTINATIONS: Destination[] = [
     category: "playa",
     image: "/assets/destino-aguilas.webp",
     activities: ["Snorkel", "Paseo en bote", "Fotografía"],
-    rating: 4.9,
+    rating: 4.8,
     desc: "8 km de arena sin un solo edificio.",
     featured: true,
     featuredOrder: 0,
@@ -92,7 +98,7 @@ export const DESTINATIONS: Destination[] = [
     category: "aventura",
     image: "/assets/destino-duarte.webp",
     activities: ["Senderismo", "Camping", "Avistamiento"],
-    rating: 4.8,
+    rating: 4.7,
     desc: "El techo del Caribe, a tu alcance.",
     featured: true,
     featuredOrder: 1,
@@ -108,7 +114,7 @@ export const DESTINATIONS: Destination[] = [
     category: "naturaleza",
     image: "/assets/destino-limon.webp",
     activities: ["Cabalgata", "Baño", "Senderismo"],
-    rating: 4.7,
+    rating: 4.5,
     desc: "A caballo entre montañas verdes.",
     featured: true,
     featuredOrder: 2,
@@ -124,7 +130,7 @@ export const DESTINATIONS: Destination[] = [
     category: "aventura",
     image: "/assets/destino-charcos.webp",
     activities: ["Saltos", "Natación", "Rappel"],
-    rating: 4.8,
+    rating: 4.7,
     desc: "Salta y nada entre cascadas turquesa.",
     featured: true,
     featuredOrder: 3,
@@ -172,9 +178,10 @@ export const DESTINATIONS: Destination[] = [
     province: "Samaná",
     coords: [-69.2518, 19.2911],
     category: "playa",
-    image: "/assets/ph-playa.png",
+    image: "/assets/destino-playa-rincon.webp",
+    imageCredit: "Thomas Berwing · CC BY-SA 4.0",
     activities: ["Baño", "Snorkel", "Fotografía"],
-    rating: 4.8,
+    rating: 4.7,
     desc: "Una de las playas más bellas del Caribe.",
   },
   {
@@ -183,7 +190,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Samaná",
     coords: [-69.1516, 19.2972],
     category: "playa",
-    image: "/assets/ph-playa.png",
+    image: "/assets/destino-playa-fronton.webp",
+    imageCredit: "Danu Widjajanto · CC BY-SA 4.0",
     activities: ["Senderismo", "Snorkel", "Escalada"],
     rating: 4.7,
     desc: "Acantilados y arena solo accesible en bote.",
@@ -194,7 +202,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Samaná",
     coords: [-69.5431, 19.311],
     category: "playa",
-    image: "/assets/ph-playa.png",
+    image: "/assets/destino-las-terrenas.webp",
+    imageCredit: "Captain-tucker · CC BY-SA 3.0",
     activities: ["Playa", "Gastronomía", "Atardecer"],
     rating: 4.6,
     desc: "Pueblo costero con sabor europeo.",
@@ -205,7 +214,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Barahona",
     coords: [-71.1004, 18.2085],
     category: "playa",
-    image: "/assets/ph-playa.png",
+    image: "/assets/destino-barahona.webp",
+    imageCredit: "Joel Diplan · CC BY 3.0",
     activities: ["Playa de piedras", "Café", "Larimar"],
     rating: 4.5,
     desc: "Costa salvaje de piedras y ecoturismo.",
@@ -216,9 +226,10 @@ export const DESTINATIONS: Destination[] = [
     province: "Independencia",
     coords: [-71.5813, 18.4854],
     category: "naturaleza",
-    image: "/assets/ph-rio.png",
+    image: "/assets/destino-lago-enriquillo.webp",
+    imageCredit: "Eric Carrasco-Nuñez · CC BY-SA 4.0",
     activities: ["Cocodrilos", "Iguanas", "Bote"],
-    rating: 4.4,
+    rating: 4.7,
     desc: "El lago más grande del Caribe, bajo el mar.",
   },
   {
@@ -227,7 +238,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Santiago",
     coords: [-70.6947, 19.4508],
     category: "gastronomia",
-    image: "/assets/ph-sunset.png",
+    image: "/assets/destino-santiago.webp",
+    imageCredit: "Ujorge · CC BY-SA 3.0",
     activities: ["Gastronomía", "Monumento", "Cigarros"],
     rating: 4.5,
     desc: "Corazón del Cibao y su cultura.",
@@ -238,7 +250,8 @@ export const DESTINATIONS: Destination[] = [
     province: "La Romana",
     coords: [-68.9663, 18.4227],
     category: "gastronomia",
-    image: "/assets/ph-sunset.png",
+    image: "/assets/destino-la-romana.webp",
+    imageCredit: "Максим Улитин · CC BY 3.0",
     activities: ["Gastronomía", "Golf", "Marina"],
     rating: 4.4,
     desc: "Lujo, marina y sabor del este.",
@@ -249,7 +262,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Santo Domingo",
     coords: [-69.8868, 18.4715],
     category: "cultura",
-    image: "/assets/ph-pueblo.png",
+    image: "/assets/destino-zona-colonial.webp",
+    imageCredit: "Martin Falbisoner · CC BY-SA 4.0",
     activities: ["Historia", "Museos", "Vida nocturna"],
     rating: 4.8,
     desc: "La primera ciudad de América.",
@@ -260,7 +274,8 @@ export const DESTINATIONS: Destination[] = [
     province: "La Romana",
     coords: [-68.8917, 18.4213],
     category: "cultura",
-    image: "/assets/ph-pueblo.png",
+    image: "/assets/destino-altos-chavon.webp",
+    imageCredit: "Dr. Eugen Lehle · CC BY-SA 3.0",
     activities: ["Anfiteatro", "Arte", "Miradores"],
     rating: 4.6,
     desc: "Una aldea mediterránea sobre el río Chavón.",
@@ -271,7 +286,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Puerto Plata",
     coords: [-70.6933, 19.7977],
     category: "cultura",
-    image: "/assets/ph-pueblo.png",
+    image: "/assets/destino-puerto-plata.webp",
+    // CC0 — sin obligación de atribución (CareAhLine, Wikimedia Commons).
     activities: ["Teleférico", "Fortaleza", "Playa"],
     rating: 4.5,
     desc: "Casas victorianas y el monte Isabel.",
@@ -282,7 +298,8 @@ export const DESTINATIONS: Destination[] = [
     province: "Puerto Plata",
     coords: [-70.4139, 19.7496],
     category: "aventura",
-    image: "/assets/ph-montana.png",
+    image: "/assets/destino-cabarete.webp",
+    imageCredit: "Alex Proimos · CC BY 2.0",
     activities: ["Kitesurf", "Surf", "Vida nocturna"],
     rating: 4.6,
     desc: "Capital del kitesurf en el Caribe.",
@@ -293,7 +310,8 @@ export const DESTINATIONS: Destination[] = [
     province: "La Vega",
     coords: [-70.6419, 19.1209],
     category: "aventura",
-    image: "/assets/ph-montana.png",
+    image: "/assets/destino-jarabacoa.webp",
+    imageCredit: "Will056t · CC BY-SA 4.0",
     activities: ["Rafting", "Cascadas", "Parapente"],
     rating: 4.7,
     desc: "La ciudad de la eterna primavera.",
@@ -407,9 +425,12 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
     mobile: { center: [-70.45, 18.87], zoom: 6.1 },
   },
+  // Rework ago 2026: el viaje completo cabía en 108×96 px en móvil (3% de la
+  // pantalla) y el avatar avanzaba 9,5 px/s — imperceptible. Se acerca la
+  // cámara para que el recorrido ocupe pantalla de verdad.
   viajeros: {
-    center: [-70.35, 18.85], zoom: 6.5, pitch: 0, bearing: 0,
-    mobile: { zoom: 5.1 },
+    center: [-70.35, 18.85], zoom: 6.8, pitch: 0, bearing: 0,
+    mobile: { zoom: 5.9 },
   },
   // El negocio (Santiago) vive al noroeste del centro de la isla: con el centro
   // genérico quedaba pegado al borde superior, bajo el nav.
