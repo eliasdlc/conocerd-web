@@ -7,8 +7,9 @@
 //  la columna de contenido: el titular, lo que ganas por entrar ahora y qué es
 //  ConoceRD cambian con él.
 //
-//  Las features salen de las mismas fuentes que la home (`ViajerosSection` y
-//  `NegociosSection`) y los beneficios de la lista, de WAITLIST_PLAN §5, para
+//  Las features salen de las mismas fuentes que la home (la sección
+//  `ViajerosNegociosSection`) y los beneficios de la lista, de WAITLIST_PLAN
+//  §5, para
 //  que la promesa no se bifurque entre páginas.
 // ─────────────────────────────────────────────────────────────────────────────
 

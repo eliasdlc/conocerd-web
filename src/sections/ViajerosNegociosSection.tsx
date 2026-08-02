@@ -1,7 +1,8 @@
 "use client";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Variante FINAL de Viajeros + Negocios — v3 como base, con lo pedido:
+//  Viajeros + Negocios — síntesis del rework jul-ago 2026 (nació como la
+//  variante v6 del sistema de variantes, promovida a sección real):
 //
 //  · Fuera: "PARADA N/3", la píldora sobre el teléfono, los numeritos de cada
 //    parada, la línea de los 500 fundadores y "gratis durante el lanzamiento".
@@ -40,7 +41,7 @@ import { PANEL_SOLID } from "@/lib/surfaces";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { DESTINATIONS, type Destination } from "@/data/destinations";
 import type { LngLat } from "@/lib/geo";
-import StampCRD from "@/variants/stamp";
+import StampCRD from "@/components/StampCRD";
 import pairs from "@/data/routes/pairs.json";
 import featured from "@/data/routes/featured-route.json";
 
@@ -996,7 +997,7 @@ const VN6_CSS = `
 }
 `;
 
-export default function VNFinal() {
+export default function ViajerosNegociosSection() {
   return (
     <>
       <style>{VN6_CSS}</style>

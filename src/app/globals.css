@@ -240,36 +240,6 @@ body::after {
 /* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
 /* One breakpoint drives camera padding, overlays, navigation and mockups.
    Keeping CSS aligned with MOBILE_BREAKPOINT avoids hybrid tablet layouts. */
-/* Sólo el alto scrolleable: tiene que ganarle al max-height que .crd-ol-panel
-   fija en móvil, y ese vive sin capa (ver nota de cascada más abajo). Todo el
-   aspecto de la tarjeta está en Tailwind, en el componente. */
-.crd-business-story {
-  max-height: calc(100dvh - clamp(102px, 15dvh, 144px));
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-/* La ruta conserva clase por su ::before: la línea punteada que une los pasos. */
-.crd-business-route {
-  position: relative;
-}
-.crd-business-route::before {
-  position: absolute;
-  top: 44px;
-  bottom: 31px;
-  left: 22px;
-  width: 1px;
-  content: '';
-  background: repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 8px);
-  opacity: .65;
-}
-/* Mismo caso que .crd-business-story: sólo el alto scrolleable. */
-.crd-business-dashboard {
-  max-height: calc(100dvh - clamp(104px, 17dvh, 154px));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
 /* Viajeros: el teléfono vive en un área segura, no en una escala aplicada al
    final. Así su relación de aspecto se conserva y nunca queda cortado por la
    capa sticky del journey. El UI de la app se lee de frente; la profundidad la
@@ -310,12 +280,6 @@ body::after {
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
   .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: #B5C0BD; margin: -10px auto 14px; }
-  /* Mismo criterio que .crd-phone-wrap: el panel del negocio sólo se leía
-     escalado a .56 y encajado en la esquina, donde ni sus cifras ni sus barras
-     son legibles y además tapa el mapa. El bottom-sheet ya cuenta la propuesta
-     completa, así que en móvil se omite el mockup. */
-  .crd-ol-panel-right { display: none !important; }
-  .crd-business-story { max-height: min(64dvh, 560px); }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
     padding: 72px 16px 16px !important;
@@ -323,10 +287,6 @@ body::after {
     justify-content: flex-start !important;
     gap: 20px;
   }
-  /* Viajeros: stat markers overlap on narrow maps → swap them for the
-     in-panel chip row below the heading. */
-  .crd-stat-marker { display: none !important; }
-  .crd-stat-chips { display: flex !important; }
   /* Footer: 4 columnas → filas en móvil, con Marca a lo ancho. Explora es
      angosta y Producto ancha: con 1fr/1fr, "iOS · próximamente" quebraba y
      dejaba "próximamente" huérfano ×2 (audit 2.6). Contacto baja a su propia
@@ -341,12 +301,6 @@ body::after {
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
-  /* El transform convierte este wrapper en containing block del panel interno
-     (absolute + top-1/2). Sin posición propia, el wrapper era una caja de alto
-     cero al tope del viewport y el panel quedaba con la mitad superior fuera
-     de pantalla (audit 1.4). Anclado a mitad de altura, el centrado vertical
-     del panel interno cae sobre esta línea y queda completo en pantalla. */
-  .crd-mapa-route-panel { display: block !important; position: absolute; top: 50%; right: 0; transform: scale(.68); transform-origin: right center; }
   /* La card crece hasta cubrir el hueco crema que quedaba en pantallas altas
      (hasta 326px de vacío en 430×932); el contenido se centra en ese alto. En
      pantallas cortas (375×667) el min-height queda por debajo del contenido
@@ -399,9 +353,6 @@ body::after {
   .crd-destinos-desc { display: none; }
   .crd-ol-panel { max-height: 55dvh; }
 }
-
-/* Stat chips live only on mobile (see media query above). */
-.crd-stat-chips { display: none; }
 
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
    Media pulgada de cinta translúcida asomando por el borde superior. Es lo que
@@ -477,9 +428,6 @@ body::after {
   transition: width .25s ease;
 }
 .crd-navlink:hover::after { width: 100%; }
-
-.crd-social { transition: transform .3s cubic-bezier(.2,.8,.3,1.3), background .25s, color .25s; }
-.crd-social:hover { transform: translateY(-4px) rotate(-6deg); background: #F76C4D !important; color: #fff !important; }
 
 /* El `scale` del hover era la otra mitad del look de plantilla: un CTA que
    crece bajo el cursor. Ahora el botón se despega del papel al pasar por
