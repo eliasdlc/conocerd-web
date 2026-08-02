@@ -3,12 +3,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Variante FINAL de "Arma tu recorrido" — síntesis elegida por el dueño.
 //
-//  Desktop = dos cartas sobre el mapa y nada más:
+//  Desktop = dos cartas centradas a los lados del mapa:
 //   · Izquierda (v1/v2): "Arma tu itinerario" con los viajes recomendados.
 //   · Derecha (v1): el itinerario vivo — paradas en orden, km y tiempo de cada
 //     tramo, totales (paradas · km · manejando) y "Ordena mejor".
-//  Fuera: los chips de categoría de arriba y el mando de control del centro.
-//  El mapa se ve completo entre las dos cartas.
+//  Abajo al centro, donde v4 tenía el mando: el filtro por categoría, en
+//  cuadros compactos (ícono + etiqueta) en vez de pills horizontales.
+//
+//  Un solo gesto por pin: el clic añade o quita la parada. El hover (o el
+//  foco de teclado) muestra la card informativa —foto y de qué va el lugar—
+//  sin botones dentro. En móvil, donde no hay hover, el toque hace las dos
+//  cosas: añade la parada y abre la card abajo con la acción inversa.
 //
 //  Guardar viaje (idea de v3, el sello): la carta derecha se estampa con el
 //  cuño ConoceRD y pide el correo ahí mismo. No manda a la lista de espera:
@@ -34,7 +39,9 @@ import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
+  CATEGORIES,
   CATEGORY_META,
+  type Category,
   type Destination,
 } from "@/data/destinations";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
@@ -203,6 +210,7 @@ function Glyph({ d, className }: { d: string; className?: string }) {
 }
 
 const GLYPH_PLUS = "M12 5v14M5 12h14";
+const GLYPH_MINUS = "M5 12h14";
 const GLYPH_UNDO = "M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11";
 const GLYPH_SAVE = "M7 3.6h10a1.2 1.2 0 0 1 1.2 1.2V20.4L12 16.6l-6.2 3.8V4.8A1.2 1.2 0 0 1 7 3.6Z";
 const GLYPH_SORT = "M7 20V5m0 15-3-3m3 3 3-3M17 4v15m0-15-3 3m3-3 3 3";
@@ -270,6 +278,9 @@ function CardBody({
       <div className="mt-0.5 font-mono text-micro text-muted">
         {d.province} · {meta.label}
       </div>
+      <p className={`leading-[1.45] text-muted ${compact ? "mt-1 text-mini" : "mt-1.5 text-tiny"}`}>
+        {d.desc}
+      </p>
       <div className={`flex flex-wrap gap-1 ${compact ? "mt-1.5" : "mt-2"}`}>
         {d.activities.map((a) => (
           <span
@@ -329,30 +340,28 @@ function CardAction({
   );
 }
 
-// ─── Mini-card desktop, anclada al pin con punta ─────────────────────────────
+// ─── Card de hover en desktop, anclada al pin con punta ──────────────────────
+//  Es solo información: la acción vive en el pin (un clic añade o quita), así
+//  que la card no captura el puntero — si lo hiciera, moverse hacia ella
+//  apagaría el hover del pin y la card parpadearía.
 
 function PinCard({
   d,
   side,
   stopIndex,
   stops,
-  onAdd,
-  onRemove,
-  onClose,
 }: {
   d: Destination;
   side: "top" | "bottom";
   stopIndex: number;
   stops: string[];
-  onAdd: () => void;
-  onRemove: () => void;
-  onClose: () => void;
 }) {
+  const inRoute = stopIndex >= 0;
+
   return (
     <div
-      role="dialog"
-      aria-label={d.name}
-      className={`absolute left-1/2 z-50 w-[242px] -translate-x-1/2 motion-reduce:animate-none max-[899px]:hidden ${
+      aria-hidden="true"
+      className={`pointer-events-none absolute left-1/2 z-50 w-[242px] -translate-x-1/2 motion-reduce:animate-none max-[899px]:hidden ${
         side === "top" ? "bottom-[calc(100%+13px)] animate-slide-up" : "top-[calc(100%+13px)]"
       }`}
     >
@@ -363,24 +372,17 @@ function PinCard({
       <div className="overflow-hidden rounded-card border border-line bg-white shadow-modal">
         <div className="relative h-[104px] w-full bg-cream-2">
           <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar detalle"
-            className="absolute right-2 top-2 grid size-7 cursor-pointer place-items-center rounded-full bg-ink/55 text-white backdrop-blur-sm transition-colors hover:bg-ink/75 focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <Icon name="close" className="text-sm" />
-          </button>
         </div>
         <div className="px-3 pb-3 pt-2.5">
           <CardBody d={d} stopIndex={stopIndex} stops={stops} />
-          <CardAction
-            inRoute={stopIndex >= 0}
-            name={d.name}
-            onAdd={onAdd}
-            onRemove={onRemove}
-            className="mt-2.5 h-10 text-tiny"
-          />
+          <div
+            className={`mt-2.5 flex h-8 items-center justify-center gap-1.5 rounded-full text-micro font-bold ${
+              inRoute ? "bg-coral-soft text-coral-ink" : "bg-mango-soft text-mango-ink"
+            }`}
+          >
+            <Glyph d={inRoute ? GLYPH_MINUS : GLYPH_PLUS} className="text-sm" />
+            {inRoute ? "Clic en el pin para quitarla" : "Clic en el pin para añadirla"}
+          </div>
         </div>
       </div>
       {side === "top" && (
@@ -396,20 +398,22 @@ function DestinationPin({
   d,
   stopIndex,
   stops,
+  isHovered,
   isSelected,
-  onSelect,
-  onAdd,
-  onRemove,
-  onClose,
+  onToggle,
+  onHover,
+  onLeave,
 }: {
   d: Destination;
   stopIndex: number;
   stops: string[];
+  /** Hover o foco de teclado: abre la card informativa (solo desktop). */
+  isHovered: boolean;
+  /** Último pin tocado: en móvil es el que tiene la card abierta abajo. */
   isSelected: boolean;
-  onSelect: () => void;
-  onAdd: () => void;
-  onRemove: () => void;
-  onClose: () => void;
+  onToggle: () => void;
+  onHover: () => void;
+  onLeave: () => void;
 }) {
   const inRoute = stopIndex >= 0;
   // Pines de media isla hacia el norte: la card se abre hacia abajo para no
@@ -417,23 +421,37 @@ function DestinationPin({
   const side: "top" | "bottom" = d.coords[1] >= 19.0 ? "bottom" : "top";
 
   return (
-    <MapMarker longitude={d.coords[0]} latitude={d.coords[1]}>
+    <MapMarker
+      longitude={d.coords[0]}
+      latitude={d.coords[1]}
+      zIndex={isHovered ? 3 : isSelected ? 2 : undefined}
+    >
       <MarkerContent>
-        <div className={isSelected ? "relative z-40" : "relative"}>
+        <div
+          className={isHovered || isSelected ? "relative z-40" : "relative"}
+          onMouseEnter={onHover}
+          onMouseLeave={onLeave}
+        >
           <button
             type="button"
-            onClick={onSelect}
+            onClick={onToggle}
+            onFocus={onHover}
+            onBlur={onLeave}
+            aria-pressed={inRoute}
             aria-label={
               inRoute
-                ? `${d.name}, parada ${stopIndex + 1} de tu ruta — ver detalle`
-                : `${d.name} — ver detalle y añadir a tu ruta`
+                ? `${d.name}, parada ${stopIndex + 1} de tu ruta — quitar de la ruta`
+                : `${d.name} — añadir a tu ruta`
             }
-            aria-expanded={isSelected}
             className="grid size-11 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
           >
             <span
               className={`grid place-items-center rounded-full transition-transform duration-150 ${
-                isSelected ? "scale-110 ring-4 ring-mango/35" : ""
+                isHovered
+                  ? "scale-110 ring-4 ring-mango/35"
+                  : isSelected
+                    ? "max-[899px]:scale-110 max-[899px]:ring-4 max-[899px]:ring-mango/35"
+                    : ""
               }`}
             >
               {inRoute ? (
@@ -443,17 +461,7 @@ function DestinationPin({
               )}
             </span>
           </button>
-          {isSelected && (
-            <PinCard
-              d={d}
-              side={side}
-              stopIndex={stopIndex}
-              stops={stops}
-              onAdd={onAdd}
-              onRemove={onRemove}
-              onClose={onClose}
-            />
-          )}
+          {isHovered && <PinCard d={d} side={side} stopIndex={stopIndex} stops={stops} />}
         </div>
       </MarkerContent>
     </MapMarker>
@@ -509,6 +517,56 @@ function PresetCard({
         </span>
       </span>
     </button>
+  );
+}
+
+// ─── Filtro por categoría: cuadros compactos abajo al centro (idea de v4) ────
+//  Conjunto vacío = "todas": los cinco cuadros se ven encendidos y se pintan
+//  todos los pines. El primer clic deja solo esa categoría; de ahí en adelante
+//  cada cuadro suma o resta. Al apagar el último, vuelve a "todas".
+
+function CategoryFilter({
+  cats,
+  onToggle,
+}: {
+  cats: Set<Category>;
+  onToggle: (c: Category) => void;
+}) {
+  const all = cats.size === 0;
+
+  return (
+    <div
+      role="group"
+      aria-label="Filtrar destinos por categoría"
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[66px] max-[899px]:translate-x-0`}
+    >
+      {CATEGORIES.map((cat) => {
+        const meta = CATEGORY_META[cat];
+        const on = all || cats.has(cat);
+        return (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => onToggle(cat)}
+            aria-pressed={on}
+            title={meta.label}
+            className="grid h-[60px] w-[60px] cursor-pointer content-center justify-items-center gap-1 rounded-tile border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5"
+            style={{
+              borderColor: on ? meta.color : "transparent",
+              background: on
+                ? `linear-gradient(0deg, ${meta.color}22, ${meta.color}22), #FFFFFF`
+                : "rgba(255,255,255,.55)",
+              color: on ? meta.ink : "var(--color-muted)",
+            }}
+          >
+            <Icon name={meta.icon} className="text-lg leading-none" />
+            <span className="w-full truncate text-center text-[9.5px] font-bold leading-none tracking-[-.01em] max-[899px]:text-[8.5px]">
+              {meta.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -572,6 +630,9 @@ export default function MapaFinal() {
     history: [],
   });
   const [selected, setSelected] = useState<string | null>(DEMO.card);
+  const [hovered, setHovered] = useState<string | null>(DEMO.card);
+  // Vacío = todas las categorías (ver CategoryFilter).
+  const [cats, setCats] = useState<Set<Category>>(() => new Set());
   const [presetId, setPresetId] = useState<string | null>(null);
   const [savedKm, setSavedKm] = useState<number | null>(null); // feedback de "Ordena mejor"
   const [save, setSave] = useState<SaveState>(DEMO.sello ? { k: "form" } : { k: "idle" });
@@ -606,7 +667,6 @@ export default function MapaFinal() {
 
   function addStop(id: string) {
     commit((s) => (s.includes(id) ? s : [...s, id]));
-    setSelected(null); // feedback inmediato: el pin se numera y la ruta se traza
     setPresetId(null);
     setSheetOpen(true);
   }
@@ -614,6 +674,38 @@ export default function MapaFinal() {
     commit((s) => (s.includes(id) ? s.filter((x) => x !== id) : s));
     setSelected((cur) => (cur === id ? null : cur));
     setPresetId(null);
+  }
+
+  /** Un solo gesto en el pin: si está en la ruta la quita, si no la añade.
+   *  En móvil, además, deja la card abierta abajo (ahí sí hay que leerla). */
+  function togglePin(id: string) {
+    if (stops.includes(id)) {
+      commit((s) => s.filter((x) => x !== id));
+      setPresetId(null);
+      setSelected(id);
+    } else {
+      addStop(id);
+      setSelected(id);
+    }
+  }
+
+  function toggleCat(cat: Category) {
+    const next = new Set(cats);
+    if (cats.size === 0) {
+      // Estaban todas encendidas: el primer clic aísla la categoría tocada.
+      next.clear();
+      next.add(cat);
+    } else if (next.has(cat)) {
+      next.delete(cat);
+    } else {
+      next.add(cat);
+    }
+    setCats(next);
+    // Si el pin abierto desaparece con el filtro, su card se va con él.
+    const stillVisible = (id: string) =>
+      next.size === 0 || next.has(DEST[id].category) || stops.includes(id);
+    setHovered((cur) => (cur && !stillVisible(cur) ? null : cur));
+    setSelected((cur) => (cur && !stillVisible(cur) ? null : cur));
   }
   function moveStop(id: string, dir: -1 | 1) {
     commit((s) => {
@@ -690,15 +782,17 @@ export default function MapaFinal() {
     if (!isVisible && !DEMO.sello && save.k !== "done") setSave({ k: "idle" });
   }
 
-  // Esc cierra la mini-card del pin.
+  // Esc cierra la card del pin.
   useEffect(() => {
-    if (!selected) return;
+    if (!selected && !hovered) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
+      if (e.key !== "Escape") return;
+      setSelected(null);
+      setHovered(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
+  }, [selected, hovered]);
 
   // Ruta por carreteras reales: concatena los legs precalculados entre paradas
   // consecutivas (con un stub corto pin→carretera en cada extremo).
@@ -720,6 +814,11 @@ export default function MapaFinal() {
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;
+  // El filtro nunca esconde una parada ya elegida: se vería como si la ruta
+  // se hubiera roto sola.
+  const visibleDests = DESTINATIONS.filter(
+    (d) => cats.size === 0 || cats.has(d.category) || stops.includes(d.id)
+  );
   const totalKm = route?.km ?? 0;
   const totalMin = route?.min ?? 0;
 
@@ -1040,17 +1139,17 @@ export default function MapaFinal() {
 
       {/* Pines: toda la interacción nace aquí */}
       {isVisible &&
-        DESTINATIONS.map((d) => (
+        visibleDests.map((d) => (
           <DestinationPin
             key={d.id}
             d={d}
             stopIndex={stops.indexOf(d.id)}
             stops={stops}
+            isHovered={hovered === d.id}
             isSelected={selected === d.id}
-            onSelect={() => setSelected((cur) => (cur === d.id ? null : d.id))}
-            onAdd={() => addStop(d.id)}
-            onRemove={() => removeStop(d.id)}
-            onClose={() => setSelected(null)}
+            onToggle={() => togglePin(d.id)}
+            onHover={() => setHovered(d.id)}
+            onLeave={() => setHovered((cur) => (cur === d.id ? null : cur))}
           />
         ))}
 
@@ -1062,18 +1161,23 @@ export default function MapaFinal() {
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
+        {/* Filtro por categoría: abajo al centro en desktop, arriba bajo el nav
+            en móvil (abajo vive el sheet del itinerario). */}
+        <CategoryFilter cats={cats} onToggle={toggleCat} />
+
         {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
             en móvil ambos viven dentro del sheet del itinerario). */}
         <div
-          className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(24px,4%,48px)] left-[clamp(16px,3%,40px)] w-[300px] rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
+          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[300px] -translate-y-1/2 rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
         >
           <Kicker icon="route" index="02">Tu ruta</Kicker>
           <h2 className="mt-1.5 font-display text-[22px] font-bold leading-tight text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
           </h2>
           <p className="mt-1 text-tiny leading-[1.5] text-muted">
-            Toca un pin y se vuelve una parada, con km y tiempo por carretera de
-            verdad. O empieza con un viaje recomendado:
+            Pasa el cursor por un pin para ver el lugar; un clic lo vuelve
+            parada, con km y tiempo de carretera de verdad. O empieza con un
+            viaje recomendado:
           </p>
           <div className="mt-2.5 flex flex-col gap-1.5" role="group" aria-label="Viajes recomendados">
             {PRESETS.map((p) => (
@@ -1091,7 +1195,7 @@ export default function MapaFinal() {
             en móvil el sheet se esconde: la mini-card ocupa ese mismo sitio. */}
         <section
           aria-label="Tu itinerario"
-          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[76vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
+          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
             sel ? "max-[899px]:hidden" : ""
           }`}
         >

@@ -221,6 +221,13 @@ export interface MapMarkerProps {
   latitude: number;
   anchor?: maplibregl.PositionAnchor;
   offset?: [number, number];
+  /**
+   * Apilado entre marcadores. MapLibre le pone `transform` a cada marcador, lo
+   * que crea un stacking context: un `z-index` puesto dentro del marcador no
+   * puede pasar por encima de los marcadores vecinos. Para que un popup tape a
+   * los demás pines hay que subir el marcador mismo.
+   */
+  zIndex?: number;
   children?: React.ReactNode;
 }
 
@@ -229,6 +236,7 @@ export function MapMarker({
   latitude,
   anchor = "center" as maplibregl.PositionAnchor,
   offset,
+  zIndex,
   children,
 }: MapMarkerProps) {
   const map = useMap();
@@ -261,6 +269,12 @@ export function MapMarker({
   useEffect(() => {
     markerRef.current?.setLngLat([longitude, latitude]);
   }, [longitude, latitude]);
+
+  useEffect(() => {
+    const node = markerRef.current?.getElement();
+    if (!node) return;
+    node.style.zIndex = zIndex === undefined ? "" : String(zIndex);
+  }, [el, zIndex]);
 
   if (!el) return null;
   return createPortal(children, el);
