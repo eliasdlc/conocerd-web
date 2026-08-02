@@ -542,7 +542,7 @@ function ViajerosFinal() {
             -translate-y-1/2 a la propiedad `translate`, que sobreviviría y
             dejaría el sheet flotando a media pantalla. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(280px,30vw,400px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
             visible ? "animate-slide-up" : ""
           }`}
         >
@@ -933,7 +933,7 @@ function NegociosFinal() {
         {/* La gran card del negocio — misma anatomía que la de viajeros
             (mismo prefijo min-[900px] para no flotar en móvil). */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(280px,30vw,400px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
             visible ? "animate-slide-up" : ""
           }`}
         >
@@ -965,7 +965,6 @@ function NegociosFinal() {
             <Button
               variant="mint"
               icon="add_business"
-              iconClassName="text-white"
               className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
               onClick={() => requestSubscribe("negocio")}
             >

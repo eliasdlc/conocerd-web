@@ -16,12 +16,12 @@ interface ButtonProps {
 
 // `crd-sticker` trae la sombra y sus estados (globals.css): offset duro y
 // neutro en vez del halo del mismo color que tenían antes (audit §3).
-// Mango lleva texto e iconos blancos por decisión del dueño (jul 2026):
-// comparado visualmente, el blanco sobre mango gana al ink oscuro.
+// Mango y mint llevan texto e iconos blancos por decisión del dueño (jul-ago
+// 2026): comparado visualmente, el blanco sobre esos fondos gana al ink oscuro.
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary: "crd-sticker bg-mango text-white",
   outline: "border-2 border-ink bg-transparent text-ink",
-  mint: "crd-sticker bg-mint text-ink-2",
+  mint: "crd-sticker bg-mint text-white",
 };
 
 const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
