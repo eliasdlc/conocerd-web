@@ -608,10 +608,18 @@ type SaveState =
 
 type RouteState = { stops: string[]; history: string[][] };
 
+/* La coreografía del estampado son cinco piezas sincronizadas al mismo
+   instante de impacto (~250 ms): el cuño cae desde "la cámara" (ease-in, como
+   un tampón de verdad: acelera hasta golpear), la carta se hunde y rebota, la
+   vista entera da una sacudida amortiguada, y del punto de contacto salen una
+   onda y salpicaduras de tinta. Los delays de ring/speck y los porcentajes de
+   kick/stamp están calculados para coincidir en ese golpe. */
 const V6_CSS = `
 @keyframes mapa6-stamp {
-  0%   { opacity: 0; transform: scale(1.6) rotate(-8deg); }
-  62%  { opacity: 1; transform: scale(0.94) rotate(1deg); }
+  0%   { opacity: 0; transform: scale(2.2) rotate(-3deg); animation-timing-function: cubic-bezier(.55,0,.8,.4); }
+  38%  { opacity: 1; transform: scale(.88) rotate(1.5deg); animation-timing-function: cubic-bezier(.2,.85,.3,1); }
+  60%  { transform: scale(1.05) rotate(-.6deg); }
+  80%  { transform: scale(.985) rotate(.2deg); }
   100% { opacity: 1; transform: none; }
 }
 /* fill \`backwards\` (no \`both\`) a propósito: un fill permanente deja el
@@ -619,11 +627,83 @@ const V6_CSS = `
    de tinta del sello a la escala del keyframe inicial (texto gigante y
    recortado). Al terminar en \`none\` el layer se libera y el SVG se pinta
    nítido; la rotación del cuño vive en el propio sello (prop rotate). */
-.mapa6-stamp { animation: mapa6-stamp .5s cubic-bezier(.2,.85,.3,1) backwards; transform-origin: 50% 45%; }
+.mapa6-stamp { animation: mapa6-stamp .66s backwards; transform-origin: 50% 45%; }
+
+/* La carta recibe el golpe: se hunde un pelo y recupera. Anima \`transform\`,
+   que compone con el \`translate\` de Tailwind (el centrado -translate-y-1/2
+   vive en la propiedad translate, no en transform). El 0-32% en reposo es la
+   espera de la caída del cuño. */
+@keyframes mapa6-kick {
+  0%, 32% { transform: none; }
+  40%  { transform: translateY(3px) scale(.988); }
+  70%  { transform: translateY(-1px) scale(1.004); }
+  100% { transform: none; }
+}
+.mapa6-kick { animation: mapa6-kick .62s cubic-bezier(.2,.8,.3,1); }
+
+/* Sacudida de cámara: se aplica por JS a .crd-journey-sticky en el momento
+   del impacto. Amplitud pequeña y amortiguada — vibra, no marea. */
+@keyframes mapa6-quake {
+  0%   { transform: none; }
+  12%  { transform: translate(-5px, 3px) rotate(-.22deg); }
+  28%  { transform: translate(4px, -3px) rotate(.2deg); }
+  46%  { transform: translate(-3px, 2px) rotate(-.12deg); }
+  64%  { transform: translate(2px, -1px) rotate(.08deg); }
+  82%  { transform: translate(-1px, 1px); }
+  100% { transform: none; }
+}
+.mapa6-quake { animation: mapa6-quake .5s cubic-bezier(.25,.45,.35,1); }
+
+/* Tinta que escapa del golpe: onda + salpicaduras desde el punto de contacto.
+   Arrancan con delay (.24s) para nacer exactamente al tocar el papel. La base
+   del cuño es papel OPACO: todo lo que quede a escala menor que el sello es
+   invisible, así que la onda nace en su borde y las gotas ya fuera de él. */
+@keyframes mapa6-ring {
+  0%   { opacity: 0; transform: scale(.96); }
+  14%  { opacity: .55; }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.mapa6-ring {
+  position: absolute; inset: 4%; border-radius: 9999px;
+  border: 3px solid #B23410; pointer-events: none;
+  animation: mapa6-ring .55s ease-out .24s both;
+}
+@keyframes mapa6-speck {
+  0%   { opacity: 0; transform: translate(calc(var(--dx) * .8), calc(var(--dy) * .8)); }
+  14%  { opacity: .9; }
+  100% { opacity: 0; transform: translate(calc(var(--dx) * 1.6), calc(var(--dy) * 1.6)) scale(.35); }
+}
+.mapa6-speck {
+  position: absolute; left: 50%; top: 45%; border-radius: 9999px;
+  background: #B23410; pointer-events: none;
+  animation: mapa6-speck .55s cubic-bezier(.15,.6,.3,1) .24s both;
+}
+
+/* El texto bajo el cuño entra después del golpe, escalonado. */
+@keyframes mapa6-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}
+.mapa6-rise { animation: mapa6-rise .45s cubic-bezier(.2,.8,.3,1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .mapa6-stamp { animation: none; }
+  .mapa6-stamp, .mapa6-kick, .mapa6-quake, .mapa6-rise { animation: none; }
+  .mapa6-ring, .mapa6-speck { display: none; }
 }
 `;
+
+/* Salpicaduras: dirección y tamaño fijos (nada aleatorio en render) — ocho
+   gotas repartidas alrededor del punto de contacto del cuño. */
+const SPECKS: { dx: string; dy: string; s: number }[] = [
+  { dx: "-74px", dy: "-40px", s: 5 },
+  { dx: "60px", dy: "-54px", s: 4 },
+  { dx: "84px", dy: "10px", s: 6 },
+  { dx: "-66px", dy: "30px", s: 4 },
+  { dx: "32px", dy: "64px", s: 5 },
+  { dx: "-26px", dy: "-72px", s: 4 },
+  { dx: "72px", dy: "50px", s: 4 },
+  { dx: "-44px", dy: "60px", s: 6 },
+];
 
 export default function MapaFinal() {
   const { activeScene } = useScene();
@@ -653,6 +733,11 @@ export default function MapaFinal() {
   const justDragged = useRef(false);
   const emailId = useId();
   const emailRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLElement | null>(null);
+  const quakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (quakeTimer.current) clearTimeout(quakeTimer.current);
+  }, []);
 
   function handleDown(e: React.PointerEvent<HTMLButtonElement>) {
     dragFrom.current = { y: e.clientY, open: sheetOpen };
@@ -786,11 +871,27 @@ export default function MapaFinal() {
     setSavedKm(ahorro);
   }
 
-  // "Guardar viaje": estampa el sello sobre la carta y pide el correo ahí mismo.
+  // "Guardar viaje": estampa el sello sobre la carta y pide el correo ahí
+  // mismo. La sacudida de cámara y la háptica se programan aquí (no en un
+  // efecto) para que solo el gesto del usuario las dispare — ?demo-sello
+  // monta la carta ya estampada sin temblor. El delay coincide con el
+  // instante de impacto del keyframe del cuño (38% de .66s ≈ 250 ms).
   function startSave() {
     setSave({ k: "form" });
     setSelected(null);
     setSheetOpen(true);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    quakeTimer.current = setTimeout(() => {
+      const view = panelRef.current?.closest(".crd-journey-sticky");
+      if (view) {
+        view.classList.remove("mapa6-quake");
+        // Reflow: sin esto, re-estampar no reinicia la animación.
+        void (view as HTMLElement).offsetWidth;
+        view.classList.add("mapa6-quake");
+        quakeTimer.current = setTimeout(() => view.classList.remove("mapa6-quake"), 600);
+      }
+      navigator.vibrate?.([18, 40, 12]);
+    }, 250);
   }
 
   async function sendItinerary(e: React.FormEvent) {
@@ -1027,27 +1128,44 @@ export default function MapaFinal() {
           // ── Ruta estampada: el sello y el correo ───────────────────────────
           <div className="flex-none px-[18px] pb-4 pt-3 max-[899px]:pt-0">
             <div className="flex flex-col items-center text-center">
-              <div className="mapa6-stamp">
-                <StampCRD
-                  size={160}
-                  rotate={-8}
-                  line1="RUTA GUARDADA"
-                  line2={`${stops.length} PARADAS · ${totalKm} KM`}
-                  label={`Ruta guardada: ${stops.length} paradas, ${totalKm} kilómetros`}
-                />
+              {/* El wrapper relativo ancla la onda y las salpicaduras al punto
+                  de contacto del cuño; overflow visible para que las gotas
+                  vuelen fuera del círculo. */}
+              <div className="relative">
+                <div className="mapa6-stamp">
+                  <StampCRD
+                    size={160}
+                    rotate={-8}
+                    line1="RUTA GUARDADA"
+                    line2={`${stops.length} PARADAS · ${totalKm} KM`}
+                    label={`Ruta guardada: ${stops.length} paradas, ${totalKm} kilómetros`}
+                  />
+                </div>
+                <span aria-hidden="true" className="mapa6-ring" />
+                {SPECKS.map((sp, i) => (
+                  <span
+                    key={i}
+                    aria-hidden="true"
+                    className="mapa6-speck"
+                    style={{ "--dx": sp.dx, "--dy": sp.dy, width: sp.s, height: sp.s } as React.CSSProperties}
+                  />
+                ))}
               </div>
               {/* El cuño da el gesto; los datos hay que poder leerlos, y dentro
                   del anillo a este tamaño no se leen. */}
-              <p className="mt-1 font-mono text-micro font-bold uppercase tracking-[.1em] text-muted">
+              <p
+                className="mapa6-rise mt-1 font-mono text-micro font-bold uppercase tracking-[.1em] text-muted"
+                style={{ animationDelay: ".3s" }}
+              >
                 {stops.length} paradas · {totalKm} km · {fmtDurShort(totalMin)}
               </p>
 
               {save.k === "done" ? (
                 <>
-                  <h3 className="mt-2 font-display text-[20px] font-bold leading-tight text-ink">
+                  <h3 className="mapa6-rise mt-2 font-display text-[20px] font-bold leading-tight text-ink">
                     Va en camino
                   </h3>
-                  <p className="mt-1 text-tiny leading-[1.55] text-muted">
+                  <p className="mapa6-rise mt-1 text-tiny leading-[1.55] text-muted" style={{ animationDelay: ".07s" }}>
                     Te mandamos el itinerario completo a{" "}
                     <span className="font-bold text-ink">{save.email}</span>. Revisa
                     también la carpeta de spam por si acaso.
@@ -1063,14 +1181,17 @@ export default function MapaFinal() {
                 </>
               ) : (
                 <>
-                  <h3 className="mt-2 font-display text-[20px] font-bold leading-tight text-ink">
+                  <h3
+                    className="mapa6-rise mt-2 font-display text-[20px] font-bold leading-tight text-ink"
+                    style={{ animationDelay: ".38s" }}
+                  >
                     Tu ruta quedó <em className="crd-accent">estampada</em>
                   </h3>
-                  <p className="mt-1 text-tiny leading-[1.55] text-muted">
+                  <p className="mapa6-rise mt-1 text-tiny leading-[1.55] text-muted" style={{ animationDelay: ".45s" }}>
                     Déjanos tu correo y te la mandamos completa: cada parada con su
                     foto, qué hacer ahí y cuánto manejas de una a otra.
                   </p>
-                  <form onSubmit={sendItinerary} className="mt-3 w-full">
+                  <form onSubmit={sendItinerary} className="mapa6-rise mt-3 w-full" style={{ animationDelay: ".52s" }}>
                     <label htmlFor={emailId} className="sr-only">
                       Tu correo
                     </label>
@@ -1113,7 +1234,8 @@ export default function MapaFinal() {
                   <button
                     type="button"
                     onClick={() => setSave({ k: "idle" })}
-                    className="mt-2 cursor-pointer border-0 bg-transparent p-0 text-mini font-bold text-muted underline-offset-2 hover:underline"
+                    className="mapa6-rise mt-2 cursor-pointer border-0 bg-transparent p-0 text-mini font-bold text-muted underline-offset-2 hover:underline"
+                    style={{ animationDelay: ".58s" }}
                   >
                     Volver a la ruta
                   </button>
@@ -1238,10 +1360,11 @@ export default function MapaFinal() {
         {/* Carta derecha en desktop; sheet abajo en móvil. Con un pin abierto
             en móvil el sheet se esconde: la mini-card ocupa ese mismo sitio. */}
         <section
+          ref={panelRef}
           aria-label="Tu itinerario"
           className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
             sel ? "max-[899px]:hidden" : ""
-          } ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
+          } ${stamped ? "mapa6-kick" : ""} ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
           style={dragY !== 0 ? { transform: `translateY(${dragY}px)` } : undefined}
         >
           {itinerary}
