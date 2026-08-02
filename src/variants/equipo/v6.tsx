@@ -10,9 +10,8 @@
 //    es un lift sutil del papel), el dorso se lee en sans —no en manuscrito—
 //    y el volteo tiene un arco con rebote leve en vez del giro seco.
 //  · El roadmap de "en qué estamos" (idea de la v2) vive en una card al lado:
-//    5 pasos, vamos por el 3, con pulso EN VIVO como si se actualizara al
-//    momento. ⚠ Nombres y descripciones PLACEHOLDER hasta que el dueño pase
-//    los definitivos.
+//    los 5 pasos oficiales de la hoja de ruta, vamos por el 3, con pulso
+//    EN VIVO como si se actualizara al momento.
 //  · La estampa ConoceRD va pegada a la card del roadmap.
 //  · Nada marcado en el mapa (se quitó el pin de Santiago).
 //
@@ -54,6 +53,7 @@ const TEAM: Member[] = [
     bg: "#FFE7DF",
     color: "#B23410",
     tilt: -3,
+    photo: "/assets/equipo-brauny.webp",
   },
   {
     name: "Elías de la Cruz",
@@ -65,6 +65,7 @@ const TEAM: Member[] = [
     bg: "#C6F3EB",
     color: "#0C6A60",
     tilt: 2.4,
+    photo: "/assets/equipo-elias.webp",
   },
 ];
 
@@ -90,15 +91,14 @@ const LINES: { text: React.ReactNode; delay: number }[] = [
   },
 ];
 
-// ⚠ PLACEHOLDER: nombres y descripciones a la espera de los definitivos del
-// dueño. La estructura (5 pasos, vamos por el 3) sí es la acordada.
+// Hoja de ruta oficial de ConoceRD (la pasó el dueño, ago 2026).
 type Step = { name: string; detail: string };
 const ROADMAP: Step[] = [
-  { name: "La idea", detail: "Demasiados lugares buenos fuera del mapa." },
-  { name: "Investigación", detail: "Viajeros y negocios nos contaron qué falta." },
-  { name: "Construcción de la app", detail: "La primera versión se arma con ese feedback." },
-  { name: "Beta cerrada", detail: "Prueba con viajeros reales en la calle." },
-  { name: "Lanzamiento", detail: "ConoceRD abierto para todo el país." },
+  { name: "Idea desarrollada y validada", detail: "Encuestas a negocios y viajeros, modelo de negocio definido." },
+  { name: "MVP funcional", detail: "Mapa, rutas, navegación GPS, diario de viaje y cuentas." },
+  { name: "Piloto con negocios y usuarios reales", detail: "Prueba en las provincias con mayor flujo turístico, membresía gratis los primeros 2 meses." },
+  { name: "Lanzamiento a nivel nacional", detail: "Tiendas de aplicaciones, web y equipo comercial propio." },
+  { name: "Nuevas fuentes de ingreso", detail: "Publicidad y comisiones por reserva sobre la base de negocios ya suscritos." },
 ];
 const CURRENT_STEP = 2; // índice 0-based: vamos por el paso 3
 

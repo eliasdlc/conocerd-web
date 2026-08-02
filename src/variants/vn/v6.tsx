@@ -284,7 +284,7 @@ function Telefono({ visible, children }: { visible: boolean; children: React.Rea
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <PhoneMockup screen={children} />
+      <PhoneMockup screen={children} chrome={false} />
     </div>
   );
 }
@@ -317,174 +317,19 @@ function TabBarApp({
   );
 }
 
-const TABS_VIAJERO: { icon: IconName; label: string }[] = [
-  { icon: "explore", label: "Explorar" },
-  { icon: "route", label: "Ruta" },
-  { icon: "auto_stories", label: "Diario" },
-];
-
 const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
   { icon: "storefront", label: "Perfil" },
   { icon: "location_on", label: "Mapa" },
   { icon: "insights", label: "Panel" },
 ];
 
-function ChipCategoria({ label, activo }: { label: string; activo?: boolean }) {
+/** Pantalla real de la app (screenshot del dueño, ago 2026). El mockup va con
+ *  `chrome={false}`: las capturas ya traen su propio contenido de borde a
+ *  borde y la Dynamic Island taparía el saludo. */
+function PantallaReal({ src }: { src: string }) {
   return (
-    <span
-      className={`whitespace-nowrap rounded-full px-2.5 py-1 text-micro font-bold ${
-        activo ? "bg-ink-2 text-white" : "border border-line bg-white text-muted"
-      }`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function PantallaExplorar() {
-  const lugares = [
-    { d: dest("charcos"), chip: "Sin multitudes", chipCls: "bg-mint-soft text-mint-ink" },
-    { d: dest("limon"), chip: "Guía local", chipCls: "bg-coral-soft text-coral-ink" },
-    { d: dest("haitises"), chip: "En bote", chipCls: "bg-mango-soft text-mango-ink" },
-  ];
-  return (
-    <div className="absolute inset-0 flex flex-col bg-[#F6F1E7]">
-      <div className="px-3 pt-10">
-        <div className="flex h-9 items-center gap-2 rounded-full bg-white px-3 shadow-card">
-          <Icon name="search" className="text-base text-muted" />
-          <span className="text-tiny text-muted">¿A dónde vamos?</span>
-        </div>
-      </div>
-      <div className="flex gap-1.5 overflow-hidden px-3 pt-2.5">
-        <ChipCategoria label="Cerca de ti" activo />
-        <ChipCategoria label="Playas" />
-        <ChipCategoria label="Aventura" />
-      </div>
-      <div className="px-3 pb-1.5 pt-3 font-mono text-micro font-bold uppercase tracking-[.12em] text-muted-2">
-        Poco visitados
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-[52px]">
-        {lugares.map(({ d, chip, chipCls }) => (
-          <div key={d.id} className="flex items-center gap-2 rounded-xl bg-white p-1.5 shadow-card">
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-cream-2">
-              <Image src={d.image} alt="" fill sizes="48px" className="object-cover" />
-            </div>
-            {/* El chip vive bajo el nombre: a la derecha empujaba el título y
-                lo truncaba ("27 Cha…", audit desktop §5). */}
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-tiny font-bold text-ink">{d.name}</div>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="whitespace-nowrap font-mono text-micro text-muted">
-                  {d.province} · ★ {d.rating}
-                </span>
-                <span className={`truncate whitespace-nowrap rounded-full px-1.5 py-px text-[8px] font-bold ${chipCls}`}>{chip}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <TabBarApp tabs={TABS_VIAJERO} activo="Explorar" />
-    </div>
-  );
-}
-
-const RUTA_A = dest("jarabacoa");
-const RUTA_B = dest("constanza");
-const RUTA_C = dest("duarte");
-const kmEntre = (a: string, b: string) => Math.round(pairs.km[idxDe(a)][idxDe(b)]);
-const minEntre = (a: string, b: string) => pairs.min[idxDe(a)][idxDe(b)];
-const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}` : `${m} min`);
-
-function PantallaRuta() {
-  const [a, b, c] = [RUTA_A, RUTA_B, RUTA_C];
-  const total = kmEntre(a.id, b.id) + kmEntre(b.id, c.id);
-  return (
-    <div className="absolute inset-0 bg-[linear-gradient(160deg,#EAF6F4,#DCEFEA)]">
-      {/* cartografía falsa + trazo de la ruta */}
-      <svg viewBox="0 0 236 490" className="absolute inset-0 size-full" aria-hidden="true">
-        <path d="M-10,150 C70,120 150,220 250,180" fill="none" stroke="#fff" strokeWidth="13" opacity="0.7" />
-        <path d="M60,-10 C90,120 30,300 130,500" fill="none" stroke="#fff" strokeWidth="11" opacity="0.6" />
-        <path d="M55,235 C95,215 120,170 105,120 C97,92 130,75 160,70" fill="none" stroke="#FF8D16" strokeWidth="3.5" strokeDasharray="1.5 6" strokeLinecap="round" />
-      </svg>
-      <div className="absolute left-[43px] top-[222px]"><SelfPin heading={24} size={30} /></div>
-      <div className="absolute left-[96px] top-[110px]">
-        <span className="block"><CategoryPin category={RUTA_B.category} size={20} /></span>
-      </div>
-      <div className="absolute left-[150px] top-[42px]"><GoalFlag size={26} /></div>
-
-      <div className="absolute inset-x-2 bottom-[52px] rounded-panel bg-white p-2.5 shadow-card">
-        {[
-          { d: a, dato: "salida" },
-          { d: b, dato: `${kmEntre(a.id, b.id)} km · ${fmtMin(minEntre(a.id, b.id))}` },
-          { d: c, dato: `${kmEntre(b.id, c.id)} km · ${fmtMin(minEntre(b.id, c.id))}`, meta: true },
-        ].map((fila) => (
-          <div key={fila.d.id} className="flex items-center gap-2 py-[3px]">
-            <span className="flex w-5 justify-center">
-              {fila.meta ? (
-                <GoalFlag size={18} />
-              ) : (
-                <CategoryPin category={fila.d.category} size={16} />
-              )}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-tiny font-bold text-ink">{fila.d.name}</span>
-            <span className="shrink-0 font-mono text-micro text-muted">{fila.dato}</span>
-          </div>
-        ))}
-        <div className="mt-1.5 flex items-center justify-between border-t border-dashed border-line pt-1.5">
-          <span className="font-mono text-micro font-bold text-ink">{total} km · 2 días</span>
-          <span className="rounded-full bg-mango px-3 py-1 text-micro font-bold text-white">Empezar</span>
-        </div>
-      </div>
-      <TabBarApp tabs={TABS_VIAJERO} activo="Ruta" />
-    </div>
-  );
-}
-
-function PantallaDiario() {
-  return (
-    <div className="absolute inset-0 flex flex-col bg-cream">
-      <div className="flex items-center justify-between px-3 pt-10">
-        <span className="text-sm font-bold text-ink">Mi diario</span>
-        <Icon name="auto_stories" className="text-lg text-mango-ink" />
-      </div>
-      {/* polaroid con sello de visitado */}
-      <div className="mx-4 mt-2 -rotate-2 rounded-md bg-white p-1.5 pb-1 shadow-card">
-        <div className="relative h-[104px] overflow-hidden rounded-sm bg-cream-2">
-          <Image src={dest("duarte").image} alt="" fill sizes="200px" className="object-cover" />
-          <span className="absolute right-1.5 top-1.5 -rotate-6 rounded border-2 border-[#43A047] bg-white/80 px-1 py-px font-mono text-[8px] font-bold tracking-[.1em] text-[#2E7D32]">
-            VISITADO
-          </span>
-        </div>
-        <div className="flex items-baseline justify-between px-0.5 pt-1">
-          <span className="font-hand text-sm text-ink">¡3,087 metros!</span>
-          <span className="font-mono text-[8px] text-muted-2">Pico Duarte</span>
-        </div>
-      </div>
-      {/* sellos ganados */}
-      <div className="px-3 pt-2.5 font-mono text-micro font-bold uppercase tracking-[.12em] text-muted-2">
-        Tus sellos
-      </div>
-      <div className="flex items-center gap-1.5 px-3 pt-1">
-        {(["hiking", "forest", "beach_access"] as IconName[]).map((n, i) => (
-          <span
-            key={n}
-            className="flex size-7 items-center justify-center rounded-full border border-line bg-white"
-            style={{ color: ["#985409", "#2E7D32", "#0C6A60"][i] }}
-          >
-            <Icon name={n} className="text-sm" />
-          </span>
-        ))}
-        <span className="font-mono text-micro text-muted">+9</span>
-      </div>
-      {/* la estampa ConoceRD cierra el diario (antes: insignia de fundador) */}
-      <div className="mx-3 mb-[52px] mt-auto flex items-center justify-between gap-2 rounded-card bg-white p-2 shadow-card">
-        <div className="min-w-0 pl-1">
-          <div className="text-tiny font-bold leading-tight text-ink">Diario estampado</div>
-          <div className="text-micro leading-[1.35] text-muted">Cada viaje deja su sello.</div>
-        </div>
-        <StampCRD size={66} rotate={9} line1="MI DIARIO" line2="· DE VIAJE ·" />
-      </div>
-      <TabBarApp tabs={TABS_VIAJERO} activo="Diario" />
+    <div className="absolute inset-0 bg-[#F6F1E7]">
+      <Image src={src} alt="" fill sizes="264px" className="object-cover" />
     </div>
   );
 }
@@ -623,7 +468,11 @@ function ViajerosFinal() {
     return upto >= 2 ? F_ROUTE.pts.slice(0, upto) : null;
   }, [bucket]);
 
-  const pantallas = [<PantallaExplorar key="e" />, <PantallaRuta key="r" />, <PantallaDiario key="d" />];
+  const pantallas = [
+    <PantallaReal key="e" src="/assets/app-explorar.webp" />,
+    <PantallaReal key="r" src="/assets/app-ruta.webp" />,
+    <PantallaReal key="d" src="/assets/app-destino.webp" />,
+  ];
 
   const proxima = F_STOPS[frame.hacia];
   const kmRestantes = Math.max(0, Math.round(F_ROUTE.cum[F_ROUTE.stopIdx[frame.hacia]] - frame.km));
@@ -800,47 +649,6 @@ function PantallaRegistro() {
   );
 }
 
-function PantallaEnElMapa() {
-  return (
-    <div className="absolute inset-0 bg-[linear-gradient(160deg,#EAF6F4,#DCEFEA)]">
-      <svg viewBox="0 0 236 490" className="absolute inset-0 size-full" aria-hidden="true">
-        <path d="M-10,160 C80,130 150,240 250,190" fill="none" stroke="#fff" strokeWidth="13" opacity="0.7" />
-        <path d="M50,-10 C80,140 30,320 130,500" fill="none" stroke="#fff" strokeWidth="11" opacity="0.6" />
-        {/* ruta del viajero pasando junto al negocio */}
-        <path d="M120,420 C105,330 150,250 128,170 C118,132 140,100 165,80" fill="none" stroke="#FF8D16" strokeWidth="3.5" strokeDasharray="1.5 6" strokeLinecap="round" />
-      </svg>
-      {/* el viajero, en ruta */}
-      <div className="absolute left-[100px] top-[382px]">
-        <SelfPin heading={12} size={38} />
-      </div>
-      {/* tu negocio, visible en su camino */}
-      <div className="absolute left-[128px] top-[150px] flex -translate-x-1/2 flex-col items-center gap-1">
-        <div className="whitespace-nowrap rounded-full bg-ink/92 px-2 py-[3px] text-micro font-bold text-white shadow-card">
-          Rancho La Cumbre
-        </div>
-        <div className={`flex size-8 items-center justify-center rounded-full bg-mango ${PIN_CHROME}`}>
-          <Icon name="storefront" className="text-base text-white" />
-        </div>
-      </div>
-      <div className="absolute inset-x-2 bottom-[52px] rounded-panel bg-white p-2.5 shadow-card">
-        <div className="flex items-center gap-2">
-          <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-cream-2">
-            <Image src="/assets/ph-sunset.png" alt="" fill sizes="44px" className="object-cover" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-tiny font-bold text-ink">Rancho La Cumbre</div>
-            <div className="font-mono text-micro text-muted">★ 4.8 · desvío de 8 min</div>
-          </div>
-          <span className="shrink-0 rounded-full bg-mint px-2.5 py-1 text-micro font-bold text-ink-2">
-            Añadir parada
-          </span>
-        </div>
-      </div>
-      <TabBarApp tabs={TABS_NEGOCIO} activo="Mapa" />
-    </div>
-  );
-}
-
 type Llegada = { key: string; nombre: string; origen: string; color: string; hace: number };
 
 const ETIQUETA_TIEMPO = ["ahora mismo", "hace 2 min", "hace 5 min"];
@@ -1003,7 +811,9 @@ function NegociosFinal() {
 
   const pantallas = [
     <PantallaRegistro key="reg" />,
-    <PantallaEnElMapa key="mapa" />,
+    // El screenshot real de la app: el mapa de Santiago con un negocio
+    // marcado — "te encuentran en la ruta" literal.
+    <PantallaReal key="mapa" src="/assets/app-mapa-ciudad.webp" />,
     <PantallaPanel key="panel" llegadas={llegadas} total={total} />,
   ];
 
