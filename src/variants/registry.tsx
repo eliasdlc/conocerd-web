@@ -62,7 +62,12 @@ function useVariantParam(area: VariantArea): string | null {
     noopSubscribe,
     () => {
       try {
-        return new URLSearchParams(window.location.search).get(`var-${area}`);
+        const params = new URLSearchParams(window.location.search);
+        // `?final=1` = atajo del dueño: monta la síntesis v6 en las TRES
+        // áreas a la vez para ver el journey completo con el diseño final.
+        // Un `var-<area>` explícito le gana (permite comparar una área
+        // contra el resto en final).
+        return params.get(`var-${area}`) ?? (params.get("final") ? "6" : null);
       } catch {
         return null;
       }
