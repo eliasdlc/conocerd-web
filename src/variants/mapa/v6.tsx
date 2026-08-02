@@ -3,28 +3,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Variante FINAL de "Arma tu recorrido" — síntesis elegida por el dueño.
 //
-//  Base: v4 "El mapa manda" (mínima, todo vive sobre el mapa) +
-//   · v1 → botón "Ordena mejor" (nearest-neighbor, dice cuántos km ahorra) y
-//     la card "Arma tu itinerario" abajo-izquierda.
-//   · v2 → rutas curadas en esa misma card de la izquierda.
-//   · v3 → al presionar "Guardar viaje" se estampa el sello ConoceRD con los
-//     totales de la ruta y de ahí se va a la lista de espera.
-//   · Pines: SIEMPRE el pin original de la app (CategoryPin); al entrar a la
-//     ruta se le suma un numerito ink — se distingue sin perder coherencia.
+//  Desktop = dos cartas sobre el mapa y nada más:
+//   · Izquierda (v1/v2): "Arma tu itinerario" con los viajes recomendados.
+//   · Derecha (v1): el itinerario vivo — paradas en orden, km y tiempo de cada
+//     tramo, totales (paradas · km · manejando) y "Ordena mejor".
+//  Fuera: los chips de categoría de arriba y el mando de control del centro.
+//  El mapa se ve completo entre las dos cartas.
 //
-//  Móvil (≤899px): el mapa manda aún más. Una sola fila de chips arriba, HUD
-//  a lo ancho abajo con targets de 44px, la mini-card como sheet pequeño y las
-//  rutas curadas como fila deslizable SOLO cuando la ruta está vacía (dan el
-//  primer valor en un tap y desaparecen para no estorbar el mapa).
+//  Guardar viaje (idea de v3, el sello): la carta derecha se estampa con el
+//  cuño ConoceRD y pide el correo ahí mismo. No manda a la lista de espera:
+//  manda el itinerario por correo — cada parada con foto, descripción, cómo
+//  llegar y cuánto se maneja entre una y otra (POST /api/itinerario).
+//
+//  Móvil (≤899px): aquí sí manda el mapa (idea de v4). No hay dos cartas —
+//  hay un solo sheet abajo con asa: con la ruta vacía muestra la intro y los
+//  viajes recomendados en fila deslizable; con paradas se vuelve el itinerario.
 //
 //  Params de demo para capturas (no afectan el uso normal):
 //    ?demo-ruta=1|id1,id2  → precarga una ruta
 //    ?demo-card=<id>       → abre la mini-card de ese destino
-//    ?demo-hud=1           → abre la lista del HUD
-//    ?demo-sello=1         → muestra el sello de "ruta guardada"
+//    ?demo-sello=1         → muestra la carta ya estampada, pidiendo el correo
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
@@ -33,13 +34,10 @@ import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
-  CATEGORIES,
   CATEGORY_META,
-  type Category,
   type Destination,
 } from "@/data/destinations";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
-import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import StampCRD from "@/variants/stamp";
 import pairs from "@/data/routes/pairs.json";
 
@@ -88,6 +86,14 @@ function fmtDur(totalMin: number): string {
   return `${h} h ${m} min`;
 }
 
+/** Formato corto para la fila de totales: "6 h 59" cabe, "6 h 59 min" no. */
+function fmtDurShort(totalMin: number): string {
+  const h = Math.floor(totalMin / 60);
+  const m = Math.round(totalMin % 60);
+  if (h === 0) return `${m} min`;
+  return `${h} h ${String(m).padStart(2, "0")}`;
+}
+
 /** Nearest-neighbor manteniendo la primera parada como origen (v1). */
 function nearestNeighborOrder(ids: string[]): string[] {
   if (ids.length < 3) return ids;
@@ -111,7 +117,7 @@ function nearestNeighborOrder(ids: string[]): string[] {
   return out;
 }
 
-// ─── Rutas curadas (v2) ──────────────────────────────────────────────────────
+// ─── Viajes recomendados (v2) ────────────────────────────────────────────────
 
 type Preset = {
   id: string;
@@ -151,8 +157,8 @@ const PRESETS: Preset[] = [
 
 const DEMO_ROUTE = ["aguilas", "barahona", "constanza", "charcos"];
 
-function readDemo(): { stops: string[]; card: string | null; hud: boolean; sello: boolean } {
-  if (typeof window === "undefined") return { stops: [], card: null, hud: false, sello: false };
+function readDemo(): { stops: string[]; card: string | null; sello: boolean } {
+  if (typeof window === "undefined") return { stops: [], card: null, sello: false };
   try {
     const p = new URLSearchParams(window.location.search);
     const ruta = p.get("demo-ruta");
@@ -166,11 +172,10 @@ function readDemo(): { stops: string[]; card: string | null; hud: boolean; sello
     return {
       stops,
       card: card && card in DEST ? card : null,
-      hud: p.has("demo-hud"),
       sello: p.has("demo-sello"),
     };
   } catch {
-    return { stops: [], card: null, hud: false, sello: false };
+    return { stops: [], card: null, sello: false };
   }
 }
 
@@ -199,10 +204,9 @@ function Glyph({ d, className }: { d: string; className?: string }) {
 
 const GLYPH_PLUS = "M12 5v14M5 12h14";
 const GLYPH_UNDO = "M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11";
-const GLYPH_TRASH =
-  "M3.5 6.5h17M18.5 6.5V19a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2V6.5M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5M10 11v6M14 11v6";
 const GLYPH_SAVE = "M7 3.6h10a1.2 1.2 0 0 1 1.2 1.2V20.4L12 16.6l-6.2 3.8V4.8A1.2 1.2 0 0 1 7 3.6Z";
 const GLYPH_SORT = "M7 20V5m0 15-3-3m3 3 3-3M17 4v15m0-15-3 3m3-3 3 3";
+const GLYPH_MAIL = "M3 6.8h18v10.4H3zM3 7.2l9 6.2 9-6.2";
 
 // ─── Pin de parada: el pin ORIGINAL de la app + numerito ink ─────────────────
 
@@ -456,103 +460,7 @@ function DestinationPin({
   );
 }
 
-// ─── Lista compacta del HUD (reordenar / quitar) ─────────────────────────────
-
-function HudList({
-  stops,
-  km,
-  min,
-  onMove,
-  onRemove,
-}: {
-  stops: string[];
-  km: number;
-  min: number;
-  onMove: (id: string, dir: -1 | 1) => void;
-  onRemove: (id: string) => void;
-}) {
-  return (
-    <div
-      role="region"
-      aria-label="Paradas de tu ruta"
-      className={`${PANEL_SOLID} w-[312px] max-w-full animate-slide-up rounded-panel p-3 shadow-modal motion-reduce:animate-none`}
-    >
-      <div className="mb-2 flex items-baseline justify-between px-1">
-        <span className="text-tiny font-bold text-ink">Orden de paradas</span>
-        {stops.length >= 2 && (
-          <span className="font-mono text-micro text-muted">
-            {km} km · {fmtDur(min)}
-          </span>
-        )}
-      </div>
-      <ol className="m-0 flex max-h-[36vh] list-none flex-col gap-1 overflow-y-auto p-0">
-        {stops.map((id, i) => {
-          const d = DEST[id];
-          return (
-            <li key={id} className="flex items-center gap-2 rounded-chip bg-cream-2 px-2 py-1.5">
-              <span
-                className="grid size-5 flex-none place-items-center rounded-full bg-ink font-mono text-micro font-bold text-white"
-                aria-hidden="true"
-              >
-                {i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-bold text-ink">{d.name}</div>
-                <div className="font-mono text-micro text-muted">{d.province}</div>
-              </div>
-              <div className="flex gap-0.5">
-                <ListBtn
-                  label={`Adelantar ${d.name}`}
-                  disabled={i === 0}
-                  onClick={() => onMove(id, -1)}
-                >
-                  <Icon name="arrow_upward" className="text-sm" />
-                </ListBtn>
-                <ListBtn
-                  label={`Atrasar ${d.name}`}
-                  disabled={i === stops.length - 1}
-                  onClick={() => onMove(id, 1)}
-                >
-                  <Icon name="arrow_downward" className="text-sm" />
-                </ListBtn>
-                <ListBtn label={`Quitar ${d.name} de la ruta`} onClick={() => onRemove(id)}>
-                  <Icon name="close" className="text-sm" />
-                </ListBtn>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
-function ListBtn({
-  label,
-  onClick,
-  disabled,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-line bg-white p-0 text-muted transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-default disabled:opacity-40 max-[899px]:size-11"
-    >
-      {children}
-    </button>
-  );
-}
-
-// ─── Carta de ruta curada (v2; versión chip para la fila móvil) ──────────────
+// ─── Carta de viaje recomendado (v2; versión compacta para la fila móvil) ────
 
 function PresetCard({
   preset,
@@ -604,6 +512,41 @@ function PresetCard({
   );
 }
 
+// ─── Botón de fila de la lista de paradas ────────────────────────────────────
+
+function RowBtn({
+  name,
+  label,
+  onClick,
+  disabled,
+}: {
+  name: "arrow_upward" | "arrow_downward" | "close";
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="grid size-8 cursor-pointer place-items-center rounded-md border-0 bg-transparent p-0 text-muted transition-colors hover:bg-cream-2 hover:text-ink focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent max-[899px]:size-10"
+    >
+      <Icon name={name} className="text-sm" />
+    </button>
+  );
+}
+
+// ─── Estado del guardado (sello + captura de correo) ─────────────────────────
+
+type SaveState =
+  | { k: "idle" }
+  | { k: "form"; error?: string }
+  | { k: "sending" }
+  | { k: "done"; email: string };
+
 // ─── Variante ────────────────────────────────────────────────────────────────
 
 type RouteState = { stops: string[]; history: string[][] };
@@ -624,17 +567,21 @@ export default function MapaFinal() {
   const { activeScene } = useScene();
   const isVisible = activeScene === "mapa";
 
-  const [cats, setCats] = useState<Set<Category>>(new Set(CATEGORIES));
   const [{ stops, history }, setRoute] = useState<RouteState>({
     stops: DEMO.stops,
     history: [],
   });
   const [selected, setSelected] = useState<string | null>(DEMO.card);
-  const [hudOpen, setHudOpen] = useState(DEMO.hud && DEMO.stops.length > 0);
   const [presetId, setPresetId] = useState<string | null>(null);
   const [savedKm, setSavedKm] = useState<number | null>(null); // feedback de "Ordena mejor"
-  const [stamped, setStamped] = useState(DEMO.sello); // sello de "Guardar viaje"
-  const stampTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [save, setSave] = useState<SaveState>(DEMO.sello ? { k: "form" } : { k: "idle" });
+  const [email, setEmail] = useState("");
+  // Móvil: el sheet arranca abierto; el asa lo colapsa para ver el mapa entero.
+  const [sheetOpen, setSheetOpen] = useState(true);
+  const emailId = useId();
+  const emailRef = useRef<HTMLInputElement | null>(null);
+
+  const stamped = save.k !== "idle";
 
   // Cada mutación de la ruta guarda el estado anterior para "deshacer".
   function commit(fn: (prev: string[]) => string[]) {
@@ -644,7 +591,7 @@ export default function MapaFinal() {
       return { stops: next, history: [...s.history.slice(-19), s.stops] };
     });
     setSavedKm(null);
-    setStamped(false);
+    setSave({ k: "idle" });
   }
 
   const undo = () => {
@@ -654,12 +601,14 @@ export default function MapaFinal() {
         : { stops: s.history[s.history.length - 1], history: s.history.slice(0, -1) }
     );
     setSavedKm(null);
+    setSave({ k: "idle" });
   };
 
   function addStop(id: string) {
     commit((s) => (s.includes(id) ? s : [...s, id]));
     setSelected(null); // feedback inmediato: el pin se numera y la ruta se traza
     setPresetId(null);
+    setSheetOpen(true);
   }
   function removeStop(id: string) {
     commit((s) => (s.includes(id) ? s.filter((x) => x !== id) : s));
@@ -679,27 +628,13 @@ export default function MapaFinal() {
   }
   function clearRoute() {
     commit(() => []);
-    setHudOpen(false);
     setPresetId(null);
   }
   function loadPreset(p: Preset) {
     commit(() => p.stops);
     setPresetId(p.id);
     setSelected(null);
-  }
-
-  function toggleCat(cat: Category) {
-    // Si el pin seleccionado va a desaparecer con el filtro, cierra su card.
-    const sel = selected ? DEST[selected] : null;
-    if (cats.has(cat) && cats.size > 1 && sel && sel.category === cat && !stops.includes(sel.id)) {
-      setSelected(null);
-    }
-    setCats((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat) && next.size > 1) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
+    setSheetOpen(true);
   }
 
   // "Ordena mejor" (v1): reordena con nearest-neighbor y reporta el ahorro.
@@ -714,36 +649,56 @@ export default function MapaFinal() {
     setSavedKm(ahorro);
   }
 
-  // "Guardar viaje": estampa el sello ConoceRD y de ahí a la lista de espera.
-  function saveTrip() {
-    setStamped(true);
-    setHudOpen(false);
+  // "Guardar viaje": estampa el sello sobre la carta y pide el correo ahí mismo.
+  function startSave() {
+    setSave({ k: "form" });
     setSelected(null);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    stampTimer.current = setTimeout(() => requestSubscribe("viajero"), reduce ? 900 : 1600);
+    setSheetOpen(true);
   }
-  useEffect(() => () => {
-    if (stampTimer.current) clearTimeout(stampTimer.current);
-  }, []);
+
+  async function sendItinerary(e: React.FormEvent) {
+    e.preventDefault();
+    const value = email.trim();
+    if (!value) {
+      setSave({ k: "form", error: "Escribe tu correo" });
+      emailRef.current?.focus();
+      return;
+    }
+    setSave({ k: "sending" });
+    try {
+      const res = await fetch("/api/itinerario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value, stops }),
+      });
+      const data = (await res.json()) as { ok: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setSave({ k: "form", error: data.error ?? "No pudimos enviarlo. Inténtalo de nuevo." });
+        return;
+      }
+      setSave({ k: "done", email: value });
+    } catch {
+      setSave({ k: "form", error: "Sin conexión. Inténtalo de nuevo." });
+    }
+  }
+
   // Al salir de la escena, el sello no debe quedarse pegado para la próxima.
   // Ajuste durante render (patrón "derive from previous render"), no un efecto.
   const [wasVisible, setWasVisible] = useState(isVisible);
   if (wasVisible !== isVisible) {
     setWasVisible(isVisible);
-    if (!isVisible && !DEMO.sello) setStamped(false);
+    if (!isVisible && !DEMO.sello && save.k !== "done") setSave({ k: "idle" });
   }
 
-  // Esc cierra card o lista del HUD (lo primero que esté abierto).
+  // Esc cierra la mini-card del pin.
   useEffect(() => {
-    if (!selected && !hudOpen) return;
+    if (!selected) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setSelected(null);
-      setHudOpen(false);
+      if (e.key === "Escape") setSelected(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected, hudOpen]);
+  }, [selected]);
 
   // Ruta por carreteras reales: concatena los legs precalculados entre paradas
   // consecutivas (con un stub corto pin→carretera en cada extremo).
@@ -765,16 +720,311 @@ export default function MapaFinal() {
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;
-  const visibleDests = DESTINATIONS.filter(
-    (d) => cats.has(d.category) || stops.includes(d.id)
-  );
+  const totalKm = route?.km ?? 0;
+  const totalMin = route?.min ?? 0;
 
-  const summary =
-    stops.length === 0
-      ? null
-      : stops.length === 1
-        ? "1 parada · elige la siguiente"
-        : `${stops.length} paradas · ${route?.km ?? 0} km · ${fmtDur(route?.min ?? 0)}`;
+  // ── Carta derecha / sheet móvil: el itinerario ─────────────────────────────
+
+  const itinerary = (
+    <>
+      {/* Asa (solo móvil): expande/colapsa el sheet */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen((o) => !o)}
+        aria-expanded={sheetOpen}
+        aria-label={sheetOpen ? "Contraer el panel de tu ruta" : "Expandir el panel de tu ruta"}
+        className="flex h-8 w-full flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 min-[900px]:hidden"
+      >
+        <span aria-hidden="true" className="h-1 w-9 rounded-full bg-[#B5C0BD]" />
+      </button>
+
+      <div className={sheetOpen ? "contents" : "max-[899px]:hidden min-[900px]:contents"}>
+        {save.k === "idle" ? (
+          <>
+            <div className="flex-none px-[18px] pb-2 pt-4 max-[899px]:pt-0">
+              {/* En móvil no existe la carta izquierda: el kicker vive aquí */}
+              <div className="mb-1.5 min-[900px]:hidden">
+                <Kicker icon="route" index="02">Tu ruta</Kicker>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="font-display text-[20px] font-bold text-ink">Itinerario</h3>
+                {stops.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {history.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={undo}
+                        aria-label="Deshacer el último cambio de la ruta"
+                        title="Deshacer"
+                        className="grid size-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 text-muted transition-colors hover:bg-cream-2 hover:text-ink focus-visible:ring-2 focus-visible:ring-ink"
+                      >
+                        <Glyph d={GLYPH_UNDO} className="text-sm" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={clearRoute}
+                      className="cursor-pointer border-0 bg-transparent p-0 text-mini font-bold text-coral-ink"
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Ordena mejor / confirmación (aria-live anuncia el ahorro) */}
+            <div aria-live="polite" className="flex-none empty:hidden">
+              {showOptimize && (
+                <div className="px-[18px] pb-2">
+                  <button
+                    type="button"
+                    onClick={optimize}
+                    className="crd-sticker flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+                  >
+                    <Glyph d={GLYPH_SORT} className="text-sm" />
+                    Ordena mejor · te ahorras {saveKm} km
+                  </button>
+                </div>
+              )}
+              {savedKm !== null && !showOptimize && (
+                <p className="flex items-center gap-1.5 px-[18px] pb-2 text-tiny font-semibold text-mint-ink">
+                  <Icon name="check_circle" className="text-sm" />
+                  Mismo viaje, {savedKm} km menos.
+                </p>
+              )}
+            </div>
+
+            {stops.length === 0 ? (
+              <div className="flex-none px-[18px] pb-5 pt-1 max-[899px]:pb-7">
+                {/* La carta izquierda ya dice "toca un pin"; en desktop este
+                    hueco solo anuncia qué va a aparecer aquí. En móvil esa
+                    carta no existe, así que la instrucción va completa. */}
+                <p className="text-center text-tiny leading-[1.55] text-muted max-[899px]:hidden">
+                  Tus paradas aparecen aquí en orden, con los kilómetros y el
+                  tiempo de cada tramo.
+                </p>
+                <p className="text-center text-tiny leading-[1.55] text-muted min-[900px]:hidden">
+                  Toca cualquier pin del mapa y aquí se arma tu viaje, tramo por
+                  tramo, con kilómetros y tiempos reales de carretera.
+                </p>
+                {/* Móvil: los viajes recomendados viven aquí — la carta
+                    izquierda no existe en pantallas chicas. */}
+                <div
+                  className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] min-[900px]:hidden"
+                  role="group"
+                  aria-label="Viajes recomendados"
+                >
+                  {PRESETS.map((p) => (
+                    <PresetCard
+                      key={p.id}
+                      preset={p}
+                      compact
+                      active={presetId === p.id}
+                      onSelect={() => loadPreset(p)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <ol className="m-0 min-h-0 flex-1 list-none overflow-y-auto px-[18px] pb-2.5 [scrollbar-width:thin]">
+                {stops.map((id, i) => {
+                  const d = DEST[id];
+                  return (
+                    <li key={id}>
+                      <div className="flex items-center gap-2.5 py-1">
+                        <span
+                          aria-hidden="true"
+                          className="grid size-[22px] flex-none place-items-center rounded-full bg-mango font-mono text-mini font-bold text-white"
+                        >
+                          {i + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-bold text-ink">{d.name}</div>
+                          <div className="truncate font-mono text-micro text-muted">
+                            {d.province}
+                          </div>
+                        </div>
+                        <div className="flex flex-none items-center gap-0.5">
+                          <RowBtn
+                            name="arrow_upward"
+                            label={`Adelantar ${d.name}`}
+                            disabled={i === 0}
+                            onClick={() => moveStop(id, -1)}
+                          />
+                          <RowBtn
+                            name="arrow_downward"
+                            label={`Atrasar ${d.name}`}
+                            disabled={i === stops.length - 1}
+                            onClick={() => moveStop(id, 1)}
+                          />
+                          <RowBtn
+                            name="close"
+                            label={`Quitar ${d.name} de la ruta`}
+                            onClick={() => removeStop(id)}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Tramo hacia la siguiente parada: km y minutos reales */}
+                      {i < stops.length - 1 && (
+                        <div className="ml-[10px] border-l-2 border-dashed border-mango/60 py-1 pl-[19px] font-mono text-micro text-muted-2">
+                          {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
+                          {fmtDur(pairMin(id, stops[i + 1]))} manejando
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </>
+        ) : (
+          // ── Ruta estampada: el sello y el correo ───────────────────────────
+          <div className="flex-none px-[18px] pb-4 pt-3 max-[899px]:pt-0">
+            <div className="flex flex-col items-center text-center">
+              <div className="mapa6-stamp">
+                <StampCRD
+                  size={148}
+                  rotate={-8}
+                  line1="RUTA GUARDADA"
+                  line2={`${stops.length} PARADAS · ${totalKm} KM`}
+                  label={`Ruta guardada: ${stops.length} paradas, ${totalKm} kilómetros`}
+                />
+              </div>
+              {/* El cuño da el gesto; los datos hay que poder leerlos, y dentro
+                  del anillo a este tamaño no se leen. */}
+              <p className="mt-1 font-mono text-micro font-bold uppercase tracking-[.1em] text-muted">
+                {stops.length} paradas · {totalKm} km · {fmtDurShort(totalMin)}
+              </p>
+
+              {save.k === "done" ? (
+                <>
+                  <h3 className="mt-2 font-display text-[20px] font-bold leading-tight text-ink">
+                    Va en camino
+                  </h3>
+                  <p className="mt-1 text-tiny leading-[1.55] text-muted">
+                    Te mandamos el itinerario completo a{" "}
+                    <span className="font-bold text-ink">{save.email}</span>. Revisa
+                    también la carpeta de spam por si acaso.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSave({ k: "idle" })}
+                    className="mt-3 inline-flex min-h-[40px] cursor-pointer items-center gap-1.5 rounded-full border-[1.5px] border-line bg-white px-3.5 text-tiny font-bold text-ink transition-colors hover:bg-cream-2 focus-visible:ring-2 focus-visible:ring-ink"
+                  >
+                    <Icon name="route" className="text-sm" />
+                    Seguir armando la ruta
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="mt-2 font-display text-[20px] font-bold leading-tight text-ink">
+                    Tu ruta quedó <em className="crd-accent">estampada</em>
+                  </h3>
+                  <p className="mt-1 text-tiny leading-[1.55] text-muted">
+                    Déjanos tu correo y te la mandamos completa: cada parada con su
+                    foto, qué hacer ahí y cuánto manejas de una a otra.
+                  </p>
+                  <form onSubmit={sendItinerary} className="mt-3 w-full">
+                    <label htmlFor={emailId} className="sr-only">
+                      Tu correo
+                    </label>
+                    <div className="flex items-center gap-1.5 rounded-full border-[1.5px] border-line bg-white pl-3 pr-1 focus-within:border-mango">
+                      <Glyph d={GLYPH_MAIL} className="flex-none text-base text-muted" />
+                      <input
+                        ref={emailRef}
+                        id={emailId}
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        required
+                        value={email}
+                        onChange={(ev) => setEmail(ev.target.value)}
+                        placeholder="tucorreo@ejemplo.com"
+                        disabled={save.k === "sending"}
+                        aria-invalid={save.k === "form" && Boolean(save.error)}
+                        className="min-w-0 flex-1 border-0 bg-transparent py-2 text-tiny text-ink outline-none placeholder:text-muted-2"
+                      />
+                      <button
+                        type="submit"
+                        disabled={save.k === "sending"}
+                        className="my-1 inline-flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-mango px-3.5 text-tiny font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
+                      >
+                        {save.k === "sending" ? "Enviando…" : "Envíamelo"}
+                      </button>
+                    </div>
+                    <p aria-live="polite" className="empty:hidden">
+                      {save.k === "form" && save.error && (
+                        <span className="mt-1.5 block text-mini font-semibold text-coral-ink">
+                          {save.error}
+                        </span>
+                      )}
+                    </p>
+                    <p className="mt-2 text-mini leading-[1.45] text-muted-2">
+                      Te apuntamos también a la lista de espera de ConoceRD. Sin spam,
+                      te puedes salir cuando quieras.
+                    </p>
+                  </form>
+                  <button
+                    type="button"
+                    onClick={() => setSave({ k: "idle" })}
+                    className="mt-2 cursor-pointer border-0 bg-transparent p-0 text-mini font-bold text-muted underline-offset-2 hover:underline"
+                  >
+                    Volver a la ruta
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Totales + guardar — visibles también con el sheet colapsado */}
+      {stops.length > 0 && save.k === "idle" && (
+        <div className="flex-none border-t border-line bg-cream-2/70">
+          <div className="grid grid-cols-3">
+            <div className="px-2 py-2.5 text-center">
+              <div className="font-mono text-lg font-bold leading-tight text-ink">
+                {stops.length}
+              </div>
+              <div className="text-micro font-semibold uppercase tracking-wide text-muted">
+                {stops.length === 1 ? "parada" : "paradas"}
+              </div>
+            </div>
+            <div className="border-l border-line px-2 py-2.5 text-center">
+              <div className="font-mono text-lg font-bold leading-tight text-ink">
+                {totalKm} km
+              </div>
+              <div className="text-micro font-semibold uppercase tracking-wide text-muted">
+                por carretera
+              </div>
+            </div>
+            <div className="border-l border-line px-2 py-2.5 text-center">
+              <div className="font-mono text-lg font-bold leading-tight text-ink">
+                {fmtDurShort(totalMin)}
+              </div>
+              <div className="text-micro font-semibold uppercase tracking-wide text-muted">
+                manejando
+              </div>
+            </div>
+          </div>
+          {stops.length >= 2 && (
+            <div className="px-[18px] pb-3.5 pt-0.5 max-[899px]:pb-5">
+              <button
+                type="button"
+                onClick={startSave}
+                className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-mango text-tiny font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+              >
+                <Glyph d={GLYPH_SAVE} className="text-sm" />
+                Guardar viaje
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -790,7 +1040,7 @@ export default function MapaFinal() {
 
       {/* Pines: toda la interacción nace aquí */}
       {isVisible &&
-        visibleDests.map((d) => (
+        DESTINATIONS.map((d) => (
           <DestinationPin
             key={d.id}
             d={d}
@@ -812,45 +1062,8 @@ export default function MapaFinal() {
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        {/* Filtros: fila de chips flotantes arriba-izquierda (v4). Debajo de la
-            franja del nav: a top 18px el cuarto chip se metía bajo la píldora
-            de navegación. Móvil: una sola fila deslizable — dos filas tapaban
-            la isla. */}
-        <div className="absolute left-[clamp(14px,3%,40px)] top-[clamp(74px,9vh,92px)] max-w-[min(560px,calc(100%-28px))] max-[899px]:left-3 max-[899px]:right-0 max-[899px]:top-[70px] max-[899px]:max-w-none">
-          <div
-            className="pointer-events-auto flex flex-wrap gap-1.5 max-[899px]:flex-nowrap max-[899px]:overflow-x-auto max-[899px]:pb-1 max-[899px]:pr-3 max-[899px]:[scrollbar-width:none]"
-            role="group"
-            aria-label="Filtrar destinos por categoría"
-          >
-            {CATEGORIES.map((cat) => {
-              const meta = CATEGORY_META[cat];
-              const isActive = cats.has(cat);
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => toggleCat(cat)}
-                  aria-pressed={isActive}
-                  className="inline-flex h-9 flex-none cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] px-3 text-tiny font-bold shadow-card backdrop-blur-[12px] transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-11"
-                  style={{
-                    borderColor: isActive ? meta.color : "var(--color-line)",
-                    background: isActive
-                      ? `linear-gradient(0deg, ${meta.color}24, ${meta.color}24), #FFFFFF`
-                      : "rgba(253,248,240,.9)",
-                    color: isActive ? meta.ink : "var(--color-muted)",
-                  }}
-                >
-                  <Icon name={meta.icon} className="text-sm" />
-                  {meta.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Card "Arma tu itinerario" abajo-izquierda (v1) con las rutas
-            curadas dentro (v2). Solo desktop: en móvil el HUD cuenta la
-            historia y las rutas listas viven sobre el HUD. */}
+        {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
+            en móvil ambos viven dentro del sheet del itinerario). */}
         <div
           className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(24px,4%,48px)] left-[clamp(16px,3%,40px)] w-[300px] rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
         >
@@ -860,9 +1073,9 @@ export default function MapaFinal() {
           </h2>
           <p className="mt-1 text-tiny leading-[1.5] text-muted">
             Toca un pin y se vuelve una parada, con km y tiempo por carretera de
-            verdad. O empieza con una ruta hecha:
+            verdad. O empieza con un viaje recomendado:
           </p>
-          <div className="mt-2.5 flex flex-col gap-1.5" role="group" aria-label="Rutas curadas">
+          <div className="mt-2.5 flex flex-col gap-1.5" role="group" aria-label="Viajes recomendados">
             {PRESETS.map((p) => (
               <PresetCard
                 key={p.id}
@@ -874,142 +1087,18 @@ export default function MapaFinal() {
           </div>
         </div>
 
-        {/* HUD abajo-centro: resumen + Ordena mejor + deshacer + limpiar +
-            guardar + lista desplegable */}
-        <div
-          className={`pointer-events-auto absolute bottom-[clamp(18px,4%,44px)] left-1/2 z-20 flex w-max max-w-[min(520px,calc(100%-24px))] -translate-x-1/2 flex-col items-center gap-2 max-[899px]:w-[calc(100%-24px)] ${
+        {/* Carta derecha en desktop; sheet abajo en móvil. Con un pin abierto
+            en móvil el sheet se esconde: la mini-card ocupa ese mismo sitio. */}
+        <section
+          aria-label="Tu itinerario"
+          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[76vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
             sel ? "max-[899px]:hidden" : ""
           }`}
         >
-          {/* Móvil, ruta vacía: las rutas curadas dan el primer valor en un
-              tap y desaparecen en cuanto existe una ruta. */}
-          {stops.length === 0 && (
-            <div
-              className="flex w-full gap-2 overflow-x-auto pb-1 [scrollbar-width:none] min-[900px]:hidden"
-              role="group"
-              aria-label="Rutas listas para usar"
-            >
-              {PRESETS.map((p) => (
-                <PresetCard key={p.id} preset={p} compact active={false} onSelect={() => loadPreset(p)} />
-              ))}
-            </div>
-          )}
+          {itinerary}
+        </section>
 
-          {hudOpen && stops.length > 0 && (
-            <HudList
-              stops={stops}
-              km={route?.km ?? 0}
-              min={route?.min ?? 0}
-              onMove={moveStop}
-              onRemove={removeStop}
-            />
-          )}
-
-          {/* "Ordena mejor" (v1): aparece solo cuando de verdad ahorra km. */}
-          <div aria-live="polite" className="empty:hidden">
-            {showOptimize ? (
-              <button
-                type="button"
-                onClick={optimize}
-                className="crd-sticker inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border-0 bg-mint px-4 text-tiny font-bold text-ink-2 max-[899px]:min-h-[44px]"
-              >
-                <Glyph d={GLYPH_SORT} className="text-sm" />
-                Ordena mejor · te ahorras {saveKm} km
-              </button>
-            ) : savedKm !== null ? (
-              <span className={`${PANEL_GLASS} inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-tiny font-bold text-mint-ink shadow-card`}>
-                <Icon name="check_circle" className="text-sm" />
-                Mismo viaje, {savedKm} km menos.
-              </span>
-            ) : null}
-          </div>
-
-          <div
-            className={`${PANEL_GLASS} flex h-[52px] items-center gap-1 rounded-full pl-2 pr-2 shadow-panel max-[899px]:w-full max-[899px]:justify-center`}
-          >
-            {stops.length === 0 ? (
-              <span className="flex items-center gap-2 px-3 text-tiny font-bold text-ink">
-                <Icon name="explore" className="text-base text-mango-ink" />
-                Toca un pin del mapa y arma tu ruta
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setHudOpen((v) => !v)}
-                aria-expanded={hudOpen}
-                aria-label={hudOpen ? "Ocultar paradas de la ruta" : "Ver y reordenar las paradas de la ruta"}
-                className="flex h-10 min-w-0 cursor-pointer items-center gap-2 rounded-full px-3 transition-colors hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-ink"
-              >
-                <Icon name="route" className="flex-none text-base text-mango-ink" />
-                <span aria-live="polite" className="truncate font-mono text-tiny font-bold text-ink">
-                  {summary}
-                </span>
-                <Icon
-                  name="arrow_upward"
-                  className={`flex-none text-sm text-muted transition-transform duration-200 ${hudOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-            )}
-            {(history.length > 0 || stops.length > 0) && (
-              <span className="h-6 w-px flex-none bg-line" aria-hidden="true" />
-            )}
-            {history.length > 0 && (
-              <button
-                type="button"
-                onClick={undo}
-                aria-label="Deshacer el último cambio de la ruta"
-                title="Deshacer"
-                className="grid size-9 flex-none cursor-pointer place-items-center rounded-full text-ink transition-colors hover:bg-white/70 focus-visible:ring-2 focus-visible:ring-ink max-[899px]:size-11"
-              >
-                <Glyph d={GLYPH_UNDO} className="text-base" />
-              </button>
-            )}
-            {stops.length > 0 && (
-              <button
-                type="button"
-                onClick={clearRoute}
-                aria-label="Limpiar toda la ruta"
-                title="Limpiar ruta"
-                className="grid size-9 flex-none cursor-pointer place-items-center rounded-full text-coral-ink transition-colors hover:bg-coral-soft focus-visible:ring-2 focus-visible:ring-ink max-[899px]:size-11"
-              >
-                <Glyph d={GLYPH_TRASH} className="text-base" />
-              </button>
-            )}
-            {/* Guardar viaje: estampa el sello y lleva a la lista de espera */}
-            {stops.length >= 2 && (
-              <button
-                type="button"
-                onClick={saveTrip}
-                disabled={stamped}
-                className="ml-0.5 inline-flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-mango px-3.5 text-tiny font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-80 max-[899px]:h-11"
-              >
-                <Glyph d={GLYPH_SAVE} className="text-sm" />
-                Guardar viaje
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* El sello: "Guardar viaje" estampa la ruta sobre el mapa (v3) y de
-            ahí el scroll sigue solo hacia la lista de espera. */}
-        {stamped && (
-          <div className="absolute inset-0 z-30 grid place-items-center" aria-live="assertive">
-            <div className="mapa6-stamp flex flex-col items-center">
-              <StampCRD
-                size={172}
-                rotate={-8}
-                line1="RUTA GUARDADA"
-                line2={`${stops.length} PARADAS · ${route?.km ?? 0} KM`}
-                label={`Ruta guardada: ${stops.length} paradas, ${route?.km ?? 0} kilómetros`}
-              />
-              <span className={`${PANEL_GLASS} mt-3 rounded-full px-3.5 py-1.5 font-mono text-micro font-bold uppercase tracking-[.12em] text-ink shadow-card`}>
-                Te llevamos a la lista de espera…
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Móvil: la mini-card es un sheet pequeño anclado abajo */}
+        {/* Móvil: la mini-card del pin es un sheet pequeño anclado abajo */}
         {sel && (
           <div
             role="dialog"
