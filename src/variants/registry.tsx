@@ -30,6 +30,8 @@ const REGISTRY: Record<VariantArea, Record<string, ComponentType>> = {
     "3": load(() => import("@/variants/mapa/v3")),
     "4": load(() => import("@/variants/mapa/v4")),
     "5": load(() => import("@/variants/mapa/v5")),
+    // v6 = la síntesis final elegida por el dueño (ago 2026).
+    "6": load(() => import("@/variants/mapa/v6")),
   },
   vn: {
     "1": load(() => import("@/variants/vn/v1")),
@@ -37,6 +39,7 @@ const REGISTRY: Record<VariantArea, Record<string, ComponentType>> = {
     "3": load(() => import("@/variants/vn/v3")),
     "4": load(() => import("@/variants/vn/v4")),
     "5": load(() => import("@/variants/vn/v5")),
+    "6": load(() => import("@/variants/vn/v6")),
   },
   equipo: {
     "1": load(() => import("@/variants/equipo/v1")),
@@ -44,6 +47,7 @@ const REGISTRY: Record<VariantArea, Record<string, ComponentType>> = {
     "3": load(() => import("@/variants/equipo/v3")),
     "4": load(() => import("@/variants/equipo/v4")),
     "5": load(() => import("@/variants/equipo/v5")),
+    "6": load(() => import("@/variants/equipo/v6")),
   },
 };
 
