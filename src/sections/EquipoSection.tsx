@@ -319,7 +319,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
     >
       {/* La estampa ConoceRD, pegada a la card */}
       <div aria-hidden="true" className="absolute -top-9 right-1 desk:-right-7">
-        <StampCRD size={106} rotate={8} line1="EST. 2026" line2="· STGO. RD ·" />
+        <StampCRD size={106} rotate={8} line1="SANTIAGO, RD" line2="· EST. 2026 ·" />
       </div>
 
       <div className="flex items-center gap-2 pr-24">

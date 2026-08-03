@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:journey": "node scripts/journey-smoke.mjs",
-    "qr": "node scripts/generate-qr.mjs"
+    "qr": "node scripts/generate-qr.mjs",
+    "email:assets": "node scripts/gen-email-assets.mjs"
   },
   "dependencies": {
     "@21st-sdk/agent": "^0.0.18",

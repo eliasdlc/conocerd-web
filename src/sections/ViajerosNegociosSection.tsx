@@ -550,7 +550,7 @@ function ViajerosFinal() {
           {/* La estampa ConoceRD, pegada en la esquina (solo desktop: en el
               sheet móvil el overflow la recortaría). */}
           <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={10} line1="EST. 2026" line2="· MODO VIAJERO ·" />
+            <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
           </div>
 
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
@@ -939,7 +939,7 @@ function NegociosFinal() {
           }`}
         >
           <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={-9} color="#0C6A60" line1="EST. 2026" line2="· NEGOCIO LOCAL ·" />
+            <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
           </div>
 
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">

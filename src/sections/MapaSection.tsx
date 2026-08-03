@@ -1139,7 +1139,9 @@ export default function MapaSection() {
                     size={160}
                     rotate={-8}
                     line1="RUTA GUARDADA"
-                    line2={`${stops.length} PARADAS · ${totalKm} KM`}
+                    // Las cifras van debajo, en texto legible: dentro del cuño
+                    // no se leen y una línea larga choca con el arco del lema.
+                    line2="· HECHO EN RD ·"
                     label={`Ruta guardada: ${stops.length} paradas, ${totalKm} kilómetros`}
                   />
                 </div>

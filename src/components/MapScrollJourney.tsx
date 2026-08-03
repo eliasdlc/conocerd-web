@@ -15,7 +15,7 @@ import {
   MOBILE_TRIGGER_TOTAL_DVH,
 } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
-import { registerSceneJumper } from "@/lib/journeyNav";
+import { registerSceneJumper, scrollToSection } from "@/lib/journeyNav";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
@@ -75,6 +75,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       scrollToSceneCenter(outerRef.current, i);
       return true;
     });
+  }, []);
+
+  // Enlaces que llegan de fuera con hash (`…/#trigger-mapa`, el CTA de los
+  // correos). El salto nativo del navegador aterriza en el BORDE de la banda
+  // de scroll, no en el keyframe, y en móvil la pista va comprimida en dvh, así
+  // que cae en cualquier sitio. Se resuelve con el mismo saltador del nav, ya
+  // registrado por el efecto de arriba.
+  useEffect(() => {
+    const scene = window.location.hash.slice(1);
+    if (!scene.startsWith("trigger-")) return;
+    const id = window.setTimeout(() => scrollToSection(scene), 120);
+    return () => window.clearTimeout(id);
   }, []);
 
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
