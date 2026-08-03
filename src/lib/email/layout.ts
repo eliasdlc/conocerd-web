@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SITE_URL } from "@/lib/site";
+import type { EmailAssets } from "./assets";
 import { C, F, WIDTH, esc } from "./theme";
 import { EMAIL_ASSET_PX, type EmailStampSlug } from "./stamps";
 
@@ -24,6 +25,23 @@ const INSTAGRAM = { handle: "@conocerd.app", url: "https://instagram.com/conocer
 export function asset(p: string): string {
   return `${SITE_URL}${p}`;
 }
+
+/**
+ * Los binarios de marca que viajan dentro del mensaje (ver `assets.ts`). En
+ * carpeta aparte de las fotos de los destinos: esto es chasis —lo lee el
+ * servidor y entra en el bundle de la ruta— y aquello es contenido que se
+ * genera en lote y sólo se sirve por URL.
+ */
+export const LOGO_ASSET = "/assets/email/marca/logo.png";
+export const stampAsset = (slug: EmailStampSlug) => `/assets/email/marca/sello-${slug}.png`;
+
+/**
+ * Estilo del texto alternativo. Cuando una imagen no llega —bloqueada, aún sin
+ * publicar, formato que el cliente no lee— casi todos los clientes pintan el
+ * `alt` con la tipografía del sistema en negro: se ve como un error. Heredar la
+ * tipografía del correo hace que la caída parezca parte del diseño.
+ */
+export const ALT_TYPE = `font:700 13px/1.4 ${F.sans};color:${C.muted};`;
 
 /** Enlace al mapa del sitio, que es la demo de rutas. */
 export const DEMO_URL = `${SITE_URL}/#trigger-mapa`;
@@ -108,22 +126,29 @@ export function bulletList(
   </table>`;
 }
 
-/** El sello, ya rasterizado y con su giro de tampón horneado en el PNG. */
-export function stamp(slug: EmailStampSlug, alt: string): string {
+/**
+ * El sello, ya rasterizado y con su giro de tampón horneado en el PNG.
+ *
+ * `alt` vacío a propósito: el cuño es decoración —lo que dice ya está escrito
+ * en el titular que va justo debajo— y un `alt` con frase deja dos líneas de
+ * texto suelto encima del correo cuando la imagen no carga. Vacío, el hueco
+ * simplemente no existe, y los lectores de pantalla lo saltan, que es lo
+ * correcto para un adorno.
+ */
+export function stamp(assets: EmailAssets, slug: EmailStampSlug): string {
   const w = EMAIL_ASSET_PX.stampBox;
-  return `<img src="${asset(`/assets/email/sello-${slug}.png`)}" width="${w}" height="${w}" alt="${esc(
-    alt
-  )}" style="display:block;margin:0 auto;width:${w}px;height:${w}px;border:0;" />`;
+  return `<img src="${assets.src(stampAsset(slug))}" width="${w}" height="${w}" alt=""
+    style="display:block;margin:0 auto;width:${w}px;height:${w}px;border:0;" />`;
 }
 
 // ─── Chasis ──────────────────────────────────────────────────────────────────
 
-function header(): string {
+function header(assets: EmailAssets): string {
   return `<tr><td align="center" style="padding:4px 0 22px 0;">
     <a href="${SITE_URL}" style="text-decoration:none;">
-      <img src="${asset("/assets/email/logo.png")}" width="${EMAIL_ASSET_PX.logoWidth}"
-        alt="ConoceRD — descubre lo nuestro"
-        style="display:block;width:${EMAIL_ASSET_PX.logoWidth}px;height:auto;border:0;" />
+      <img src="${assets.src(LOGO_ASSET)}" width="${EMAIL_ASSET_PX.logoWidth}"
+        alt="ConoceRD"
+        style="display:block;width:${EMAIL_ASSET_PX.logoWidth}px;height:auto;border:0;${ALT_TYPE}" />
     </a>
   </td></tr>`;
 }
@@ -156,9 +181,11 @@ export interface ShellOptions {
   content: string;
   /** Última línea del pie, antes de la letra pequeña legal. */
   footerNote: string;
+  /** De dónde salen el logo y el sello: adjuntos o URL. Ver `assets.ts`. */
+  assets: EmailAssets;
 }
 
-export function shell({ title, preheader, content, footerNote }: ShellOptions): string {
+export function shell({ title, preheader, content, footerNote, assets }: ShellOptions): string {
   return `<!doctype html>
 <html lang="es"><head>
 <meta charset="utf-8" />
@@ -174,7 +201,7 @@ export function shell({ title, preheader, content, footerNote }: ShellOptions): 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.cream};">
   <tr><td align="center" style="padding:28px 12px 40px 12px;">
     <table role="presentation" width="${WIDTH}" cellpadding="0" cellspacing="0" border="0" style="width:${WIDTH}px;max-width:100%;">
-      ${header()}
+      ${header(assets)}
       ${content}
       ${footer(footerNote)}
     </table>

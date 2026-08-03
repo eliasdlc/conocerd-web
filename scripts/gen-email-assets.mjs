@@ -19,9 +19,12 @@ import path from "node:path";
 import process from "node:process";
 
 import puppeteer from "puppeteer-core";
+import sharp from "sharp";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
-const OUT_DIR = path.resolve("public/assets/email");
+// Carpeta propia, aparte de las fotos de los destinos: estos PNG son el chasis
+// de la marca y los lee el servidor para meterlos dentro del mensaje.
+const OUT_DIR = path.resolve("public/assets/email/marca");
 
 const CHROMIUM_CANDIDATES = [
   process.env.CHROMIUM_PATH,
@@ -121,9 +124,14 @@ try {
     const el = await page.$(`[data-asset="${name}"]`);
     const shot = await el.screenshot({ encoding: "base64", omitBackground: true });
     const png = await scrubAlpha(page, shot);
+    // El PNG del canvas de Chromium sale sin comprimir de verdad: pesa tres
+    // veces lo que debe. Estos dos archivos ya no sólo se descargan, viajan
+    // ADJUNTOS dentro de cada correo (`lib/email/assets.ts`), así que su peso
+    // se paga en cada envío. Recomprimir sin pérdida: mismos píxeles, un tercio.
+    const packed = await sharp(png).png({ compressionLevel: 9, effort: 10 }).toBuffer();
     const file = path.join(OUT_DIR, `${name}.png`);
-    await writeFile(file, png);
-    console.log("✓", path.relative(process.cwd(), file));
+    await writeFile(file, packed);
+    console.log("✓", path.relative(process.cwd(), file).padEnd(40), `${Math.round(packed.length / 1024)} kB`);
   }
 } finally {
   await browser.close();

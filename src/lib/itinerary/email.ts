@@ -17,7 +17,10 @@ import { DESTINATIONS, CATEGORY_META, type Destination } from "@/data/destinatio
 import { SITE_URL } from "@/lib/site";
 import pairs from "@/data/routes/pairs.json";
 
+import { loadEmailAssets, type EmailAssets, type RenderMode } from "@/lib/email/assets";
 import {
+  ALT_TYPE,
+  LOGO_ASSET,
   button,
   card,
   heading,
@@ -26,8 +29,9 @@ import {
   row,
   shell,
   stamp,
+  stampAsset,
 } from "@/lib/email/layout";
-import { sendEmail, type SendResult } from "@/lib/email/send";
+import { sendEmail, type RenderedEmail, type SendResult } from "@/lib/email/send";
 import { C, F, WIDTH, esc } from "@/lib/email/theme";
 
 const IDS = pairs.ids as string[];
@@ -98,18 +102,30 @@ function totalsStrip(stops: number, km: number, min: number): string {
   </table>`;
 }
 
-function stopBlock(id: string, i: number): string {
+/**
+ * La foto de la parada, en la copia que el correo sí sabe pintar.
+ *
+ * El sitio sirve WebP y Outlook de escritorio no lo lee — la tarjeta se
+ * quedaría con el nombre del lugar donde va la playa. Las copias JPEG salen del
+ * mismo original con `pnpm email:photos`; el nombre es el contrato entre ese
+ * script y esta función.
+ */
+function photoPath(d: Destination): string {
+  const file = d.image.split("/").pop()!.replace(/\.\w+$/, ".jpg");
+  return `/assets/email/${file}`;
+}
+
+function stopBlock(assets: EmailAssets, id: string, i: number): string {
   const d = DEST[id];
   const meta = CATEGORY_META[d.category];
-  const img = `${SITE_URL}${d.image}`;
 
   return `
   <tr><td style="padding:0 0 8px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
       style="background:${C.paper};border:1px solid ${C.line};border-radius:14px;overflow:hidden;">
-      <tr><td>
-        <img src="${img}" width="${CARD_W}" alt="${esc(d.name)}"
-          style="display:block;width:100%;max-width:${CARD_W}px;height:auto;border:0;" />
+      <tr><td align="center" bgcolor="${C.cream2}" style="background:${C.cream2};">
+        <img src="${assets.src(photoPath(d))}" width="${CARD_W}" alt="${esc(d.name)}"
+          style="display:block;width:100%;max-width:${CARD_W}px;height:auto;border:0;${ALT_TYPE}" />
       </td></tr>
       <tr><td style="padding:16px 20px 20px 20px;">
         <p style="margin:0;font:700 12px/1 ${F.mono};letter-spacing:.1em;color:${meta.ink};text-transform:uppercase;">
@@ -147,19 +163,25 @@ function legBlock(a: string, b: string): string {
   </td></tr>`;
 }
 
-export function renderItineraryEmail(stops: string[]): { subject: string; html: string; text: string } {
+export async function renderItineraryEmail(
+  stops: string[],
+  mode: RenderMode = "send"
+): Promise<RenderedEmail> {
+  const assets = await loadEmailAssets([LOGO_ASSET, stampAsset("ruta")], mode);
   const { km, min } = itineraryTotals(stops);
   const first = DEST[stops[0]];
   const last = DEST[stops[stops.length - 1]];
   const subject = `Tu ruta por RD: ${first.name} → ${last.name} (${stops.length} paradas)`;
 
   const paradas = stops
-    .map((id, i) => stopBlock(id, i) + (i < stops.length - 1 ? legBlock(id, stops[i + 1]) : ""))
+    .map(
+      (id, i) => stopBlock(assets, id, i) + (i < stops.length - 1 ? legBlock(id, stops[i + 1]) : "")
+    )
     .join("");
 
   const content = [
     row(
-      `${stamp("ruta", "Sello de ruta guardada de ConoceRD")}
+      `${stamp(assets, "ruta")}
        <div style="text-align:center;">
          ${kicker("Tu ruta, parada por parada")}
          ${heading("Aquí está tu viaje")}
@@ -191,6 +213,7 @@ export function renderItineraryEmail(stops: string[]): { subject: string; html: 
     preheader: `${stops.length} paradas · ${km} km · ${fmtDur(min)} manejando por República Dominicana.`,
     content,
     footerNote: "Te llegó esto porque guardaste una ruta en ConoceRD.",
+    assets,
   });
 
   const text = [
@@ -218,15 +241,15 @@ export function renderItineraryEmail(stops: string[]): { subject: string; html: 
     "correos, responde a este con «Baja».",
   ].join("\n");
 
-  return { subject, html, text };
+  return { subject, html, text, attachments: assets.attachments };
 }
 
 export async function sendItineraryEmail(
   to: string,
   stops: string[]
 ): Promise<ItineraryResult> {
-  const { subject, html, text } = renderItineraryEmail(stops);
-  const sent = await sendEmail({ to, subject, html, text });
+  const { subject, html, text, attachments } = await renderItineraryEmail(stops);
+  const sent = await sendEmail({ to, subject, html, text, attachments });
 
   // En local el no-op es a propósito. En producción no: el mapa estampa el
   // sello de "listo" cuando el endpoint responde `ok`, así que saltarse el

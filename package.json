@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:journey": "node scripts/journey-smoke.mjs",
     "qr": "node scripts/generate-qr.mjs",
-    "email:assets": "node scripts/gen-email-assets.mjs"
+    "email:assets": "node scripts/gen-email-assets.mjs",
+    "email:photos": "node scripts/gen-email-photos.mjs"
   },
   "dependencies": {
     "@21st-sdk/agent": "^0.0.18",
@@ -36,6 +37,7 @@
     "eslint-config-next": "16.2.9",
     "puppeteer-core": "^25.2.1",
     "qrcode": "^1.5.4",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

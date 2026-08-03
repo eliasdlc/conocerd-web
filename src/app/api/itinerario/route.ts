@@ -63,7 +63,10 @@ export async function GET(request: Request) {
       status: 400,
     });
   }
-  return new Response(renderItineraryEmail(stops).html, {
+  // `preview`: el navegador no sabe qué es un `cid:`, así que la marca se pinta
+  // desde las rutas del propio servidor en vez de viajar adjunta.
+  const { html } = await renderItineraryEmail(stops, "preview");
+  return new Response(html, {
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }

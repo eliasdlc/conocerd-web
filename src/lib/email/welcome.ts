@@ -17,8 +17,10 @@ import { CONTENT } from "@/components/lista/content";
 import { SITE_URL } from "@/lib/site";
 import type { Audience } from "@/lib/waitlist/schema";
 
+import { loadEmailAssets, type RenderMode } from "./assets";
 import {
   DEMO_URL,
+  LOGO_ASSET,
   bulletList,
   button,
   card,
@@ -28,10 +30,11 @@ import {
   row,
   shell,
   stamp,
+  stampAsset,
   subheading,
 } from "./layout";
 import { C, esc } from "./theme";
-import { sendEmail, type SendResult } from "./send";
+import { sendEmail, type RenderedEmail, type SendResult } from "./send";
 
 export interface WelcomeRecipient {
   /** Nombre de pila de la persona, si lo dejó. */
@@ -119,16 +122,18 @@ function copyFor(audience: Audience, who: WelcomeRecipient): Copy {
   };
 }
 
-export function renderWelcomeEmail(
+export async function renderWelcomeEmail(
   audience: Audience,
-  who: WelcomeRecipient = {}
-): { subject: string; html: string; text: string } {
+  who: WelcomeRecipient = {},
+  mode: RenderMode = "send"
+): Promise<RenderedEmail> {
   const c = copyFor(audience, who);
   const { perks, features } = CONTENT[audience];
+  const assets = await loadEmailAssets([LOGO_ASSET, stampAsset(c.stampSlug)], mode);
 
   const content = [
     row(
-      `${stamp(c.stampSlug, "Sello de ConoceRD")}
+      `${stamp(assets, c.stampSlug)}
        <div style="text-align:center;">
          ${kicker(c.eyebrow, audience === "negocio" ? C.mintInk : C.coralInk)}
          ${heading(c.headline)}
@@ -166,6 +171,7 @@ export function renderWelcomeEmail(
     preheader: c.preheader,
     content,
     footerNote: c.footerNote,
+    assets,
   });
 
   const text = [
@@ -188,7 +194,7 @@ export function renderWelcomeEmail(
     "Si no quieres más correos, responde a este con «Baja».",
   ].join("\n");
 
-  return { subject: c.subject, html, text };
+  return { subject: c.subject, html, text, attachments: assets.attachments };
 }
 
 export async function sendWelcomeEmail(
@@ -196,6 +202,6 @@ export async function sendWelcomeEmail(
   audience: Audience,
   who: WelcomeRecipient = {}
 ): Promise<SendResult> {
-  const { subject, html, text } = renderWelcomeEmail(audience, who);
-  return sendEmail({ to, subject, html, text });
+  const { subject, html, text, attachments } = await renderWelcomeEmail(audience, who);
+  return sendEmail({ to, subject, html, text, attachments });
 }

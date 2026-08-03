@@ -33,10 +33,16 @@ export async function GET(request: Request) {
   }
   const params = new URL(request.url).searchParams;
   const audience = params.get("audience") === "negocio" ? "negocio" : "viajero";
-  const html = renderWelcomeEmail(audience, {
-    name: params.get("name") ?? undefined,
-    businessName: params.get("businessName") ?? undefined,
-  }).html;
+  // `preview`: el navegador no sabe qué es un `cid:`, así que la marca se pinta
+  // desde las rutas del propio servidor en vez de viajar adjunta.
+  const { html } = await renderWelcomeEmail(
+    audience,
+    {
+      name: params.get("name") ?? undefined,
+      businessName: params.get("businessName") ?? undefined,
+    },
+    "preview"
+  );
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
