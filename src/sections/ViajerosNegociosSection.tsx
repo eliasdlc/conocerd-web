@@ -285,7 +285,7 @@ function Telefono({ visible, children }: { visible: boolean; children: React.Rea
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
-      <PhoneMockup screen={children} />
+      <PhoneMockup screen={children} chrome={false} />
     </div>
   );
 }
@@ -324,15 +324,13 @@ const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
   { icon: "insights", label: "Panel" },
 ];
 
-/** Pantalla real de la app (screenshot del dueño, ago 2026). Las capturas van
- *  recortadas borde a borde, así que se colocan bajo la franja blanca de 26px
- *  donde el mockup dibuja la barra One UI y el punch-hole. */
+/** Pantalla real de la app (screenshot del dueño, ago 2026). Las capturas
+ *  traen su propia barra de estado, así que van de borde a borde y el mockup
+ *  solo les superpone el punch-hole; `chrome={false}` evita duplicar barras. */
 function PantallaReal({ src }: { src: string }) {
   return (
     <div className="absolute inset-0 bg-white">
-      <div className="absolute inset-x-0 bottom-0 top-[26px]">
-        <Image src={src} alt="" fill sizes="264px" className="object-cover" />
-      </div>
+      <Image src={src} alt="" fill sizes="264px" className="object-cover" />
     </div>
   );
 }

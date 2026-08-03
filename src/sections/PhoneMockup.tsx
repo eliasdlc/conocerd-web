@@ -12,20 +12,19 @@ import { SelfPin } from "@/components/map/pins";
 //  esquinas casi cuadradas, bisel de metal finísimo, botones solo en el lado
 //  derecho (volumen + encendido) y cámara punch-hole centrada en vez de
 //  Dynamic Island. El aspect del frame se deriva del aspect de las capturas
-//  (480×996) más 26px de franja de estado: las capturas van recortadas borde a
-//  borde, así que la barra One UI y el punch-hole viven en esa franja superior
-//  reservada (ver PantallaReal) en vez de tapar contenido. Sigue siendo CSS
-//  puro y la pantalla intercambiable por un screenshot real vía `screen`.
+//  (480×996) para que entren sin recorte. El punch-hole es hardware: se dibuja
+//  siempre, superpuesto a la pantalla como en el teléfono real — las capturas
+//  traen su propia barra de estado debajo. `chrome` añade solo el software del
+//  mockup por defecto (barra de estado y barra de gestos de la DefaultScreen).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Barra de estado estilo One UI: franja blanca de 26px con hora a la
- *  izquierda y radios a la derecha. Lleva su propio fondo para que el tope se
- *  vea blanco sobre cualquier pantalla (capturas reales o pantallas CSS). */
+/** Barra de estado estilo One UI (solo para la DefaultScreen): hora a la
+ *  izquierda, radios a la derecha, sin fondo propio. */
 function StatusBar() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-0 z-[3] flex h-[26px] items-center justify-between bg-white px-[18px] text-[11px] font-semibold tracking-[.01em] text-[#1B1F23]"
+      className="pointer-events-none absolute inset-x-0 top-0 z-[3] flex items-center justify-between px-[18px] pt-[8px] text-[11px] font-semibold tracking-[.01em] text-[#1B1F23]"
     >
       <span>9:41</span>
       <span className="flex items-center gap-[5px]">
@@ -104,10 +103,9 @@ export default function PhoneMockup({
     <div className="crd-phone-device">
       {/* Riel de titanio: gradiente grafito con luz de canto arriba/abajo, como
           el "Titanium Black". De frente el metal apenas asoma (3px); el grueso
-          del borde es el bisel negro uniforme del panel. 264/559 sale de la
-          captura 480×996 + 26px de franja de estado + 7px por lado (3 metal +
-          4 bisel). */}
-      <div className="crd-phone-frame relative box-border aspect-[264/559] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
+          del borde es el bisel negro uniforme del panel. 264/533 sale de la
+          captura 480×996 + 7px de bisel por lado (3 metal + 4 bisel). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/533] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
         {/* Botones, todos a la derecha: balancín de volumen y encendido, del
             mismo titanio que el riel */}
         <span aria-hidden="true" className="absolute -right-[2.5px] top-[19%] h-[52px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
@@ -121,15 +119,16 @@ export default function PhoneMockup({
             {chrome && (
               <>
                 <StatusBar />
-                {/* Cámara punch-hole centrada, con aro suave sobre el blanco */}
-                <div className="absolute left-1/2 top-[7px] z-[4] size-[12px] -translate-x-1/2 rounded-full bg-[#04070A] shadow-[0_0_2px_rgba(0,0,0,0.35)]">
-                  {/* lente */}
-                  <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#101820] shadow-[inset_0_-0.5px_1.5px_rgba(110,140,175,0.9)]" />
-                </div>
                 {/* Barra de gestos */}
                 <div className="absolute bottom-[6px] left-1/2 z-[4] h-[4px] w-[96px] -translate-x-1/2 rounded-full bg-black/30" />
               </>
             )}
+
+            {/* Cámara punch-hole centrada: es hardware, va siempre encima */}
+            <div className="absolute left-1/2 top-[7px] z-[4] size-[12px] -translate-x-1/2 rounded-full bg-[#04070A] shadow-[0_0_2px_rgba(0,0,0,0.35)]">
+              {/* lente */}
+              <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#101820] shadow-[inset_0_-0.5px_1.5px_rgba(110,140,175,0.9)]" />
+            </div>
 
             {/* Reflejo del cristal: diagonal y muy sutil, no lava la captura */}
             <div
