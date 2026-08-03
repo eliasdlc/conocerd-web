@@ -32,6 +32,9 @@ export const ROUTABLE_IDS = new Set(
 
 export type ItineraryResult = { ok: true; skipped?: boolean } | { ok: false; error: string };
 
+/** Buzón que atiende las bajas; recibe de verdad (MX de la raíz en name.com). */
+const UNSUBSCRIBE_MAILBOX = "info@conocerd.app";
+
 const C = {
   cream: "#FDF8F0",
   cream2: "#F5EEE3",
@@ -197,6 +200,7 @@ export function renderItineraryEmail(stops: string[]): { subject: string; html: 
         <p style="margin:16px 0 0 0;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:${C.muted};">
           Te llegó esto porque guardaste una ruta en ConoceRD. Estás en la lista de
           espera; te avisamos cuando abra la app.
+          Si no quieres más correos, responde a este con «Baja».
         </p>
       </td></tr>
 
@@ -225,6 +229,9 @@ export function renderItineraryEmail(stops: string[]): { subject: string; html: 
       return [...lines, ""];
     }),
     `Arma otra ruta: ${SITE_URL}`,
+    "",
+    "Te llegó esto porque guardaste una ruta en ConoceRD. Si no quieres más",
+    "correos, responde a este con «Baja».",
   ].join("\n");
 
   return { subject, html, text };
@@ -236,13 +243,31 @@ export async function sendItineraryEmail(
 ): Promise<ItineraryResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ITINERARY_FROM;
-  if (!apiKey || !from) return { ok: true, skipped: true };
+  if (!apiKey || !from) {
+    // En local el no-op es a propósito. En producción no: el mapa estampa el
+    // sello de "listo" cuando el endpoint responde `ok`, así que saltarse el
+    // envío en silencio le promete a la persona un correo que nunca sale.
+    if (process.env.NODE_ENV === "production") {
+      return { ok: false, error: "Falta RESEND_API_KEY o ITINERARY_FROM" };
+    }
+    console.warn("[itinerario] envío omitido: falta RESEND_API_KEY o ITINERARY_FROM");
+    return { ok: true, skipped: true };
+  }
 
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(apiKey);
     const { subject, html, text } = renderItineraryEmail(stops);
-    const { error } = await resend.emails.send({ from, to, subject, html, text });
+    const { error } = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+      text,
+      // Gmail y Yahoo penalizan a un remitente nuevo sin salida de un clic.
+      // `mailto:` en vez de URL porque no hay endpoint de baja todavía.
+      headers: { "List-Unsubscribe": `<mailto:${UNSUBSCRIBE_MAILBOX}?subject=Baja>` },
+    });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   } catch (err) {

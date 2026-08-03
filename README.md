@@ -72,11 +72,17 @@ entra más gente al panel, hay que sustituirlo por auth de verdad.
 | `DATABASE_URL` (Neon) | Los registros se guardan en `.waitlist/subscribers.json` (ignorado por git) en vez de en Postgres |
 | `RESEND_API_KEY` | No se da de alta el contacto en el ESP; el registro se guarda igual |
 | `RESEND_AUDIENCE_ID` | Ídem |
+| `ITINERARY_FROM` | En local, el correo de la ruta no se envía (no-op con aviso en consola); en producción `/api/itinerario` responde 502 en vez de fingir que salió |
 | `ADMIN_PASSWORD` | `/admin` no se puede abrir: el login queda deshabilitado con un aviso |
 
-Con las cuatro definidas (`vercel env`) no hay que tocar código: la selección de
-almacenamiento, el alta en el ESP y el acceso al panel dependen sólo de su
-presencia.
+Con las cinco definidas (`vercel env`) no hay que tocar código: la selección de
+almacenamiento, el alta en el ESP, el envío del itinerario y el acceso al panel
+dependen sólo de su presencia.
+
+`ITINERARY_FROM` es el remitente completo (`ConoceRD <info@conocerd.app>`) y su
+dominio tiene que estar verificado en Resend: SPF y MX de rebote en
+`send.conocerd.app`, DKIM en `resend._domainkey`. La raíz conserva su MX y su
+SPF de name.com, así que `info@` sigue recibiendo con normalidad.
 
 La tabla `waitlist_subscribers` se crea y se migra sola al primer arranque
 (`src/lib/waitlist/store.ts`); las columnas añadidas después de la creación
