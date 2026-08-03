@@ -8,15 +8,16 @@ import { SelfPin } from "@/components/map/pins";
 //  Mockup de teléfono (#10, rework ago 2026). La pantalla se mantiene frontal:
 //  debe comunicar el producto, no convertirse en una pieza 3D ilegible.
 //
-//  El frame dejó de ser "una card con notch": bisel fino de metal con botones
-//  laterales, aro negro de pantalla, Dynamic Island flotante, barra de estado
-//  (hora + señal/wifi/batería) y home indicator. Sigue siendo CSS puro y la
-//  pantalla sigue siendo intercambiable por un screenshot real vía `screen`
-//  (cuando lleguen las capturas reales de la app, pasar `chrome={false}` si ya
-//  traen su propia barra de estado).
+//  El frame imita un Galaxy S25 Ultra (el dispositivo de las capturas reales):
+//  esquinas casi cuadradas, bisel de metal finísimo, botones solo en el lado
+//  derecho (volumen + encendido) y cámara punch-hole centrada en vez de
+//  Dynamic Island. El aspect del frame se deriva del aspect de las capturas
+//  (480×996) para que entren sin recorte. Sigue siendo CSS puro y la pantalla
+//  sigue siendo intercambiable por un screenshot real vía `screen` (pasar
+//  `chrome={false}` cuando la captura ya trae su contenido de borde a borde).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Barra de estado estilo iOS: hora a la izquierda, radios a la derecha. */
+/** Barra de estado estilo One UI: hora a la izquierda, radios a la derecha. */
 function StatusBar() {
   return (
     <div
@@ -98,28 +99,27 @@ export default function PhoneMockup({
 }) {
   return (
     <div className="crd-phone-device">
-      {/* Bisel de metal: fino, con luz de canto y botones laterales */}
-      <div className="crd-phone-frame relative box-border aspect-[132/278] w-full rounded-[46px] bg-[linear-gradient(155deg,#43606C,#22414D_45%,#2E4F5B_85%,#43606C)] p-[7px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_1px_rgba(0,0,0,0.25)]">
-        {/* Botones: acción + volumen (izq.), encendido (der.) */}
-        <span aria-hidden="true" className="absolute -left-[2px] top-[15%] h-[22px] w-[2.5px] rounded-l-[2px] bg-[#16303A]" />
-        <span aria-hidden="true" className="absolute -left-[2px] top-[23%] h-[38px] w-[2.5px] rounded-l-[2px] bg-[#16303A]" />
-        <span aria-hidden="true" className="absolute -left-[2px] top-[33%] h-[38px] w-[2.5px] rounded-l-[2px] bg-[#16303A]" />
-        <span aria-hidden="true" className="absolute -right-[2px] top-[26%] h-[58px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
+      {/* Riel de titanio: plano, esquinas boxy y luz de canto. 264/533 sale de
+          la captura 480×996 más 7px de bisel por lado (5 metal + 2 aro). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/533] w-full rounded-[20px] bg-[linear-gradient(155deg,#43606C,#22414D_45%,#2E4F5B_85%,#43606C)] p-[5px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_1px_rgba(0,0,0,0.25)]">
+        {/* Botones, todos a la derecha: balancín de volumen y encendido */}
+        <span aria-hidden="true" className="absolute -right-[2px] top-[19%] h-[52px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
+        <span aria-hidden="true" className="absolute -right-[2px] top-[31%] h-[26px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
 
-        {/* Aro negro de pantalla (el borde OLED de un teléfono real) */}
-        <div className="relative size-full rounded-[39px] bg-black p-[3px]">
-          <div className="relative size-full overflow-hidden rounded-[36px] bg-[#EAF6F4]">
+        {/* Aro negro de pantalla: en el S25 Ultra es casi inexistente */}
+        <div className="relative size-full rounded-[15px] bg-black p-[2px]">
+          <div className="relative size-full overflow-hidden rounded-[13px] bg-[#EAF6F4]">
             {screen ?? <DefaultScreen />}
 
             {chrome && (
               <>
                 <StatusBar />
-                {/* Dynamic Island: pastilla flotante, separada del borde */}
-                <div className="absolute left-1/2 top-[9px] z-[4] h-[22px] w-[76px] -translate-x-1/2 rounded-full bg-black">
-                  {/* lente de la cámara */}
-                  <span className="absolute right-[7px] top-1/2 size-[9px] -translate-y-1/2 rounded-full bg-[#10151a] shadow-[inset_0_0_2px_rgba(90,120,150,0.8)]" />
+                {/* Cámara punch-hole centrada */}
+                <div className="absolute left-1/2 top-[8px] z-[4] size-[11px] -translate-x-1/2 rounded-full bg-black">
+                  {/* lente */}
+                  <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#10151a] shadow-[inset_0_0_2px_rgba(90,120,150,0.8)]" />
                 </div>
-                {/* Home indicator */}
+                {/* Barra de gestos */}
                 <div className="absolute bottom-[7px] left-1/2 z-[4] h-[4px] w-[100px] -translate-x-1/2 rounded-full bg-ink/40" />
               </>
             )}

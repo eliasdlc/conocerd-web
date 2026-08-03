@@ -326,7 +326,7 @@ const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
 
 /** Pantalla real de la app (screenshot del dueño, ago 2026). El mockup va con
  *  `chrome={false}`: las capturas ya traen su propio contenido de borde a
- *  borde y la Dynamic Island taparía el saludo. */
+ *  borde y el punch-hole de la cámara taparía el saludo. */
 function PantallaReal({ src }: { src: string }) {
   return (
     <div className="absolute inset-0 bg-[#F6F1E7]">
