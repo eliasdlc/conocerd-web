@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CONTENT } from "@/components/lista/content";
+import { founderCode } from "@/lib/waitlist/founder";
 import type { Audience } from "@/lib/waitlist/schema";
 
 import { loadEmailAssets, type RenderMode } from "./assets";
@@ -45,6 +46,14 @@ export interface WelcomeRecipient {
   name?: string;
   /** Sólo negocios: el nombre del sitio, que es como quieren que les hablen. */
   businessName?: string;
+  /**
+   * Los dos datos que hacen la credencial suya: su número de fundador (el `id`
+   * del alta) y el correo con el que se apuntó, que es lo que firma su código.
+   * Sin ellos el correo se manda igual, sólo que sin código — vale para la
+   * preview del navegador.
+   */
+  founderNumber?: number;
+  email?: string;
 }
 
 /** Primer nombre, capitalizado. La gente escribe "elias" y "ELIAS DE LA CRUZ". */
@@ -158,6 +167,10 @@ export async function renderWelcomeEmail(
   // El logo y el sello son los dos binarios que viajan dentro del mensaje.
   const assets = await loadEmailAssets([LOGO_ASSET, stampAsset(c.stampSlug)], mode);
 
+  // El sello dice que es fundador; el código lo demuestra. Ver `waitlist/founder.ts`.
+  const code =
+    who.founderNumber && who.email ? founderCode(who.founderNumber, who.email) : null;
+
   // El primer beneficio ya lo cuenta la credencial; la rejilla enseña el resto.
   const rest = perks.slice(1).map(short);
   const grid = features.map(short);
@@ -173,8 +186,17 @@ export async function renderWelcomeEmail(
         body: c.credentialBody,
         facts: [
           { label: c.factLabel, value: longDate(new Date()) },
-          { label: c.includesLabel, value: c.includes },
+          who.founderNumber
+            ? { label: "N.º de fundador", value: `#${who.founderNumber}` }
+            : { label: c.includesLabel, value: c.includes },
         ],
+        serial: code
+          ? {
+              label: "Tu código de fundador",
+              code,
+              note: "Guárdalo: es lo que te acredita cuando la app abra. Es personal — quien lo tenga puede usarlo, así que no lo compartas.",
+            }
+          : undefined,
       }),
       "0 0 30px 0"
     ),
@@ -224,7 +246,15 @@ export async function renderWelcomeEmail(
     c.headline,
     "",
     c.credentialBody,
-    `${c.factLabel}: ${longDate(new Date())}. ${c.includesLabel}: ${c.includes}.`,
+    `${c.factLabel}: ${longDate(new Date())}.`,
+    ...(who.founderNumber ? [`Fundador n.º ${who.founderNumber}.`] : []),
+    ...(code
+      ? [
+          "",
+          `TU CÓDIGO DE FUNDADOR: ${code}`,
+          "Guárdalo: es lo que te acredita cuando la app abra. No lo compartas.",
+        ]
+      : []),
     "",
     `${c.ctaTitle}: ${c.ctaBody}`,
     `${c.ctaLabel}: ${DEMO_URL}`,
