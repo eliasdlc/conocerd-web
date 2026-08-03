@@ -557,27 +557,34 @@ export function MapRoute({
       geometry: { type: "LineString", coordinates },
     };
 
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, { type: "geojson", data });
-    } else {
-      (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
-    }
+    // Si el GL del mapa murió (p. ej. SwiftShader sin recursos), maplibre
+    // lanza desde getSource/addSource con el style ya nulo. Una ruta que no
+    // puede pintarse se omite; no puede tumbar la página completa.
+    try {
+      if (!map.getSource(sourceId)) {
+        map.addSource(sourceId, { type: "geojson", data });
+      } else {
+        (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
+      }
 
-    if (!map.getLayer(layerId)) {
-      const paint: Record<string, unknown> = {
-        "line-color": color,
-        "line-width": width,
-        "line-opacity": opacity,
-      };
-      if (dashArray) paint["line-dasharray"] = dashArray;
+      if (!map.getLayer(layerId)) {
+        const paint: Record<string, unknown> = {
+          "line-color": color,
+          "line-width": width,
+          "line-opacity": opacity,
+        };
+        if (dashArray) paint["line-dasharray"] = dashArray;
 
-      map.addLayer({
-        id: layerId,
-        type: "line",
-        source: sourceId,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint,
-      });
+        map.addLayer({
+          id: layerId,
+          type: "line",
+          source: sourceId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint,
+        });
+      }
+    } catch {
+      return;
     }
 
     return () => {
@@ -597,12 +604,14 @@ export function MapRoute({
   // polilínea en vivo y sin esto la línea se quedaba con la primera versión.
   useEffect(() => {
     if (!map || coordinates.length < 2) return;
-    const src = map.getSource(`route-source-${id}`) as maplibregl.GeoJSONSource | undefined;
-    src?.setData({
-      type: "Feature",
-      properties: {},
-      geometry: { type: "LineString", coordinates },
-    });
+    try {
+      const src = map.getSource(`route-source-${id}`) as maplibregl.GeoJSONSource | undefined;
+      src?.setData({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates },
+      });
+    } catch {}
   }, [map, id, coordinates]);
 
   return null;
@@ -675,22 +684,27 @@ export function MapArc({
       geometry: { type: "LineString", coordinates: arcCoords(from, to, bend, 48) },
     };
 
-    if (!map.getSource(sourceId)) map.addSource(sourceId, { type: "geojson", data });
-    else (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
+    // Mismo blindaje que MapRoute: con el GL muerto, addSource lanza.
+    try {
+      if (!map.getSource(sourceId)) map.addSource(sourceId, { type: "geojson", data });
+      else (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
 
-    if (!map.getLayer(layerId)) {
-      map.addLayer({
-        id: layerId,
-        type: "line",
-        source: sourceId,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": color,
-          "line-width": width,
-          "line-opacity": 0.85,
-          "line-dasharray": [0, 4, 3],
-        },
-      });
+      if (!map.getLayer(layerId)) {
+        map.addLayer({
+          id: layerId,
+          type: "line",
+          source: sourceId,
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": color,
+            "line-width": width,
+            "line-opacity": 0.85,
+            "line-dasharray": [0, 4, 3],
+          },
+        });
+      }
+    } catch {
+      return;
     }
 
     let raf = 0;

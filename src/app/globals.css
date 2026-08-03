@@ -245,8 +245,8 @@ body::after {
    capa sticky del journey. El UI de la app se lee de frente; la profundidad la
    aportan la sombra y el mapa, no una rotación que deforme el contenido. */
 .crd-phone-device {
-  /* 0.495 = aspect 264/533 del frame: el teléfono cabe completo en alto. */
-  width: min(264px, 18vw, calc((100dvh - 120px) * 0.495));
+  /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto. */
+  width: min(264px, 18vw, calc((100dvh - 120px) * 0.480));
 }
 
 @media (min-width: 900px) and (max-height: 480px) {

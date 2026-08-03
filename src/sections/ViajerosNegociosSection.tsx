@@ -28,7 +28,7 @@
 //  prefers-reduced-motion se muestra el estado final estático.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useReducedMotion } from "motion/react";
 import { useScene } from "@/context/SceneContext";
@@ -335,6 +335,45 @@ function PantallaReal({ src }: { src: string }) {
   );
 }
 
+/** Demo en video de la app (grabación del dueño, ago 2026). Reproduce solo
+ *  mientras su parada está activa y arranca desde el inicio cada vez que
+ *  vuelve, para que el gesto grabado se entienda completo. Con
+ *  prefers-reduced-motion queda la captura fija del poster. */
+function PantallaVideo({ src, poster, activa }: { src: string; poster: string; activa: boolean }) {
+  const reduced = !!useReducedMotion();
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (activa) {
+      v.currentTime = 0;
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [activa]);
+
+  if (reduced) return <PantallaReal src={poster} />;
+  return (
+    <div className="absolute inset-0 bg-white">
+      {/* La captura fija vive debajo del video: si el navegador no puede
+          decodificar (o aún no cargó), se ve la pantalla real, nunca blanco. */}
+      <Image src={poster} alt="" fill sizes="264px" className="object-cover" />
+      <video
+        ref={ref}
+        src={src}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        className="absolute inset-0 size-full object-cover"
+      />
+    </div>
+  );
+}
+
 // ─── Sección VIAJEROS: GPS por el país en loop ───────────────────────────────
 
 // La ruta destacada del finale de Destinos: 6 paradas reales de punta a punta
@@ -469,10 +508,13 @@ function ViajerosFinal() {
     return upto >= 2 ? F_ROUTE.pts.slice(0, upto) : null;
   }, [bucket]);
 
+  // Cada parada enseña la app en movimiento: descubrir destinos, armar la
+  // ruta en el wizard y vivir el itinerario día a día. El poster es la
+  // captura fija equivalente (y el fallback con reduced motion).
   const pantallas = [
-    <PantallaReal key="e" src="/assets/app-explorar.webp" />,
-    <PantallaReal key="r" src="/assets/app-ruta.webp" />,
-    <PantallaReal key="d" src="/assets/app-destino.webp" />,
+    <PantallaVideo key="e" src="/assets/app-explorar.mp4" poster="/assets/app-explorar.webp" activa={visible && paso === 0} />,
+    <PantallaVideo key="r" src="/assets/app-crear-ruta.mp4" poster="/assets/app-ruta.webp" activa={visible && paso === 1} />,
+    <PantallaVideo key="d" src="/assets/app-itinerario.mp4" poster="/assets/app-itinerario.webp" activa={visible && paso === 2} />,
   ];
 
   const proxima = F_STOPS[frame.hacia];

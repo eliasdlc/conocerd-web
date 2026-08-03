@@ -12,7 +12,7 @@ import { SelfPin } from "@/components/map/pins";
 //  esquinas casi cuadradas, bisel de metal finísimo, botones solo en el lado
 //  derecho (volumen + encendido) y cámara punch-hole centrada en vez de
 //  Dynamic Island. El aspect del frame se deriva del aspect de las capturas
-//  (480×996) para que entren sin recorte. El punch-hole es hardware: se dibuja
+//  (1080×2316) para que entren sin recorte. El punch-hole es hardware: se dibuja
 //  siempre, superpuesto a la pantalla como en el teléfono real — las capturas
 //  traen su propia barra de estado debajo. `chrome` añade solo el software del
 //  mockup por defecto (barra de estado y barra de gestos de la DefaultScreen).
@@ -103,9 +103,9 @@ export default function PhoneMockup({
     <div className="crd-phone-device">
       {/* Riel de titanio: gradiente grafito con luz de canto arriba/abajo, como
           el "Titanium Black". De frente el metal apenas asoma (3px); el grueso
-          del borde es el bisel negro uniforme del panel. 264/533 sale de la
-          captura 480×996 + 7px de bisel por lado (3 metal + 4 bisel). */}
-      <div className="crd-phone-frame relative box-border aspect-[264/533] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
+          del borde es el bisel negro uniforme del panel. 264/550 sale de la
+          captura 1080×2316 + 7px de bisel por lado (3 metal + 4 bisel). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/550] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
         {/* Botones, todos a la derecha: balancín de volumen y encendido, del
             mismo titanio que el riel */}
         <span aria-hidden="true" className="absolute -right-[2.5px] top-[19%] h-[52px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
