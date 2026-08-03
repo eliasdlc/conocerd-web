@@ -12,9 +12,10 @@ import { SelfPin } from "@/components/map/pins";
 //  esquinas casi cuadradas, bisel de metal finísimo, botones solo en el lado
 //  derecho (volumen + encendido) y cámara punch-hole centrada en vez de
 //  Dynamic Island. El aspect del frame se deriva del aspect de las capturas
-//  (480×996) para que entren sin recorte. Sigue siendo CSS puro y la pantalla
-//  sigue siendo intercambiable por un screenshot real vía `screen` (pasar
-//  `chrome={false}` cuando la captura ya trae su contenido de borde a borde).
+//  (480×996) más 26px de franja de estado: las capturas van recortadas borde a
+//  borde, así que la barra One UI y el punch-hole viven en esa franja superior
+//  reservada (ver PantallaReal) en vez de tapar contenido. Sigue siendo CSS
+//  puro y la pantalla intercambiable por un screenshot real vía `screen`.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Barra de estado estilo One UI: hora a la izquierda, radios a la derecha. */
@@ -99,9 +100,10 @@ export default function PhoneMockup({
 }) {
   return (
     <div className="crd-phone-device">
-      {/* Riel de titanio: plano, esquinas boxy y luz de canto. 264/533 sale de
-          la captura 480×996 más 7px de bisel por lado (5 metal + 2 aro). */}
-      <div className="crd-phone-frame relative box-border aspect-[264/533] w-full rounded-[20px] bg-[linear-gradient(155deg,#43606C,#22414D_45%,#2E4F5B_85%,#43606C)] p-[5px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_1px_rgba(0,0,0,0.25)]">
+      {/* Riel de titanio: plano, esquinas boxy y luz de canto. 264/559 sale de
+          la captura 480×996 + 26px de franja de estado + 7px de bisel por lado
+          (5 metal + 2 aro). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/559] w-full rounded-[20px] bg-[linear-gradient(155deg,#43606C,#22414D_45%,#2E4F5B_85%,#43606C)] p-[5px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_1px_rgba(0,0,0,0.25)]">
         {/* Botones, todos a la derecha: balancín de volumen y encendido */}
         <span aria-hidden="true" className="absolute -right-[2px] top-[19%] h-[52px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
         <span aria-hidden="true" className="absolute -right-[2px] top-[31%] h-[26px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
