@@ -3,37 +3,41 @@
 //
 //  Apuntarse a una lista no devuelve nada tangible: la persona deja su correo y
 //  se queda mirando una pantalla de éxito. Este mensaje es lo que convierte ese
-//  registro en algo real — da las gracias, cuenta qué se lleva por entrar
-//  ahora, enseña qué podrá hacer cuando la app abra y, sobre todo, le da algo
-//  que hacer HOY: la demo de rutas del mapa.
+//  registro en algo real.
+//
+//  El orden es el del interés, no el del guion. Primero LO QUE YA SE LLEVÓ —la
+//  credencial de fundador, que es lo que de verdad le importa a quien abre
+//  esto—, después LO ÚNICO que puede hacer hoy (la demo de rutas), y sólo al
+//  final lo que vendrá cuando la app abra. Nada de un párrafo de
+//  agradecimiento antes del premio.
 //
 //  Dos públicos, dos correos. El viajero quiere saber a dónde ir; el negocio,
 //  que lo encuentren. Los beneficios NO se escriben aquí: salen de
 //  `components/lista/content.ts`, la misma fuente que la página /lista, para
-//  que la promesa no se bifurque entre el correo y el sitio.
+//  que la promesa no se bifurque entre el correo y el sitio. Del correo sale
+//  sólo el tono: la credencial cuenta en primera persona el primer beneficio
+//  de esa lista (el badge, el perfil destacado), que por eso no se repite
+//  debajo.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CONTENT } from "@/components/lista/content";
-import { SITE_URL } from "@/lib/site";
 import type { Audience } from "@/lib/waitlist/schema";
 
 import { loadEmailAssets, type RenderMode } from "./assets";
 import {
   DEMO_URL,
   LOGO_ASSET,
-  bulletList,
+  band,
   button,
-  card,
-  heading,
+  credential,
+  grid2,
   kicker,
-  paragraph,
   row,
   shell,
-  stamp,
   stampAsset,
-  subheading,
+  type HeaderTag,
 } from "./layout";
-import { C, esc } from "./theme";
+import { C, F, esc } from "./theme";
 import { sendEmail, type RenderedEmail, type SendResult } from "./send";
 
 export interface WelcomeRecipient {
@@ -50,75 +54,97 @@ function firstName(raw?: string): string | undefined {
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
 
+/** «3 de agosto de 2026». La fecha del alta es el único dato del carnet que es
+ *  suyo y verificable; sin ella la credencial es un adorno. */
+function longDate(d: Date): string {
+  return new Intl.DateTimeFormat("es-DO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(d);
+}
+
+/** Descripción corta para la rejilla; si no hay, la larga de la página. */
+function short(it: { title: string; desc: string; short?: string }) {
+  return { title: it.title, desc: it.short ?? it.desc };
+}
+
 interface Copy {
   subject: string;
   preheader: string;
-  eyebrow: string;
-  headline: string;
-  intro: string;
-  ctaLabel: string;
-  ctaHref: string;
-  ctaColor: string;
-  demoTitle: string;
-  demoBody: string;
-  perksTitle: string;
-  featuresTitle: string;
-  footerNote: string;
+  tag: HeaderTag;
   stampSlug: "viajero" | "negocio";
-  dot: string;
+  eyebrow: string;
+  eyebrowColor: string;
+  headline: string;
+  credentialBody: string;
+  factLabel: string;
+  includesLabel: string;
+  includes: string;
+  ctaEyebrow: string;
+  ctaTitle: string;
+  ctaBody: string;
+  ctaLabel: string;
+  ctaColor: string;
+  ps: string;
+  footerNote: string;
 }
 
 function copyFor(audience: Audience, who: WelcomeRecipient): Copy {
-  const name = firstName(who.name);
-  const content = CONTENT[audience];
-
   if (audience === "negocio") {
     const business = who.businessName?.trim();
     return {
       subject: business
-        ? `${business} ya está en la lista de ConoceRD`
-        : "Tu negocio ya está en la lista de ConoceRD",
+        ? `${business} ya está en el mapa de ConoceRD`
+        : "Tu negocio ya está en el mapa de ConoceRD",
       preheader:
-        "Te contactamos para dejar tu perfil listo antes del lanzamiento. Mientras, mira la demo de rutas.",
-      eyebrow: "Lista de espera · Negocios",
-      headline: business ? `Gracias por registrar ${business}` : "Gracias por registrar tu negocio",
-      intro:
-        "Ya estás dentro. Cuando ConoceRD abra, tu negocio aparecerá en el mapa justo cuando un viajero esté planificando su parada cerca de ti. Antes de eso te escribimos para dejar tu perfil montado — fotos, horario y contacto — sin que tengas que pelearte con nada.",
-      ctaLabel: "Ver la demo de rutas",
-      ctaHref: DEMO_URL,
-      ctaColor: C.mintInk,
-      demoTitle: "Mira lo que ve el viajero",
-      demoBody:
+        "Tu perfil destacado gratis ya está reservado. Mira lo que verá el viajero cuando la app abra.",
+      tag: { text: "NEGOCIO · FUNDADOR", bg: C.mintSoft, fg: C.mintInk },
+      stampSlug: "negocio",
+      eyebrow: "Credencial de negocio fundador",
+      eyebrowColor: C.mint,
+      headline: business ? `${business} ya está dentro` : "Tu negocio ya está dentro",
+      credentialBody:
+        "Tienes reservado el perfil destacado gratis de los primeros meses tras el lanzamiento. Sólo lo tienen los negocios que se registraron antes de que la app abriera.",
+      factLabel: "Registrado desde",
+      includesLabel: "Tu reserva incluye",
+      includes: "Perfil destacado y panel anticipado",
+      ctaEyebrow: "Mientras tanto",
+      ctaTitle: "Mira lo que va a ver el viajero",
+      ctaBody:
         "En la página ya funciona la demo del mapa: se arma una ruta parada por parada, con distancias y tiempos por carretera de verdad. Es exactamente el momento en el que tu negocio va a aparecer.",
-      perksTitle: content.perksTitle,
-      featuresTitle: content.featuresTitle,
+      ctaLabel: "Ver la demo del mapa",
+      ctaColor: C.mintInk,
+      ps: "PS: ¿tienes un vecino que también debería estar en el mapa? Reenvíale este correo.",
       footerNote:
         "Te llegó esto porque registraste tu negocio en la lista de espera de ConoceRD.",
-      stampSlug: "negocio",
-      dot: C.mint,
     };
   }
 
+  const name = firstName(who.name);
   return {
-    subject: name ? `Gracias, ${name} — ya estás en la lista de ConoceRD` : "Ya estás en la lista de ConoceRD",
+    subject: name ? `${name}, ya eres fundador de ConoceRD` : "Ya eres fundador de ConoceRD",
     preheader:
-      "Te avisamos antes que a nadie cuando la app abra. Mientras tanto, arma tu próxima ruta en la demo.",
-    eyebrow: "Lista de espera · Viajeros",
-    headline: name ? `Gracias por apuntarte, ${name}` : "Gracias por apuntarte",
-    intro:
-      "Ya eres fundador de ConoceRD. La app todavía no está en las tiendas, pero no tienes que esperar de brazos cruzados: en la página ya puedes armar tu próxima ruta por el país y recibirla por correo, parada por parada.",
-    ctaLabel: "Arma tu próxima ruta",
-    ctaHref: DEMO_URL,
+      "Tu badge de fundador ya es tuyo. Y mientras la app llega, puedes armar tu próxima ruta hoy.",
+    tag: { text: "VIAJERO · FUNDADOR", bg: C.coralSoft, fg: C.coralInk },
+    stampSlug: "viajero",
+    eyebrow: "Credencial de fundador",
+    eyebrowColor: C.mangoOnInk,
+    headline: name ? `${name}, ya eres fundador` : "Ya eres fundador",
+    credentialBody:
+      "Tu insignia queda para siempre en tu perfil. Sólo la tiene quien se apuntó antes de que la app abriera: después del lanzamiento ya no se puede conseguir.",
+    factLabel: "Fundador desde",
+    includesLabel: "Tu insignia incluye",
+    includes: "Beta anticipada y aviso primero",
+    ctaEyebrow: "Mientras tanto",
+    ctaTitle: "Arma tu próxima ruta hoy mismo",
+    ctaBody:
+      "La demo del mapa ya funciona en la página: eliges los lugares, te dice cuánto manejas entre uno y otro por carretera de verdad, y te manda el itinerario escrito al correo.",
+    ctaLabel: "Armar mi ruta",
     ctaColor: C.mango,
-    demoTitle: "Empieza a planear hoy",
-    demoBody:
-      "La demo del mapa ya funciona: eliges los lugares que quieres ver, te dice cuánto manejas entre uno y otro por carretera de verdad, y te manda el itinerario escrito al correo.",
-    perksTitle: CONTENT.viajero.perksTitle,
-    featuresTitle: CONTENT.viajero.featuresTitle,
+    ps: "PS: si conoces un negocio que debería estar en el mapa, reenvíale este correo — también pueden apuntarse.",
     footerNote:
       "Te llegó esto porque te apuntaste a la lista de espera de ConoceRD como viajero.",
-    stampSlug: "viajero",
-    dot: C.mango,
   };
 }
 
@@ -128,41 +154,60 @@ export async function renderWelcomeEmail(
   mode: RenderMode = "send"
 ): Promise<RenderedEmail> {
   const c = copyFor(audience, who);
-  const { perks, features } = CONTENT[audience];
+  const { perks, features, perksTitle, featuresTitle } = CONTENT[audience];
+  // El logo y el sello son los dos binarios que viajan dentro del mensaje.
   const assets = await loadEmailAssets([LOGO_ASSET, stampAsset(c.stampSlug)], mode);
+
+  // El primer beneficio ya lo cuenta la credencial; la rejilla enseña el resto.
+  const rest = perks.slice(1).map(short);
+  const grid = features.map(short);
 
   const content = [
     row(
-      `${stamp(assets, c.stampSlug)}
-       <div style="text-align:center;">
-         ${kicker(c.eyebrow, audience === "negocio" ? C.mintInk : C.coralInk)}
-         ${heading(c.headline)}
-       </div>`,
-      "0 0 6px 0"
-    ),
-    row(paragraph(esc(c.intro)), "0 0 22px 0"),
-
-    // La acción que sí puede hacer hoy va antes que cualquier promesa futura.
-    row(
-      card(
-        `${subheading(c.demoTitle)}
-         <p style="margin:0 0 16px 0;font:400 15px/1.6 Helvetica,Arial,sans-serif;color:${C.muted};">${esc(
-           c.demoBody
-         )}</p>
-         ${button(c.ctaHref, c.ctaLabel, c.ctaColor)}`,
-        "20px 20px 22px 20px"
-      )
+      credential({
+        assets,
+        slug: c.stampSlug,
+        eyebrow: c.eyebrow,
+        eyebrowColor: c.eyebrowColor,
+        headline: c.headline,
+        body: c.credentialBody,
+        facts: [
+          { label: c.factLabel, value: longDate(new Date()) },
+          { label: c.includesLabel, value: c.includes },
+        ],
+      }),
+      "0 0 30px 0"
     ),
 
-    row(card(`${subheading(c.perksTitle)}${bulletList(perks, c.dot)}`)),
-    row(card(`${subheading(c.featuresTitle)}${bulletList(features, c.dot)}`)),
+    // Lo único accionable hoy, suelto sobre el crema y con el botón a la
+    // izquierda: después del panel oscuro, el aire es lo que marca el ritmo.
+    row(
+      `${kicker(c.ctaEyebrow)}
+       <h2 style="margin:9px 0 0 0;font:700 23px/1.2 ${F.serif};color:${C.ink};">${esc(c.ctaTitle)}</h2>
+       <p style="margin:10px 0 20px 0;font:400 15px/1.6 ${F.sans};color:${C.muted};">${esc(c.ctaBody)}</p>
+       ${button(DEMO_URL, c.ctaLabel, c.ctaColor, "#FFFFFF", "left")}`,
+      "0 0 32px 0"
+    ),
 
     row(
-      `<p style="margin:0;text-align:center;font:400 14px/1.6 Helvetica,Arial,sans-serif;color:${C.muted};">
-        ¿Prefieres verlo todo con calma?
-        <a href="${SITE_URL}" style="color:${C.ink};font-weight:700;">Date una vuelta por la página</a>.
-      </p>`,
-      "6px 0 0 0"
+      band(
+        `${kicker(perksTitle)}
+         <div style="height:14px;font-size:0;line-height:0;">&nbsp;</div>
+         ${grid2(rest)}`
+      ),
+      "0 0 30px 0"
+    ),
+
+    row(
+      `${kicker(featuresTitle)}
+       <div style="height:16px;font-size:0;line-height:0;">&nbsp;</div>
+       ${grid2(grid)}`,
+      "0 0 22px 0"
+    ),
+
+    row(
+      `<p style="margin:0;font:400 14px/1.6 ${F.sans};color:${C.muted};">${esc(c.ps)}</p>`,
+      "0"
     ),
   ].join("");
 
@@ -172,24 +217,25 @@ export async function renderWelcomeEmail(
     content,
     footerNote: c.footerNote,
     assets,
+    tag: c.tag,
   });
 
   const text = [
     c.headline,
     "",
-    c.intro,
+    c.credentialBody,
+    `${c.factLabel}: ${longDate(new Date())}. ${c.includesLabel}: ${c.includes}.`,
     "",
-    `${c.demoTitle}: ${c.demoBody}`,
-    `${c.ctaLabel}: ${c.ctaHref}`,
+    `${c.ctaTitle}: ${c.ctaBody}`,
+    `${c.ctaLabel}: ${DEMO_URL}`,
     "",
-    c.perksTitle.toUpperCase(),
-    ...perks.map((p) => `· ${p.title} — ${p.desc}`),
+    perksTitle.toUpperCase(),
+    ...rest.map((p) => `· ${p.title} — ${p.desc}`),
     "",
-    c.featuresTitle.toUpperCase(),
-    ...features.map((f) => `· ${f.title} — ${f.desc}`),
+    featuresTitle.toUpperCase(),
+    ...grid.map((f) => `· ${f.title} — ${f.desc}`),
     "",
-    `La página completa: ${SITE_URL}`,
-    "",
+    c.ps,
     c.footerNote,
     "Si no quieres más correos, responde a este con «Baja».",
   ].join("\n");

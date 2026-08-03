@@ -25,12 +25,15 @@ export interface EmailStampSpec {
 /** Tamaños de dibujo en CSS px; el script los fotografía a 2× para pantallas retina. */
 export const EMAIL_ASSET_PX = {
   /** Ancho al que se muestra el logo en la cabecera del correo. */
-  logoWidth: 220,
+  logoWidth: 272,
   /** Lado del SVG del sello. */
   stampSize: 132,
   /** Lado de la caja que lo contiene (y del PNG resultante). El margen extra
    *  evita que el troquel festoneado quede recortado al girar el cuño. */
   stampBox: 148,
+  /** Lado del sello cuando va pegado en la esquina de la credencial. Más chico
+   *  que el PNG: ahí compite con el titular, no lo encabeza. */
+  stampCorner: 126,
 } as const;
 
 export const EMAIL_STAMPS: EmailStampSpec[] = [

@@ -27,6 +27,15 @@ export const C = {
   mint: "#25CCB8",
   mintInk: "#0C6A60",
   mintSoft: "#C6F3EB",
+
+  // Sobre el panel de tinta (la credencial). Las reglas se invierten: aquí el
+  // texto claro es el que tiene contraste y el mango puro se queda en 4.3:1,
+  // así que sube un punto de luz. El mint sí pasa tal cual (5:1).
+  onInk: "#FFFFFF",
+  onInkSoft: "#CBDDE2",
+  onInkLabel: "#9DBDC5",
+  onInkLine: "#3E6673",
+  mangoOnInk: "#FFA94D",
 } as const;
 
 /** Pilas de fuentes seguras para correo: nada de webfonts, nada de `var()`. */
