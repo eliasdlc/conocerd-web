@@ -11,7 +11,8 @@
     "test:journey": "node scripts/journey-smoke.mjs",
     "qr": "node scripts/generate-qr.mjs",
     "email:assets": "node scripts/gen-email-assets.mjs",
-    "email:photos": "node scripts/gen-email-photos.mjs"
+    "email:photos": "node scripts/gen-email-photos.mjs",
+    "email:check": "node scripts/check-email-images.mjs"
   },
   "dependencies": {
     "@21st-sdk/agent": "^0.0.18",
