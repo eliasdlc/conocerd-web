@@ -325,12 +325,11 @@ const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
 ];
 
 /** Pantalla real de la app (screenshot del dueño, ago 2026). Las capturas van
- *  recortadas borde a borde, así que se colocan bajo la franja de estado de
- *  26px que el frame reserva para la barra One UI y el punch-hole; `statusBg`
- *  tiñe esa franja a juego con el tope de cada captura. */
-function PantallaReal({ src, statusBg = "#F6F1E7" }: { src: string; statusBg?: string }) {
+ *  recortadas borde a borde, así que se colocan bajo la franja blanca de 26px
+ *  donde el mockup dibuja la barra One UI y el punch-hole. */
+function PantallaReal({ src }: { src: string }) {
   return (
-    <div className="absolute inset-0" style={{ backgroundColor: statusBg }}>
+    <div className="absolute inset-0 bg-white">
       <div className="absolute inset-x-0 bottom-0 top-[26px]">
         <Image src={src} alt="" fill sizes="264px" className="object-cover" />
       </div>
@@ -817,7 +816,7 @@ function NegociosFinal() {
     <PantallaRegistro key="reg" />,
     // El screenshot real de la app: el mapa de Santiago con un negocio
     // marcado — "te encuentran en la ruta" literal.
-    <PantallaReal key="mapa" src="/assets/app-mapa-ciudad.webp" statusBg="#E9EBEE" />,
+    <PantallaReal key="mapa" src="/assets/app-mapa-ciudad.webp" />,
     <PantallaPanel key="panel" llegadas={llegadas} total={total} />,
   ];
 

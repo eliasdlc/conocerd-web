@@ -18,12 +18,14 @@ import { SelfPin } from "@/components/map/pins";
 //  puro y la pantalla intercambiable por un screenshot real vía `screen`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Barra de estado estilo One UI: hora a la izquierda, radios a la derecha. */
+/** Barra de estado estilo One UI: franja blanca de 26px con hora a la
+ *  izquierda y radios a la derecha. Lleva su propio fondo para que el tope se
+ *  vea blanco sobre cualquier pantalla (capturas reales o pantallas CSS). */
 function StatusBar() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-x-0 top-0 z-[3] flex items-center justify-between px-[22px] pt-[9px] text-[11px] font-bold tracking-[.01em] text-ink-2"
+      className="pointer-events-none absolute inset-x-0 top-0 z-[3] flex h-[26px] items-center justify-between bg-white px-[18px] text-[11px] font-semibold tracking-[.01em] text-[#1B1F23]"
     >
       <span>9:41</span>
       <span className="flex items-center gap-[5px]">
@@ -100,31 +102,40 @@ export default function PhoneMockup({
 }) {
   return (
     <div className="crd-phone-device">
-      {/* Riel de titanio: plano, esquinas boxy y luz de canto. 264/559 sale de
-          la captura 480×996 + 26px de franja de estado + 7px de bisel por lado
-          (5 metal + 2 aro). */}
-      <div className="crd-phone-frame relative box-border aspect-[264/559] w-full rounded-[20px] bg-[linear-gradient(155deg,#43606C,#22414D_45%,#2E4F5B_85%,#43606C)] p-[5px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.35),inset_0_-1px_1px_rgba(0,0,0,0.25)]">
-        {/* Botones, todos a la derecha: balancín de volumen y encendido */}
-        <span aria-hidden="true" className="absolute -right-[2px] top-[19%] h-[52px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
-        <span aria-hidden="true" className="absolute -right-[2px] top-[31%] h-[26px] w-[2.5px] rounded-r-[2px] bg-[#16303A]" />
+      {/* Riel de titanio: gradiente grafito con luz de canto arriba/abajo, como
+          el "Titanium Black". De frente el metal apenas asoma (3px); el grueso
+          del borde es el bisel negro uniforme del panel. 264/559 sale de la
+          captura 480×996 + 26px de franja de estado + 7px por lado (3 metal +
+          4 bisel). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/559] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
+        {/* Botones, todos a la derecha: balancín de volumen y encendido, del
+            mismo titanio que el riel */}
+        <span aria-hidden="true" className="absolute -right-[2.5px] top-[19%] h-[52px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
+        <span aria-hidden="true" className="absolute -right-[2.5px] top-[31%] h-[26px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
 
-        {/* Aro negro de pantalla: en el S25 Ultra es casi inexistente */}
-        <div className="relative size-full rounded-[15px] bg-black p-[2px]">
-          <div className="relative size-full overflow-hidden rounded-[13px] bg-[#EAF6F4]">
+        {/* Bisel negro del panel: uniforme y fino, todo pantalla */}
+        <div className="relative size-full rounded-[17px] bg-black p-[4px]">
+          <div className="relative size-full overflow-hidden rounded-[13px] bg-white">
             {screen ?? <DefaultScreen />}
 
             {chrome && (
               <>
                 <StatusBar />
-                {/* Cámara punch-hole centrada */}
-                <div className="absolute left-1/2 top-[8px] z-[4] size-[11px] -translate-x-1/2 rounded-full bg-black">
+                {/* Cámara punch-hole centrada, con aro suave sobre el blanco */}
+                <div className="absolute left-1/2 top-[7px] z-[4] size-[12px] -translate-x-1/2 rounded-full bg-[#04070A] shadow-[0_0_2px_rgba(0,0,0,0.35)]">
                   {/* lente */}
-                  <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#10151a] shadow-[inset_0_0_2px_rgba(90,120,150,0.8)]" />
+                  <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#101820] shadow-[inset_0_-0.5px_1.5px_rgba(110,140,175,0.9)]" />
                 </div>
                 {/* Barra de gestos */}
-                <div className="absolute bottom-[7px] left-1/2 z-[4] h-[4px] w-[100px] -translate-x-1/2 rounded-full bg-ink/40" />
+                <div className="absolute bottom-[6px] left-1/2 z-[4] h-[4px] w-[96px] -translate-x-1/2 rounded-full bg-black/30" />
               </>
             )}
+
+            {/* Reflejo del cristal: diagonal y muy sutil, no lava la captura */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-[6] bg-[linear-gradient(115deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0.04)_26%,transparent_44%)]"
+            />
           </div>
         </div>
       </div>
