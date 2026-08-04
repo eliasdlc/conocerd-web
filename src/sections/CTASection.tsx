@@ -25,7 +25,7 @@ export default function CTAOverlay() {
       inert={!isVisible}
       // El journey cierra volviendo al globo: en móvil la card baja para que el
       // planeta se vea completo encima, igual que en el hero.
-      className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[72px] transition-opacity duration-700 ease-in-out
+      className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[var(--crd-nav-clear)] transition-opacity duration-700 ease-in-out
         desk:items-center desk:px-6 desk:pb-9
         ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >

@@ -539,7 +539,7 @@ function CategoryFilter({
     <div
       role="group"
       aria-label="Filtrar destinos por categoría"
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[84px] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];

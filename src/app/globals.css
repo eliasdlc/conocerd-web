@@ -244,6 +244,12 @@ body::after {
    que los calc() que lo usan sigan siendo válidos fuera del breakpoint. */
 :root { --crd-stepper-h: 0px; }
 
+/* Holgura bajo la píldora del nav: top 16px + botón 40px + padding 16px +
+   borde 2px = 74px de borde inferior, más 10px de aire. Todo contenido que
+   pueda tocar el tope de la pantalla debe reservar esta franja — la píldora
+   flota por encima y no debe tapar nada interactivo en reposo. */
+:root { --crd-nav-clear: 84px; }
+
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
 .crd-mobile-scrim { display: none; }
@@ -314,7 +320,7 @@ body::after {
   .crd-ol-equipo {
     /* Único scroll "de página" permitido en móvil: el contenido de Equipo no
        cabe en una pantalla. Scrollea por dentro y NO cambia de escena. */
-    padding: 72px 16px calc(16px + var(--crd-stepper-h)) !important;
+    padding: var(--crd-nav-clear) 16px calc(16px + var(--crd-stepper-h)) !important;
     overflow-y: auto;
     overscroll-behavior: contain;
     justify-content: flex-start !important;
@@ -329,8 +335,11 @@ body::after {
   .crd-footer-grid > :last-child { grid-column: 1 / -1; }
   /* Lista de espera: tipo de negocio + WhatsApp se apilan en pantallas angostas. */
   .crd-sub-row { grid-template-columns: 1fr !important; }
-  /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
+  /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. Con el
+     botón como único contenido, el padding izquierdo iguala al derecho (8px)
+     para que la píldora quede simétrica alrededor del botón. */
   .crd-navlink { display: none !important; }
+  .crd-nav-pill { padding-left: 8px !important; }
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
@@ -339,16 +348,25 @@ body::after {
      pantallas cortas (375×667) el min-height queda por debajo del contenido
      natural y no cambia nada. */
   .crd-cta-card {
-    /* El panel de pasos flota debajo: la card se apoya encima de él y cede su
-       franja, si no el formulario quedaba tapado justo en la conversión. */
-    max-height: calc(100dvh - var(--crd-stepper-h) - 56px);
+    /* El panel de pasos flota debajo y la píldora del nav arriba: la card cede
+       ambas franjas. El cálculo descuenta el pb-3.5 (14px) del wrapper, el
+       margin-bottom (stepper) y la holgura del nav — si falta cualquiera, la
+       card sube por detrás de la píldora y tapa el titular en la conversión. */
+    max-height: calc(100dvh - var(--crd-stepper-h) - 14px - var(--crd-nav-clear));
     min-height: min(68dvh, 640px);
     margin-bottom: var(--crd-stepper-h);
     overflow-y: auto;
     padding: 28px 18px !important;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* Sin justify-content: center — con overflow, el centrado recorta el tope
+       (el kicker quedaba inalcanzable incluso scrolleando). Los espaciadores
+       flexibles centran cuando sobra alto y ceden a 0 cuando falta. */
+  }
+  .crd-cta-card::before,
+  .crd-cta-card::after {
+    content: "";
+    flex: 1 0 0;
   }
   /* 46%: la carta creció ~30px (la descripción vive ahora en el papel), así
      que el titular sube en proporción — la franja muerta que motivó el 43%

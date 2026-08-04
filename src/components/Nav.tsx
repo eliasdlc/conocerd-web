@@ -15,7 +15,8 @@ const LINKS = [
 
 // #15 — píldora flotante sin wordmark: solo nav + botón Descargar.
 // Visible en todo el recorrido, CTA y footer incluidos (decisión del dueño,
-// jul 2026): el CTA reserva espacio arriba (pt-[72px]) así que no se solapan.
+// jul 2026): las escenas con contenido cerca del tope reservan la franja
+// --crd-nav-clear (globals.css) así que no se solapan.
 export default function Nav() {
   const pillRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +38,7 @@ export default function Nav() {
     <nav className="fixed left-1/2 top-4 z-[100] max-w-[calc(100vw-24px)] -translate-x-1/2">
       <div
         ref={pillRef}
-        className="group flex items-center gap-[clamp(8px,1.4vw,18px)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [scrollbar-width:none]
+        className="crd-nav-pill group flex items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(8px,1.4vw,18px)] [scrollbar-width:none]
           bg-cream/60 shadow-card
           data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-panel"
       >
@@ -50,7 +51,11 @@ export default function Nav() {
             e.preventDefault();
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
-          className="grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity] duration-300 group-data-[solid=true]:w-[22px] group-data-[solid=true]:opacity-100"
+          // El margen negativo cancela el gap del flex mientras el logo mide
+          // 0px: sin él, la píldora arrastraba un hueco fantasma a la izquierda
+          // del primer elemento visible (notorio en móvil, donde solo queda el
+          // botón: 20px a un lado y 8px al otro).
+          className="-mr-[var(--nav-gap)] grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity,margin] duration-300 group-data-[solid=true]:mr-0 group-data-[solid=true]:w-[22px] group-data-[solid=true]:opacity-100"
         >
           <BrandPin />
         </a>
