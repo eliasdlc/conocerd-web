@@ -13,6 +13,7 @@
 
 import { useMemo, useState } from "react";
 
+import Icon from "@/components/Icon";
 import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "@/lib/waitlist/schema";
 import type { Subscriber } from "@/lib/waitlist/store";
 import type { Bucket, WaitlistStats } from "@/lib/waitlist/stats";
@@ -288,9 +289,7 @@ export default function AdminDashboard({
                 textDecoration: "none",
               }}
             >
-              <span className="ms" aria-hidden="true" style={{ fontSize: 18 }}>
-                download
-              </span>
+              <Icon name="download" style={{ fontSize: 18 }} />
               Exportar CSV
             </a>
             <form action={logout}>

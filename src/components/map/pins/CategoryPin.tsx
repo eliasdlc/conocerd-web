@@ -2,6 +2,8 @@
 
 import type { Category } from "@/data/destinations";
 import { CATEGORY_META } from "@/data/destinations";
+import Icon from "@/components/Icon";
+import { PIN_SHADOW } from "./chrome";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Pin de categoría (#4). Portado de conocerd_map_pins.html (app_map_markers.dart):
@@ -23,7 +25,7 @@ const STATE: Record<
   done: { fill: "#43A047", fillOpacity: 0.78, borderOpacity: 0.7, iconOpacity: 0.85, shadowAlpha: 0.18 },
 };
 
-const CREAM = "251,247,239"; // #FBF7EF en RGB (borde crema)
+const CREAM = "253,248,240"; // --color-cream (#FDF8F0) en RGB, para el borde
 
 function hexToRgb(hex: string): string {
   const h = hex.replace("#", "");
@@ -53,23 +55,20 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
         borderRadius: "50%",
         background: `rgba(${fillRgb},${s.fillOpacity})`,
         border: `2px solid rgba(${CREAM},${s.borderOpacity})`,
-        boxShadow: `0 2px 5px rgba(0,0,0,${s.shadowAlpha})`,
+        boxShadow: state === "done" ? `0 2px 5px rgba(0,0,0,${s.shadowAlpha})` : PIN_SHADOW,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         lineHeight: 0,
       }}
     >
-      <span
-        className="ms"
-        aria-hidden="true"
+      <Icon
+        name={meta.icon}
         style={{
           fontSize: Math.round(size * 0.52),
           color: `rgba(255,255,255,${s.iconOpacity})`,
         }}
-      >
-        {meta.icon}
-      </span>
+      />
     </div>
   );
 }

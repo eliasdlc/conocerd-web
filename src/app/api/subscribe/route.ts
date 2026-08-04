@@ -1,12 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  POST /api/subscribe — alta en la lista de espera (viajeros y negocios).
 //
-//  Orden deliberado: valida → honeypot → rate limit → guarda → ESP. El alta en
-//  el ESP va después y no bloquea la respuesta si falla: el correo ya está a
-//  salvo en la base, y perder un registro delante de alguien que acaba de
-//  escanear un QR es mucho peor que reconciliar la audiencia después.
+//  Orden deliberado: valida → honeypot → rate limit → guarda → bienvenida +
+//  ESP. Lo que va después de guardar no bloquea la respuesta si falla: el
+//  correo ya está a salvo en la base, y perder un registro delante de alguien
+//  que acaba de escanear un QR es mucho peor que reconciliar la audiencia
+//  después o quedarnos sin mandar un agradecimiento.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { after } from "next/server";
+
+import { renderWelcomeEmail, sendWelcomeEmail } from "@/lib/email/welcome";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
 import { HONEYPOT_FIELD, subscribeSchema, type SubscribeResult } from "@/lib/waitlist/schema";
@@ -16,6 +20,30 @@ const RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 
 function json(body: SubscribeResult, init?: ResponseInit) {
   return Response.json(body, init);
+}
+
+/**
+ * Preview del correo de bienvenida en el navegador, sólo en desarrollo:
+ *   /api/subscribe?audience=negocio&name=Elias&businessName=La%20Casona
+ * Iterar el diseño de un correo mandándoselo a uno mismo es insoportable.
+ */
+export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return new Response("Not found", { status: 404 });
+  }
+  const params = new URL(request.url).searchParams;
+  const audience = params.get("audience") === "negocio" ? "negocio" : "viajero";
+  // `preview`: el navegador no sabe qué es un `cid:`, así que la marca se pinta
+  // desde las rutas del propio servidor en vez de viajar adjunta.
+  const { html } = await renderWelcomeEmail(
+    audience,
+    {
+      name: params.get("name") ?? undefined,
+      businessName: params.get("businessName") ?? undefined,
+    },
+    "preview"
+  );
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
 export async function POST(request: Request) {
@@ -76,13 +104,26 @@ export async function POST(request: Request) {
     );
   }
 
+  // Sólo en un alta nueva: repetirle la bienvenida a quien ya estaba dentro es
+  // ruido, y la pantalla de éxito ya le dice que su correo estaba registrado.
+  //
+  // Va en `after`, no en el camino de la respuesta: ninguna de las dos llamadas
+  // cambia lo que ve la persona (el registro ya está guardado y la pantalla de
+  // éxito no promete un correo inmediato, a diferencia del mapa, que estampa
+  // "te lo mandamos" y por eso allí un fallo sí es un error), y sumaban medio
+  // segundo largo de espera delante de alguien que acaba de escanear un QR.
   if (status === "created") {
-    const esp = await addToAudience({
-      email: data.email,
-      audience: data.audience,
-      name: data.name,
+    after(async () => {
+      const [welcome, esp] = await Promise.all([
+        sendWelcomeEmail(data.email, data.audience, {
+          name: data.name,
+          businessName: data.businessName,
+        }),
+        addToAudience({ email: data.email, audience: data.audience, name: data.name }),
+      ]);
+      if (!welcome.ok) console.error("[subscribe] bienvenida falló", welcome.error);
+      if (!esp.ok) console.error("[subscribe] alta en el ESP falló", esp.error);
     });
-    if (!esp.ok) console.error("[subscribe] alta en el ESP falló", esp.error);
   }
 
   return json({ ok: true, status });

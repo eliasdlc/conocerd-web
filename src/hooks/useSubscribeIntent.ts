@@ -3,7 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Puente entre los CTAs repartidos por la página y el único formulario.
 //
-//  "Registra tu negocio" (NegociosSection) y "Unirme a la lista" (Nav) tienen
+//  "Registrar mi negocio" (ViajerosNegociosSection) y "Unirme a la lista"
+//  (Nav) tienen
 //  que hacer scroll al CTA *y* dejar el toggle en la audiencia correcta. Ambos
 //  viven en overlays distintos sin ancestro común útil, así que el mensaje va
 //  por un evento del window en vez de por un contexto que envolvería todo el

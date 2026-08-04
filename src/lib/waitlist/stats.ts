@@ -100,6 +100,8 @@ export function computeStats(rows: Subscriber[], now = Date.now()): WaitlistStat
 
 // ─── Exportación ──────────────────────────────────────────────────────────────
 
+export type CsvRow = Subscriber;
+
 const CSV_COLUMNS = [
   ["email", "Correo"],
   ["audience", "Audiencia"],
@@ -111,7 +113,7 @@ const CSV_COLUMNS = [
   ["ref", "Origen"],
   ["consentAt", "Consentimiento"],
   ["createdAt", "Registro"],
-] as const satisfies ReadonlyArray<readonly [keyof Subscriber, string]>;
+] as const satisfies ReadonlyArray<readonly [keyof CsvRow, string]>;
 
 /**
  * Un valor que empieza por `=`, `+`, `-` o `@` lo ejecuta Excel como fórmula al
@@ -122,7 +124,7 @@ function csvCell(value: string): string {
   return `"${safe.replace(/"/g, '""')}"`;
 }
 
-export function toCsv(rows: Subscriber[]): string {
+export function toCsv(rows: CsvRow[]): string {
   const header = CSV_COLUMNS.map(([, label]) => csvCell(label)).join(",");
   const body = rows.map((row) =>
     CSV_COLUMNS.map(([field]) => csvCell(String(row[field] ?? ""))).join(",")

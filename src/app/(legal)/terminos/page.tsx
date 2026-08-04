@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Términos de uso — ConoceRD",
+  title: "Términos de uso",
   description: "Condiciones de uso del sitio de ConoceRD y de su lista de espera.",
 };
 
@@ -55,7 +55,7 @@ export default function TerminosPage() {
 
       <h2>Contacto</h2>
       <p>
-        Cualquier duda sobre estos términos: <a href="mailto:hola@conocerd.app">hola@conocerd.app</a>.
+        Cualquier duda sobre estos términos: <a href="mailto:contacto@conocerd.app">contacto@conocerd.app</a>.
       </p>
     </article>
   );

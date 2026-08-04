@@ -15,61 +15,64 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Icon from "@/components/Icon";
+import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import SubscribeForm, { type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
 import InstagramGlyph from "./InstagramGlyph";
 import { CONTENT, INSTAGRAM, type Item } from "./content";
 import { AUDIENCES, type Audience } from "@/lib/waitlist/schema";
+import Kicker from "@/components/Kicker";
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 font-display text-[17px] font-extrabold tracking-[-.015em] text-ink-2">
+    <h2 className="mb-3 text-lead font-bold tracking-[-.015em] text-ink-2">
       {children}
     </h2>
   );
 }
 
-/** Beneficio de la lista de espera. Al registrarse pasa a estado conseguido. */
+/**
+ * Beneficio de la lista de espera, dibujado como cupón de pasaporte (audit §3,
+ * movimiento 9): borde troquelado, número de sello en mono y, al registrarse,
+ * el sello estampado en diagonal. Antes era una card blanca con borde gris e
+ * icono en cuadradito pastel — el momento más genérico del sitio.
+ */
 function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; index: number }) {
   return (
     <li
-      className={`flex items-start gap-[13px] rounded-2xl border px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
-        unlocked ? "border-mint bg-[#EAFBF7]" : "border-line bg-white"
+      className={`relative flex items-start gap-[13px] overflow-hidden rounded-card border border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
+        unlocked ? "border-mint bg-[#EAFBF7]" : "border-muted-2/35 bg-white"
       }`}
     >
       <span
         aria-hidden="true"
-        className={`relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors duration-[350ms] ease-in-out ${
+        className={`relative flex size-10 shrink-0 items-center justify-center rounded-tile transition-colors duration-[350ms] ease-in-out ${
           unlocked ? "bg-mint" : "bg-mango-soft"
         }`}
       >
-        <span className={`ms text-[22px] ${unlocked ? "text-white" : "text-mango-ink"}`}>
-          {unlocked ? "check" : item.icon}
-        </span>
+        <Icon
+          name={unlocked ? "check" : item.icon}
+          className={`text-feature ${unlocked ? "text-white" : "text-mango-ink"}`}
+        />
       </span>
       <div className="min-w-0 flex-1">
-        {/* El distintivo se ancla arriba a la derecha en vez de seguir al
-            título: si lo arrastra, con títulos de distinto largo cae a una
-            segunda línea en unas tarjetas sí y en otras no. */}
-        <div className="flex items-start gap-2">
-          <span className="min-w-0 flex-1 font-display text-[14.5px] font-bold text-ink">
-            {item.title}
-          </span>
-          {unlocked && (
-            <span
-              // Escalonado: los tres tics no deben aparecer a la vez, y el
-              // retardo depende del índice → va por style.
-              className="mt-px shrink-0 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] rounded-full bg-mint-soft px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-[.08em] text-mint-ink"
-              style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
-            >
-              Desbloqueado
-            </span>
-          )}
-        </div>
-        <p className="mt-0.5 text-[13px] leading-[1.5] text-muted">{item.desc}</p>
+        <div className="text-body font-bold text-ink">{item.title}</div>
+        <p className="mt-0.5 text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
+
+      {unlocked && (
+        <span
+          // Escalonado: los tres sellos no deben caer a la vez, y el retardo
+          // depende del índice → va por style.
+          className="crd-sello absolute -right-3 bottom-2 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both]"
+          style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
+        >
+          Sellado
+        </span>
+      )}
     </li>
   );
 }
@@ -77,12 +80,10 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
 function FeatureRow({ item }: { item: Item }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="ms mt-px shrink-0 text-[22px] text-mint-ink" aria-hidden="true">
-        {item.icon}
-      </span>
+      <Icon name={item.icon} className="mt-px shrink-0 text-feature text-mint-ink" />
       <div>
-        <div className="font-display text-[14.5px] font-bold text-ink">{item.title}</div>
-        <p className="mt-px text-[13px] leading-[1.5] text-muted">{item.desc}</p>
+        <div className="text-body font-bold text-ink">{item.title}</div>
+        <p className="mt-px text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>
   );
@@ -139,37 +140,42 @@ export default function ListaExperience() {
             width={210}
             height={100}
             priority
+            sizes="176px"
             className="h-[clamp(62px,14vw,84px)] w-auto"
           />
         </Link>
 
         <div className="crd-lista-in mb-2.5 [animation-delay:.06s]">
-          <span
+          {/* Píldora de audiencia: cambia con el toggle (viajeros mint,
+              negocios coral) — la etiqueta pastel que abre la columna. */}
+          <Kicker
             key={audience}
-            className="crd-lista-swap inline-flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-[5px] font-display text-[11px] font-extrabold uppercase tracking-[.12em] text-mint-ink"
+            icon={c.eyebrowIcon}
+            variant="pill"
+            tone={audience === "negocio" ? "coral" : "mint"}
+            className="crd-lista-swap"
           >
-            <span className="ms text-sm" aria-hidden="true">{c.eyebrowIcon}</span>
             {c.eyebrow}
-          </span>
+          </Kicker>
         </div>
 
         <h1
           key={`h-${audience}`}
-          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-extrabold leading-[1.06] tracking-[-.028em] text-ink-2"
+          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2"
         >
-          {c.headline}
+          {c.headline} <em className="crd-accent">{c.headlineAccent}</em>
         </h1>
 
         <p
           key={`p-${audience}`}
-          className="crd-lista-swap mb-5 text-[15.5px] leading-[1.55] text-muted"
+          className="crd-lista-swap mb-5 text-body leading-[1.55] text-muted"
         >
           {c.sub}
         </p>
 
         {/* El formulario es la única acción de la página: siempre sobre el fold.
             overflow-visible porque el confeti del panel de éxito se sale. */}
-        <div className="crd-lista-in overflow-visible rounded-[22px] border border-line bg-white px-5 pb-[18px] pt-5 shadow-[0_18px_44px_rgba(38,70,83,.10)] [animation-delay:.12s]">
+        <div className="crd-lista-in overflow-visible rounded-panel border border-line bg-white px-5 pb-[18px] pt-5 shadow-modal [animation-delay:.12s]">
           <SubscribeForm
             key={formKey}
             tone="light"
@@ -182,9 +188,9 @@ export default function ListaExperience() {
           />
         </div>
 
-        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-[12.5px] text-muted-2 [animation-delay:.18s]">
-          <span className="ms text-lg" aria-hidden="true">phone_iphone</span>
-          <span className="ms text-lg" aria-hidden="true">android</span>
+        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-tiny text-muted-2 [animation-delay:.18s]">
+          <AppleGlyph size={15} />
+          <GooglePlayGlyph size={14} />
           Próximamente en App Store y Google Play
         </div>
 
@@ -200,17 +206,20 @@ export default function ListaExperience() {
         >
           <span
             aria-hidden="true"
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-[11px] bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] text-white"
+            // Degradado oficial de Instagram: es la única presencia real de la
+            // marca hoy y merece reconocerse al primer vistazo (decisión del
+            // dueño, jul 2026 — revierte el monocromo del audit §3).
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-[radial-gradient(circle_at_28%_110%,#FDF497_0%,#FD5949_45%,#D6249F_60%,#285AEB_90%)] text-white"
           >
             <InstagramGlyph size={20} />
           </span>
           <span>
-            <span className="block font-display text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
-            <span className="block text-[12.5px] leading-[1.4] text-muted">
+            <span className="block text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
+            <span className="block text-tiny leading-[1.4] text-muted">
               Los destinos que vamos sumando, antes de que salga la app.
             </span>
           </span>
-          <span className="ms ml-auto text-xl text-muted-2" aria-hidden="true">arrow_outward</span>
+          <Icon name="arrow_outward" className="ml-auto text-xl text-muted-2" />
         </a>
       </aside>
 
@@ -244,7 +253,7 @@ export default function ListaExperience() {
               {c.stats.map((s) => (
                 <div key={s.label} className="max-w-[150px]">
                   <div
-                    className="font-display text-[26px] font-extrabold tracking-[-.02em]"
+                    className="font-display text-[26px] font-bold tracking-[-.012em]"
                     style={{ color: s.color }}
                   >
                     {s.value}
@@ -262,10 +271,11 @@ export default function ListaExperience() {
           onClick={() => setAudience(audience === "viajero" ? "negocio" : "viajero")}
           className="mb-6 flex w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-dashed border-[#F7B39D] bg-[#FFF4EE] px-[15px] py-[13px] text-left font-[inherit]"
         >
-          <span className="ms text-[22px] text-coral-ink" aria-hidden="true">
-            {audience === "viajero" ? "storefront" : "hiking"}
-          </span>
-          <span className="text-[13.5px] leading-[1.45] text-muted">
+          <Icon
+            name={audience === "viajero" ? "storefront" : "hiking"}
+            className="text-feature text-coral-ink"
+          />
+          <span className="text-copy leading-[1.45] text-muted">
             {audience === "viajero" ? (
               <>
                 ¿Tienes un negocio en RD?{" "}
@@ -278,7 +288,7 @@ export default function ListaExperience() {
               </>
             )}
           </span>
-          <span className="ms ml-auto text-xl text-coral-ink" aria-hidden="true">arrow_forward</span>
+          <Icon name="arrow_forward" className="ml-auto text-xl text-coral-ink" />
         </button>
 
         <div className="flex flex-wrap gap-4 border-t border-line pt-3.5">

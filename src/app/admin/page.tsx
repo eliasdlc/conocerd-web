@@ -15,7 +15,7 @@ import AdminDashboard from "./AdminDashboard";
 import AdminLogin from "./AdminLogin";
 
 export const metadata: Metadata = {
-  title: "Panel — ConoceRD",
+  title: "Panel",
   // Un panel con correos de gente real no puede acabar en un buscador.
   robots: { index: false, follow: false, nocache: true },
 };

@@ -15,12 +15,12 @@ import {
   MOBILE_TRIGGER_TOTAL_DVH,
 } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
-import { registerSceneJumper } from "@/lib/journeyNav";
-import HeroOverlay from "@/sections/HeroOverlay";
+import { registerSceneJumper, scrollToSection } from "@/lib/journeyNav";
+import JourneyProgress from "@/components/JourneyProgress";
+import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
-import ViajerosSection from "@/sections/ViajerosSection";
-import NegociosSection from "@/sections/NegociosSection";
+import ViajerosNegociosSection from "@/sections/ViajerosNegociosSection";
 import EquipoSection from "@/sections/EquipoSection";
 import CTASection from "@/sections/CTASection";
 
@@ -78,6 +78,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     });
   }, []);
 
+  // Enlaces que llegan de fuera con hash (`…/#trigger-mapa`, el CTA de los
+  // correos). El salto nativo del navegador aterriza en el BORDE de la banda
+  // de scroll, no en el keyframe, y en móvil la pista va comprimida en dvh, así
+  // que cae en cualquier sitio. Se resuelve con el mismo saltador del nav, ya
+  // registrado por el efecto de arriba.
+  useEffect(() => {
+    const scene = window.location.hash.slice(1);
+    if (!scene.startsWith("trigger-")) return;
+    const id = window.setTimeout(() => scrollToSection(scene), 120);
+    return () => window.clearTimeout(id);
+  }, []);
+
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
   // se queda en el view inicial hasta la primera interacción.
   const handleLoad = useCallback(
@@ -127,15 +139,24 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           touchZoomRotate={false}
           attributionControl={false}
         >
-          <HeroOverlay />
+          <HeroPinMarker />
           <DestinosSection />
           <MapaSection />
-          <ViajerosSection />
-          <NegociosSection />
+          <ViajerosNegociosSection />
           <EquipoSection />
           <CTASection />
         </Map>
+
+        {/* Fuera del <Map>: el mapa se carga con `ssr: false` y todo lo que
+            cuelgue de él desaparece del HTML inicial. El hero es lo primero
+            que se ve y su logo es el LCP, así que se sirve renderizado desde
+            el servidor y se pinta sin esperar a MapLibre (audit 5.6). */}
+        <HeroOverlay />
       </div>
+
+      {/* Fuera de la capa sticky: es `fixed` y debe sobrevivir a todo el
+          recorrido, no solo al viewport de una escena. */}
+      <JourneyProgress />
 
       {/* Anchor divs — pista nativa de scroll; en móvil se comprime con dvh. */}
       {SCENES.map((scene) => (
