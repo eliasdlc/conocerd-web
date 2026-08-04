@@ -42,3 +42,14 @@ next-env.d.ts
 
 # waitlist local store (dev)
 /.waitlist
+
+# sondas del rediseño y su salida. Los .mjs sueltos en la raíz son de un uso
+# (capturas headless y medición de animaciones con puppeteer-core) y
+# `.artifacts/` son sus ~170 MB de PNG y reportes, que ellos regeneran. Los
+# scripts que el proyecto sí necesita viven en `scripts/`.
+/.artifacts/
+/*probe*.mjs
+/shot*.mjs
+/motion-*.mjs
+/mailshot.mjs
+/stamp-freeze.mjs
