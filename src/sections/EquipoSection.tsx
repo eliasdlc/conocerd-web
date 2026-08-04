@@ -322,17 +322,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         <StampCRD size={106} rotate={8} line1="SANTIAGO, RD" line2="· EST. 2026 ·" />
       </div>
 
-      <div className="flex items-center gap-2 pr-24">
-        <span className="flex items-center gap-1 rounded-full bg-mint-soft px-2 py-[3px]">
-          <span className="block size-[6px] animate-live-dot rounded-full bg-mint" />
-          <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
-        </span>
-        <span className="font-mono text-micro font-bold uppercase tracking-[.12em] text-muted-2">
-          Paso {CURRENT_STEP + 1} de {ROADMAP.length}
-        </span>
-      </div>
-
-      <h3 className="m-0 mt-2 pr-16 font-display text-[19px] font-bold leading-tight text-ink">
+      <h3 className="m-0 pr-16 font-display text-[19px] font-bold leading-tight text-ink">
         En esto estamos <em className="crd-accent">ahora mismo</em>
       </h3>
 
@@ -359,16 +349,11 @@ function RoadmapCard({ visible }: { visible: boolean }) {
             <li key={s.name} className="flex items-start gap-2.5">
               <StepDot state={state} />
               <div className="min-w-0 pt-0.5">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className={`text-tiny font-bold leading-[1.25] ${state === "next" ? "text-muted" : "text-ink"}`}>
-                    {s.name}
-                  </span>
-                  {state === "current" && (
-                    <span className="rounded-chip bg-coral-soft px-1.5 py-px font-mono text-micro font-bold uppercase tracking-[.1em] text-coral-ink">
-                      Ahora
-                    </span>
-                  )}
-                </div>
+                <span
+                  className={`block text-tiny font-bold leading-[1.25] ${state === "next" ? "text-muted" : "text-ink"}`}
+                >
+                  {s.name}
+                </span>
                 <p className={`m-0 mt-0.5 text-mini leading-[1.4] ${state === "next" ? "text-muted-2" : "text-muted"}`}>
                   {s.detail}
                 </p>
@@ -377,10 +362,6 @@ function RoadmapCard({ visible }: { visible: boolean }) {
           );
         })}
       </ol>
-
-      <p className="m-0 mt-3 border-t border-dashed border-line pt-2.5 font-mono text-micro text-muted-2">
-        Actualizado hoy · desde Santiago
-      </p>
     </section>
   );
 }
