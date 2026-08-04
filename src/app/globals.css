@@ -227,15 +227,22 @@ body::after {
 }
 
 @media (max-width: 899px) {
-  /* Native scrolling keeps the map signature without turning phones into a
-     locked slide deck. */
+  /* En móvil el journey no se scrollea (queja de usuarios ago 2026: nadie
+     sabe medir cuán lento deslizar): ocupa una pantalla exacta y avanza por
+     pasos desde el panel inferior (JourneyStepper). El bloqueo del scroll lo
+     hace `overflow:hidden` sobre <html>/<body> (MapScrollJourney), no
+     `touch-action`, porque touch-action también anularía el scroll interno de
+     los bottom-sheets y de la sección de Equipo. */
   .crd-journey {
-    height: calc((100 + var(--crd-mobile-track-dvh, 837)) * 1dvh);
+    height: 100dvh;
+    overscroll-behavior: none;
   }
-  .crd-journey-anchor {
-    height: var(--crd-mobile-scene-height) !important;
-  }
+  .crd-journey-anchor { display: none; }
 }
+
+/* Alto reservado del panel de pasos móvil (JourneyStepper). 0 en desktop para
+   que los calc() que lo usan sigan siendo válidos fuera del breakpoint. */
+:root { --crd-stepper-h: 0px; }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
@@ -276,6 +283,9 @@ body::after {
 }
 
 @media (max-width: 899px) {
+  /* Altura reservada para el panel de pasos, que flota sobre los sheets. */
+  :root { --crd-stepper-h: 84px; }
+
   .crd-ol-panel {
     left: 0 !important;
     right: 0 !important;
@@ -294,7 +304,7 @@ body::after {
        reponerlo como padding para que el contenido no quede pegado al borde.
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
-    padding: 24px 16px 28px !important;
+    padding: 24px 16px calc(20px + var(--crd-stepper-h)) !important;
     /* Sombra hacia ARRIBA (-8px): el sheet sube desde el borde inferior, así
        que no entra en la escala de elevación, que proyecta hacia abajo. */
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
@@ -302,8 +312,11 @@ body::after {
   .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: #B5C0BD; margin: -10px auto 14px; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
-    padding: 72px 16px 16px !important;
+    /* Único scroll "de página" permitido en móvil: el contenido de Equipo no
+       cabe en una pantalla. Scrollea por dentro y NO cambia de escena. */
+    padding: 72px 16px calc(16px + var(--crd-stepper-h)) !important;
     overflow-y: auto;
+    overscroll-behavior: contain;
     justify-content: flex-start !important;
     gap: 20px;
   }
@@ -326,8 +339,11 @@ body::after {
      pantallas cortas (375×667) el min-height queda por debajo del contenido
      natural y no cambia nada. */
   .crd-cta-card {
-    max-height: calc(100dvh - 42px);
-    min-height: min(76dvh, 700px);
+    /* El panel de pasos flota debajo: la card se apoya encima de él y cede su
+       franja, si no el formulario quedaba tapado justo en la conversión. */
+    max-height: calc(100dvh - var(--crd-stepper-h) - 56px);
+    min-height: min(68dvh, 640px);
+    margin-bottom: var(--crd-stepper-h);
     overflow-y: auto;
     padding: 28px 18px !important;
     display: flex;
@@ -337,8 +353,19 @@ body::after {
   /* 46%: la carta creció ~30px (la descripción vive ahora en el papel), así
      que el titular sube en proporción — la franja muerta que motivó el 43%
      original (audit 2.4) la ocupa hoy la propia pila. */
-  .crd-destinos-heading { left: 16px !important; bottom: 46% !important; }
-  .crd-destinos-card { width: min(196px, calc(100vw - 116px)) !important; padding: 9px 9px 0 !important; }
+  /* +26px: acompaña la subida de la pila por el panel de pasos — la carta más
+     alta (bottom 12%, con su rotación) rozaba el titular en pantallas ~800px
+     de alto. */
+  .crd-destinos-heading { left: 16px !important; bottom: calc(46% + 26px) !important; }
+  .crd-destinos-card {
+    width: min(196px, calc(100vw - 116px)) !important;
+    padding: 9px 9px 0 !important;
+    /* Sube la pila lo justo para que el texto de la carta libre el panel de
+       pasos. En pantallas altas el hueco bajo la carta ya casi alcanza (raise
+       chico); en cortas el panel come proporcionalmente más (raise grande),
+       pero sin llegar a chocar con el titular. */
+    margin-bottom: clamp(10px, calc(94px - 9dvh), 44px);
+  }
   .crd-destinos-card-media { height: 150px !important; }
 }
 
@@ -364,7 +391,10 @@ body::after {
   .crd-hero-logo { width: min(64vw, 240px) !important; }
   .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
   .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
-  .crd-destinos-heading { bottom: 54% !important; }
+  /* +36px: en estas pantallas la pila sube ~43px por el panel de pasos y a 54%
+     el titular quedaba debajo de la carta. El halo del text-shadow lo mantiene
+     legible aunque asome por encima del velo crema. */
+  .crd-destinos-heading { bottom: calc(54% + 36px) !important; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
   .crd-destinos-card { width: 176px !important; }
   .crd-destinos-card-media { height: 124px !important; }

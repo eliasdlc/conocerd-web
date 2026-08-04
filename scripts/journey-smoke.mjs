@@ -41,33 +41,55 @@ for (const [width, height] of viewports) {
     await page.waitForSelector("h1", { timeout: 15_000 });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    const isMobileViewport = width < 900;
     const initial = await page.evaluate(() => ({
       active: document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null,
       hero: document.querySelector("h1")?.textContent ?? null,
       xOverflow: document.documentElement.scrollWidth > window.innerWidth,
       rootOverflow: getComputedStyle(document.documentElement).overflow,
       bodyOverflow: getComputedStyle(document.body).overflow,
+      stepper: Boolean(document.querySelector('button[aria-label="Siguiente escena"]')),
     }));
-    if (!initial.hero?.includes("ConoceRD") || initial.active !== "hero" || initial.xOverflow || initial.rootOverflow === "hidden" || initial.bodyOverflow === "hidden") {
+    // Contrato por modo: en móvil el journey bloquea el scroll de página y
+    // navega con el panel de pasos; en desktop el scroll debe quedar libre.
+    const scrollLockOk = isMobileViewport
+      ? initial.rootOverflow === "hidden" && initial.bodyOverflow === "hidden" && initial.stepper
+      : initial.rootOverflow !== "hidden" && initial.bodyOverflow !== "hidden";
+    if (!initial.hero?.includes("ConoceRD") || initial.active !== "hero" || initial.xOverflow || !scrollLockOk) {
       throw new Error(`Invalid cold load at ${width}x${height}: ${JSON.stringify(initial)}`);
     }
 
     for (const scene of scenes) {
-      const scrollToScene = async () => {
-        await page.evaluate((target) => {
-          if (target === "hero") {
-            window.scrollTo(0, 0);
-            return;
-          }
-          const anchor = document.getElementById(`trigger-${target}`);
-          if (!anchor) throw new Error(`Missing anchor for ${target}`);
-          window.scrollTo(0, anchor.offsetTop + anchor.offsetHeight / 2 - window.innerHeight);
-        }, scene);
-      };
-      await scrollToScene();
-      await new Promise((resolve) => setTimeout(resolve, 80));
-      await scrollToScene();
-      await new Promise((resolve) => setTimeout(resolve, 1_200));
+      if (isMobileViewport) {
+        // Sin pista de scroll en móvil: se avanza tocando "Siguiente escena".
+        // Las escenas del recorrido van en orden, así que basta pulsar hasta
+        // llegar (con reduced-motion cada paso es instantáneo).
+        for (let guard = 0; guard < 8; guard++) {
+          const active = await page.evaluate(
+            () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
+          );
+          if (active === scene) break;
+          await page.click('button[aria-label="Siguiente escena"]');
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      } else {
+        const scrollToScene = async () => {
+          await page.evaluate((target) => {
+            if (target === "hero") {
+              window.scrollTo(0, 0);
+              return;
+            }
+            const anchor = document.getElementById(`trigger-${target}`);
+            if (!anchor) throw new Error(`Missing anchor for ${target}`);
+            window.scrollTo(0, anchor.offsetTop + anchor.offsetHeight / 2 - window.innerHeight);
+          }, scene);
+        };
+        await scrollToScene();
+        await new Promise((resolve) => setTimeout(resolve, 80));
+        await scrollToScene();
+        await new Promise((resolve) => setTimeout(resolve, 1_200));
+      }
 
       const state = await page.evaluate(() => {
         const active = document.querySelector(".crd-journey")?.getAttribute("data-active-scene");

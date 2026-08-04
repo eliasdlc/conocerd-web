@@ -1366,7 +1366,7 @@ export default function MapaSection() {
         <section
           ref={panelRef}
           aria-label="Tu itinerario"
-          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none ${
+          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none max-[899px]:pb-[var(--crd-stepper-h)] ${
             sel ? "max-[899px]:hidden" : ""
           } ${stamped ? "mapa6-kick" : ""} ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
           style={dragY !== 0 ? { transform: `translateY(${dragY}px)` } : undefined}
@@ -1379,7 +1379,7 @@ export default function MapaSection() {
           <div
             role="dialog"
             aria-label={sel.name}
-            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-3 z-30 animate-slide-up rounded-panel p-3 shadow-modal motion-reduce:animate-none min-[900px]:hidden`}
+            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-panel p-3 shadow-modal motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
               <div className="relative size-[92px] flex-none overflow-hidden rounded-tile bg-cream-2">
