@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Button from "@/components/Button";
 import { useScene } from "@/context/SceneContext";
@@ -58,6 +59,87 @@ export function HeroPinMarker() {
         </div>
       </MarkerContent>
     </MapMarker>
+  );
+}
+
+/**
+ * Empujón del cue de scroll. NO es levitación en reposo: nace de un disparador
+ * real —el visitante lleva 2,4 s en el hero sin scrollear— y se apaga para
+ * siempre en cuanto la página se mueve. Tres intentos como máximo: si a la
+ * tercera no ha bajado, insistir es ruido.
+ *
+ * Devuelve un contador; remontar la flecha con `key` es lo que rearma la
+ * animación CSS (reiniciar una animación por clase requiere reflow forzado).
+ */
+function useEmpujonDeScroll(): number {
+  const [empujon, setEmpujon] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let veces = 0;
+    let timer = 0;
+    const parar = () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", alScrollear);
+    };
+    function alScrollear() {
+      if (window.scrollY > 8) parar();
+    }
+    const empujar = () => {
+      if (window.scrollY > 8 || veces >= 3) return parar();
+      veces += 1;
+      setEmpujon((n) => n + 1);
+      timer = window.setTimeout(empujar, 6500);
+    };
+
+    timer = window.setTimeout(empujar, 2400);
+    window.addEventListener("scroll", alScrollear, { passive: true });
+    return parar;
+  }, []);
+
+  return empujon;
+}
+
+/**
+ * Cue de scroll: pista de que la home se recorre bajando. Es un botón de
+ * verdad —lleva al primer capítulo— porque un adorno que parece pulsable y no
+ * responde es peor que no tenerlo.
+ */
+function ScrollCue({ compacto }: { compacto?: boolean }) {
+  const empujon = useEmpujonDeScroll();
+
+  return (
+    <button
+      type="button"
+      onClick={() => scrollToSection("trigger-polaroid-0")}
+      className={`crd-scroll-cue group flex cursor-pointer flex-col items-center gap-1 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
+        compacto ? "gap-0.5" : ""
+      }`}
+    >
+      <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
+        {compacto ? "Desliza para explorar" : "Explora"}
+      </span>
+      <svg
+        key={empujon}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-[22px]"}`}
+        // El contador, no un booleano: deja auditar desde el DOM que el empujón
+        // se detiene (máximo 3, y menos si el visitante scrollea antes).
+        data-empujon={empujon > 0 ? empujon : undefined}
+      >
+        <polyline
+          points="5,8 12,16 19,8"
+          fill="none"
+          stroke="#F76C4D"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className="sr-only">Bajar al primer destino</span>
+    </button>
   );
 }
 
@@ -124,17 +206,19 @@ export default function HeroOverlay() {
               Soy un negocio
             </Button>
           </div>
+
+          {/* Móvil: el cue va DENTRO del bloque de contenido, debajo de los CTA.
+              Absoluto al fondo chocaba con los botones en pantallas de 667px.
+              Sin él, la primera pantalla del teléfono se lee como una página
+              completa y el recorrido entero queda invisible. */}
+          <div className="mt-4 desk:hidden">
+            <ScrollCue compacto />
+          </div>
         </div>
 
-        {/* Desktop keeps the explicit scroll cue; mobile space is reserved for the
-            primary actions and native scrolling is already expected. */}
-        <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1.5 text-muted desk:flex">
-          <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">Explora</span>
-          {/* Sin `crdBob infinite`: era levitación en reposo, que el proyecto no
-              usa. La pista aparece con el hero y se queda quieta. */}
-          <svg viewBox="0 0 24 24" className="size-[22px]">
-            <polyline points="5,8 12,16 19,8" fill="none" stroke="#F76C4D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca. */}
+        <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 desk:block">
+          <ScrollCue />
         </div>
       </div>
     </>

@@ -177,6 +177,26 @@ body::after {
   to   { opacity: 1; transform: translateY(0);    }
 }
 
+/* ── Cue de scroll: empujón acotado ──────────────────────────────────────────
+   No es levitación en reposo (el proyecto no la usa): la flecha está quieta y
+   solo se mueve cuando el visitante lleva unos segundos en el hero sin bajar
+   —el disparador vive en useEmpujonDeScroll—, tres iteraciones y para. Al
+   primer scroll no vuelve a dispararse. */
+@keyframes crdScrollNudge {
+  0%, 100% { transform: translateY(0);   opacity: .8; }
+  40%      { transform: translateY(6px); opacity: 1;  }
+  70%      { transform: translateY(0);   opacity: .8; }
+}
+.crd-scroll-arrow[data-empujon] { animation: crdScrollNudge 1.15s ease-in-out 3 both; }
+.crd-scroll-cue:hover .crd-scroll-arrow { transform: translateY(3px); transition: transform .2s ease; }
+
+/* ── Auto-demo del rail de pasos (Viajeros / Negocios) ───────────────────────
+   Barra que consume el tiempo del paso activo mientras la demo se pasa sola.
+   Es la que convierte "esto cambia solo" en "esto avanza y puedo adelantarlo":
+   desaparece en cuanto el usuario toma el control con el mouse. */
+@keyframes crdPasoAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.crd-paso-auto { animation: crdPasoAuto linear both; transform-origin: left; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;

@@ -28,10 +28,11 @@
 //  prefers-reduced-motion se muestra el estado final estático.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useReducedMotion } from "motion/react";
 import { useScene } from "@/context/SceneContext";
+import { useViewportMode } from "@/hooks/useIsMobile";
 import Icon, { type IconName } from "@/components/Icon";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
@@ -172,6 +173,46 @@ function pasoInicial(): number {
   }
 }
 
+// ─── Auto-demo del rail ──────────────────────────────────────────────────────
+//
+//  El rail siempre fue interactivo, pero nada lo decía: una lista de tres
+//  bullets no se lee como un control, así que el teléfono se quedaba en la
+//  primera pantalla y la mitad de la demo no se veía nunca.
+//
+//  En vez de explicarlo con más texto, se DEMUESTRA: mientras la escena está en
+//  cámara y el visitante no ha tocado nada, los pasos se pasan solos y el
+//  teléfono cambia con ellos — la relación queda establecida sin leer. Al
+//  primer hover/foco/clic el control pasa al usuario y ya no vuelve.
+//
+//  Solo en desktop: en móvil el teléfono está oculto (.crd-phone-wrap) y pasar
+//  pasos solo movería un resaltado, sin premio visible.
+
+const PASO_AUTO_MS = 5000; // cabe el tramo más largo del panel (6,4 s recortado)
+
+function usePasosDemo(visible: boolean, total: number) {
+  const reduced = !!useReducedMotion();
+  const { mobile, resolved } = useViewportMode();
+  const [paso, setPaso] = useState(pasoInicial);
+  const [tomado, setTomado] = useState(false);
+
+  const auto = visible && resolved && !mobile && !reduced && !tomado;
+
+  useEffect(() => {
+    if (!auto) return;
+    const id = window.setInterval(() => setPaso((p) => (p + 1) % total), PASO_AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [auto, total]);
+
+  // El control es de ida: quien ya descubrió que los pasos se tocan no necesita
+  // que la demo se los quite de las manos al volver a entrar en la escena.
+  const tomarControl = useCallback((i: number) => {
+    setTomado(true);
+    setPaso(i);
+  }, []);
+
+  return { paso, tomarControl, auto };
+}
+
 // ─── Piezas compartidas de la card ───────────────────────────────────────────
 
 function PinDeParada({ paso, activo }: { paso: Paso; activo: boolean }) {
@@ -193,18 +234,50 @@ function PinDeParada({ paso, activo }: { paso: Paso; activo: boolean }) {
   );
 }
 
+/**
+ * La pista de interacción: aparece solo mientras la demo se pasa sola y se
+ * pliega (grid-rows 1fr→0fr, sin salto de layout) en cuanto el usuario toma el
+ * control. Desktop únicamente — es donde existe el teléfono que cambia.
+ */
+function PistaDeInteraccion({ texto, visible }: { texto: string; visible: boolean }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`hidden transition-[grid-template-rows,opacity] duration-300 ease-out desk:grid ${
+        visible ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      }`}
+    >
+      <div className="overflow-hidden">
+        <span className="mb-2 flex w-fit items-center gap-1.5 rounded-full bg-mango-soft px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-[.06em] text-mango-ink">
+          {/* Cursor: la única forma inequívoca de decir "pasa el mouse". */}
+          <svg viewBox="0 0 24 24" className="size-3 shrink-0" aria-hidden="true">
+            <path
+              d="M6 3.4 18.2 12l-5.1.9 2.8 5.6-2.4 1.2-2.8-5.6L6 17.8Z"
+              fill="currentColor"
+            />
+          </svg>
+          {texto}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function RailDePasos({
   pasos,
   activo,
   onActivo,
   visible,
   label,
+  auto,
 }: {
   pasos: Paso[];
   activo: number;
   onActivo: (i: number) => void;
   visible: boolean;
   label: string;
+  /** La demo se está pasando sola: el paso activo lleva su barra de tiempo. */
+  auto: boolean;
 }) {
   return (
     <ol aria-label={label} className="relative m-0 flex list-none flex-col gap-1 p-0">
@@ -226,7 +299,7 @@ function RailDePasos({
             onMouseEnter={() => onActivo(i)}
             onFocus={() => onActivo(i)}
             aria-current={activo === i ? "step" : undefined}
-            className={`relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-card border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+            className={`group relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-card border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
               activo === i
                 ? "border-line bg-cream"
                 : "border-transparent bg-transparent hover:bg-cream/60"
@@ -239,6 +312,30 @@ function RailDePasos({
               </span>
               <span className="mt-0.5 block text-xs leading-[1.4] text-muted">{p.desc}</span>
             </span>
+
+            {/* Flecha hacia el teléfono: el paso activo la lleva encendida, los
+                demás la revelan al pasar el mouse. Es lo que dice, sin texto,
+                que esta lista manda sobre la pantalla de la derecha. */}
+            <span
+              aria-hidden="true"
+              className={`hidden self-center transition-opacity duration-200 desk:block ${
+                activo === i ? "text-mango opacity-100" : "text-muted-2 opacity-0 group-hover:opacity-70"
+              }`}
+            >
+              <Icon name="arrow_forward" className="text-sm" />
+            </span>
+
+            {/* Tiempo del paso mientras la demo corre sola: se lee como "esto
+                avanza" y desaparece en cuanto el usuario toma el control. */}
+            {auto && activo === i && (
+              <span aria-hidden="true" className="absolute inset-x-2 bottom-[3px] h-[2px] overflow-hidden rounded-full bg-mango/15">
+                <span
+                  key={i}
+                  className="crd-paso-auto block size-full rounded-full bg-mango/60"
+                  style={{ animationDuration: `${PASO_AUTO_MS}ms` }}
+                />
+              </span>
+            )}
           </button>
         </li>
       ))}
@@ -530,7 +627,7 @@ function ViajerosFinal() {
   const { activeScene } = useScene();
   const visible = activeScene === "viajeros";
   const reduced = !!useReducedMotion();
-  const [paso, setPaso] = useState(pasoInicial);
+  const { paso, tomarControl, auto } = usePasosDemo(visible, PASOS_VIAJERO.length);
 
   const t = useDemoTime(visible, reduced);
   // Reduced motion: fotograma fijo a mitad del segundo tramo (ruta visible,
@@ -654,11 +751,14 @@ function ViajerosFinal() {
               : `Rumbo a ${proxima.name} · ${kmRestantes} km`}
           </ChipEnVivo>
 
+          <PistaDeInteraccion texto="Pasa el mouse por cada parada" visible={auto} />
+
           <RailDePasos
             pasos={PASOS_VIAJERO}
             activo={paso}
-            onActivo={setPaso}
+            onActivo={tomarControl}
             visible={visible}
+            auto={auto}
             label="Cómo funciona ConoceRD para viajeros, en 3 pasos"
           />
 
@@ -783,7 +883,7 @@ function NegociosFinal() {
   const { activeScene } = useScene();
   const visible = activeScene === "negocios";
   const reduced = !!useReducedMotion();
-  const [paso, setPaso] = useState(pasoInicial);
+  const { paso, tomarControl, auto } = usePasosDemo(visible, PASOS_NEGOCIO.length);
 
   const t = useDemoTime(visible, reduced);
   // Reduced motion: fotograma fijo con dos clientes a medio camino. El +CICLO
@@ -947,9 +1047,10 @@ function NegociosFinal() {
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
             Tres pasos para <em className="crd-accent">estar en la ruta</em>
           </h2>
+          {/* En móvil el teléfono está oculto: prometer que "el teléfono salta"
+              era una instrucción para un elemento que ahí no existe. */}
           <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
-            Toca una parada y el teléfono salta a ese momento de tu panel. Es la app
-            real, grabada.
+            Cada paso es un momento real de tu panel, grabado de la app.
           </p>
 
           {/* Móvil: espejo del panel — el teléfono no se muestra. */}
@@ -957,11 +1058,14 @@ function NegociosFinal() {
             {ultima ? `${total} hoy · ${ultima.nombre} llegó desde ${ultima.origen}` : "esperando llegadas…"}
           </ChipEnVivo>
 
+          <PistaDeInteraccion texto="Pasa el mouse por cada paso" visible={auto} />
+
           <RailDePasos
             pasos={PASOS_NEGOCIO}
             activo={paso}
-            onActivo={setPaso}
+            onActivo={tomarControl}
             visible={visible}
+            auto={auto}
             label="Cómo funciona ConoceRD para tu negocio, en 3 pasos"
           />
 
