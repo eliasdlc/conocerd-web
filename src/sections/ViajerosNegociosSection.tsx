@@ -148,10 +148,12 @@ const PASOS_VIAJERO: Paso[] = [
   { meta: true, titulo: "Vive y guarda el recuerdo", desc: "Fotos, sellos por destino y tu diario de viaje para presumir después." },
 ];
 
+// El rail de negocios no describe la app: la abre por donde toca. Cada paso es
+// un tramo del recorrido grabado del panel (ver TRAMOS_NEGOCIO).
 const PASOS_NEGOCIO: Paso[] = [
-  { icon: "add_business", color: "#25CCB8", titulo: "Regístrate gratis", desc: "Perfil con fotos, horario y contacto directo por WhatsApp. Listo en minutos." },
-  { icon: "location_on", color: "#FF8D16", titulo: "Te encuentran en la ruta", desc: "Apareces en el mapa justo cuando el viajero planifica su parada cerca de ti." },
-  { meta: true, titulo: "Ves llegar clientes", desc: "Panel en vivo: cuántos vienen, de dónde salen y qué andan buscando." },
+  { icon: "groups", color: "#25CCB8", titulo: "Ves quién viene en camino", desc: "8 personas en los próximos 45 min, con nombre, de dónde salen y a qué hora llegan." },
+  { icon: "verified", color: "#FF8D16", titulo: "Escaneas y aplicas el beneficio", desc: "El QR del cliente, el visitante verificado y su descuento aplicado al instante." },
+  { meta: true, titulo: "Sabes qué funciona", desc: "De dónde vienen, tu calificación y las horas pico de tu semana." },
 ];
 
 // Línea punteada de la ruta — la firma de la card (v3), compartida por ambas.
@@ -292,38 +294,6 @@ function Telefono({ visible, children }: { visible: boolean; children: React.Rea
 
 // ─── Pantallas de la app — Viajeros ──────────────────────────────────────────
 
-/** Tab bar inferior de la app: ancla las pantallas como una app real y llena
- *  el tercio inferior que quedaba vacío en el mockup. */
-function TabBarApp({
-  tabs,
-  activo,
-}: {
-  tabs: { icon: IconName; label: string }[];
-  activo: string;
-}) {
-  return (
-    <div className="absolute inset-x-0 bottom-0 z-[2] flex items-start justify-around border-t border-line bg-white/95 px-2 pb-[18px] pt-1.5 backdrop-blur-[6px]">
-      {tabs.map((t) => (
-        <span
-          key={t.label}
-          className={`flex flex-col items-center gap-0.5 ${
-            t.label === activo ? "text-mango-ink" : "text-muted-2"
-          }`}
-        >
-          <Icon name={t.icon} className="text-lg" />
-          <span className="text-[8px] font-bold">{t.label}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-const TABS_NEGOCIO: { icon: IconName; label: string }[] = [
-  { icon: "storefront", label: "Perfil" },
-  { icon: "location_on", label: "Mapa" },
-  { icon: "insights", label: "Panel" },
-];
-
 /** Pantalla real de la app (screenshot del dueño, ago 2026). Las capturas
  *  traen su propia barra de estado, así que van de borde a borde y el mockup
  *  solo les superpone el punch-hole; `chrome={false}` evita duplicar barras. */
@@ -365,6 +335,81 @@ function PantallaVideo({ src, poster, activa }: { src: string; poster: string; a
         src={src}
         muted
         loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+        className="absolute inset-0 size-full object-cover"
+      />
+    </div>
+  );
+}
+
+/** El recorrido del panel del negocio, grabado del teléfono del dueño (ago
+ *  2026). Un solo archivo para los tres pasos: cada uno entra por su tramo. */
+const VIDEO_PANEL = "/assets/app-panel-negocio.mp4";
+
+/**
+ * Un tramo del recorrido del panel. Entra por `desde`, se repite dentro de
+ * [`desde`, `hasta`] y no desborda al capítulo siguiente.
+ *
+ * El corte se vigila por fotograma: `timeupdate` solo dispara unas cuatro veces
+ * por segundo y a 30 fps eso deja asomar hasta ocho fotogramas del capítulo que
+ * viene. Donde no existe `requestVideoFrameCallback` (Firefox) se cae a
+ * `timeupdate`, que desborda un pelo pero nunca se queda colgado.
+ */
+function PantallaVideoTramo({
+  desde,
+  hasta,
+  poster,
+  activa,
+}: {
+  desde: number;
+  hasta: number;
+  poster: string;
+  activa: boolean;
+}) {
+  const reduced = !!useReducedMotion();
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (!activa) {
+      v.pause();
+      return;
+    }
+
+    // El seek antes del play: si los metadatos aún no cargaron, `currentTime`
+    // se aplica igual en cuanto el navegador puede buscar.
+    v.currentTime = desde;
+    v.play().catch(() => {});
+
+    const alFinal = () => {
+      if (v.currentTime >= hasta) v.currentTime = desde;
+    };
+
+    if (typeof v.requestVideoFrameCallback === "function") {
+      let id = v.requestVideoFrameCallback(function frame() {
+        alFinal();
+        id = v.requestVideoFrameCallback(frame);
+      });
+      return () => v.cancelVideoFrameCallback?.(id);
+    }
+
+    v.addEventListener("timeupdate", alFinal);
+    return () => v.removeEventListener("timeupdate", alFinal);
+  }, [activa, desde, hasta]);
+
+  if (reduced) return <PantallaReal src={poster} />;
+  return (
+    <div className="absolute inset-0 bg-white">
+      {/* La captura del tramo vive debajo: mientras el video busca su segundo
+          —o si el navegador no puede decodificar— se ve la pantalla real. */}
+      <Image src={poster} alt="" fill sizes="264px" className="object-cover" />
+      <video
+        ref={ref}
+        src={VIDEO_PANEL}
+        muted
         playsInline
         preload="metadata"
         aria-hidden="true"
@@ -639,112 +684,23 @@ function ViajerosFinal() {
 
 // ─── Pantallas de la app — Negocios ──────────────────────────────────────────
 
-function PantallaRegistro() {
-  return (
-    <div className="absolute inset-0 flex flex-col bg-cream">
-      <div className="px-3 pt-10">
-        <div className="text-sm font-bold text-ink">Crea tu perfil</div>
-        <div className="font-mono text-micro text-muted-2">Gratis · listo en minutos</div>
-      </div>
-      <div className="flex flex-col gap-1.5 px-3 pt-2.5">
-        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
-          <div className="text-micro text-muted-2">Nombre del negocio</div>
-          <div className="text-tiny font-bold text-ink">Rancho La Cumbre</div>
-        </div>
-        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
-          <div className="text-micro text-muted-2">Categoría</div>
-          <div className="mt-1 flex gap-1">
-            <span className="rounded-full bg-coral-soft px-2 py-0.5 text-micro font-bold text-coral-ink">Comida criolla</span>
-            <span className="rounded-full border border-line px-2 py-0.5 text-micro text-muted">Hospedaje</span>
-          </div>
-        </div>
-        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
-          <div className="text-micro text-muted-2">Fotos</div>
-          <div className="mt-1 flex gap-1.5">
-            {["/assets/ph-sunset.png", "/assets/ph-pueblo.png"].map((src) => (
-              <div key={src} className="relative size-11 overflow-hidden rounded-md bg-cream-2">
-                <Image src={src} alt="" fill sizes="44px" className="object-cover" />
-              </div>
-            ))}
-            <span className="flex size-11 items-center justify-center rounded-md border border-dashed border-muted-2 text-muted">
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </span>
-          </div>
-        </div>
-        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
-          <div className="text-micro text-muted-2">Horario</div>
-          <div className="text-tiny font-bold text-ink">Lun–Dom · 9 a. m. – 8 p. m.</div>
-        </div>
-        <div className="rounded-lg border border-line bg-white px-2.5 py-1.5">
-          <div className="text-micro text-muted-2">WhatsApp</div>
-          <div className="flex items-center gap-1.5 text-tiny font-bold text-ink">
-            <Icon name="chat" className="text-sm text-mint-ink" />
-            (809) 555-0173
-          </div>
-        </div>
-      </div>
-      <div className="mx-3 mb-3 mt-auto flex h-10 items-center justify-center rounded-full bg-mango text-tiny font-bold text-white shadow-card">
-        Publicar mi perfil
-      </div>
-    </div>
-  );
-}
+/**
+ * El tramo del recorrido que enseña cada paso, en el orden de `PASOS_NEGOCIO`,
+ * con el fotograma que sirve de póster.
+ *
+ * Los cortes caen en el gesto que separa un capítulo del siguiente: el segundo
+ * arranca medio segundo antes del final del primero, en el dedo tocando
+ * «Escanear QR del cliente», para que el salto se lea como una acción y no como
+ * un corte seco.
+ */
+const TRAMOS_NEGOCIO = [
+  { desde: 0, hasta: 5.5, poster: "/assets/app-panel-llegadas.webp" },
+  { desde: 5.4, hasta: 11.8, poster: "/assets/app-panel-escaneo.webp" },
+  { desde: 18.7, hasta: 21.7, poster: "/assets/app-panel-datos.webp" },
+];
 
 type Llegada = { key: string; nombre: string; origen: string; color: string; hace: number };
 
-const ETIQUETA_TIEMPO = ["ahora mismo", "hace 2 min", "hace 5 min"];
-
-function PantallaPanel({ llegadas, total }: { llegadas: Llegada[]; total: number }) {
-  return (
-    <div className="absolute inset-0 flex flex-col bg-cream">
-      <div className="flex items-center justify-between px-3 pt-10">
-        <span className="text-sm font-bold text-ink">Tu panel</span>
-        <span className="flex items-center gap-1 rounded-full bg-mint-soft px-2 py-0.5">
-          <span className="block size-[6px] animate-live-dot rounded-full bg-mint" />
-          <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
-        </span>
-      </div>
-      <div className="mx-3 mt-2 rounded-card bg-mango px-3 py-2.5 text-ink-2">
-        <div className="text-micro font-semibold opacity-90">Clientes hoy</div>
-        <div className="flex items-baseline gap-1.5">
-          <span key={total} className="vn6-pop inline-block font-mono text-[30px] font-bold leading-none">{total}</span>
-          <span className="text-micro opacity-90">y subiendo</span>
-        </div>
-      </div>
-      <div className="px-3 pb-1 pt-2.5 font-mono text-micro font-bold uppercase tracking-[.12em] text-muted-2">
-        Llegadas
-      </div>
-      <div className="flex flex-col gap-1 px-3">
-        {llegadas.slice(0, 3).map((ll, i) => (
-          <div
-            key={ll.key}
-            className={`flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 shadow-card ${i === 0 ? "vn6-in" : ""}`}
-          >
-            <span className="size-[7px] shrink-0 rounded-full" style={{ background: ll.color }} />
-            <span className="min-w-0 flex-1 truncate text-micro text-ink">
-              <b>{ll.nombre}</b> · desde {ll.origen}
-            </span>
-            <span className="shrink-0 font-mono text-[8px] text-muted-2">{ETIQUETA_TIEMPO[i]}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mx-3 mb-[52px] mt-auto grid grid-cols-2 gap-1.5">
-        {[
-          { label: "Hoy", val: String(28 + total) },
-          { label: "Semana", val: "212" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-lg bg-white px-2 py-1.5 shadow-card">
-            <div className="text-micro text-muted-2">{s.label}</div>
-            <div className="font-mono text-sm font-bold text-ink">{s.val}</div>
-          </div>
-        ))}
-      </div>
-      <TabBarApp tabs={TABS_NEGOCIO} activo="Panel" />
-    </div>
-  );
-}
 
 // ─── Sección NEGOCIOS: clientes por carreteras reales ────────────────────────
 
@@ -852,13 +808,17 @@ function NegociosFinal() {
   const ultima = llegadas[0] ?? null;
   const llegadaReciente = ultima !== null && ultima.hace < 1600;
 
-  const pantallas = [
-    <PantallaRegistro key="reg" />,
-    // El screenshot real de la app: el mapa de Santiago con un negocio
-    // marcado — "te encuentran en la ruta" literal.
-    <PantallaReal key="mapa" src="/assets/app-mapa-ciudad.webp" />,
-    <PantallaPanel key="panel" llegadas={llegadas} total={total} />,
-  ];
+  // Tocar un paso salta a su segundo del recorrido: los tres son tramos del
+  // mismo archivo, así que el teléfono nunca cambia de pantalla, avanza.
+  const pantallas = TRAMOS_NEGOCIO.map((tr, i) => (
+    <PantallaVideoTramo
+      key={i}
+      desde={tr.desde}
+      hasta={tr.hasta}
+      poster={tr.poster}
+      activa={visible && paso === i}
+    />
+  ));
 
   return (
     <>
@@ -988,7 +948,8 @@ function NegociosFinal() {
             Tres pasos para <em className="crd-accent">estar en la ruta</em>
           </h2>
           <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
-            Del registro a ver clientes llegando. Cada parada enseña tu panel real.
+            Toca una parada y el teléfono salta a ese momento de tu panel. Es la app
+            real, grabada.
           </p>
 
           {/* Móvil: espejo del panel — el teléfono no se muestra. */}
