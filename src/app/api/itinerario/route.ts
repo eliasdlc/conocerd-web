@@ -15,7 +15,7 @@ import { z } from "zod";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
 import { HONEYPOT_FIELD } from "@/lib/waitlist/schema";
-import { getWaitlistStore, type SaveResult } from "@/lib/waitlist/store";
+import { getWaitlistStore } from "@/lib/waitlist/store";
 import { ROUTABLE_IDS, renderItineraryEmail, sendItineraryEmail } from "@/lib/itinerary/email";
 
 // Un envío es más caro que un alta en la lista: límite más apretado.
@@ -100,9 +100,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let saved: SaveResult;
+  let status: "created" | "already_subscribed";
   try {
-    saved = await getWaitlistStore().save({
+    status = await getWaitlistStore().save({
       email,
       audience: "viajero",
       ref: "mapa-itinerario",
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
   // El alta en el ESP no bloquea la respuesta: la persona ya tiene su correo y
   // el registro está en la base; reconciliar la audiencia después es barato.
-  if (saved.status === "created") {
+  if (status === "created") {
     const esp = await addToAudience({ email, audience: "viajero" });
     if (!esp.ok) console.error("[itinerario] alta en el ESP falló", esp.error);
   }
