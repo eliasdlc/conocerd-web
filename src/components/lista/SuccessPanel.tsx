@@ -12,6 +12,7 @@
 
 import Confetti from "./Confetti";
 import InstagramGlyph from "./InstagramGlyph";
+import Icon, { type IconName } from "@/components/Icon";
 import { CONTENT, INSTAGRAM } from "./content";
 import type { Audience } from "@/lib/waitlist/schema";
 
@@ -22,7 +23,7 @@ const IN = "animate-[crdListaIn_.5s_cubic-bezier(.16,1,.3,1)_both]";
 
 /** Sello de fundador: el anillo se dibuja, el check entra detrás y el conjunto
  *  hace un rebote corto. Tres tiempos encadenados leen como "conseguido". */
-function AchievementSeal({ icon }: { icon: string }) {
+function AchievementSeal({ icon }: { icon: IconName }) {
   return (
     <div className="relative size-24 shrink-0">
       {/* Halo que se expande una vez y desaparece */}
@@ -46,11 +47,10 @@ function AchievementSeal({ icon }: { icon: string }) {
             className="animate-[crdRingDraw_.8s_cubic-bezier(.3,.8,.3,1)_.15s_both]"
           />
         </svg>
-        <span
-          className="ms absolute inset-0 flex items-center justify-center text-[42px] text-mint-ink"
-          aria-hidden="true"
-        >
-          {icon}
+        {/* El centrado vive en el contenedor: si va sobre el <Icon>, `inset-0`
+            estira el SVG a toda la caja en vez de centrarlo dentro. */}
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Icon name={icon} className="text-[42px] text-mint-ink" />
         </span>
       </div>
     </div>
@@ -78,7 +78,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
         <AchievementSeal icon={seal} />
       </div>
 
-      <h2 className={`mb-1.5 font-display text-2xl font-extrabold tracking-[-.02em] text-ink-2 ${IN}`} style={{ animationDelay: ".35s" }}>
+      <h2 className={`mb-1.5 font-display text-2xl font-bold tracking-[-.012em] text-ink-2 ${IN}`} style={{ animationDelay: ".35s" }}>
         {alreadyIn ? "Ya estabas en la lista" : copy.title}
       </h2>
       <p className={`mx-auto mb-[18px] max-w-[340px] text-sm leading-[1.55] text-muted ${IN}`} style={{ animationDelay: ".42s" }}>
@@ -89,7 +89,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
 
       {/* Siguiente paso */}
       <div className={`border-t border-dashed border-line pt-4 ${IN}`} style={{ animationDelay: ".5s" }}>
-        <p className="mb-3 text-[13px] leading-[1.5] text-muted-2">
+        <p className="mb-3 text-copy leading-[1.5] text-muted-2">
           Mientras llega el lanzamiento, síguenos: ahí publicamos los destinos que vamos
           sumando y avisamos de cada avance.
         </p>
@@ -98,7 +98,7 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
           target="_blank"
           rel="noopener noreferrer"
           // .crd-ig-cta aporta el hover (translate + sombra).
-          className="crd-ig-cta inline-flex items-center gap-2.5 rounded-2xl bg-[linear-gradient(135deg,#F58529_0%,#DD2A7B_55%,#8134AF_100%)] px-[22px] py-[13px] font-display text-[15px] font-extrabold text-white no-underline shadow-[0_10px_26px_rgba(221,42,123,.34)]"
+          className="crd-ig-cta crd-sticker inline-flex items-center gap-2.5 rounded-card bg-ink-2 px-[22px] py-[13px] text-body font-bold text-cream no-underline"
         >
           <InstagramGlyph />
           Síguenos en {INSTAGRAM.handle}
@@ -108,12 +108,12 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
             también tiene un colmado, una cabaña o un tour: aquí es donde se le
             puede preguntar sin robarle protagonismo al registro que acaba de
             hacer. */}
-        <p className="mt-3.5 text-[12.5px] text-muted-2">
+        <p className="mt-3.5 text-tiny text-muted-2">
           {audience === "viajero" ? "¿También tienes un negocio? " : "¿Y como viajero? "}
           <button
             type="button"
             onClick={onSwitchAudience}
-            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-[12.5px] font-bold text-coral-ink underline"
+            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-tiny font-bold text-coral-ink underline"
           >
             {audience === "viajero" ? "Regístralo también" : "Apúntate también"}
           </button>

@@ -14,7 +14,7 @@ const viewports = [
   [1440, 900],
   [1920, 1080],
 ];
-const scenes = ["hero", "destinos-intro", "polaroid-0", "polaroid-5", "destinos-finale", "mapa", "viajeros", "negocios", "equipo", "cta"];
+const scenes = ["hero", "polaroid-0", "polaroid-5", "destinos-finale", "mapa", "viajeros", "negocios", "equipo", "cta"];
 
 await fs.mkdir(outputDir, { recursive: true });
 

@@ -12,6 +12,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import Icon from "@/components/Icon";
+import {
+  trackWaitlistError,
+  trackWaitlistSubmit,
+  trackWaitlistSuccess,
+  trackWaitlistView,
+} from "@/lib/analytics";
 import {
   AUDIENCES,
   BUSINESS_TYPES,
@@ -66,7 +73,7 @@ const TONES: Record<Tone, {
 // Sin `outline-none`: las utilities le ganan al anillo de focus global de
 // @layer base (globals.css) y los campos del embudo quedaban sin focus visible
 // al navegar con teclado (audit 5.2).
-const FIELD = "h-12 w-full rounded-[14px] border px-3.5 font-sans text-[15px]";
+const FIELD = "h-12 w-full rounded-card border px-3.5 font-sans text-body";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
@@ -197,6 +204,28 @@ export default function SubscribeForm({
 
   useEffect(persistReferral, []);
 
+  // Vista del formulario (audit 5.7). Se cuenta cuando entra en pantalla, no al
+  // montar: en la home el formulario está al final de un journey largo y
+  // contarlo al montar inflaría la tasa vista→envío hasta hacerla inútil.
+  // El efecto se resuscribe si cambia la audiencia —para registrar el valor
+  // vigente— pero `viewed` garantiza un solo evento por montaje.
+  const viewed = useRef(false);
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el || viewed.current) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (viewed.current || !entries.some((e) => e.isIntersecting)) return;
+        viewed.current = true;
+        io.disconnect();
+        trackWaitlistView({ source, audience });
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [source, audience]);
+
   // Un cambio de audiencia desde fuera (p. ej. "Registra tu negocio") debe
   // reflejarse aunque el componente ya esté montado. Se ajusta durante el
   // render —no en un efecto— para no encadenar un segundo render.
@@ -230,6 +259,8 @@ export default function SubscribeForm({
         [HONEYPOT_FIELD]: String(fd.get(HONEYPOT_FIELD) ?? ""),
       };
 
+      trackWaitlistSubmit({ source, audience });
+
       try {
         const res = await fetch("/api/subscribe", {
           method: "POST",
@@ -241,15 +272,18 @@ export default function SubscribeForm({
           setError(data.error);
           setFieldErrors(data.fields ?? {});
           setStatus("error");
+          trackWaitlistError({ source, audience, reason: "validacion" });
           return;
         }
         const already = data.status === "already_subscribed";
         setAlreadyIn(already);
         setStatus("success");
+        trackWaitlistSuccess({ source, audience, already });
         onSuccess?.({ audience, alreadyIn: already });
       } catch {
         setError("No hay conexión. Revisa tu señal e inténtalo de nuevo.");
         setStatus("error");
+        trackWaitlistError({ source, audience, reason: "red" });
       }
     },
     [audience, isBusiness, onSuccess, source, status]
@@ -269,14 +303,12 @@ export default function SubscribeForm({
           compact ? "px-3.5 py-3" : "px-[18px] py-4"
         }`}
       >
-        <span className={`ms shrink-0 text-2xl ${t.success}`} aria-hidden="true">
-          check_circle
-        </span>
+        <Icon name="check_circle" className={`shrink-0 text-2xl ${t.success}`} />
         <div>
-          <div className={`font-display text-[15px] font-extrabold ${t.text}`}>
+          <div className={`text-body font-bold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
           </div>
-          <p className={`mt-[3px] text-[13px] leading-[1.5] ${t.muted}`}>
+          <p className={`mt-[3px] text-copy leading-[1.5] ${t.muted}`}>
             {alreadyIn
               ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
               : copy.body}
@@ -320,7 +352,7 @@ export default function SubscribeForm({
                   setAudience(next);
                   toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
                 }}
-                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-display text-[13.5px] font-bold transition-[background-color,color] duration-200 ${
+                className={`h-11 flex-1 cursor-pointer rounded-full border-none text-copy font-bold transition-[background-color,color] duration-200 ${
                   active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
                 }`}
               >
@@ -346,7 +378,7 @@ export default function SubscribeForm({
               className={field}
             />
             {fieldErrors.businessName && (
-              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
+              <p className={`mx-0.5 mt-[5px] text-tiny ${t.error}`}>
                 {fieldErrors.businessName}
               </p>
             )}
@@ -382,7 +414,7 @@ export default function SubscribeForm({
             <div className="relative">
               <span
                 aria-hidden="true"
-                className={`pointer-events-none absolute left-3.5 top-0 flex h-12 items-center font-sans text-[15px] ${t.prefix}`}
+                className={`pointer-events-none absolute left-3.5 top-0 flex h-12 items-center font-sans text-body ${t.prefix}`}
               >
                 @
               </span>
@@ -402,7 +434,7 @@ export default function SubscribeForm({
               />
             </div>
             {fieldErrors.instagram && (
-              <p className={`mx-0.5 mt-[5px] text-[12.5px] ${t.error}`}>
+              <p className={`mx-0.5 mt-[5px] text-tiny ${t.error}`}>
                 {fieldErrors.instagram}
               </p>
             )}
@@ -432,22 +464,23 @@ export default function SubscribeForm({
           // estrecha del footer eso empujaba el botón a otra línea.
           className={`${field} w-auto min-w-0 ${compact ? "flex-[1_1_130px]" : "flex-[1_1_200px]"}`}
         />
+        {/* En móvil el botón baja a su propia línea al 44% del ancho, con un
+            vacío enorme a la derecha (audit 2.2) → ancho completo, como el
+            resto de los CTA. El footer (compact) sí cabe en una línea. */}
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-[14px] border-none bg-mango font-display text-[15px] font-extrabold text-white shadow-[0_8px_22px_rgba(255,141,22,.30)] disabled:cursor-progress disabled:opacity-75 ${
-            compact ? "px-4" : "px-[22px]"
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-white crd-sticker disabled:cursor-progress disabled:opacity-75 ${
+            compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >
           {submitting ? "Enviando…" : isBusiness ? "Registrar negocio" : "Unirme"}
-          {!submitting && !compact && (
-            <span className="ms text-lg" aria-hidden="true">arrow_forward</span>
-          )}
+          {!submitting && !compact && <Icon name="arrow_forward" className="text-lg" />}
         </button>
       </div>
 
       {fieldErrors.email && (
-        <p className={`mx-0.5 mt-1.5 text-[12.5px] ${t.error}`}>{fieldErrors.email}</p>
+        <p className={`mx-0.5 mt-1.5 text-tiny ${t.error}`}>{fieldErrors.email}</p>
       )}
 
       {/* Honeypot: fuera de la vista pero dentro del DOM, sin aria y sin tab. */}
@@ -456,10 +489,12 @@ export default function SubscribeForm({
         <input id={`${uid}-hp`} name={HONEYPOT_FIELD} type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      {/* Consentimiento explícito (§2.5) */}
+      {/* Consentimiento explícito (§2.5). El checkbox es obligatorio para
+          convertir: 22px de caja + padding vertical del label (todo él
+          clicable) llevan el target táctil a ≥44px de alto (audit 2.3). */}
       <label
         htmlFor={consentId}
-        className={`mx-0.5 mt-2.5 flex cursor-pointer items-start gap-2 text-xs leading-[1.45] ${t.muted}`}
+        className={`mx-0.5 mt-1.5 flex cursor-pointer items-start gap-2.5 py-1.5 text-xs leading-[1.45] ${t.muted}`}
       >
         <input
           id={consentId}
@@ -467,7 +502,7 @@ export default function SubscribeForm({
           type="checkbox"
           required
           aria-invalid={Boolean(fieldErrors.consent)}
-          className="mt-0.5 size-4 shrink-0 accent-coral"
+          className="size-[22px] shrink-0 accent-coral"
         />
         <span>
           Acepto recibir correos de ConoceRD sobre el lanzamiento. Puedo darme de baja cuando
@@ -475,7 +510,7 @@ export default function SubscribeForm({
         </span>
       </label>
       {fieldErrors.consent && (
-        <p className={`mx-0.5 mt-1 text-[12.5px] ${t.error}`}>{fieldErrors.consent}</p>
+        <p className={`mx-0.5 mt-1 text-tiny ${t.error}`}>{fieldErrors.consent}</p>
       )}
 
       {/* Error general — sin error no ocupa alto, para no reservar hueco vacío. */}
@@ -483,7 +518,7 @@ export default function SubscribeForm({
         id={errorId}
         role="alert"
         aria-live="assertive"
-        className={`text-[13px] ${t.error} ${error ? "mx-0.5 mt-2" : "m-0 min-h-0"}`}
+        className={`text-copy ${t.error} ${error ? "mx-0.5 mt-2" : "m-0 min-h-0"}`}
       >
         {error}
       </p>

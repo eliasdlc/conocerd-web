@@ -2,30 +2,38 @@ import Image from "next/image";
 import Link from "next/link";
 
 // Shell compartido de las páginas legales: prosa legible, sin journey ni mapa.
+//
+// Los estilos venían inline de antes del sistema de tokens y quedaron fuera del
+// restyling de Fase D — legales y 404 se veían de otra época que el resto del
+// sitio (audit 5.8). Ahora usan los mismos tokens; la prosa la estila .crd-legal
+// desde globals.css, que ya pasó al serif editorial.
+
+const FOOT_LINK =
+  "inline-flex min-h-[44px] items-center px-2 text-tiny text-muted-2 no-underline";
+
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        background: "#FDF8F0",
-        padding: "28px clamp(18px,5vw,32px) 56px",
-      }}
-    >
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <Link href="/" style={{ display: "inline-flex", minWidth: 44, minHeight: 44, alignItems: "center", marginBottom: 26 }}>
+    <main className="min-h-[100dvh] bg-cream px-[clamp(18px,5vw,32px)] pb-14 pt-7">
+      <div className="mx-auto max-w-[680px]">
+        <Link
+          href="/"
+          className="mb-[26px] inline-flex min-h-[44px] min-w-[44px] items-center"
+        >
           <Image
             src="/assets/wordmark.svg"
             alt="ConoceRD"
             width={101}
             height={32}
-            style={{ height: 32, width: "auto" }}
+            className="h-8 w-auto"
           />
         </Link>
+
         <div className="crd-legal">{children}</div>
-        <div style={{ marginTop: 36, borderTop: "1px solid #EBE6D9", paddingTop: 14, display: "flex", gap: 8, fontSize: 12.5 }}>
-          <Link href="/privacidad" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Privacidad</Link>
-          <Link href="/terminos" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Términos</Link>
-          <Link href="/lista" style={{ color: "#66747B", textDecoration: "none", minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 8px" }}>Lista de espera</Link>
+
+        <div className="mt-9 flex gap-2 border-t border-line pt-3.5">
+          <Link href="/privacidad" className={FOOT_LINK}>Privacidad</Link>
+          <Link href="/terminos" className={FOOT_LINK}>Términos</Link>
+          <Link href="/lista" className={FOOT_LINK}>Lista de espera</Link>
         </div>
       </div>
     </main>

@@ -100,7 +100,17 @@ export function computeStats(rows: Subscriber[], now = Date.now()): WaitlistStat
 
 // ─── Exportación ──────────────────────────────────────────────────────────────
 
+/**
+ * Una fila con lo que no está guardado: el código de fundador se deriva en el
+ * servidor (ver `waitlist/founder.ts`), así que llega desde fuera en vez de
+ * calcularse aquí — este módulo también lo usa el panel, que corre en el
+ * navegador y no tiene el secreto ni `node:crypto`.
+ */
+export type CsvRow = Subscriber & { founderCode?: string | null };
+
 const CSV_COLUMNS = [
+  ["id", "N.º de fundador"],
+  ["founderCode", "Código de fundador"],
   ["email", "Correo"],
   ["audience", "Audiencia"],
   ["name", "Nombre"],
@@ -111,7 +121,7 @@ const CSV_COLUMNS = [
   ["ref", "Origen"],
   ["consentAt", "Consentimiento"],
   ["createdAt", "Registro"],
-] as const satisfies ReadonlyArray<readonly [keyof Subscriber, string]>;
+] as const satisfies ReadonlyArray<readonly [keyof CsvRow, string]>;
 
 /**
  * Un valor que empieza por `=`, `+`, `-` o `@` lo ejecuta Excel como fórmula al
@@ -122,7 +132,7 @@ function csvCell(value: string): string {
   return `"${safe.replace(/"/g, '""')}"`;
 }
 
-export function toCsv(rows: Subscriber[]): string {
+export function toCsv(rows: CsvRow[]): string {
   const header = CSV_COLUMNS.map(([, label]) => csvCell(label)).join(",");
   const body = rows.map((row) =>
     CSV_COLUMNS.map(([field]) => csvCell(String(row[field] ?? ""))).join(",")

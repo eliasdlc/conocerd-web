@@ -10,10 +10,15 @@
   --breakpoint-desk: 900px;
 
   /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
-     nombre literal ('Plus Jakarta Sans') NO resuelve, porque next/font sirve
-     cada familia bajo un nombre hasheado. */
-  --font-sans:    var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-plus-jakarta), system-ui, sans-serif;
+     nombre literal ('Fraunces') NO resuelve, porque next/font sirve cada
+     familia bajo un nombre hasheado. */
+  /* `display` es el serif editorial y sólo se usa en titulares (≥20px) y en el
+     acento itálico; todo lo demás —cuerpo, botones, nav, etiquetas— es `sans`.
+     Mezclarlos era lo que hacía el sitio antes, y de ahí salía el look de
+     plantilla. Fraunces sólo tiene el peso 700 cargado: `font-extrabold` no
+     existe en esta paleta tipográfica. */
+  --font-sans:    var(--font-instrument), system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
   --font-hand:    var(--font-caveat), cursive;
 
@@ -35,6 +40,50 @@
   --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
   --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
   --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
+
+  /* ── Elevación ────────────────────────────────────────────────────────────
+     Había 18 sombras ad-hoc sobre el mismo ink para lo que en realidad son
+     tres niveles (audit 4.3). Cada token es el centro de su grupo, así que
+     migrar una sombra concreta mueve como mucho un par de píxeles de blur.
+     Se mantienen fuera de la escala, por ser efectos y no elevación: el
+     mockup del teléfono (tres capas) y el anillo de foco coral. */
+  --shadow-card:  0 6px 18px rgba(38,70,83,.14);
+  --shadow-panel: 0 12px 32px rgba(38,70,83,.18);
+  --shadow-modal: 0 26px 58px rgba(38,70,83,.20);
+  /* Sombra sticker de los CTA (audit §3, movimiento 3). Los botones llevaban
+     un halo del mismo color que el relleno —el cliché de plantilla 2019— y
+     sobre crema se leía como neón. Un offset duro y neutro los convierte en
+     calcomanías pegadas al papel, que es el lenguaje del resto del sitio
+     (polaroids, sellos). Sin blur a propósito: el blur es elevación y de eso
+     ya se encarga la escala de arriba. */
+  --shadow-sticker: 0 3px 0 rgba(38,70,83,.18);
+  /* Halo de color: sólo para pines sobre el mapa, donde el contraste contra la
+     cartografía sí necesita ayuda. Ningún botón lo usa ya. */
+  --shadow-glow-coral: 0 6px 20px rgba(247,108,77,.34);
+
+  /* ── Radios ───────────────────────────────────────────────────────────────
+     13 radios arbitrarios convivían con la escala de Tailwind, y las baldosas
+     de icono usaban cuatro tratamientos distintos para el mismo elemento
+     (9px asimétrico / 7px / 11px / full — audit 4.6). Nombres propios para no
+     pisar `rounded-md|xl|2xl`, que el proyecto sí usa. */
+  --radius-chip:  10px;
+  --radius-tile:  11px;
+  --radius-card:  14px;
+  --radius-panel: 22px;
+
+  /* ── Tipografía ───────────────────────────────────────────────────────────
+     17 tamaños arbitrarios con saltos de medio píxel (9.5→10→10.5→…), fruto
+     de ajustar cada caso a ojo (audit 4.4). Siete tokens cubren ~70 usos; el
+     mayor desplazamiento al migrar es de 0.5px. Los tamaños realmente únicos
+     (19, 26, 38, 42) siguen inline. Nombres propios para no pisar la escala
+     `text-xs…text-3xl` de Tailwind, que el proyecto usa en 56 sitios. */
+  --text-micro:   10px;    /* absorbe 9.5 / 10 / 10.5 */
+  --text-mini:    11px;    /* absorbe 11 / 11.5 */
+  --text-tiny:    12.5px;
+  --text-copy:    13.5px;  /* absorbe 13 / 13.5 */
+  --text-body:    15px;    /* absorbe 14.5 / 15 / 15.5 */
+  --text-lead:    17px;
+  --text-feature: 22px;
 
   /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
      Los @keyframes viven más abajo en este archivo.
@@ -58,13 +107,37 @@ body {
 }
 ::selection { background: #FFE6C8; color: #264653; }
 
+/* ── Grano de papel (audit §3, movimiento 4) ──────────────────────────────────
+   Los fondos crema eran gradientes radiales perfectamente lisos: "gradiente de
+   Figma", no "papel de guía de viaje". Un 3.5% de ruido los convierte en papel
+   sin tocar un solo componente.
+
+   Va sobre <body> y no sobre cada superficie porque la textura tiene que ser
+   continua: si cada panel trajera su propio grano, los bordes se notarían. Es
+   `fixed` para que el grano no viaje con el scroll —un grano que se desplaza se
+   lee como suciedad en la pantalla, no como papel— y queda por debajo del
+   skip-link, que es lo único que debe verse absolutamente nítido. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: .035;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+@media print {
+  body::after { display: none; }
+}
+
 .crd-skip-link {
   position: fixed;
   top: 12px;
   left: 12px;
   z-index: 1000;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--radius-chip);
   background: var(--color-ink-2);
   color: #fff;
   font-weight: 700;
@@ -74,36 +147,6 @@ body {
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
 
-/* Va en @layer base a propósito: CSS sin capa le gana a las utilidades de
-   Tailwind (que viven en @layer utilities), así que un `.ms` sin capa imponía
-   su `display: inline-block` sobre `flex`/`grid` y rompía el centrado del
-   glifo en cada caja de icono. Dentro de base, las utilidades vuelven a
-   ganar y `display` aquí sólo actúa como valor por defecto. */
-@layer base {
-  .ms {
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    line-height: 1;
-    font-variation-settings: 'FILL' 1;
-    display: inline-block;
-    vertical-align: middle;
-    user-select: none;
-  }
-}
-
-@keyframes crdFloatX {
-  0%, 100% { transform: translate(0,0) rotate(-3deg); }
-  50% { transform: translate(18px,-14px) rotate(4deg); }
-}
-@keyframes crdSway {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(4deg); }
-}
-@keyframes crdBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(9px); }
-}
 @keyframes crdLiveDot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .4; transform: scale(.7); }
@@ -197,42 +240,13 @@ body {
 /* ── Overlay panels: mobile bottom-sheet reflow ─────────────────── */
 /* One breakpoint drives camera padding, overlays, navigation and mockups.
    Keeping CSS aligned with MOBILE_BREAKPOINT avoids hybrid tablet layouts. */
-/* Sólo el alto scrolleable: tiene que ganarle al max-height que .crd-ol-panel
-   fija en móvil, y ese vive sin capa (ver nota de cascada más abajo). Todo el
-   aspecto de la tarjeta está en Tailwind, en el componente. */
-.crd-business-story {
-  max-height: calc(100dvh - clamp(102px, 15dvh, 144px));
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-/* La ruta conserva clase por su ::before: la línea punteada que une los pasos. */
-.crd-business-route {
-  position: relative;
-}
-.crd-business-route::before {
-  position: absolute;
-  top: 44px;
-  bottom: 31px;
-  left: 22px;
-  width: 1px;
-  content: '';
-  background: repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 8px);
-  opacity: .65;
-}
-/* Mismo caso que .crd-business-story: sólo el alto scrolleable. */
-.crd-business-dashboard {
-  max-height: calc(100dvh - clamp(104px, 17dvh, 154px));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
 /* Viajeros: el teléfono vive en un área segura, no en una escala aplicada al
    final. Así su relación de aspecto se conserva y nunca queda cortado por la
    capa sticky del journey. El UI de la app se lee de frente; la profundidad la
    aportan la sombra y el mapa, no una rotación que deforme el contenido. */
 .crd-phone-device {
-  width: min(264px, 18vw, calc((100dvh - 120px) * 0.482));
+  /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto. */
+  width: min(264px, 18vw, calc((100dvh - 120px) * 0.480));
 }
 
 @media (min-width: 900px) and (max-height: 480px) {
@@ -250,7 +264,7 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
-    border-radius: 20px 20px 0 0 !important;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0 !important;
     max-height: min(62dvh, 520px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -261,15 +275,11 @@ body {
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
     padding: 24px 16px 28px !important;
+    /* Sombra hacia ARRIBA (-8px): el sheet sube desde el borde inferior, así
+       que no entra en la escala de elevación, que proyecta hacia abajo. */
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
-  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 99px; background: #B5C0BD; margin: -10px auto 14px; }
-  /* Mismo criterio que .crd-phone-wrap: el panel del negocio sólo se leía
-     escalado a .56 y encajado en la esquina, donde ni sus cifras ni sus barras
-     son legibles y además tapa el mapa. El bottom-sheet ya cuenta la propuesta
-     completa, así que en móvil se omite el mockup. */
-  .crd-ol-panel-right { display: none !important; }
-  .crd-business-story { max-height: min(64dvh, 560px); }
+  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: #B5C0BD; margin: -10px auto 14px; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
     padding: 72px 16px 16px !important;
@@ -277,14 +287,13 @@ body {
     justify-content: flex-start !important;
     gap: 20px;
   }
-  /* Viajeros: stat markers overlap on narrow maps → swap them for the
-     in-panel chip row below the heading. */
-  .crd-stat-marker { display: none !important; }
-  .crd-stat-chips { display: flex !important; }
-  /* Footer: 4 columnas → 2 en móvil. La columna de marca lleva el formulario
-     de la lista, así que ocupa el ancho completo. */
-  .crd-footer-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Footer: 4 columnas → filas en móvil, con Marca a lo ancho. Explora es
+     angosta y Producto ancha: con 1fr/1fr, "iOS · próximamente" quebraba y
+     dejaba "próximamente" huérfano ×2 (audit 2.6). Contacto baja a su propia
+     fila porque el correo tampoco cabe en media pantalla. */
+  .crd-footer-grid { grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important; }
   .crd-footer-grid > :first-child { grid-column: 1 / -1; }
+  .crd-footer-grid > :last-child { grid-column: 1 / -1; }
   /* Lista de espera: tipo de negocio + WhatsApp se apilan en pantallas angostas. */
   .crd-sub-row { grid-template-columns: 1fr !important; }
   /* Nav: los 5 links no caben junto al botón → en móvil solo Descargar. */
@@ -292,36 +301,42 @@ body {
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
-  /* El transform convierte este wrapper en containing block del panel interno
-     (absolute + top-1/2). Sin posición propia, el wrapper era una caja de alto
-     cero al tope del viewport y el panel quedaba con la mitad superior fuera
-     de pantalla (audit 1.4). Anclado a mitad de altura, el centrado vertical
-     del panel interno cae sobre esta línea y queda completo en pantalla. */
-  .crd-mapa-route-panel { display: block !important; position: absolute; top: 50%; right: 0; transform: scale(.68); transform-origin: right center; }
-  .crd-cta-card { max-height: calc(100dvh - 42px); overflow-y: auto; padding: 24px 18px !important; }
-  .crd-destinos-heading { left: 16px !important; bottom: 48% !important; }
-  .crd-polaroid-deck-mobile { bottom: max(12px, 2dvh) !important; }
+  /* La card crece hasta cubrir el hueco crema que quedaba en pantallas altas
+     (hasta 326px de vacío en 430×932); el contenido se centra en ese alto. En
+     pantallas cortas (375×667) el min-height queda por debajo del contenido
+     natural y no cambia nada. */
+  .crd-cta-card {
+    max-height: calc(100dvh - 42px);
+    min-height: min(76dvh, 700px);
+    overflow-y: auto;
+    padding: 28px 18px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  /* 46%: la carta creció ~30px (la descripción vive ahora en el papel), así
+     que el titular sube en proporción — la franja muerta que motivó el 43%
+     original (audit 2.4) la ocupa hoy la propia pila. */
+  .crd-destinos-heading { left: 16px !important; bottom: 46% !important; }
   .crd-destinos-card { width: min(196px, calc(100vw - 116px)) !important; padding: 9px 9px 0 !important; }
   .crd-destinos-card-media { height: 150px !important; }
 }
 
 /* Short laptop/browser viewports need vertical composition, not another width
    breakpoint. The heading remains above the interactive deck instead of
-   competing for the same absolute region. */
+   competing for the same absolute region. (El chip crema del heading vive en
+   el componente desde audit 2.1 — aquí solo queda el reposicionado.) */
 @media (min-width: 900px) and (max-height: 780px) {
   .crd-destinos-heading {
     top: clamp(112px, 19vh, 148px) !important;
     bottom: auto !important;
-    padding: 12px 14px;
-    border: 1px solid rgba(235,230,217,.82);
-    border-radius: 14px;
-    background: rgba(253,248,240,.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
   }
-  .crd-polaroid-deck {
-    bottom: 4% !important;
-  }
+}
+
+/* En teléfonos muy angostos ni la columna ancha del footer salva la línea de
+   "próximamente" → una sola columna (audit 2.6). */
+@media (max-width: 379px) {
+  .crd-footer-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 359px) and (max-height: 640px) {
@@ -333,19 +348,73 @@ body {
   .crd-destinos-heading h2 { font-size: 24px !important; }
   .crd-destinos-card { width: 176px !important; }
   .crd-destinos-card-media { height: 124px !important; }
+  /* La descripción en el papel hace la carta ~30px más alta y a este alto
+     invade el titular; en pantallas así de chicas se omite. */
+  .crd-destinos-desc { display: none; }
   .crd-ol-panel { max-height: 55dvh; }
 }
 
-/* Stat chips live only on mobile (see media query above). */
-.crd-stat-chips { display: none; }
+/* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
+   Media pulgada de cinta translúcida asomando por el borde superior. Es lo que
+   convierte una card blanca con foto en una foto pegada al papel. Va en un
+   ::before y no en el markup para que las dos escenas que dibujan polaroids
+   —la pila de Destinos y el deck del finale— la hereden del papel compartido
+   sin añadir un nodo por carta. */
+.crd-tape::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 62px;
+  height: 17px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: linear-gradient(180deg, rgba(255,255,255,.62), rgba(253,248,240,.42));
+  border-left: 1px solid rgba(38,70,83,.07);
+  border-right: 1px solid rgba(38,70,83,.07);
+  box-shadow: 0 1px 2px rgba(38,70,83,.10);
+  pointer-events: none;
+}
+
+/* ── Textura topográfica del CTA final (audit §3, movimiento 11) ──────────────
+   La card ya es opaca; esto le da materia. Son curvas de nivel a un 5% de
+   blanco, como las de un mapa impreso: se intuyen antes de verse. Va como
+   `background-image` y no como pseudo-elemento porque así se pinta encima del
+   color de fondo y por debajo de todo el contenido, sin tocar el z-index de
+   nada ni pelearse con el `overflow-y: auto` que la card usa en móvil. */
+.crd-cta-card {
+  background-image:
+    repeating-radial-gradient(circle at 84% 8%, rgba(255,255,255,.05) 0 1px, transparent 1px 27px),
+    repeating-radial-gradient(circle at 12% 94%, rgba(255,255,255,.04) 0 1px, transparent 1px 35px);
+}
+
+/* ── Acento editorial ─────────────────────────────────────────────────────────
+   La itálica de Fraunces sustituye al <strong> coral (audit §3): antes el
+   énfasis era negrita de color, que es lo que hace cualquier plantilla. En los
+   titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
+   —que va en Instrument— también trae la familia, y ahí es donde se nota que
+   el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
+.crd-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--color-coral-ink);
+}
+/* Sobre la card ink del CTA el coral accesible se apaga; ahí manda el vivo. */
+.crd-accent-on-ink {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  color: var(--color-mango);
+}
 
 .crd-navlink {
   position: relative;
   text-decoration: none;
   color: #264653;
-  font-family: var(--font-display);
+  /* El nav es UI, no titular: sans 600. El serif se reserva a los titulares. */
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--text-body);
   padding: 4px 2px;
   transition: color .2s;
 }
@@ -360,15 +429,19 @@ body {
 }
 .crd-navlink:hover::after { width: 100%; }
 
-.crd-social { transition: transform .3s cubic-bezier(.2,.8,.3,1.3), background .25s, color .25s; }
-.crd-social:hover { transform: translateY(-4px) rotate(-6deg); background: #F76C4D !important; color: #fff !important; }
-
+/* El `scale` del hover era la otra mitad del look de plantilla: un CTA que
+   crece bajo el cursor. Ahora el botón se despega del papel al pasar por
+   encima y se hunde al pulsar — el offset de la sombra hace el trabajo, no la
+   escala. Los estados viven aquí porque :active tiene que ganarle a :hover. */
 .crd-button:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px);
 }
 .crd-button:active {
-  transform: translateY(0) scale(.98) !important;
+  transform: translateY(1px) !important;
 }
+.crd-sticker { box-shadow: var(--shadow-sticker); }
+.crd-button.crd-sticker:hover  { box-shadow: 0 5px 0 rgba(38,70,83,.18); }
+.crd-button.crd-sticker:active { box-shadow: 0 1px 0 rgba(38,70,83,.18) !important; }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */
 /* Va en @layer base a propósito: el CSS sin capa le gana a las utilidades de
@@ -495,8 +568,29 @@ body {
   animation: crdConfettiFly 1.5s cubic-bezier(.2,.6,.35,1) both;
 }
 
+/* El CTA de Instagram era el único elemento del sitio con el degradado oficial
+   de otra marca a todo color; en ink pesa igual sin competir (audit §3, mov. 9). */
 .crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3), box-shadow .2s; }
-.crd-ig-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(221,42,123,.42); }
+.crd-ig-cta:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(38,70,83,.18); }
+
+/* Sello de pasaporte: el estado "conseguido" de cada cupón de /lista. Rotado y
+   con doble borde, como la tinta de un cuño — no una píldora de estado. */
+.crd-sello {
+  transform: rotate(-9deg);
+  border: 2px solid var(--color-mint-ink);
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--color-mint-ink);
+  opacity: .8;
+  outline: 1px solid var(--color-mint-ink);
+  outline-offset: 2px;
+  pointer-events: none;
+}
 
 /* Los beneficios se marcan como conseguidos cuando el registro entra. */
 @keyframes crdPerkTick {
@@ -511,35 +605,39 @@ body {
 
 /* ───────────────────── Páginas legales ────────────────────── */
 /* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
-   el contenido es markup semántico y se estila una vez desde el shell. */
+   el contenido es markup semántico y se estila una vez desde el shell.
+   La regla tipográfica de Fase D vale también aquí: el serif sólo en el H1;
+   los H2 van a 17px, por debajo del umbral de 20, así que son sans 700. */
 .crd-legal {
-  color: #264653;
-  font-size: 15px;
+  color: var(--color-ink);
+  font-size: var(--text-body);
   line-height: 1.7;
 }
 .crd-legal h1 {
   font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -.025em;
+  font-weight: 700;
+  letter-spacing: -.012em;
   font-size: clamp(28px, 5vw, 38px);
   line-height: 1.1;
   margin: 0 0 6px;
   color: #1D3A45;
 }
 .crd-legal h2 {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 17px;
+  font-weight: 700;
+  font-size: var(--text-lead);
   margin: 30px 0 8px;
   color: #1D3A45;
 }
 .crd-legal p { margin: 0 0 14px; }
-.crd-legal ul { margin: 0 0 14px; padding-left: 20px; }
+/* `list-style: disc` explícito: el preflight de Tailwind lo quita de todos los
+   <ul>, y en prosa legal las viñetas son lo que separa una enumeración de un
+   párrafo partido. */
+.crd-legal ul { margin: 0 0 14px; padding-left: 20px; list-style: disc; }
 .crd-legal li { margin-bottom: 7px; }
-.crd-legal a { color: #B23410; }
+.crd-legal a { color: var(--color-coral-ink); }
 .crd-legal-date {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--text-tiny);
   color: #66747B;
   margin-bottom: 26px !important;
 }

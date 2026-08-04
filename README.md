@@ -72,11 +72,24 @@ entra más gente al panel, hay que sustituirlo por auth de verdad.
 | `DATABASE_URL` (Neon) | Los registros se guardan en `.waitlist/subscribers.json` (ignorado por git) en vez de en Postgres |
 | `RESEND_API_KEY` | No se da de alta el contacto en el ESP; el registro se guarda igual |
 | `RESEND_AUDIENCE_ID` | Ídem |
+| `ITINERARY_FROM` | En local, el correo de la ruta no se envía (no-op con aviso en consola); en producción `/api/itinerario` responde 502 en vez de fingir que salió |
 | `ADMIN_PASSWORD` | `/admin` no se puede abrir: el login queda deshabilitado con un aviso |
+| `FOUNDER_SECRET` | La bienvenida sale sin código de fundador (el resto del correo, igual). Mejor eso que firmar con un secreto de mentira un código que luego no valdría |
 
-Con las cuatro definidas (`vercel env`) no hay que tocar código: la selección de
-almacenamiento, el alta en el ESP y el acceso al panel dependen sólo de su
-presencia.
+Con las seis definidas (`vercel env`) no hay que tocar código: la selección de
+almacenamiento, el alta en el ESP, el envío del itinerario y el acceso al panel
+dependen sólo de su presencia.
+
+`FOUNDER_SECRET` es la única que **no se puede rotar nunca**: firma los códigos
+de fundador, que la gente guarda para canjear su insignia cuando la app abra, y
+cambiarla los invalida todos de golpe. 32 bytes al azar
+(`openssl rand -hex 32`), la misma en todos los entornos que manden correos de
+verdad.
+
+`ITINERARY_FROM` es el remitente completo (`ConoceRD <info@conocerd.app>`) y su
+dominio tiene que estar verificado en Resend: SPF y MX de rebote en
+`send.conocerd.app`, DKIM en `resend._domainkey`. La raíz conserva su MX y su
+SPF de name.com, así que `info@` sigue recibiendo con normalidad.
 
 La tabla `waitlist_subscribers` se crea y se migra sola al primer arranque
 (`src/lib/waitlist/store.ts`); las columnas añadidas después de la creación

@@ -1,6 +1,6 @@
-// Material Symbols no trae glifos de marca, y `photo_camera` no se lee como
-// Instagram. La marca va inline para que herede `currentColor` y no cueste una
-// petición extra en la página que tiene que abrir rápido.
+// El set de `Icon` no lleva glifos de marca, y una cámara genérica no se lee
+// como Instagram. La marca va inline para que herede `currentColor` y no cueste
+// una petición extra en la página que tiene que abrir rápido.
 
 export default function InstagramGlyph({ size = 22 }: { size?: number }) {
   return (

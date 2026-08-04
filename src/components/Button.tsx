@@ -1,17 +1,27 @@
 "use client";
 
+import Icon, { type IconName } from "@/components/Icon";
+
 interface ButtonProps {
   variant?: "primary" | "outline" | "mint";
   size?: "sm" | "lg";
-  icon?: string;
+  icon?: IconName;
   onClick?: () => void;
+  /** Overrides puntuales de layout (p. ej. `max-[899px]:w-full`). */
+  className?: string;
+  /** Color del icono cuando debe diferir del texto (p. ej. blanco sobre mint). */
+  iconClassName?: string;
   children: React.ReactNode;
 }
 
+// `crd-sticker` trae la sombra y sus estados (globals.css): offset duro y
+// neutro en vez del halo del mismo color que tenían antes (audit §3).
+// Mango y mint llevan texto e iconos blancos por decisión del dueño (jul-ago
+// 2026): comparado visualmente, el blanco sobre esos fondos gana al ink oscuro.
 const VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-mango text-white shadow-[0_6px_20px_rgba(255,141,22,.34)]",
+  primary: "crd-sticker bg-mango text-white",
   outline: "border-2 border-ink bg-transparent text-ink",
-  mint: "bg-mint text-ink-2 shadow-[0_6px_20px_rgba(37,204,184,.35)]",
+  mint: "crd-sticker bg-mint text-white",
 };
 
 const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
@@ -19,20 +29,24 @@ const SIZES: Record<NonNullable<ButtonProps["size"]>, string> = {
   lg: "h-14 px-[26px] text-base",
 };
 
-export default function Button({ variant = "primary", size = "sm", icon, onClick, children }: ButtonProps) {
+export default function Button({
+  variant = "primary",
+  size = "sm",
+  icon,
+  onClick,
+  className = "",
+  iconClassName = "",
+  children,
+}: ButtonProps) {
   return (
     <button
       type="button"
       // .crd-button aporta el hover/active (translate + scale); vive en CSS
       // porque el :active necesita ganarle al hover.
-      className={`crd-button inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]}`}
+      className={`crd-button inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-bold transition-[transform,box-shadow] duration-200 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       onClick={onClick}
     >
-      {icon && (
-        <span className={`ms ${size === "lg" ? "text-[22px]" : "text-lg"}`} aria-hidden="true">
-          {icon}
-        </span>
-      )}
+      {icon && <Icon name={icon} className={`${size === "lg" ? "text-feature" : "text-lg"} ${iconClassName}`} />}
       {children}
     </button>
   );

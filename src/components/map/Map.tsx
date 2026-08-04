@@ -200,7 +200,14 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         style={{ width: "100%", height: "100%", ...style }}
       />
       {!ready && !failed && loading}
-      {(ready || failed) && children}
+      {/* Los children se pintan desde el primer render, sin esperar a que
+          MapLibre cargue estilo y tiles. Antes se esperaba, y eso ataba el LCP
+          de la home —el logo del hero— a la inicialización del mapa: 8.6 s en
+          la línea base móvil de Lighthouse (audit 5.6). Los markers, rutas y
+          arcos ya se enganchan solos cuando el mapa aparece: todos consumen
+          `useMap()`, que devuelve null hasta entonces, y sus efectos dependen
+          de él. El fondo crema con halos hace de póster mientras tanto. */}
+      {children}
     </MapContext.Provider>
   );
 });
@@ -214,6 +221,13 @@ export interface MapMarkerProps {
   latitude: number;
   anchor?: maplibregl.PositionAnchor;
   offset?: [number, number];
+  /**
+   * Apilado entre marcadores. MapLibre le pone `transform` a cada marcador, lo
+   * que crea un stacking context: un `z-index` puesto dentro del marcador no
+   * puede pasar por encima de los marcadores vecinos. Para que un popup tape a
+   * los demás pines hay que subir el marcador mismo.
+   */
+  zIndex?: number;
   children?: React.ReactNode;
 }
 
@@ -222,6 +236,7 @@ export function MapMarker({
   latitude,
   anchor = "center" as maplibregl.PositionAnchor,
   offset,
+  zIndex,
   children,
 }: MapMarkerProps) {
   const map = useMap();
@@ -254,6 +269,12 @@ export function MapMarker({
   useEffect(() => {
     markerRef.current?.setLngLat([longitude, latitude]);
   }, [longitude, latitude]);
+
+  useEffect(() => {
+    const node = markerRef.current?.getElement();
+    if (!node) return;
+    node.style.zIndex = zIndex === undefined ? "" : String(zIndex);
+  }, [el, zIndex]);
 
   if (!el) return null;
   return createPortal(children, el);
@@ -536,27 +557,34 @@ export function MapRoute({
       geometry: { type: "LineString", coordinates },
     };
 
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, { type: "geojson", data });
-    } else {
-      (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
-    }
+    // Si el GL del mapa murió (p. ej. SwiftShader sin recursos), maplibre
+    // lanza desde getSource/addSource con el style ya nulo. Una ruta que no
+    // puede pintarse se omite; no puede tumbar la página completa.
+    try {
+      if (!map.getSource(sourceId)) {
+        map.addSource(sourceId, { type: "geojson", data });
+      } else {
+        (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
+      }
 
-    if (!map.getLayer(layerId)) {
-      const paint: Record<string, unknown> = {
-        "line-color": color,
-        "line-width": width,
-        "line-opacity": opacity,
-      };
-      if (dashArray) paint["line-dasharray"] = dashArray;
+      if (!map.getLayer(layerId)) {
+        const paint: Record<string, unknown> = {
+          "line-color": color,
+          "line-width": width,
+          "line-opacity": opacity,
+        };
+        if (dashArray) paint["line-dasharray"] = dashArray;
 
-      map.addLayer({
-        id: layerId,
-        type: "line",
-        source: sourceId,
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint,
-      });
+        map.addLayer({
+          id: layerId,
+          type: "line",
+          source: sourceId,
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint,
+        });
+      }
+    } catch {
+      return;
     }
 
     return () => {
@@ -569,6 +597,22 @@ export function MapRoute({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, id, color, width, opacity]);
+
+  // Actualiza la geometría cuando cambian las coordenadas SIN rehacer la capa:
+  // el efecto de arriba no depende de `coordinates` a propósito (rehacer capa
+  // y source por cada parada añadida parpadea). El route-builder cambia la
+  // polilínea en vivo y sin esto la línea se quedaba con la primera versión.
+  useEffect(() => {
+    if (!map || coordinates.length < 2) return;
+    try {
+      const src = map.getSource(`route-source-${id}`) as maplibregl.GeoJSONSource | undefined;
+      src?.setData({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates },
+      });
+    } catch {}
+  }, [map, id, coordinates]);
 
   return null;
 }
@@ -640,22 +684,27 @@ export function MapArc({
       geometry: { type: "LineString", coordinates: arcCoords(from, to, bend, 48) },
     };
 
-    if (!map.getSource(sourceId)) map.addSource(sourceId, { type: "geojson", data });
-    else (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
+    // Mismo blindaje que MapRoute: con el GL muerto, addSource lanza.
+    try {
+      if (!map.getSource(sourceId)) map.addSource(sourceId, { type: "geojson", data });
+      else (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(data);
 
-    if (!map.getLayer(layerId)) {
-      map.addLayer({
-        id: layerId,
-        type: "line",
-        source: sourceId,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": color,
-          "line-width": width,
-          "line-opacity": 0.85,
-          "line-dasharray": [0, 4, 3],
-        },
-      });
+      if (!map.getLayer(layerId)) {
+        map.addLayer({
+          id: layerId,
+          type: "line",
+          source: sourceId,
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": color,
+            "line-width": width,
+            "line-opacity": 0.85,
+            "line-dasharray": [0, 4, 3],
+          },
+        });
+      }
+    } catch {
+      return;
     }
 
     let raf = 0;

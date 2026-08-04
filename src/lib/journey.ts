@@ -30,8 +30,10 @@ export type SceneDef = {
 // sin comerse el dwell de las escenas de lectura.
 export const SCENES: SceneDef[] = [
   { name: "hero",             height: 100, chapter: "Inicio",   padLeft: 0.44, padBottom: 0.40 },
-  { name: "destinos-intro",   height:  75, chapter: "Destinos", padBottom: 0.16 },
-  { name: "polaroid-0",       height:  82, chapter: "Destinos", padBottom: 0.46 },
+  // Sin "destinos-intro": la isla vacía con titular era un frame muerto de
+  // scroll (decisión del dueño, jul 2026). El primer polaroid absorbe algo de
+  // pista extra porque ahora recibe el vuelo completo globo→closeup.
+  { name: "polaroid-0",       height:  95, chapter: "Destinos", padBottom: 0.46 },
   { name: "polaroid-1",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "polaroid-2",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "polaroid-3",       height:  82, chapter: "Destinos", padBottom: 0.46 },
@@ -147,8 +149,8 @@ function buildSegments(v: JourneyViewport): Segment[] {
   const fitPx = Math.max(220, Math.min(v.width, v.height) * 0.62);
 
   return SCENE_BANDS.slice(0, -1).map((band, i) => {
-    const a = resolveCamera(band.camera, v.mobile);
-    const b = resolveCamera(SCENE_BANDS[i + 1].camera, v.mobile);
+    const a = resolveCamera(band.camera, v.mobile, v.width);
+    const b = resolveCamera(SCENE_BANDS[i + 1].camera, v.mobile, v.width);
 
     const dx = (b.center[0] - a.center[0]) / 360;
     const dy = mercY(b.center[1]) - mercY(a.center[1]);
@@ -249,7 +251,7 @@ export function localProgress(p: number, name: string): number {
 }
 
 /**
- * Cuánto queda del "modo hero" (1 en el hero, 0 al llegar a destinos-intro).
+ * Cuánto queda del "modo hero" (1 en el hero, 0 al llegar al primer polaroid).
  * Lo usa la rotación en reposo del globo para desvanecerse al arrancar.
  */
 export function heroFactorAtProgress(p: number): number {
@@ -265,7 +267,7 @@ export function cameraAtProgress(p: number, v: JourneyViewport): Viewport {
   const at = segmentAt(p);
   if (!at) {
     const band = p <= bands[0].center ? bands[0] : bands[bands.length - 1];
-    return resolveCamera(band.camera, v.mobile);
+    return resolveCamera(band.camera, v.mobile, v.width);
   }
 
   const seg = segmentsFor(v)[at.i];

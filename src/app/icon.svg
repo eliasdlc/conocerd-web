@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ConoceRD">
+  <!-- El favicon es el pin del logo, no el lockup completo: a 16px "CONOCERD ·
+       DESCUBRE LO NUESTRO" es una mancha. El pin es el único elemento de la
+       marca que sobrevive a ese tamaño, y va sobre el ink de marca para que se
+       lea igual en pestañas claras y oscuras. -->
+  <rect width="64" height="64" rx="14" fill="#264653"/>
+  <path d="M32 52.5 L43.691 32.25 A13.5 13.5 0 1 0 20.309 32.25 Z" fill="#FF8D16"/>
+  <circle cx="32" cy="25.5" r="6.3" fill="#FDF8F0"/>
+</svg>

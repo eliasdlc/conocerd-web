@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de privacidad — ConoceRD",
+  title: "Política de privacidad",
   description: "Qué datos recoge ConoceRD en su lista de espera, para qué los usa y cómo darte de baja.",
 };
 
@@ -23,7 +23,7 @@ export default function PrivacidadPage() {
       <h2>Quién es responsable</h2>
       <p>
         ConoceRD (Santiago, República Dominicana). Para cualquier asunto relacionado con tus
-        datos escribe a <a href="mailto:hola@conocerd.app">hola@conocerd.app</a>.
+        datos escribe a <a href="mailto:contacto@conocerd.app">contacto@conocerd.app</a>.
       </p>
 
       <h2>Qué datos recogemos</h2>
@@ -69,7 +69,7 @@ export default function PrivacidadPage() {
       <p>
         Puedes pedirnos en cualquier momento acceder a tus datos, corregirlos o eliminarlos, y
         retirar tu consentimiento. Cada correo que te enviemos incluye un enlace de baja, y
-        también puedes escribirnos a <a href="mailto:hola@conocerd.app">hola@conocerd.app</a>.
+        también puedes escribirnos a <a href="mailto:contacto@conocerd.app">contacto@conocerd.app</a>.
         Darte de baja no tiene ninguna consecuencia más allá de dejar de recibir nuestros correos.
       </p>
 

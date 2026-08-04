@@ -1,13 +1,56 @@
 "use client";
 
 import Image from "next/image";
+import Icon from "@/components/Icon";
 import { SelfPin } from "@/components/map/pins";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Mockup de teléfono (#10). La pantalla se mantiene frontal y proporcionada:
-//  debe comunicar el producto, no convertirse en una pieza 3D ilegible. Sigue
-//  siendo intercambiable por un video o screenshot real mediante `screen`.
+//  Mockup de teléfono (#10, rework ago 2026). La pantalla se mantiene frontal:
+//  debe comunicar el producto, no convertirse en una pieza 3D ilegible.
+//
+//  El frame imita un Galaxy S25 Ultra (el dispositivo de las capturas reales):
+//  esquinas casi cuadradas, bisel de metal finísimo, botones solo en el lado
+//  derecho (volumen + encendido) y cámara punch-hole centrada en vez de
+//  Dynamic Island. El aspect del frame se deriva del aspect de las capturas
+//  (1080×2316) para que entren sin recorte. El punch-hole es hardware: se dibuja
+//  siempre, superpuesto a la pantalla como en el teléfono real — las capturas
+//  traen su propia barra de estado debajo. `chrome` añade solo el software del
+//  mockup por defecto (barra de estado y barra de gestos de la DefaultScreen).
 // ─────────────────────────────────────────────────────────────────────────────
+
+/** Barra de estado estilo One UI (solo para la DefaultScreen): hora a la
+ *  izquierda, radios a la derecha, sin fondo propio. */
+function StatusBar() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-x-0 top-0 z-[3] flex items-center justify-between px-[18px] pt-[8px] text-[11px] font-semibold tracking-[.01em] text-[#1B1F23]"
+    >
+      <span>9:41</span>
+      <span className="flex items-center gap-[5px]">
+        {/* señal */}
+        <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor">
+          <rect x="0" y="6" width="2.6" height="4" rx="0.8" />
+          <rect x="4" y="4" width="2.6" height="6" rx="0.8" />
+          <rect x="8" y="2" width="2.6" height="8" rx="0.8" />
+          <rect x="12" y="0" width="2.6" height="10" rx="0.8" opacity="0.35" />
+        </svg>
+        {/* wifi */}
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+          <path d="M1.5 3.4a8.4 8.4 0 0 1 11 0" />
+          <path d="M3.6 5.8a5.2 5.2 0 0 1 6.8 0" />
+          <circle cx="7" cy="8.4" r="1" fill="currentColor" stroke="none" />
+        </svg>
+        {/* batería */}
+        <svg width="23" height="11" viewBox="0 0 23 11">
+          <rect x="0.5" y="0.5" width="19" height="10" rx="3" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+          <rect x="2" y="2" width="13" height="7" rx="1.6" fill="currentColor" />
+          <path d="M21.5 3.6v3.8a2 2 0 0 0 0-3.8Z" fill="currentColor" opacity="0.5" />
+        </svg>
+      </span>
+    </div>
+  );
+}
 
 function DefaultScreen() {
   return (
@@ -21,9 +64,9 @@ function DefaultScreen() {
       </svg>
 
       {/* barra de búsqueda */}
-      <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-[0_6px_18px_rgba(38,70,83,0.16)]">
-        <span className="ms text-lg text-muted">search</span>
-        <span className="font-display text-[12.5px] text-muted">¿A dónde vamos?</span>
+      <div className="absolute inset-x-4 top-11 flex h-[38px] items-center gap-2 rounded-full bg-white px-3.5 shadow-card">
+        <Icon name="search" className="text-lg text-muted" />
+        <span className="text-tiny text-muted">¿A dónde vamos?</span>
       </div>
 
       {/* self-pin en el centro */}
@@ -32,15 +75,15 @@ function DefaultScreen() {
       </div>
 
       {/* card inferior estilo bottom-sheet */}
-      <div className="absolute inset-x-3 bottom-4 flex items-center gap-[11px] rounded-[20px] bg-white p-3 shadow-[0_-2px_20px_rgba(38,70,83,0.14)]">
+      <div className="absolute inset-x-3 bottom-4 flex items-center gap-[11px] rounded-panel bg-white p-3 shadow-card">
         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-cream-2">
-          <Image src="/assets/ph-playa.png" alt="" fill sizes="56px" className="object-cover" />
+          <Image src="/assets/destino-aguilas.webp" alt="" fill sizes="56px" className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-[13px] font-extrabold text-ink">Bahía de las Águilas</div>
-          <div className="mt-0.5 font-mono text-[10px] text-muted">★ 4.9 · a 2.4 km</div>
+          <div className="text-copy font-bold text-ink">Bahía de las Águilas</div>
+          <div className="mt-0.5 font-mono text-micro text-muted">★ 4.8 · a 2.4 km</div>
         </div>
-        <div className="shrink-0 rounded-full bg-coral px-4 py-[9px] font-display text-xs font-extrabold text-white">
+        <div className="shrink-0 rounded-full bg-coral-ink px-4 py-[9px] text-xs font-bold text-white">
           Ir
         </div>
       </div>
@@ -48,15 +91,52 @@ function DefaultScreen() {
   );
 }
 
-export default function PhoneMockup({ screen }: { screen?: React.ReactNode }) {
+export default function PhoneMockup({
+  screen,
+  chrome = true,
+}: {
+  screen?: React.ReactNode;
+  /** false = la pantalla trae su propia barra de estado (screenshots reales). */
+  chrome?: boolean;
+}) {
   return (
     <div className="crd-phone-device">
-      <div className="crd-phone-frame relative box-border aspect-[264/548] w-full rounded-[44px] bg-[linear-gradient(155deg,#33545F,#1D3A45)] p-3 shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_2px_rgba(255,255,255,0.18)]">
-        <div className="relative size-full overflow-hidden rounded-[33px] bg-[#EAF6F4]">
-          {screen ?? <DefaultScreen />}
+      {/* Riel de titanio: gradiente grafito con luz de canto arriba/abajo, como
+          el "Titanium Black". De frente el metal apenas asoma (3px); el grueso
+          del borde es el bisel negro uniforme del panel. 264/550 sale de la
+          captura 1080×2316 + 7px de bisel por lado (3 metal + 4 bisel). */}
+      <div className="crd-phone-frame relative box-border aspect-[264/550] w-full rounded-[20px] bg-[linear-gradient(150deg,#848D94,#3A4147_18%,#23282C_50%,#3F474D_82%,#8E979E)] p-[3px] shadow-[0_50px_90px_rgba(38,70,83,0.38),0_12px_30px_rgba(38,70,83,0.25),inset_0_1px_1px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(0,0,0,0.45)]">
+        {/* Botones, todos a la derecha: balancín de volumen y encendido, del
+            mismo titanio que el riel */}
+        <span aria-hidden="true" className="absolute -right-[2.5px] top-[19%] h-[52px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
+        <span aria-hidden="true" className="absolute -right-[2.5px] top-[31%] h-[26px] w-[3px] rounded-r-[2px] bg-[linear-gradient(90deg,#5A6268,#23282C)] shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(0,0,0,0.4)]" />
+
+        {/* Bisel negro del panel: uniforme y fino, todo pantalla */}
+        <div className="relative size-full rounded-[17px] bg-black p-[4px]">
+          <div className="relative size-full overflow-hidden rounded-[13px] bg-white">
+            {screen ?? <DefaultScreen />}
+
+            {chrome && (
+              <>
+                <StatusBar />
+                {/* Barra de gestos */}
+                <div className="absolute bottom-[6px] left-1/2 z-[4] h-[4px] w-[96px] -translate-x-1/2 rounded-full bg-black/30" />
+              </>
+            )}
+
+            {/* Cámara punch-hole centrada: es hardware, va siempre encima */}
+            <div className="absolute left-1/2 top-[7px] z-[4] size-[12px] -translate-x-1/2 rounded-full bg-[#04070A] shadow-[0_0_2px_rgba(0,0,0,0.35)]">
+              {/* lente */}
+              <span className="absolute left-1/2 top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#101820] shadow-[inset_0_-0.5px_1.5px_rgba(110,140,175,0.9)]" />
+            </div>
+
+            {/* Reflejo del cristal: diagonal y muy sutil, no lava la captura */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-[6] bg-[linear-gradient(115deg,rgba(255,255,255,0.13)_0%,rgba(255,255,255,0.04)_26%,transparent_44%)]"
+            />
+          </div>
         </div>
-        {/* notch */}
-        <div className="absolute left-1/2 top-3 z-[2] h-[22px] w-[92px] -translate-x-1/2 rounded-b-[14px] bg-ink-2" />
       </div>
     </div>
   );
