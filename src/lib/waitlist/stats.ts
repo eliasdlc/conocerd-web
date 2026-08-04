@@ -100,17 +100,9 @@ export function computeStats(rows: Subscriber[], now = Date.now()): WaitlistStat
 
 // ─── Exportación ──────────────────────────────────────────────────────────────
 
-/**
- * Una fila con lo que no está guardado: el código de fundador se deriva en el
- * servidor (ver `waitlist/founder.ts`), así que llega desde fuera en vez de
- * calcularse aquí — este módulo también lo usa el panel, que corre en el
- * navegador y no tiene el secreto ni `node:crypto`.
- */
-export type CsvRow = Subscriber & { founderCode?: string | null };
+export type CsvRow = Subscriber;
 
 const CSV_COLUMNS = [
-  ["id", "N.º de fundador"],
-  ["founderCode", "Código de fundador"],
   ["email", "Correo"],
   ["audience", "Audiencia"],
   ["name", "Nombre"],

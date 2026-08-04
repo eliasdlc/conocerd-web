@@ -24,20 +24,10 @@ export type SubscriberInput = {
 };
 
 /** `created` = correo nuevo. `already_subscribed` = ya estaba (perfil actualizado). */
-export type SaveStatus = "created" | "already_subscribed";
-
-/**
- * El `id` es el número de fundador: se asigna una vez, al insertar, y no cambia
- * nunca. Sale del alta —y no de un contador aparte— porque cualquier otra
- * cuenta se puede desincronizar, y este número va impreso en un correo que la
- * persona guarda y firmado dentro de su código.
- */
-export type SaveResult = { status: SaveStatus; id: number };
+export type SaveResult = "created" | "already_subscribed";
 
 /** Una fila tal como la lee el panel interno. Fechas en ISO: cruzan el límite servidor→cliente. */
 export type Subscriber = {
-  /** Número de fundador. Ver `SaveResult`. */
-  id: number;
   email: string;
   audience: Audience;
   name: string | null;
@@ -126,25 +116,21 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
           instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
           ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
           updated_at    = now()
-        returning id, (xmax = 0) as inserted
+        returning (xmax = 0) as inserted
       `;
-      return {
-        status: rows[0]?.inserted ? "created" : "already_subscribed",
-        id: Number(rows[0]?.id),
-      };
+      return rows[0]?.inserted ? "created" : "already_subscribed";
     },
 
     async list() {
       const q = await sql();
       const rows = await q`
-        select id, email, audience, name, business_name, business_type, whatsapp,
+        select email, audience, name, business_name, business_type, whatsapp,
                instagram, ref, consent_at, created_at, updated_at
         from waitlist_subscribers
         order by created_at desc
       `;
       return (rows as Record<string, unknown>[]).map(
         (r): Subscriber => ({
-          id: Number(r.id),
           email: String(r.email),
           audience: r.audience as Audience,
           name: (r.name as string) ?? null,
@@ -171,8 +157,6 @@ function isoDate(value: unknown): string {
 // ─── Archivo local (desarrollo) ───────────────────────────────────────────────
 
 type LocalRow = Omit<SubscriberInput, "consentAt"> & {
-  /** El equivalente al `bigserial` de Neon. Ver `SaveResult`. */
-  id: number;
   consentAt: string;
   createdAt: string;
   updatedAt: string;
@@ -206,15 +190,8 @@ function createLocalStore(): WaitlistStore {
         const rows = await readRows();
         const now = new Date().toISOString();
         const existing = rows.findIndex((r) => r.email === input.email);
-        // Como el `bigserial` de Neon: el mayor visto + 1, nunca reutilizado.
-        // `rows.length` no vale — borrar una fila repetiría un número.
-        const id =
-          existing >= 0
-            ? rows[existing].id
-            : rows.reduce((max, r) => Math.max(max, r.id ?? 0), 0) + 1;
         const row: LocalRow = {
           ...input,
-          id,
           consentAt: input.consentAt.toISOString(),
           createdAt: existing >= 0 ? rows[existing].createdAt : now,
           updatedAt: now,
@@ -226,7 +203,7 @@ function createLocalStore(): WaitlistStore {
         }
         await fs.mkdir(dir, { recursive: true });
         await fs.writeFile(file, JSON.stringify(rows, null, 2), "utf8");
-        return { status: existing >= 0 ? "already_subscribed" : "created", id };
+        return existing >= 0 ? "already_subscribed" : "created";
       });
       queue = run.catch(() => {});
       return run;
@@ -237,7 +214,6 @@ function createLocalStore(): WaitlistStore {
       return rows
         .map(
           (r): Subscriber => ({
-            id: r.id,
             email: r.email,
             audience: r.audience,
             name: r.name ?? null,

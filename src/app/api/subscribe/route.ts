@@ -14,7 +14,7 @@ import { renderWelcomeEmail, sendWelcomeEmail } from "@/lib/email/welcome";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
 import { HONEYPOT_FIELD, subscribeSchema, type SubscribeResult } from "@/lib/waitlist/schema";
-import { getWaitlistStore, type SaveResult } from "@/lib/waitlist/store";
+import { getWaitlistStore } from "@/lib/waitlist/store";
 
 const RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 
@@ -40,10 +40,6 @@ export async function GET(request: Request) {
     {
       name: params.get("name") ?? undefined,
       businessName: params.get("businessName") ?? undefined,
-      // Datos de mentira para ver la credencial entera: el código sale firmado
-      // de verdad, pero de un correo que no existe.
-      founderNumber: Number(params.get("n") ?? 137),
-      email: params.get("email") ?? "preview@conocerd.app",
     },
     "preview"
   );
@@ -87,9 +83,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let saved: SaveResult;
+  let status: "created" | "already_subscribed";
   try {
-    saved = await getWaitlistStore().save({
+    status = await getWaitlistStore().save({
       email: data.email,
       audience: data.audience,
       name: data.name,
@@ -116,16 +112,12 @@ export async function POST(request: Request) {
   // éxito no promete un correo inmediato, a diferencia del mapa, que estampa
   // "te lo mandamos" y por eso allí un fallo sí es un error), y sumaban medio
   // segundo largo de espera delante de alguien que acaba de escanear un QR.
-  if (saved.status === "created") {
+  if (status === "created") {
     after(async () => {
       const [welcome, esp] = await Promise.all([
         sendWelcomeEmail(data.email, data.audience, {
           name: data.name,
           businessName: data.businessName,
-          // El número de fundador es el `id` del alta y su código se firma con
-          // el correo: los dos salen de esta misma fila, sin contador aparte.
-          founderNumber: saved.id,
-          email: data.email,
         }),
         addToAudience({ email: data.email, audience: data.audience, name: data.name }),
       ]);
@@ -134,5 +126,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return json({ ok: true, status: saved.status });
+  return json({ ok: true, status });
 }

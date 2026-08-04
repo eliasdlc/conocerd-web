@@ -8,7 +8,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { requestHasAdminSession } from "@/lib/admin/auth";
-import { founderCode } from "@/lib/waitlist/founder";
 import { toCsv } from "@/lib/waitlist/stats";
 import { getWaitlistStore } from "@/lib/waitlist/store";
 
@@ -19,11 +18,7 @@ export async function GET(request: Request) {
     return new Response("Not found", { status: 404 });
   }
 
-  // El código no se guarda: se firma al vuelo desde el número y el correo.
-  const rows = (await getWaitlistStore().list()).map((row) => ({
-    ...row,
-    founderCode: founderCode(row.id, row.email),
-  }));
+  const rows = await getWaitlistStore().list();
   const stamp = new Date().toISOString().slice(0, 10);
 
   return new Response(toCsv(rows), {

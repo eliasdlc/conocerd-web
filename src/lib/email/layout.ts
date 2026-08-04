@@ -193,8 +193,6 @@ export interface CredentialOptions {
   body: string;
   /** Los datos del carnet, en dos columnas. */
   facts: { label: string; value: string }[];
-  /** El código de fundador. Sin `FOUNDER_SECRET` no hay ninguno y no se pinta. */
-  serial?: { label: string; code: string; note: string };
 }
 
 /**
@@ -219,7 +217,6 @@ export function credential({
   headline,
   body,
   facts,
-  serial,
 }: CredentialOptions): string {
   const w = EMAIL_ASSET_PX.stampCorner;
 
@@ -263,25 +260,6 @@ export function credential({
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0 0;">
         <tr>${facts.map(fact).join("")}</tr>
       </table>
-
-      ${
-        serial
-          ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-              style="margin:20px 0 0 0;border:1px dashed ${C.onInkLine};border-radius:12px;">
-              <tr><td style="padding:14px 16px 15px 16px;">
-                <p style="margin:0;font:700 10px/1.3 ${F.mono};letter-spacing:.14em;color:${
-                  C.onInkLabel
-                };text-transform:uppercase;">${esc(serial.label)}</p>
-                <p style="margin:8px 0 0 0;font:700 19px/1.25 ${F.mono};letter-spacing:.06em;color:${
-                  C.onInk
-                };word-break:break-all;">${esc(serial.code)}</p>
-                <p style="margin:8px 0 0 0;font:400 12px/1.5 ${F.sans};color:${
-                  C.onInkSoft
-                };">${esc(serial.note)}</p>
-              </td></tr>
-            </table>`
-          : ""
-      }
 
     </td></tr>
   </table>`;
