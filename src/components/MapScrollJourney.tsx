@@ -16,6 +16,7 @@ import {
 } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper, scrollToSection } from "@/lib/journeyNav";
+import JourneyProgress from "@/components/JourneyProgress";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
@@ -152,6 +153,10 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             el servidor y se pinta sin esperar a MapLibre (audit 5.6). */}
         <HeroOverlay />
       </div>
+
+      {/* Fuera de la capa sticky: es `fixed` y debe sobrevivir a todo el
+          recorrido, no solo al viewport de una escena. */}
+      <JourneyProgress />
 
       {/* Anchor divs — pista nativa de scroll; en móvil se comprime con dvh. */}
       {SCENES.map((scene) => (
