@@ -117,8 +117,10 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         compacto ? "gap-0.5" : ""
       }`}
     >
+      {/* Móvil ya no se desliza: el recorrido avanza tocando (este cue o el
+          panel de pasos de abajo). */}
       <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
-        {compacto ? "Desliza para explorar" : "Explora"}
+        {compacto ? "Toca para explorar" : "Explora"}
       </span>
       <svg
         key={empujon}
@@ -161,7 +163,9 @@ export default function HeroOverlay() {
         inert={!isVisible}
         // Móvil: contenido abajo (el globo queda arriba). Desktop: a la izquierda,
         // centrado vertical.
-        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-5 text-center transition-opacity duration-500 ease-in-out
+        // El pb móvil reserva la franja del panel de pasos: sin él, el cue
+        // "Toca para explorar" quedaba enterrado debajo del panel.
+        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-[calc(var(--crd-stepper-h)+10px)] text-center transition-opacity duration-500 ease-in-out
           desk:items-start desk:justify-center desk:px-[6vw] desk:pb-0 desk:text-left
           ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
