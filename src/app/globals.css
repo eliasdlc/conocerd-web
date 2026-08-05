@@ -356,7 +356,10 @@ body::after {
     min-height: min(68dvh, 640px);
     margin-bottom: var(--crd-stepper-h);
     overflow-y: auto;
-    padding: 28px 18px !important;
+    /* 20px vertical (no 28): en 360x800 el contenido rebasaba el max-height por
+       ~35px y la card scrolleaba — el overflow queda solo como seguridad de
+       pantallas cortas (320x568), no como el estado normal. */
+    padding: 20px 18px !important;
     display: flex;
     flex-direction: column;
     /* Sin justify-content: center — con overflow, el centrado recorta el tope
