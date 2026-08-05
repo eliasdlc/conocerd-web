@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type maplibregl from "maplibre-gl";
 import { SceneProvider, useScene } from "@/context/SceneContext";
-import { useJourneyScroll, scrollToSceneCenter } from "@/hooks/useJourneyScroll";
+import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
@@ -62,7 +62,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   // inferior (decisión del dueño, ago 2026: el scroll táctil corría demasiado).
   // Ambos gated hasta que matchMedia resuelve, para que un frame desktop nunca
   // adelante un teléfono hasta el CTA.
-  useJourneyScroll({
+  const { jumpToScene } = useJourneyScroll({
     containerRef: outerRef,
     mapRef,
     progress,
@@ -79,7 +79,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena
-  // en ambos modos, en vez de al borde de su banda de scroll.
+  // en ambos modos. En desktop la navegación es teletransporte + vuelo directo
+  // de cámara (jumpToScene): clicar "Equipo" no re-narra el recorrido.
   useEffect(() => {
     return registerSceneJumper((scene) => {
       const i = SCENE_BANDS.findIndex((b) => b.name === scene);
@@ -90,11 +91,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         window.scrollTo({ top: 0, behavior: "smooth" });
         goTo(i);
       } else {
-        scrollToSceneCenter(outerRef.current, i);
+        jumpToScene(i);
       }
       return true;
     });
-  }, [isMobile, goTo]);
+  }, [isMobile, goTo, jumpToScene]);
 
   // Bloqueo del scroll de página en móvil. Con `overflow:hidden` un swipe
   // vertical no mueve la página, pero los bottom-sheets y la sección de equipo

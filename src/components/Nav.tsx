@@ -45,11 +45,14 @@ export default function Nav() {
         {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
             a tamaño completo y repetirlo sobraría. */}
         <a
-          href="#top"
+          href="#trigger-hero"
           aria-label="ConoceRD — volver al inicio"
           onClick={(e) => {
             e.preventDefault();
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            // Por el saltador del journey: en desktop teletransporta con vuelo
+            // directo de cámara (un smooth scroll desde el footer sería un tour
+            // de 10 s con el tope de ritmo); en móvil re-encuadra al hero.
+            scrollToSection("trigger-hero");
           }}
           // El margen negativo cancela el gap del flex mientras el logo mide
           // 0px: sin él, la píldora arrastraba un hueco fantasma a la izquierda
