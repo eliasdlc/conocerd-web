@@ -49,11 +49,25 @@ export const SCENES: SceneDef[] = [
 
 export const TRIGGER_TOTAL_VH = SCENES.reduce((sum, s) => sum + s.height, 0);
 
-// Mobile keeps the same relative scene timing so camera bands and anchor
-// positions stay aligned, but needs less physical scrolling than desktop.
-// 0.63 turns the 1329vh desktop track into ~837dvh on phones.
-export const MOBILE_TRACK_SCALE = 0.63;
-export const MOBILE_TRIGGER_TOTAL_DVH = TRIGGER_TOTAL_VH * MOBILE_TRACK_SCALE;
+export const SCENE_COUNT = SCENES.length;
+
+// Capítulos como rangos de ÍNDICE de escena (el riel desktop usa rangos de
+// progreso; el panel de pasos móvil navega por índices). Escenas consecutivas
+// que comparten `chapter` se funden: los 6 polaroids son un solo "Destinos".
+export type Chapter = { label: string; first: number; last: number };
+
+export const CHAPTERS: Chapter[] = SCENES.reduce<Chapter[]>((out, s, i) => {
+  const prev = out[out.length - 1];
+  if (prev && prev.label === s.chapter) prev.last = i;
+  else out.push({ label: s.chapter, first: i, last: i });
+  return out;
+}, []);
+
+/** Capítulo al que pertenece un índice de escena. */
+export function chapterIndexOfScene(sceneIndex: number): number {
+  const i = CHAPTERS.findIndex((c) => sceneIndex <= c.last);
+  return i < 0 ? CHAPTERS.length - 1 : i;
+}
 
 // ─── Bandas en espacio de progreso [0,1] ──────────────────────────────────────
 // `start/end` = banda de la escena (activeScene + progreso local).

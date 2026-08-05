@@ -1,22 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type maplibregl from "maplibre-gl";
 import { SceneProvider, useScene } from "@/context/SceneContext";
-import { useJourneyScroll, scrollToSceneCenter } from "@/hooks/useJourneyScroll";
+import { useJourneyScroll } from "@/hooks/useJourneyScroll";
+import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
-import {
-  SCENES,
-  SCENE_BANDS,
-  TRIGGER_TOTAL_VH,
-  MOBILE_TRACK_SCALE,
-  MOBILE_TRIGGER_TOTAL_DVH,
-} from "@/lib/journey";
+import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
-import { registerSceneJumper, scrollToSection } from "@/lib/journeyNav";
+import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import JourneyProgress from "@/components/JourneyProgress";
+import JourneyStepper from "@/components/JourneyStepper";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
@@ -53,29 +49,101 @@ function applyBrandPaint(map: maplibregl.Map) {
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
   const { activeScene, setActiveScene, progress } = useScene();
   const outerRef = useRef<HTMLDivElement>(null);
-  const { resolved: viewportResolved } = useViewportMode();
+  const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
-  // One scroll engine serves every viewport. It is gated until matchMedia has
-  // resolved, preventing a desktop frame from ever advancing a phone to CTA.
-  useJourneyScroll({
+  // El journey móvil bloquea el scroll de la página; solo se libera al final
+  // para dejar bajar al footer (y se vuelve a bloquear al regresar arriba).
+  const [unlocked, setUnlocked] = useState(false);
+  const [stepperVisible, setStepperVisible] = useState(true);
+  const leftJourney = useRef(false);
+
+  // Dos motores excluyentes escribiendo el mismo progreso: desktop = scroll
+  // continuo con tope de velocidad, móvil = pasos discretos desde el panel
+  // inferior (decisión del dueño, ago 2026: el scroll táctil corría demasiado).
+  // Ambos gated hasta que matchMedia resuelve, para que un frame desktop nunca
+  // adelante un teléfono hasta el CTA.
+  const { jumpToScene } = useJourneyScroll({
     containerRef: outerRef,
     mapRef,
     progress,
     onSceneChange: setActiveScene,
-    enabled: viewportResolved,
+    enabled: viewportResolved && !isMobile,
+  });
+  const { goTo, next, prev, index } = useJourneySteps({
+    enabled: viewportResolved && isMobile,
+    mapRef,
+    progress,
+    onSceneChange: setActiveScene,
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena
-  // en ambos modos, en vez de al borde de su banda de scroll.
+  // en ambos modos. En desktop la navegación es teletransporte + vuelo directo
+  // de cámara (jumpToScene): clicar "Equipo" no re-narra el recorrido.
   useEffect(() => {
     return registerSceneJumper((scene) => {
       const i = SCENE_BANDS.findIndex((b) => b.name === scene);
       if (i < 0) return false;
-      scrollToSceneCenter(outerRef.current, i);
+      if (isMobile) {
+        // Un link desde el footer llega con la página desbloqueada y abajo:
+        // volver arriba y dejar que el motor de pasos anime hasta la escena.
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        goTo(i);
+      } else {
+        jumpToScene(i);
+      }
       return true;
     });
+  }, [isMobile, goTo, jumpToScene]);
+
+  // Bloqueo del scroll de página en móvil. Con `overflow:hidden` un swipe
+  // vertical no mueve la página, pero los bottom-sheets y la sección de equipo
+  // siguen scrolleando POR DENTRO (a diferencia de `touch-action`, que los
+  // habría anulado también). Ese scroll interno no cambia de escena: la escena
+  // solo avanza desde el panel de pasos.
+  useEffect(() => {
+    if (!viewportResolved || !isMobile || unlocked) return;
+    // Sobre <html> y no solo <body>: globals.css le pone `overflow-x: clip` al
+    // root, y con el root en overflow no-visible el overflow del body deja de
+    // propagarse al viewport (el bloqueo no llegaba a aplicarse).
+    // Se limpia a "" en vez de restaurar el valor previo: en StrictMode el
+    // efecto corre dos veces y el "previo" de la segunda pasada ya sería
+    // "hidden", que quedaría fijado para siempre.
+    const root = document.documentElement;
+    root.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, [viewportResolved, isMobile, unlocked]);
+
+  // El panel es fijo: se retira cuando el usuario sale del journey al footer,
+  // y al volver arriba el journey recupera el bloqueo del gesto vertical.
+  useEffect(() => {
+    if (!isMobile) return;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setStepperVisible(y < window.innerHeight * 0.3);
+      if (!unlocked) return;
+      // Solo se vuelve a bloquear tras haber bajado de verdad: si se mirara
+      // únicamente `y <= 2`, el primer frame del scroll suave hacia el footer
+      // (todavía en 0) re-bloquearía la página a mitad del gesto.
+      if (y > 60) leftJourney.current = true;
+      else if (y <= 2 && leftJourney.current) {
+        leftJourney.current = false;
+        setUnlocked(false);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMobile, unlocked]);
+
+  const goToFooter = useCallback(() => {
+    setUnlocked(true);
+    requestAnimationFrame(() => scrollToFooter());
   }, []);
 
   // Enlaces que llegan de fuera con hash (`…/#trigger-mapa`, el CTA de los
@@ -106,10 +174,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       ref={outerRef}
       className="crd-journey"
       data-active-scene={activeScene}
-      style={{
-        "--crd-track-vh": TRIGGER_TOTAL_VH,
-        "--crd-mobile-track-dvh": MOBILE_TRIGGER_TOTAL_DVH,
-      } as React.CSSProperties}
+      style={{ "--crd-track-vh": TRIGGER_TOTAL_VH } as React.CSSProperties}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
           Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
@@ -154,11 +219,20 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         <HeroOverlay />
       </div>
 
-      {/* Fuera de la capa sticky: es `fixed` y debe sobrevivir a todo el
+      {/* Fuera de la capa sticky: son `fixed` y deben sobrevivir a todo el
           recorrido, no solo al viewport de una escena. */}
       <JourneyProgress />
+      <JourneyStepper
+        index={index}
+        onPrev={prev}
+        onNext={next}
+        onChapter={goTo}
+        onEnd={goToFooter}
+        visible={stepperVisible}
+      />
 
-      {/* Anchor divs — pista nativa de scroll; en móvil se comprime con dvh. */}
+      {/* Anchor divs — pista nativa de scroll, solo desktop (en móvil no hay
+          pista: el panel de pasos anima el progreso y el CSS los oculta). */}
       {SCENES.map((scene) => (
         <div
           key={scene.name}
@@ -166,10 +240,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           className="crd-journey-anchor pointer-events-none"
           data-scene={scene.name}
           // Altura por escena: es dato, no estilo, así que sigue inline.
-          style={{
-            height: `${scene.height}vh`,
-            "--crd-mobile-scene-height": `${scene.height * MOBILE_TRACK_SCALE}dvh`,
-          } as React.CSSProperties}
+          style={{ height: `${scene.height}vh` }}
         />
       ))}
 

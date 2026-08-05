@@ -25,7 +25,7 @@ export default function CTAOverlay() {
       inert={!isVisible}
       // El journey cierra volviendo al globo: en móvil la card baja para que el
       // planeta se vea completo encima, igual que en el hero.
-      className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[72px] transition-opacity duration-700 ease-in-out
+      className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[var(--crd-nav-clear)] transition-opacity duration-700 ease-in-out
         desk:items-center desk:px-6 desk:pb-9
         ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
@@ -40,43 +40,51 @@ export default function CTAOverlay() {
           ${isVisible ? "animate-slide-up" : ""}`}
       >
         {/* Handwritten kicker */}
-        <div className="mb-1.5 font-hand text-[clamp(28px,4vw,40px)] font-bold leading-none text-mint">
+        <div className="mb-1 font-hand text-[clamp(28px,4vw,40px)] font-bold leading-none text-mint desk:mb-1.5">
           Descubre lo nuestro
         </div>
 
         {/* Main heading */}
-        <h2 className="m-0 mb-3.5 font-display text-[clamp(28px,5vw,50px)] font-bold leading-[1.04] tracking-[-.012em] text-white">
+        <h2 className="m-0 mb-2.5 font-display text-[clamp(28px,5vw,50px)] font-bold leading-[1.04] tracking-[-.012em] text-white desk:mb-3.5">
           Tu próxima aventura<br />empieza <em className="crd-accent-on-ink">aquí</em>
         </h2>
 
         {/* Subtext */}
-        <p className="mx-auto mb-5 max-w-[460px] text-body leading-[1.55] text-white/76">
+        <p className="mx-auto mb-4 max-w-[460px] text-body leading-[1.55] text-white/76 desk:mb-5">
           ConoceRD está en camino. Déjanos tu correo y entra a la lista de fundadores: serás
           de los primeros en explorar la República Dominicana que no aparece en las guías.
         </p>
 
         {/* Lista de espera — la acción real de la página */}
-        <div className="mx-auto mb-[18px] max-w-[460px]">
+        <div className="mx-auto mb-3.5 max-w-[460px] desk:mb-[18px]">
           <SubscribeForm tone="dark" defaultAudience={audience} source="cta" />
         </div>
 
         {/* Tiendas — señal de credibilidad, no acción (§2.4). Las apps aún no
-            están publicadas, así que se muestran atenuadas y sin enlace. */}
-        <div className="mb-3.5 flex flex-wrap items-center justify-center gap-2.5">
-          {STORES.map((btn) => (
-            <div
-              key={btn.store}
-              className="flex items-center gap-2 rounded-xl border border-white/[0.14] bg-white/[0.07] px-3.5 py-2 text-white/62"
-            >
-              {btn.glyph}
-              <span className="text-left leading-[1.2]">
-                <span className="block text-micro font-bold uppercase tracking-[.08em] text-white/72">
-                  Próximamente en
+            están publicadas, así que se muestran atenuadas y sin enlace.
+            En móvil la card no debe scrollear: los dos badges van en UNA fila,
+            con el "próximamente" compartido encima — con la leyenda por badge
+            miden ~150px cada uno y no caben lado a lado ni en 360px. */}
+        <div className="mb-3 desk:mb-3.5">
+          <div className="mb-1.5 text-micro font-bold uppercase tracking-[.08em] text-white/55 desk:hidden">
+            Próximamente en
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 desk:gap-2.5">
+            {STORES.map((btn) => (
+              <div
+                key={btn.store}
+                className="flex items-center gap-1.5 rounded-xl border border-white/[0.14] bg-white/[0.07] px-2.5 py-1.5 text-white/62 desk:gap-2 desk:px-3.5 desk:py-2"
+              >
+                {btn.glyph}
+                <span className="text-left leading-[1.2]">
+                  <span className="hidden text-micro font-bold uppercase tracking-[.08em] text-white/72 desk:block">
+                    Próximamente en
+                  </span>
+                  <span className="text-copy font-bold">{btn.store}</span>
                 </span>
-                <span className="text-copy font-bold">{btn.store}</span>
-              </span>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Atajo a la audiencia B2B sin salir de la card */}
