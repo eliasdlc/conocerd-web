@@ -98,6 +98,59 @@ html {
   scroll-behavior: smooth;
   overflow-x: clip; /* clip horizontal overflow at html level without affecting scroll container */
 }
+
+/* ── Scrollbars de marca ──────────────────────────────────────────────────────
+   Un solo sistema para todo lo que scrollea (página, sheets, paneles, card del
+   CTA): pulgar tinta redondeado sobre pista transparente, eco del riel de
+   progreso. Las superficies oscuras redefinen --crd-sb-thumb y heredan el
+   resto. WebKit/Blink van por pseudo-elementos; Firefox no los soporta y
+   recibe scrollbar-color DENTRO del guard @supports — declararlo fuera
+   apagaría los pseudos en Chromium (si un elemento tiene una propiedad
+   estándar de scrollbar, sus ::-webkit-scrollbar se ignoran). */
+:root {
+  --crd-sb-thumb: color-mix(in srgb, var(--color-ink) 32%, transparent);
+  --crd-sb-thumb-hover: color-mix(in srgb, var(--color-ink) 52%, transparent);
+}
+.crd-cta-card {
+  --crd-sb-thumb: rgba(255, 255, 255, 0.28);
+  --crd-sb-thumb-hover: rgba(255, 255, 255, 0.45);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--crd-sb-thumb);
+  border-radius: 999px;
+  /* Borde transparente + padding-box = píldora de 4px con aire alrededor; al
+     hover engorda a 6px sin cambiar el ancho reservado. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--crd-sb-thumb-hover);
+  border-width: 2px;
+}
+
+/* Los que ocultan su scrollbar con la utilidad arbitraria de Tailwind
+   (píldora del nav, chips del itinerario) también lo ocultan en WebKit viejo,
+   que no soporta scrollbar-width. El selector de atributo casa el token
+   literal de la clase. */
+[class~="[scrollbar-width:none]"]::-webkit-scrollbar {
+  display: none;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--crd-sb-thumb) transparent;
+  }
+}
 body {
   margin: 0;
   background: #FDF8F0;
