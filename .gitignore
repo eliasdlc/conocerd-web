@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+# El gestor es pnpm y su lockfile es el único que vale. Un package-lock.json
+# aquí no lo usa nadie y miente sobre las dependencias reales.
+/package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
@@ -53,3 +56,6 @@ next-env.d.ts
 /motion-*.mjs
 /mailshot.mjs
 /stamp-freeze.mjs
+# Las mismas sondas cuando se nombran con punto delante: los patrones de arriba
+# no las ven y acaban apareciendo como archivos sin trackear.
+/.*.mjs
