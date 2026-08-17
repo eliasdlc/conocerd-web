@@ -33,6 +33,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         <div className="mt-9 flex gap-2 border-t border-line pt-3.5">
           <Link href="/privacidad" className={FOOT_LINK}>Privacidad</Link>
           <Link href="/terminos" className={FOOT_LINK}>Términos</Link>
+          <Link href="/eliminar-cuenta" className={FOOT_LINK}>Eliminar cuenta</Link>
           <Link href="/lista" className={FOOT_LINK}>Lista de espera</Link>
         </div>
       </div>

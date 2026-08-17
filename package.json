@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "test:journey": "node scripts/journey-smoke.mjs",
     "qr": "node scripts/generate-qr.mjs",
     "email:assets": "node scripts/gen-email-assets.mjs",
@@ -17,6 +18,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
+    "firebase": "^12.17.1",
     "gsap": "^3.15.0",
     "maplibre-gl": "^5.24.0",
     "motion": "^12.42.0",
@@ -40,6 +42,7 @@
     "qrcode": "^1.5.4",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
