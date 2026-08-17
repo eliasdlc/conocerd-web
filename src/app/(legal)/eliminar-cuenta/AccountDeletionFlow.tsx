@@ -17,6 +17,7 @@ import {
   deletionWorkflowReducer,
   initialDeletionWorkflowState,
 } from "@/lib/account-deletion/workflow";
+import Icon from "@/components/Icon";
 
 const firebaseConfig = parseFirebasePublicConfig(firebasePublicEnvironment);
 const configuredAuth = firebaseConfig.ok
@@ -112,16 +113,25 @@ export default function AccountDeletionFlow() {
 
   if (!firebaseConfig.ok || !configuredAuth) {
     return (
-      <section className="mt-8 border-l-4 border-mango bg-mango-soft p-5" role="status">
-        <h2 className="mt-0">Configuración pendiente</h2>
-        <p>
-          Este formulario todavía no puede autenticar tu cuenta. Puedes escribir a{" "}
-          <a href="mailto:contacto@conocerd.app">contacto@conocerd.app</a> mientras se
-          completa la configuración.
+      <section className="rounded-panel border border-mango/30 bg-white/75 p-6 shadow-card" role="status">
+        <span className="grid size-11 place-items-center rounded-tile bg-mango-soft text-mango-ink">
+          <Icon name="lock" className="text-feature" />
+        </span>
+        <p className="mb-1 mt-5 font-mono text-micro font-bold uppercase tracking-[.14em] text-mango-ink">
+          Servicio temporalmente no disponible
         </p>
-        <p className="mb-0 font-mono text-tiny">
-          Faltan: {firebaseConfig.ok ? "configuración de Firebase" : firebaseConfig.missing.join(", ")}
+        <h2 className="mt-0 text-[22px]">Solicita ayuda por correo</h2>
+        <p className="text-muted">
+          Todavía no podemos verificar tu identidad desde esta página. Tu cuenta sigue activa y
+          no se ha enviado ninguna solicitud.
         </p>
+        <a
+          href="mailto:contacto@conocerd.app?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta"
+          className="mt-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 font-bold text-white! no-underline shadow-sticker"
+        >
+          <Icon name="mail" className="text-lg" />
+          Escribir a soporte
+        </a>
       </section>
     );
   }
@@ -183,8 +193,14 @@ export default function AccountDeletionFlow() {
 
   if (workflow.screen === "success") {
     return (
-      <section className="mt-8 border-l-4 border-mint bg-mint-soft p-5" role="status">
-        <h2 className="mt-0">Tu cuenta fue eliminada</h2>
+      <section className="rounded-panel border border-mint/35 bg-white/80 p-6 shadow-panel" role="status">
+        <span className="grid size-11 place-items-center rounded-tile bg-mint-soft text-mint-ink">
+          <Icon name="check_circle" className="text-feature" />
+        </span>
+        <p className="mb-1 mt-5 font-mono text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
+          Proceso completado
+        </p>
+        <h2 className="mt-0 text-[22px]">Tu cuenta fue eliminada</h2>
         <p className="mb-0">
           La sesión se cerró y tus reseñas quedaron anónimas. Ya no hay una cuenta activa
           asociada a esta sesión.
@@ -195,9 +211,12 @@ export default function AccountDeletionFlow() {
 
   if (workflow.screen === "confirm" || workflow.screen === "deleting") {
     return (
-      <section className="mt-8 border-t border-line pt-6">
-        <h2 className="mt-0">Confirma la cuenta</h2>
-        <div className="mb-5 bg-cream-2 p-4">
+      <section className="rounded-panel border border-coral/25 bg-white/80 p-6 shadow-panel">
+        <p className="mb-1 font-mono text-micro font-bold uppercase tracking-[.14em] text-coral-ink">
+          Paso 2 de 3
+        </p>
+        <h2 className="mt-0 text-[22px]">Confirma la cuenta</h2>
+        <div className="mb-5 rounded-card bg-cream-2 p-4">
           {workflow.account?.displayName && (
             <p className="mb-1 font-bold">{workflow.account.displayName}</p>
           )}
@@ -229,7 +248,7 @@ export default function AccountDeletionFlow() {
         <div className="mt-5 flex flex-wrap gap-3">
           <button
             type="button"
-            className="min-h-11 rounded-full bg-coral px-5 font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
+            className="min-h-12 rounded-full bg-coral px-5 font-bold text-white shadow-sticker disabled:cursor-not-allowed disabled:opacity-45"
             disabled={!workflow.acknowledged || workflow.screen === "deleting"}
             onClick={deleteAccount}
           >
@@ -237,7 +256,7 @@ export default function AccountDeletionFlow() {
           </button>
           <button
             type="button"
-            className="min-h-11 rounded-full border-2 border-ink px-5 font-bold text-ink disabled:opacity-45"
+            className="min-h-12 rounded-full border-2 border-ink px-5 font-bold text-ink disabled:opacity-45"
             disabled={workflow.screen === "deleting"}
             onClick={() => void signOut(auth)}
           >
@@ -249,8 +268,11 @@ export default function AccountDeletionFlow() {
   }
 
   return (
-    <section className="mt-8 border-t border-line pt-6">
-      <h2 className="mt-0">Autentícate para continuar</h2>
+    <section className="rounded-panel border border-line bg-white/80 p-6 shadow-panel">
+      <p className="mb-1 font-mono text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
+        Paso 1 de 3
+      </p>
+      <h2 className="mt-0 text-[22px]">Inicia sesión para continuar</h2>
       <p>
         El correo solo se usa como credencial de acceso. Una dirección escrita aquí nunca se
         acepta por sí sola como solicitud de borrado.
@@ -263,7 +285,7 @@ export default function AccountDeletionFlow() {
             type="email"
             autoComplete="email"
             required
-            className="min-h-12 border border-line bg-white px-3 font-normal"
+            className="min-h-12 rounded-chip border border-line bg-white px-3 font-normal outline-none transition-shadow focus:border-mint focus:ring-3 focus:ring-mint/20"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -274,14 +296,14 @@ export default function AccountDeletionFlow() {
             type="password"
             autoComplete="current-password"
             required
-            className="min-h-12 border border-line bg-white px-3 font-normal"
+            className="min-h-12 rounded-chip border border-line bg-white px-3 font-normal outline-none transition-shadow focus:border-mint focus:ring-3 focus:ring-mint/20"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
         </label>
         <button
           type="submit"
-          className="min-h-12 rounded-full bg-ink px-5 font-bold text-white disabled:opacity-45"
+          className="min-h-12 rounded-full bg-ink px-5 font-bold text-white shadow-sticker disabled:opacity-45"
           disabled={authenticating || !sessionReady}
         >
           {sessionReady ? "Entrar con correo y contraseña" : "Preparando autenticación..."}
