@@ -1,0 +1,233 @@
+/* ── "Globo protagonista" ─────────────────────────────────────────────────────
+   Lo que vive aquí es lo que no cabe en una utilidad: los gradientes del lienzo
+   y del velo, el cristal del panel, la etiqueta de los pines y el repintado de
+   los controles de MapLibre para que dejen de verse como el widget por defecto.
+   El reparto móvil/desktop va por variantes de Tailwind en el markup; aquí solo
+   hay media queries para lo que es puramente pintura. */
+
+/* Lienzo: es el fondo real de la pantalla Y el plan B del mapa. Si MapLibre no
+   arranca (sin WebGL, CDN caído) esto es lo que queda, y tiene que sostener la
+   composición solo: noche caribeña con halos de marca y curvas de nivel. */
+.lienzo {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(66% 52% at 66% 34%, rgba(37, 204, 184, 0.17), transparent 70%),
+    radial-gradient(58% 48% at 20% 80%, rgba(247, 108, 77, 0.14), transparent 72%),
+    radial-gradient(96% 64% at 52% 2%, rgba(255, 141, 22, 0.11), transparent 70%),
+    linear-gradient(158deg, #17343f 0%, #0e252d 54%, #091a20 100%);
+}
+/* Curvas de nivel: el mapa que se intuye aunque no cargue. */
+.lienzo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-radial-gradient(circle at 63% 40%, rgba(198, 243, 235, 0.07) 0 1px, transparent 1px 34px),
+    repeating-radial-gradient(circle at 16% 90%, rgba(255, 231, 223, 0.05) 0 1px, transparent 1px 44px);
+}
+
+/* Velo cinematográfico sobre la cartografía: viñeta + caída de luz hacia el
+   panel. Sin él, la toponimia del mapa compite con el titular. */
+.velo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 88% at 60% 46%, rgba(9, 26, 32, 0) 34%, rgba(9, 26, 32, 0.5) 76%, rgba(8, 21, 26, 0.88) 100%),
+    linear-gradient(90deg, rgba(9, 26, 32, 0.82) 0%, rgba(9, 26, 32, 0.34) 32%, rgba(9, 26, 32, 0) 54%);
+}
+@media (max-width: 899px) {
+  /* En móvil la hoja vive abajo: la caída de luz gira 90° y el mapa se disuelve
+     dentro del panel en vez de cortarse contra su borde. */
+  .velo {
+    background:
+      radial-gradient(130% 62% at 52% 26%, rgba(9, 26, 32, 0) 30%, rgba(9, 26, 32, 0.45) 74%, rgba(8, 21, 26, 0.8) 100%),
+      linear-gradient(180deg, rgba(9, 26, 32, 0.62) 0%, rgba(9, 26, 32, 0.06) 22%, rgba(9, 26, 32, 0) 40%, rgba(9, 26, 32, 0.72) 66%, #0a1c22 88%);
+  }
+}
+
+/* Cristal del panel. Ink translúcido con blur, filo claro arriba (la luz que
+   entra por el borde) y sombra profunda: una lámina apoyada sobre el país. */
+.panel {
+  background:
+    linear-gradient(180deg, rgba(38, 70, 83, 0.4) 0%, rgba(13, 33, 41, 0.12) 42%),
+    rgba(11, 30, 37, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 28px 64px rgba(4, 14, 18, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+@media (max-width: 899px) {
+  .panel {
+    background:
+      linear-gradient(180deg, rgba(38, 70, 83, 0.42) 0%, rgba(11, 30, 37, 0.2) 30%),
+      rgba(10, 28, 34, 0.94);
+    border-bottom: 0;
+    box-shadow:
+      0 -18px 44px rgba(4, 14, 18, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+}
+
+/* Chip de marca: el logo va sobre crema porque su letra es tinta oscura y sobre
+   el cristal desaparecería. Leído como calcomanía pegada al panel. */
+.chipLogo {
+  background: linear-gradient(180deg, #fffdf8, #f5efe2);
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.28),
+    0 10px 22px rgba(4, 14, 18, 0.4);
+}
+
+/* Instrumentos: la lectura de coordenadas y la ficha del destino comparten
+   caja para que se lean como un mismo aparato de a bordo. */
+.instrumento {
+  background: rgba(8, 24, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Pines ──────────────────────────────────────────────────────────────────
+   El punto es el pin de categoría compartido; lo de aquí es el halo de estado
+   y la etiqueta que lo nombra sin tener que pasar el cursor. */
+.pin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  animation: globoPinEntra 0.6s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+}
+.pin[data-lado="izq"] {
+  flex-direction: row-reverse;
+}
+.pin > .punto {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.pin[data-on] > .punto {
+  transform: scale(1.16);
+}
+/* Anillo de estado: nace del hover/foco/tap, no late solo. */
+.pin > .punto::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 141, 22, 0.75);
+  opacity: 0;
+  transform: scale(0.72);
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.pin[data-on] > .punto::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.etiqueta {
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(8, 24, 30, 0.82);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(4, 14, 18, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.pin[data-on] .etiqueta {
+  background: #ff8d16;
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #1d3a45;
+}
+.pin:focus-visible {
+  outline: none;
+}
+.pin:focus-visible .etiqueta {
+  outline: 2px solid #f76c4d;
+  outline-offset: 3px;
+}
+
+@media (max-width: 899px) {
+  /* Cuatro etiquetas sobre una isla de 330px: bajan de cuerpo para que ninguna
+     pise a la vecina. */
+  .etiqueta {
+    font-size: 9px;
+    padding: 3px 8px;
+    letter-spacing: 0.05em;
+  }
+}
+
+@keyframes globoPinEntra {
+  from {
+    opacity: 0;
+    transform: scale(0.6) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Controles de MapLibre ──────────────────────────────────────────────────
+   El widget por defecto es una caja blanca con sombra dura: sobre esta pantalla
+   se lee como un accidente. Aquí se convierte en el mismo cristal del panel.
+   Van con :global porque el DOM lo crea MapLibre, no React. */
+.pantalla :global(.maplibregl-ctrl-group) {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(8, 24, 30, 0.78);
+  box-shadow: 0 10px 26px rgba(4, 14, 18, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.pantalla :global(.maplibregl-ctrl-group button) {
+  width: 34px;
+  height: 34px;
+  background: transparent;
+}
+.pantalla :global(.maplibregl-ctrl-group button + button) {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.pantalla :global(.maplibregl-ctrl-group button:hover) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.pantalla :global(.maplibregl-ctrl-icon) {
+  filter: invert(1) brightness(1.7);
+  opacity: 0.9;
+}
+.pantalla :global(.maplibregl-ctrl-bottom-right .maplibregl-ctrl) {
+  margin: 0 18px 22px 0;
+}
+@media (max-width: 899px) {
+  /* Abajo a la derecha vive la hoja: los controles suben a la esquina libre. */
+  .pantalla :global(.maplibregl-ctrl-bottom-right) {
+    top: calc(env(safe-area-inset-top) + 10px);
+    bottom: auto;
+  }
+  .pantalla :global(.maplibregl-ctrl-bottom-right .maplibregl-ctrl) {
+    margin: 0 12px 0 0;
+  }
+  /* En el teléfono el zoom es de dos dedos: los botones sobran y le quitan
+     mapa a la pantalla. Queda la brújula, que es la que devuelve el norte
+     después de girar el país. */
+  .pantalla :global(.maplibregl-ctrl-zoom-in),
+  .pantalla :global(.maplibregl-ctrl-zoom-out) {
+    display: none;
+  }
+}

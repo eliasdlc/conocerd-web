@@ -1,0 +1,364 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   "Ruta trazada" — la primera pantalla ES un itinerario dibujado a mano.
+
+   Reparto móvil/desktop: un solo DOM, dos maquetas CSS. En móvil la página es
+   una columna en flujo (cabecera, titular, bajada, lienzo, destino, cola) y el
+   lienzo del trazo es el elemento elástico que absorbe la holgura. A partir de
+   900px el lienzo pasa a `absolute inset:0` —el trazo cruza la pantalla entera,
+   por debajo del texto— y cada bloque se ancla en porcentajes.
+
+   Los porcentajes de los nodos casan con el viewBox porque los dos SVG van con
+   preserveAspectRatio="none": el mapeo viewBox→caja es lineal, así que
+   `left: 31.39%` cae exactamente sobre el punto 452 de un viewBox de 1440.
+   Como cada trazo es casi paralelo al eje que se estira (horizontal en desktop,
+   vertical en móvil), el estirón no engorda el trazo de forma perceptible.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.hoja {
+  position: relative;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 26px 20px calc(60px + env(safe-area-inset-bottom));
+  background-color: var(--color-cream);
+}
+
+/* Papel de cuaderno de viaje: retícula de puntos muy tenue, apagada hacia los
+   bordes para que no se lea como textura de plantilla, más dos manchas cálidas
+   de marca. El grano lo pone <body> (globals.css) por encima de todo. */
+.hoja::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(38, 70, 83, 0.16) 1px, transparent 1.2px);
+  background-size: 27px 27px;
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 46%, #000 22%, transparent 78%);
+  mask-image: radial-gradient(120% 90% at 50% 46%, #000 22%, transparent 78%);
+}
+.hoja::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(640px 420px at 8% 88%, rgba(255, 141, 22, 0.13), transparent 72%),
+    radial-gradient(620px 440px at 88% 10%, rgba(37, 204, 184, 0.13), transparent 74%);
+}
+
+.hoja > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Cabecera: marca + hoja de ruta ─────────────────────────────────────────── */
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* ── Bloques de texto ───────────────────────────────────────────────────────── */
+.titular {
+  margin: 16px 0 0;
+}
+.bajada {
+  margin: 10px 0 0;
+  max-width: 46ch;
+}
+
+/* ── Lienzo del trazo ───────────────────────────────────────────────────────── */
+.lienzo {
+  position: relative;
+  /* Por debajo de todos los bloques de texto (que van a z-index 1): el trazo
+     cruza POR DETRÁS del titular y de la bajada, como en un mapa anotado. */
+  z-index: 0;
+  width: 100%;
+  min-height: 180px;
+  flex: 1 1 auto;
+  margin-top: 18px;
+  pointer-events: none;
+}
+
+.svgMovil,
+.svgDesk {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.svgDesk {
+  display: none;
+}
+
+/* ── Nodos ──────────────────────────────────────────────────────────────────── */
+/* Caja de tamaño cero: el punto (left,top) ES la punta del pin, y todo lo demás
+   se cuelga de ahí con offsets. Así un nodo se mueve cambiando dos números. */
+.nodo {
+  position: absolute;
+  left: var(--mx);
+  top: var(--my);
+  width: 0;
+  height: 0;
+  animation: nodoEntra 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--dm) both;
+}
+.soloDesk {
+  display: none;
+}
+
+.pin {
+  position: absolute;
+  left: -15px;
+  top: -27px;
+  filter: drop-shadow(0 2px 3px rgba(38, 70, 83, 0.28));
+}
+
+.etiqueta {
+  position: absolute;
+  left: 26px;
+  top: -30px;
+  width: max-content;
+  max-width: min(58vw, 250px);
+}
+
+/* Halo crema: las etiquetas y el titular conviven con el trazo y con la
+   retícula del papel; sin el halo, una letra que cae justo sobre la línea se
+   lee sucia. Es el mismo recurso que usa la home en Destinos. */
+.halo {
+  text-shadow:
+    0 1px 2px rgba(253, 248, 240, 0.96),
+    0 0 12px rgba(253, 248, 240, 0.9),
+    0 0 4px rgba(253, 248, 240, 1);
+}
+
+/* ── Destino: el CTA vive al final de la ruta ───────────────────────────────── */
+.destino {
+  margin-top: 18px;
+  text-align: center;
+}
+/* El hueco horizontal es mayor que el vertical porque el óvalo del botón
+   principal se sale 15px por cada lado: con el gap por defecto se comía el
+   canto del botón secundario. */
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 28px;
+}
+.envoltura {
+  position: relative;
+  display: inline-flex;
+}
+/* Óvalo a mano alrededor del botón principal: el gesto de rodear el destino en
+   un mapa impreso. Sale del flujo para no alterar el tamaño del botón. */
+.ovalo {
+  position: absolute;
+  inset: -12px -15px;
+  width: calc(100% + 30px);
+  height: calc(100% + 24px);
+  overflow: visible;
+  pointer-events: none;
+  transform: rotate(-1.1deg);
+}
+
+/* Nota al margen y rosa de los vientos: sólo en el trazo ancho. En móvil no hay
+   margen que ocupar y meterlos sería ruido. */
+.margen,
+.rosa {
+  display: none;
+}
+@media (min-width: 900px) {
+  .margen {
+    position: absolute;
+    display: block;
+    left: 4.4%;
+    bottom: 4.6%;
+    margin: 0;
+  }
+  /* Cae dentro del arco que dibuja la ruta: sin ella ese hueco se lee como un
+     vacío, y con ella como el mar que la ruta bordea. */
+  .rosa {
+    position: absolute;
+    display: block;
+    left: 58%;
+    top: 54%;
+    width: clamp(88px, 8vw, 124px);
+    height: auto;
+    /* El transform ya lo ocupa el centrado, así que su entrada sólo puede ser
+       opacidad; por eso no reutiliza `.entra`. */
+    transform: translate(-50%, -50%) rotate(-6deg);
+    opacity: 0.24;
+    animation: aparece 0.8s ease 1.55s both;
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.24;
+  }
+}
+
+/* ── Cola: el trazo no termina en pantalla ──────────────────────────────────── */
+.cola {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Animaciones ────────────────────────────────────────────────────────────── */
+/* Todo nace de la carga y termina: ni un bucle infinito en reposo. */
+.linea {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: dibujar var(--dur) cubic-bezier(0.36, 0, 0.14, 1) var(--ini) both;
+}
+.entra {
+  animation: subir 0.62s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both;
+}
+/* El óvalo se traza cuando la línea ya llegó al destino. */
+.ovaloLinea {
+  --dur: 0.75s;
+  --ini: 2.05s;
+}
+
+@keyframes dibujar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes nodoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── 900px: el trazo cruza la pantalla ──────────────────────────────────────── */
+@media (min-width: 900px) {
+  .hoja {
+    padding: 0;
+  }
+  .cabecera {
+    position: absolute;
+    left: 4.4%;
+    right: 4.4%;
+    top: 5%;
+  }
+  .titular {
+    position: absolute;
+    left: 4.4%;
+    top: 17.5%;
+    margin: 0;
+    max-width: 68%;
+  }
+  .bajada {
+    position: absolute;
+    left: 4.4%;
+    top: 38%;
+    margin: 0;
+    width: 34%;
+    max-width: 500px;
+  }
+
+  .lienzo {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    min-height: 0;
+    flex: none;
+  }
+  .svgMovil {
+    display: none;
+  }
+  .svgDesk {
+    display: block;
+  }
+
+  .nodo {
+    left: var(--dx);
+    top: var(--dy);
+    animation-delay: var(--dd);
+  }
+  .soloDesk {
+    display: block;
+  }
+  .etiqueta {
+    left: var(--lx);
+    top: var(--ly);
+    max-width: var(--lw);
+  }
+  .ovaloLinea {
+    --ini: 2.6s;
+  }
+
+  /* Anclados donde muere el trazo (1060, 598 sobre el viewBox de 1440×900):
+     la nota manuscrita arranca en la punta de la línea. */
+  .destino {
+    position: absolute;
+    left: 63%;
+    width: 32%;
+    top: 66.2%;
+    margin: 0;
+  }
+  .cola {
+    position: absolute;
+    left: 63%;
+    width: 32%;
+    top: 81.5%;
+    margin: 0;
+  }
+}
+
+/* Pantallas anchas y bajas (portátiles de 1440×720): el titular y la bajada se
+   comen el arranque del trazo. Se compacta el bloque de texto en vez de
+   introducir otro breakpoint de ancho. */
+@media (min-width: 900px) and (max-height: 760px) {
+  .titular {
+    top: 15%;
+  }
+  .bajada {
+    top: 40%;
+  }
+  .destino {
+    top: 65%;
+  }
+  .cola {
+    top: 80%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Aparece ya dibujado: mismo estado final, sin recorrido. */
+  .linea,
+  .entra,
+  .nodo,
+  .rosa {
+    animation: none;
+  }
+  .linea {
+    stroke-dashoffset: 0;
+  }
+}

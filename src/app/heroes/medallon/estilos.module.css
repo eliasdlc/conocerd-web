@@ -1,0 +1,561 @@
+/* ── "Medallón" ───────────────────────────────────────────────────────────────
+   El globo tratado como troquel: el mapa vive a pantalla completa por debajo y
+   lo que hay aquí es el PAPEL que lo tapa todo menos un agujero circular, más
+   el anillo grabado que rodea ese agujero.
+
+   Reglas del montaje (importan si se toca algo):
+   · El agujero es una máscara sobre el papel, NUNCA un contenedor más pequeño
+     para el mapa: la cámara tiene que seguir midiendo el viewport entero.
+   · El centro del troquel coincide con el centro del globo. Con
+     `encuadre={{ padLeft: 0, padBottom: 0.24 }}` maplibre centra el planeta en
+     el 50% del ancho y en el 38% del alto en móvil ⇒ `--cy` vale exactamente
+     eso. Si cambia el encuadre, cambia `--cy` o el globo se sale del anillo.
+   · Todo el descenso se dibuja con `--descenso` (0..1), que GloboHero publica
+     en el contenedor sticky: sin JS propio ni listeners duplicados. Las tres
+     rampas de abajo son la coreografía completa.
+   · Nada se mueve en reposo: lo único con @keyframes es la entrada del
+     troquel, de una sola pasada. */
+
+.escena {
+  /* Troquel. 47dvh es lo que deja sitio arriba (marca + titular) y abajo
+     (CTA + pie) en 1440×900 sin que nada se toque. */
+  --medalla: min(424px, 47dvh, 38vw);
+  --cy: 50%;
+  --rad: calc(var(--medalla) / 2);
+  /* Radio del agujero en reposo. 0.400 y no 0.4025 (el borde interior del
+     anillo) a propósito: el papel se mete un pelo por debajo de la banda y no
+     deja un hilo de mapa entre los dos. */
+  --apertura: calc(var(--medalla) * 0.4);
+
+  /* Rampas del descenso ─────────────────────────────────────────────────────
+     `--fuga`  copy: se retira primero, antes de que el troquel se mueva.
+     `--sep`   anillo: se parte en dos y se va por arriba y por abajo.
+     `--abre`  papel: el agujero crece al cuadrado (lento al principio, de
+               golpe al final) hasta pasarse del viewport ⇒ el papel se retira.
+     El vuelo real de la cámara arranca sobre el 34% del recorrido (antes de
+     eso la interpolación del journey sigue asentada en el keyframe del hero),
+     así que todo esto ocurre ANTES: primero se abre el sello, después se cae
+     dentro. */
+  --fuga: clamp(0, calc(var(--descenso, 0) * 3.4), 1);
+  --sep: clamp(0, calc((var(--descenso, 0) - 0.05) * 1.35), 1);
+  --abre: clamp(0, calc((var(--descenso, 0) - 0.1) * 1.5), 1);
+  --hueco-r: calc(var(--apertura) + var(--abre) * var(--abre) * 76vmax);
+
+  --tinta: #264653;
+}
+
+@media (max-width: 899px) {
+  .escena {
+    /* El medallón manda la mitad de arriba; el texto y los CTA, la de abajo. */
+    --medalla: min(90vw, 40dvh);
+    --cy: 38%;
+  }
+}
+
+/* Portátiles bajos: no hay troquel grande que quepa con titular y CTA a la vez.
+   Antes que recortar el anillo, se encoge (y con él, el titular). */
+@media (min-width: 900px) and (max-height: 820px) {
+  .escena {
+    --medalla: min(372px, 44dvh, 34vw);
+  }
+}
+
+/* Cielo detrás del globo (GloboHero lo pinta bajo el canvas). Sólo se ve si
+   WebGL no arranca: mantiene el agujero con color de mar en vez de un vacío. */
+.cielo {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(38% 38% at 50% var(--cy), rgba(198, 243, 235, 0.85), rgba(198, 243, 235, 0) 72%),
+    radial-gradient(60% 44% at 18% 12%, rgba(255, 141, 22, 0.08), transparent 70%),
+    radial-gradient(58% 42% at 86% 88%, rgba(247, 108, 77, 0.08), transparent 72%),
+    var(--color-cream);
+}
+
+/* ── Papel troquelado ───────────────────────────────────────────────────────
+   Un solo elemento a pantalla completa con un agujero de máscara. Lleva la
+   filigrana (anillos concéntricos finos que nacen del troquel) y el filete
+   doble del borde; las estrellas de las esquinas son hijos suyos, así que
+   heredan la máscara y se van con él. */
+.papel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  background:
+    /* Doble filete circular alrededor del troquel: el eco del anillo sobre el
+       papel, lo que en una etiqueta sería el segundo cerco de la impresión. */
+    radial-gradient(
+      circle at 50% var(--cy),
+      transparent 0 calc(var(--rad) * 1.12),
+      rgba(38, 70, 83, 0.2) calc(var(--rad) * 1.12) calc(var(--rad) * 1.12 + 1.5px),
+      transparent calc(var(--rad) * 1.12 + 1.5px) calc(var(--rad) * 1.17),
+      rgba(38, 70, 83, 0.12) calc(var(--rad) * 1.17) calc(var(--rad) * 1.17 + 1px),
+      transparent calc(var(--rad) * 1.17 + 1px)
+    ),
+    /* Guilloché: anillos finos que nacen del sello y se apagan al alejarse. El
+       degradado crema de encima es el que los desvanece. */
+      radial-gradient(circle at 50% var(--cy), transparent 0 24%, #fdf8f0 58%),
+    repeating-radial-gradient(
+      circle at 50% var(--cy),
+      transparent 0 13px,
+      rgba(38, 70, 83, 0.05) 13px 14px
+    ),
+    repeating-radial-gradient(
+      circle at 50% var(--cy),
+      transparent 0 47px,
+      rgba(37, 204, 184, 0.09) 47px 49px
+    ),
+    radial-gradient(circle at 50% var(--cy), #fffdf7 0 34%, #fdf8f0 62%, #f3ecdd 100%);
+  -webkit-mask-image: radial-gradient(
+    circle var(--hueco-r) at 50% var(--cy),
+    #0000 0 99.2%,
+    #000 99.8%
+  );
+  mask-image: radial-gradient(circle var(--hueco-r) at 50% var(--cy), #0000 0 99.2%, #000 99.8%);
+}
+
+/* Filete doble del borde: la firma de cualquier impreso con pretensiones. */
+.papel::before,
+.papel::after {
+  content: "";
+  position: absolute;
+  border-radius: 3px;
+}
+.papel::before {
+  inset: 15px;
+  border: 2px solid rgba(38, 70, 83, 0.16);
+}
+.papel::after {
+  inset: 21px;
+  border: 1px solid rgba(38, 70, 83, 0.26);
+}
+
+@media (max-width: 899px) {
+  .papel::before {
+    inset: 9px;
+  }
+  .papel::after {
+    inset: 14px;
+  }
+}
+
+/* Estrellas de imprenta en las esquinas del filete. */
+.estrella {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  color: rgba(38, 70, 83, 0.32);
+}
+.estrella svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.eNO {
+  top: 12px;
+  left: 12px;
+}
+.eNE {
+  top: 12px;
+  right: 12px;
+}
+.eSO {
+  bottom: 12px;
+  left: 12px;
+}
+.eSE {
+  bottom: 12px;
+  right: 12px;
+}
+@media (max-width: 899px) {
+  .estrella {
+    width: 10px;
+    height: 10px;
+  }
+  .eNO,
+  .eNE {
+    top: 7px;
+  }
+  .eSO,
+  .eSE {
+    bottom: 7px;
+  }
+  .eNO,
+  .eSO {
+    left: 7px;
+  }
+  .eNE,
+  .eSE {
+    right: 7px;
+  }
+}
+
+/* ── Lente ──────────────────────────────────────────────────────────────────
+   Sombra de troquel + caída de luz DENTRO del agujero. Es lo que convierte un
+   recorte plano de cartografía en algo esférico y hundido en el papel; sigue
+   al agujero mientras crece y se apaga antes de estorbar al vuelo. */
+.lente {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  width: calc(var(--hueco-r) * 2);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 11;
+  pointer-events: none;
+  opacity: clamp(0, calc(1 - var(--abre) * 1.7), 1);
+  background:
+    radial-gradient(circle at 33% 27%, rgba(255, 255, 255, 0.32) 0 12%, transparent 52%),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 38%,
+      rgba(38, 70, 83, 0.1) 62%,
+      rgba(38, 70, 83, 0.26) 84%,
+      rgba(38, 70, 83, 0.5) 100%
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(38, 70, 83, 0.16),
+    inset 0 6px 18px rgba(38, 70, 83, 0.22);
+}
+
+/* ── Anillo ─────────────────────────────────────────────────────────────────
+   Dos SVG idénticos en tamaño y posición, cada uno con su mitad. En reposo se
+   solapan 1.2 unidades y leen como una sola pieza; al bajar, cada mitad se va
+   por su lado, gira y crece: el sello se rompe y la cámara pasa por dentro. */
+.medallon {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  width: var(--medalla);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  z-index: 12;
+  pointer-events: none;
+}
+
+/* Sombra propia del sello sobre el papel. Va en un disco aparte y no como
+   `filter: drop-shadow` en los SVG: las mitades se escalan al bajar, y un
+   filtro bajo escala animada se recalcula en cada frame (y se ve sucio). */
+.sombra {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 10px 26px rgba(38, 70, 83, 0.16),
+    0 2px 5px rgba(38, 70, 83, 0.1);
+  opacity: clamp(0, calc(1 - var(--sep) * 2.4), 1);
+}
+
+/* Capa aparte para la entrada: `.medallon` ya gasta su transform en centrarse
+   y una animación que tocara `transform` lo descolocaría. */
+.troquel {
+  position: absolute;
+  inset: 0;
+  animation: medallonEntra 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes medallonEntra {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mitad {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  color: var(--tinta);
+  opacity: clamp(0, calc(1 - var(--sep) * var(--sep) * 1.2), 1);
+}
+
+.mitadSup {
+  transform: translateY(calc(var(--sep) * -30vh)) scale(calc(1 + var(--sep) * 0.62))
+    rotate(calc(var(--sep) * -7deg));
+}
+.mitadInf {
+  transform: translateY(calc(var(--sep) * 30vh)) scale(calc(1 + var(--sep) * 0.62))
+    rotate(calc(var(--sep) * 7deg));
+}
+
+.arcoTexto {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 700;
+  fill: currentColor;
+}
+
+/* ── Composición ────────────────────────────────────────────────────────────
+   Tres bloques, y ninguno pisa el troquel porque sus franjas se calculan desde
+   `--cy` y `--rad`. El titular vive en el DOM detrás del hueco (orden de
+   lectura: marca → titular → acción) y en desktop sube por encima del medallón
+   con posición absoluta; en móvil se queda donde cae, debajo.
+   Ojo: las franjas sólo animan `opacity` (los desplazamientos van en los
+   bloques de dentro) porque un `transform` aquí crearía bloque contenedor y el
+   titular absoluto dejaría de medirse contra `.marco`. */
+.marco {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.franja {
+  opacity: clamp(0, calc(1 - var(--fuga)), 1);
+}
+
+.zonaSup {
+  height: calc(var(--cy) - var(--rad));
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 22px 8px;
+}
+
+.hueco {
+  height: calc(var(--rad) * 2);
+  flex: none;
+}
+
+.zonaInf {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 10px 22px calc(56px + env(safe-area-inset-bottom));
+}
+
+/* Marca */
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  transform: translateY(calc(var(--fuga) * -36px));
+}
+.wordmark {
+  display: block;
+  width: 132px;
+  height: auto;
+}
+.lema {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+.lema span {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.lema i {
+  flex: 1 1 auto;
+  height: 1px;
+  background: rgba(38, 70, 83, 0.22);
+}
+
+/* Titular */
+.titular {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transform: translateY(calc(var(--fuga) * 30px));
+}
+.titular h1 {
+  margin: 0;
+  max-width: 15ch;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(27px, 7.2vw, 34px);
+  line-height: 1.06;
+  letter-spacing: -0.014em;
+  color: var(--color-ink-2);
+  text-wrap: balance;
+}
+.titular p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  text-wrap: pretty;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: translateY(calc(var(--fuga) * 36px));
+}
+
+@media (min-width: 900px) {
+  /* En desktop la franja de arriba tiene DOS inquilinos: la marca, que se
+     apoya en el borde superior, y el titular, que se apoya en el anillo (con
+     posición absoluta). Centrar la marca la metería debajo del titular. */
+  .zonaSup {
+    justify-content: flex-start;
+    padding-top: 22px;
+  }
+  .wordmark {
+    width: 158px;
+  }
+  .lema {
+    max-width: 380px;
+  }
+  .titular {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* Justo encima del troquel: (100% − cy) es la distancia del centro al
+       borde inferior; sumarle el radio deja el bloque apoyado en el anillo. */
+    bottom: calc(100% - var(--cy) + var(--rad) + 18px);
+    padding: 0 24px;
+    gap: 12px;
+    transform: translateY(calc(var(--fuga) * -30px));
+  }
+  .titular h1 {
+    max-width: 20ch;
+    font-size: clamp(30px, 3vw, 40px);
+  }
+  .titular p {
+    max-width: 52ch;
+    font-size: var(--text-lead);
+    line-height: 1.5;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .zonaSup {
+    padding-top: 14px;
+    gap: 8px;
+  }
+  .wordmark {
+    width: 138px;
+  }
+  .titular {
+    bottom: calc(100% - var(--cy) + var(--rad) + 14px);
+    gap: 8px;
+  }
+  .titular h1 {
+    font-size: clamp(26px, 2.4vw, 31px);
+  }
+  .titular p {
+    font-size: 14.5px;
+  }
+}
+
+/* Acciones */
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  transition: color 0.2s ease;
+}
+.cue:hover {
+  color: var(--color-ink);
+}
+.cue svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+.cue:hover svg {
+  transform: translateY(3px);
+}
+
+/* Pie de imprenta */
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.pie b {
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: 0.1em;
+}
+.pie i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(38, 70, 83, 0.28);
+}
+
+/* En móvil el colofón no cabe en una línea. En vez de dejar que el flex parta
+   por donde quiera (y deje un punto suelto al final de la primera), la
+   coordenada se lleva su propia línea completa y el separador que sobra
+   desaparece. */
+@media (max-width: 899px) {
+  /* El colofón no cabe en una línea de teléfono. En vez de dejar que el flex
+     parta por donde quiera (y deje un punto suelto colgando), la coordenada se
+     lleva su propia línea, el separador que sobra desaparece y el cuerpo baja
+     medio punto para que la primera línea entre entera. */
+  .pie {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    gap: 5px 8px;
+  }
+  .pie b {
+    flex-basis: 100%;
+  }
+  .pie .sepCoord {
+    display: none;
+  }
+}
+
+/* Pin de RD, clavado en el centro del troquel. Se apaga en cuanto empieza el
+   descenso: a partir de ahí el país deja de ser un punto. */
+.pin {
+  opacity: clamp(0, calc(1 - var(--descenso, 0) * 4), 1);
+}
+
+/* Ancla del final de la pista: destino del enlace "baja y entra por el sello". */
+.ancla {
+  height: 1px;
+}

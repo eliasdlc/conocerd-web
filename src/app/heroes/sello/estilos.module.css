@@ -1,0 +1,273 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   "Sello de entrada" — primera pantalla editorial de pasaporte.
+
+   Todo el movimiento de esta propuesta vive aquí y es de UNA sola pasada,
+   disparado por la carga: los sellos caen y se asientan, el titular sube por
+   líneas y el pase entra desde abajo. Nada queda animándose en reposo (regla
+   dura del proyecto), así que basta con `both` en el fill-mode: el estado final
+   ES el estado de reposo, y el bloque global de `prefers-reduced-motion` de
+   globals.css lo deja pintado al instante sin que haga falta duplicar reglas.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.pantalla {
+  position: relative;
+  min-height: 100dvh;
+  /* clip en X (no `hidden`): contiene los cuños que sobresalen por el canto sin
+     obligar al eje Y a `auto`. Si un viewport rarísimo no diera la altura, el
+     contenido se puede alcanzar scrolleando en vez de perderse recortado. */
+  overflow-x: clip;
+  /* Papel calentado por los tres hues de marca. El grano lo pone body::after. */
+  background:
+    radial-gradient(760px 520px at 6% -10%, rgba(255, 141, 22, 0.11), transparent 68%),
+    radial-gradient(640px 480px at 98% 2%, rgba(37, 204, 184, 0.10), transparent 70%),
+    radial-gradient(820px 560px at 74% 112%, rgba(247, 108, 77, 0.09), transparent 72%),
+    var(--color-cream);
+}
+
+/* Marco de página de pasaporte: filete impreso + troquel punteado por dentro. */
+.marco {
+  position: absolute;
+  inset: clamp(8px, 1.2vw, 15px);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  pointer-events: none;
+}
+.marco::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(38, 70, 83, 0.11);
+  border-radius: 8px;
+}
+
+/* ── Titular ─────────────────────────────────────────────────────────────────
+   Una línea = una ventana con overflow oculto; el texto sube desde debajo de su
+   propia caja. El padding negativo ensancha la ventana lo justo para que ni los
+   acentos (ú, é) ni los descendentes (p de "República") queden recortados en
+   reposo. */
+.titular {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* El tope móvil (12.2vw ≈ 47.6px en 390) es el mayor que deja las cuatro
+     líneas, la entradilla, el cuño y la franja del pase dentro de 844px sin
+     scroll, con la holgura que pide el conmutador de propuestas. */
+  font-size: clamp(38px, 12.2vw, 74px);
+  line-height: 0.97;
+  letter-spacing: -0.03em;
+  color: var(--color-ink-2);
+}
+@media (min-width: 900px) {
+  /* 88px es el techo medido: "Dominicana" ocupa 5.77em → 508px dentro de los
+     568px de la columna editorial en 1440. Subirlo mete el titular debajo del
+     pase de abordar. */
+  .titular {
+    font-size: clamp(54px, 6.6vw, 88px);
+  }
+}
+
+/* Troquel de la página: la línea punteada del canalón entre las dos columnas.
+   Es lo que hace que la mitad derecha se lea como un talón arrancable y no como
+   una card puesta al lado. Sólo existe donde hay dos columnas. */
+@media (min-width: 900px) {
+  .troquelGutter::before {
+    content: "";
+    position: absolute;
+    left: calc(clamp(30px, 4.6vw, 66px) / -2);
+    top: -16%;
+    bottom: -16%;
+    border-left: 1.5px dashed rgba(38, 70, 83, 0.14);
+    pointer-events: none;
+  }
+}
+.linea {
+  display: block;
+  overflow: hidden;
+  padding: 0.1em 0.06em 0.16em 0;
+  margin: -0.1em 0 -0.16em;
+}
+.lineaTexto {
+  display: block;
+  animation: selloLineaSube 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes selloLineaSube {
+  from {
+    transform: translateY(108%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── Entradas genéricas ──────────────────────────────────────────────────── */
+.sube {
+  animation: selloSube 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes selloSube {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* El sello cae de plano sobre el papel: entra grande y desenfocado, rebota un
+   punto por debajo de su tamaño y se asienta en su ángulo de tampón. */
+.cae {
+  animation: selloCae 0.66s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  animation-delay: var(--d, 0s);
+  transform-origin: center;
+}
+@keyframes selloCae {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--giro, 0deg) + 16deg)) scale(1.85);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(var(--giro, 0deg)) scale(1);
+  }
+}
+
+.pegado {
+  animation: selloPegado 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+@keyframes selloPegado {
+  from {
+    opacity: 0;
+    transform: translateY(26px) rotate(calc(var(--giro, 0deg) - 2.5deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--giro, 0deg));
+  }
+}
+
+/* ── Sello de tinta rectangular ──────────────────────────────────────────────
+   El cuño de aduana: doble filete (borde + outline desplazado), mono espaciado
+   y la opacidad justa para que se lea como tinta absorbida por el papel y no
+   como una etiqueta de UI. */
+.selloTinta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 2.5px solid currentColor;
+  border-radius: 5px;
+  padding: 6px 13px 5px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: currentColor;
+  opacity: 0.85;
+  outline: 1px solid currentColor;
+  outline-offset: 2.5px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.selloTintaTitulo {
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  line-height: 1;
+}
+.selloTintaSub {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+/* ── Estampilla: la única foto, tratada como sello de correo ─────────────────
+   El troquel son cuatro máscaras radiales intersecadas; donde no haya soporte
+   de mask-composite la foto degrada a un rectángulo con su papel, que sigue
+   siendo correcto. */
+.estampilla {
+  background: #fffdf6;
+  padding: 7px 7px 20px;
+  -webkit-mask:
+    radial-gradient(circle 4px at 50% 0, transparent 97%, #000) 0 0 / 13px 100%,
+    radial-gradient(circle 4px at 50% 100%, transparent 97%, #000) 0 0 / 13px 100%,
+    radial-gradient(circle 4px at 0 50%, transparent 97%, #000) 0 0 / 100% 13px,
+    radial-gradient(circle 4px at 100% 50%, transparent 97%, #000) 0 0 / 100% 13px;
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(circle 4px at 50% 0, transparent 97%, #000) 0 0 / 13px 100%,
+    radial-gradient(circle 4px at 50% 100%, transparent 97%, #000) 0 0 / 13px 100%,
+    radial-gradient(circle 4px at 0 50%, transparent 97%, #000) 0 0 / 100% 13px,
+    radial-gradient(circle 4px at 100% 50%, transparent 97%, #000) 0 0 / 100% 13px;
+  mask-composite: intersect;
+}
+.estampillaSombra {
+  filter: drop-shadow(0 6px 12px rgba(38, 70, 83, 0.22));
+}
+
+/* ── Pase de abordar ─────────────────────────────────────────────────────── */
+.pase {
+  background: #fffdf6;
+  border: 1px solid var(--color-line);
+}
+
+/* La línea de troquel: puntos de perforación con dos muescas que muerden el
+   canto de la tarjeta. Las muescas se pintan del color del papel de la página
+   (crema), que es lo que hace creer que la tarjeta está agujereada. */
+.perforacion {
+  position: relative;
+  height: 1px;
+  margin: 0 18px;
+  background-image: linear-gradient(90deg, rgba(38, 70, 83, 0.3) 0 6px, transparent 6px 12px);
+  background-size: 12px 1px;
+  background-repeat: repeat-x;
+}
+.perforacion::before,
+.perforacion::after {
+  content: "";
+  position: absolute;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-cream);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+.perforacion::before {
+  left: -29px;
+}
+.perforacion::after {
+  right: -29px;
+}
+
+/* Código de barras del talón. Anchos irregulares a propósito: un patrón
+   regular se lee como textura, no como código. */
+.codigo {
+  height: 30px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-ink-2) 0 2px,
+    transparent 2px 5px,
+    var(--color-ink-2) 5px 6px,
+    transparent 6px 8px,
+    var(--color-ink-2) 8px 11px,
+    transparent 11px 13px,
+    var(--color-ink-2) 13px 14px,
+    transparent 14px 18px
+  );
+  opacity: 0.82;
+}
+
+/* Riel de la ruta TÚ → RD: raya de puntos entre los dos códigos. */
+.riel {
+  flex: 1;
+  height: 2px;
+  background-image: linear-gradient(90deg, rgba(38, 70, 83, 0.32) 0 5px, transparent 5px 10px);
+  background-size: 10px 2px;
+  background-repeat: repeat-x;
+}

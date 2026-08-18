@@ -1,0 +1,529 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   "Ventana al país" — el globo se ve a través de un troquel en el papel.
+
+   La geometría del hueco vive ENTERA en custom properties y se deriva de
+   `--descenso` (0..1), que GloboHero publica en el contenedor sticky. Nada de
+   esto necesita JavaScript propio: el papel se abre porque el scroll mueve una
+   variable, así que la apertura va exactamente al ritmo de la cámara y no
+   puede desincronizarse de ella.
+
+   El canvas del mapa NUNCA se toca: sigue ocupando el viewport completo. Lo
+   que se abre es la máscara del papel que está encima. Por eso al aterrizar el
+   mapa ya está a tamaño real y no hay ningún reencuadre.
+
+   Reparto de capas (orden de pintado dentro del sticky):
+     z -1  .cielo   fondo oscuro — es lo que hace que el hueco tenga fondo
+                    propio y no se confunda con el crema del papel
+      —    canvas   el globo (transparente fuera de la esfera)
+     z  2  .papel   la superficie crema, enmascarada con el troquel
+     z  3  .capa    editorial: dos copias registradas, una por cara del corte
+     z  4  .canto   el filo del troquel (línea, sombra hacia dentro y guía)
+   ───────────────────────────────────────────────────────────────────────── */
+
+.escena {
+  --vt-t: var(--descenso, 0);
+
+  /* Apertura del troquel. Va con ease-out (el papel se rasga de golpe y luego
+     termina de salir sin tirones) y con dos constantes medidas contra el motor
+     de cámara, no elegidas a ojo:
+       · 0.09 de retardo — los primeros píxeles de scroll son para que el texto
+         se retire; el corte no debe alcanzarlo nunca.
+       · 0.83 de pendiente — el papel termina de salir en t≈0.72. Antes de eso
+         la cámara aún está arrancando (GloboHero mapea la pista a p = t·0.12,
+         y el keyframe del hero vive en 0.041: hasta t≈0.34 la cámara no se
+         mueve), y después queda un tercio de pista de vuelo limpio a pantalla
+         completa. Abrir más rápido dejaba el gesto huérfano; más lento, papel
+         tapando el aterrizaje. */
+  --vt-abre: clamp(0, calc((var(--vt-t) - 0.09) * 0.83), 1);
+  --vt-e: calc(var(--vt-abre) * (2 - var(--vt-abre)));
+
+  /* Centro del globo = centro de cámara con el encuadre de page.tsx.
+     Móvil: padBottom 0.55 ⇒ (1 - 0.55) / 2 = 22.5vh. */
+  --vt-gx: 50vw;
+  --vt-gy: 22.5vh;
+
+  /* Móvil: arco superior a sangre por los lados. La elipse NO es concéntrica
+     con el globo: su centro sube hasta 15.4vh para que a la altura del borde
+     superior siga siendo más ancha que la pantalla (sale por los dos lados) y
+     su borde inferior caiga como un arco de 87px de flecha. El globo mide
+     ~330px en pantalla (zoom 1.15) y queda entero dentro, con 45px de cielo
+     bajo el polo sur: la esfera se ve completa, con su limbo. */
+  --vt-cx: var(--vt-gx);
+  --vt-cy: 15.4vh;
+  --vt-rx0: 68vw;
+  --vt-ry0: 32vh;
+  --vt-dx: 55vw;
+  --vt-dy: 85vh;
+
+  --vt-rx: calc(var(--vt-rx0) + var(--vt-e) * var(--vt-dx));
+  --vt-ry: calc(var(--vt-ry0) + var(--vt-e) * var(--vt-dy));
+
+  /* El troquel y su negativo. Un solo pixel de transición: es un corte, no un
+     desvanecido. */
+  --vt-recorte: radial-gradient(
+    ellipse var(--vt-rx) var(--vt-ry) at var(--vt-cx) var(--vt-cy),
+    transparent 0 calc(100% - 1.5px),
+    #000 100%
+  );
+  --vt-recorte-inv: radial-gradient(
+    ellipse var(--vt-rx) var(--vt-ry) at var(--vt-cx) var(--vt-cy),
+    #000 0 calc(100% - 1.5px),
+    transparent 100%
+  );
+}
+
+@media (min-width: 900px) {
+  .escena {
+    /* padLeft 0.49 ⇒ centro de cámara en (1 + 0.49) / 2 = 74.5vw. */
+    --vt-gx: 74.5vw;
+    --vt-gy: 50vh;
+
+    /* El hueco NO es concéntrico con el globo: se desplaza 220px a la
+       izquierda para que dentro del círculo quede un creciente de cielo antes
+       del limbo del planeta. Ese creciente es el que hace que se lea "esfera"
+       y no "recorte redondo de un mapa", y es el terreno sobre el que el
+       titular cruza el corte. El desplazamiento va en px porque el globo mide
+       siempre lo mismo en pantalla (~750px de diámetro a zoom 2.5), no una
+       fracción del viewport. Medido en 1440×900: filo del troquel en x=443,
+       limbo del planeta en x=700 ⇒ 257px de cielo, de sobra para que las dos
+       líneas largas del titular crucen sin llegar nunca a pisar la esfera. */
+    /* El `clamp()` es el suelo y el techo de la composición: el filo del
+       troquel nunca sube por encima de 440px —ancho mínimo con el que la
+       columna editorial sigue siendo una columna; a 1280 el corte se comía el
+       párrafo y medio botón— ni baja de 470px, o el titular dejaría de
+       alcanzarlo (pasa en monitores bajos, donde el radio lo limita el alto).
+       El globo mide lo mismo en píxeles a cualquier tamaño de ventana, así que
+       el reparto no puede ser sólo proporcional. */
+    --vt-cx: clamp(
+      calc(440px + var(--vt-rx0)),
+      calc(var(--vt-gx) - 220px),
+      calc(470px + var(--vt-rx0))
+    );
+    --vt-cy: 50vh;
+    --vt-rx0: min(28.5vw, 45.5vh);
+    --vt-ry0: min(28.5vw, 45.5vh);
+    --vt-dx: 50vw;
+    --vt-dy: 50vw;
+  }
+}
+
+/* ── El cielo del hueco ──────────────────────────────────────────────────────
+   Va como `fondo` de GloboHero (debajo del canvas, que fuera de la esfera es
+   transparente). Es la mitad del concepto: papel plano y mate arriba, noche
+   viva debajo. Sin él, el crema del papel y el crema del contenedor serían el
+   mismo color y el troquel no existiría más que como una sombra. */
+.cielo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Los dos halos no son decoración: a media bajada el papel ya se retiró y el
+     cielo ocupa la pantalla entera con el planeta todavía pequeño. Sin ellos
+     ese tramo es un rectángulo negro. Con ellos hay atmósfera alrededor del
+     globo y una brasa cálida abajo, y el vacío se lee como espacio. */
+  background:
+    radial-gradient(
+      54vmax 54vmax at var(--vt-gx) var(--vt-gy),
+      rgba(37, 204, 184, 0.34),
+      rgba(37, 204, 184, 0.08) 52%,
+      transparent 74%
+    ),
+    radial-gradient(46vmax 40vmax at 12% 98%, rgba(247, 108, 77, 0.26), transparent 70%),
+    linear-gradient(154deg, #1e3e4a 0%, #14303a 46%, #0c222a 100%);
+}
+
+/* ── El papel ─────────────────────────────────────────────────────────────── */
+.papel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 56% at 10% 6%, rgba(37, 204, 184, 0.1), transparent 68%),
+    radial-gradient(58% 48% at 2% 98%, rgba(255, 141, 22, 0.11), transparent 70%),
+    radial-gradient(52% 42% at 94% 92%, rgba(247, 108, 77, 0.08), transparent 72%),
+    var(--color-cream);
+  -webkit-mask-image: var(--vt-recorte);
+  mask-image: var(--vt-recorte);
+}
+
+/* Fibra del papel. El grano global de body::after cae sobre TODA la pantalla
+   (también sobre el hueco); este segundo ruido, más grueso y sólo aquí, es lo
+   que separa la textura del papel de la del mundo. */
+.papel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23f)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* ── El filo del corte ───────────────────────────────────────────────────────
+   Dos elementos con la misma geometría, y la diferencia importa:
+
+   · .sombra va DEBAJO del texto. Es el espesor del papel proyectado hacia
+     dentro del hueco (el papel está encima del mundo, su sombra cae ahí). En
+     la primera ronda esta sombra vivía en la misma capa que la línea, por
+     encima del titular, y apagaba a gris las letras que cruzaban al lado
+     oscuro: cream al 45% sobre tinta ya no es cream.
+   · .canto va ENCIMA del titular. La línea del troquel pasa por encima de las
+     letras que la cruzan, y eso es lo que hace creer que el papel está cortado
+     sobre el texto en vez de ser dos textos distintos. */
+.sombra,
+.canto {
+  position: absolute;
+  left: var(--vt-cx);
+  top: var(--vt-cy);
+  width: calc(var(--vt-rx) * 2);
+  height: calc(var(--vt-ry) * 2);
+  margin-left: calc(var(--vt-rx) * -1);
+  margin-top: calc(var(--vt-ry) * -1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sombra {
+  z-index: 2;
+  box-shadow:
+    inset 0 0 38px rgba(6, 20, 26, 0.5),
+    inset 0 5px 14px rgba(6, 20, 26, 0.42);
+}
+
+.canto {
+  z-index: 4;
+  box-shadow: 0 0 0 1.5px rgba(38, 70, 83, 0.16);
+}
+
+/* Guía de troquelado: la línea de puntos por la que "se cortó" la página. */
+.canto::after {
+  content: "";
+  position: absolute;
+  inset: -15px;
+  border: 1px dashed rgba(38, 70, 83, 0.15);
+  border-radius: 50%;
+}
+
+/* ── Capas de texto ──────────────────────────────────────────────────────────
+   El mismo bloque editorial se pinta DOS veces con la misma geometría y
+   máscaras complementarias: la copia de tinta sólo existe sobre el papel, la
+   copia crema sólo dentro del hueco. Donde el titular cruza el corte cambia de
+   color exactamente en el filo. Es la costura entre las dos capas y la razón
+   de que el titular pueda invadir la ventana sin perder contraste.
+
+   Las máscaras se posicionan en coordenadas de viewport, así que las dos capas
+   tienen que ocupar el viewport entero (inset: 0) para que el gradiente cuadre
+   con el del papel. */
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  /* El texto vive en el papel: se retira antes de que el troquel lo alcance. */
+  opacity: clamp(0, calc(1 - var(--vt-t) * 11), 1);
+}
+.capaPapel {
+  -webkit-mask-image: var(--vt-recorte);
+  mask-image: var(--vt-recorte);
+}
+.capaHueco {
+  -webkit-mask-image: var(--vt-recorte-inv);
+  mask-image: var(--vt-recorte-inv);
+}
+
+/* La copia del hueco es sólo el titular: el resto del bloque conserva su caja
+   —de ahí depende que las dos copias queden registradas al píxel— pero no se
+   pinta ni se lee. */
+.capaHueco * {
+  visibility: hidden;
+}
+.capaHueco .titular,
+.capaHueco .titular * {
+  visibility: visible;
+}
+.capaHueco .titular {
+  color: var(--color-cream);
+}
+.capaHueco .acento {
+  /* Sobre el cielo, el coral accesible se apaga; ahí manda el mango. */
+  color: var(--color-mango);
+}
+
+.retirado {
+  visibility: hidden;
+}
+
+/* ── Columna editorial ───────────────────────────────────────────────────── */
+/* Móvil: la columna vive en la franja de papel que queda BAJO el arco, y su
+   tope se ata a la geometría del troquel (punto más bajo del arco + 6px). Si
+   se anclara sólo al borde inferior, cualquier línea de más empujaría la marca
+   hacia arriba y la máscara le cortaría la cabeza — que es exactamente lo que
+   pasaba en la primera ronda. */
+.columna {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--vt-cy) + var(--vt-ry0) + 6px);
+  bottom: calc(58px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  text-align: center;
+  pointer-events: auto;
+}
+.capaHueco .columna {
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  /* Sólo el titular puede cruzar el corte. Todo lo demás se mide contra el
+     papel que queda a SU altura: `--vt-ancho-*` aproxima el arco (a distancia
+     d del centro, el filo está en cx − rx·cos(asin(d/rx))) con el coseno ya
+     resuelto para las dos alturas que importan — el párrafo, pegado al centro,
+     y la fila de botones, más abajo. Así el reparto se recalcula solo en
+     cualquier monitor en vez de depender de un max-width elegido en 1440. */
+  .columna {
+    --vt-izq: clamp(30px, 5.7vw, 82px);
+    --vt-ancho-medio: calc(var(--vt-cx) - 0.95 * var(--vt-rx0) - var(--vt-izq) - 10px);
+    --vt-ancho-bajo: calc(var(--vt-cx) - 0.84 * var(--vt-rx0) - var(--vt-izq) - 10px);
+    left: var(--vt-izq);
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(58vw, 620px);
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0;
+    text-align: left;
+  }
+}
+
+/* Marca. En desktop el logotipo a mano hace de cabecera; en móvil el papel
+   disponible es la mitad de la pantalla y el wordmark dice lo mismo en un
+   tercio del alto. */
+.marcaMovil {
+  display: block;
+  width: min(42vw, 152px);
+  height: auto;
+}
+.marcaDesk {
+  display: none;
+}
+@media (min-width: 900px) {
+  .marcaMovil {
+    display: none;
+  }
+  .marcaDesk {
+    display: block;
+    width: min(20vw, 224px);
+    height: auto;
+  }
+}
+
+.coords {
+  display: none;
+}
+@media (min-width: 900px) {
+  .coords {
+    display: block;
+    margin: 16px 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+}
+
+.titular {
+  margin: 10px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(27px, 7.6vw, 34px);
+  line-height: 1.02;
+  letter-spacing: -0.026em;
+  color: var(--color-ink-2);
+}
+@media (min-width: 900px) {
+  .titular {
+    margin-top: 14px;
+    /* 80px es el techo medido: con estas cuatro líneas, las dos últimas cruzan
+       el troquel y ninguna llega al limbo del globo (a 612px del borde
+       izquierdo en 1440). Subirlo mete "en las guías" sobre la esfera, donde
+       el crema deja de tener contraste. */
+    font-size: clamp(42px, 5.6vw, 80px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+  }
+}
+
+/* En móvil el titular fluye (2–3 líneas según el ancho); en desktop cada línea
+   es un salto decidido y no puede reflowear: de dónde corta cada una depende
+   el dibujo contra la curva del troquel. */
+.linea {
+  display: inline;
+}
+@media (min-width: 900px) {
+  .linea {
+    display: block;
+    white-space: nowrap;
+  }
+}
+
+.acento {
+  font-style: italic;
+  color: var(--color-coral-ink);
+}
+
+.entradilla {
+  margin: 12px 0 0;
+  max-width: 340px;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+@media (min-width: 900px) {
+  .entradilla {
+    margin-top: 18px;
+    max-width: min(370px, var(--vt-ancho-medio));
+    font-size: clamp(16px, 1.24vw, 18px);
+    line-height: 1.55;
+  }
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+@media (min-width: 900px) {
+  .acciones {
+    justify-content: flex-start;
+    gap: 14px;
+    margin-top: 26px;
+    /* Si el papel no da para la fila, los botones se apilan; nunca se cortan. */
+    max-width: var(--vt-ancho-bajo);
+  }
+}
+
+/* ── Invitación a bajar ──────────────────────────────────────────────────────
+   No dice "scroll": dice qué pasa al bajar (la ventana se abre) y a dónde se
+   aterriza (Bahía de las Águilas, que es literalmente el keyframe siguiente
+   del recorrido). */
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 14px;
+  padding: 4px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--color-muted);
+  text-align: left;
+  transition: color 0.2s ease;
+}
+@media (min-width: 900px) {
+  .cue {
+    margin-top: 24px;
+  }
+}
+.cue:hover {
+  color: var(--color-ink);
+}
+
+.cueDisco {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(38, 70, 83, 0.22);
+  border-radius: 999px;
+  color: var(--color-coral-ink);
+  font-size: 18px;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.cue:hover .cueDisco {
+  background: var(--color-coral-soft);
+  border-color: var(--color-coral);
+  transform: translateY(3px);
+}
+
+.cueTexto {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.cueNota {
+  display: none;
+}
+@media (min-width: 900px) {
+  .cueNota {
+    display: block;
+    margin-top: 1px;
+    font-family: var(--font-hand);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-coral-ink);
+  }
+}
+
+/* ── Entradas de carga ───────────────────────────────────────────────────────
+   Una sola pasada, disparadas por el montaje. Nada queda en movimiento: con
+   `both`, el estado final ES el estado de reposo, y el bloque global de
+   prefers-reduced-motion lo deja pintado al instante. */
+.entra {
+  animation: vtEntra 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--vt-d, 0s);
+}
+@keyframes vtEntra {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Pin de República Dominicana ─────────────────────────────────────────────
+   Vive dentro del mapa (MapMarker), así que viaja pegado a sus coordenadas
+   mientras el globo gira. Se apaga en cuanto empieza el descenso: a partir de
+   ahí el sujeto es el país, no la chincheta. */
+.pin {
+  pointer-events: none;
+  opacity: clamp(0, calc(1 - var(--descenso, 0) * 6), 1);
+}
+
+.pinEtiqueta {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 3px 11px 4px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: rgba(253, 248, 240, 0.96);
+  box-shadow: 0 4px 12px rgba(6, 20, 26, 0.3);
+  font-family: var(--font-hand);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-ink);
+}
