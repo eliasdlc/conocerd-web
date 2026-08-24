@@ -72,10 +72,14 @@ export function PolaroidMedia({
   );
 }
 
+/** El pie va en la tinta literal `#0F1A2E` y no en `text-ink`: la polaroid es
+ *  una sola pieza en las tres plataformas y el papel fotográfico es
+ *  blanco literal, así que el texto que se apoya en él también se mide una vez
+ *  y vale para todas. Sobre el marco blanco rinde 17.39:1. */
 export function PolaroidCaption({ name, meta }: { name: string; meta?: string }) {
   return (
     <>
-      <div className="font-hand text-2xl font-bold leading-none text-ink">{name}</div>
+      <div className="font-hand text-2xl font-bold leading-none text-[#0F1A2E]">{name}</div>
       <div className="mt-[3px] font-mono text-mini text-muted">{meta}</div>
     </>
   );
