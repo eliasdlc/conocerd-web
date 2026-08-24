@@ -705,7 +705,11 @@ body::after {
    El filete es un ::before de verdad y no un `outline`: el outline iba por
    fuera del borde, así que el doble marco quedaba al revés que en el hermano
    de la app, y no admite radio propio. La rotación va por custom property
-   porque la animación de abajo compone sobre ella. */
+   porque la animación de abajo compone sobre ella.
+
+   La opacidad es .90 y no un número redondo: es el piso exacto donde la tinta
+   mango cruza AA sobre crema (4.53:1). A .88 se quedaba en 4.33 siendo texto
+   de 10px. Bajarla vuelve a romper el mango antes que ningún otro tinte. */
 .crd-sello {
   --crd-sello-rot: -8deg;
   position: relative;
@@ -720,7 +724,7 @@ body::after {
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--color-mint-ink);
-  opacity: .88;
+  opacity: .90;
   pointer-events: none;
   -webkit-mask-image: radial-gradient(circle at 30% 20%, #000 90%, transparent 93%);
   mask-image: radial-gradient(circle at 30% 20%, #000 90%, transparent 93%);
