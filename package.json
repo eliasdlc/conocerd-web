@@ -15,7 +15,6 @@
     "email:check": "node scripts/check-email-images.mjs"
   },
   "dependencies": {
-    "@21st-sdk/agent": "^0.0.18",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
     "gsap": "^3.15.0",
@@ -28,6 +27,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@21st-sdk/agent": "^0.0.18",
     "@tailwindcss/postcss": "^4",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^20",

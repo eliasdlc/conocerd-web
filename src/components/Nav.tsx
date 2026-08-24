@@ -58,9 +58,12 @@ export default function Nav() {
           // 0px: sin él, la píldora arrastraba un hueco fantasma a la izquierda
           // del primer elemento visible (notorio en móvil, donde solo queda el
           // botón: 20px a un lado y 8px al otro).
-          className="-mr-[var(--nav-gap)] grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity,margin] duration-300 group-data-[solid=true]:mr-0 group-data-[solid=true]:w-[22px] group-data-[solid=true]:opacity-100"
+          // El ancho tiene que seguir al `size` del pin: 28 es el umbral desde
+          // el que lleva la flor, y por debajo la píldora enseñaría el anillo
+          // pelado, que es el pin de una lista y no la marca en pantalla.
+          className="-mr-[var(--nav-gap)] grid w-0 shrink-0 place-items-center overflow-hidden opacity-0 transition-[width,opacity,margin] duration-300 group-data-[solid=true]:mr-0 group-data-[solid=true]:w-[28px] group-data-[solid=true]:opacity-100"
         >
-          <BrandPin />
+          <BrandPin size={28} />
         </a>
 
         {LINKS.map((l) => (

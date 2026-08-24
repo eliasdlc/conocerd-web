@@ -8,7 +8,8 @@ import BrandPin from "@/components/BrandPin";
 export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-cream px-6 text-center">
-      {/* El pin que se cayó del mapa: la misma gota del logo, volcada. */}
+      {/* El pin que se cayó del mapa: la misma silueta del logo, volcada. A 44
+          lleva la flor de Bayahíbe en la ventana. */}
       <BrandPin size={44} color="#F76C4D" className="mb-5 rotate-[18deg] [filter:drop-shadow(0_5px_6px_rgba(38,70,83,.22))]" />
       <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-muted">
         404 · Esta ruta no existe

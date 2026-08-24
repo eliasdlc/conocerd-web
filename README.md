@@ -37,8 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Lista de espera
 
-La página no ofrece descarga: captura correos para la lista de espera (ver
-`WAITLIST_PLAN.md`). Piezas:
+La página no ofrece descarga: captura correos para la lista de espera. Piezas:
 
 - `POST /api/subscribe` — validación zod, honeypot, rate limit por IP y dedupe
   por correo (`src/app/api/subscribe/route.ts`).

@@ -2,8 +2,13 @@
   <!-- El favicon es el pin del logo, no el lockup completo: a 16px "CONOCERD ·
        DESCUBRE LO NUESTRO" es una mancha. El pin es el único elemento de la
        marca que sobrevive a ese tamaño, y va sobre el ink de marca para que se
-       lea igual en pestañas claras y oscuras. -->
+       lea igual en pestañas claras y oscuras.
+
+       Es el nivel chico de la silueta: ventana r58 y sin flor. A este tamaño
+       los pétalos se empastan, que es exactamente por qué el umbral existe.
+       La ventana es un hueco de verdad, así que enseña el ink de la baldosa. -->
   <rect width="64" height="64" rx="14" fill="#264653"/>
-  <path d="M32 52.5 L43.691 32.25 A13.5 13.5 0 1 0 20.309 32.25 Z" fill="#FF8D16"/>
-  <circle cx="32" cy="25.5" r="6.3" fill="#FDF8F0"/>
+  <svg viewBox="30 10 240 300" x="16" y="12" width="32" height="40">
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="#FF8D16" d="M150 303.5C150 294 149 276.5 133.5 256C118.5 233 110 241.5 87.5 222C52.5 196 40 160 40 130C40 64 88 20 150 20C212 20 260 64 260 130C260 160 247.5 196 212.5 222C190 241.5 181.5 233 166.5 256C151 276.5 150 294 150 303.5ZM92 130a58 58 0 1 0 116 0a58 58 0 1 0 -116 0Z"/>
+  </svg>
 </svg>

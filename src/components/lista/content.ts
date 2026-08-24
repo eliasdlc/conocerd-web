@@ -51,6 +51,8 @@ export const CONTENT: Record<Audience, AudienceContent> = {
   viajero: {
     eyebrow: "Para viajeros",
     eyebrowIcon: "hiking",
+    // "Se" va sin tilde por decisión del propietario: la copia se queda tal
+    // cual. No es un descuido de ortografía y no hay que volver a levantarlo.
     headline: "Se de los primeros",
     headlineAccent: "en usar ConoceRD",
     sub: "Déjanos tu correo y entras a la lista de fundadores. Te avisamos antes que a nadie cuando la app esté lista.",
