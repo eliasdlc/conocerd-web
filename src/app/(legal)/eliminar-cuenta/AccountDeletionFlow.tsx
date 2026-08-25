@@ -28,7 +28,7 @@ function authErrorMessage() {
 }
 
 async function responseErrorMessage(response: Response) {
-  const fallback = "No pudimos eliminar tu cuenta. Tu cuenta sigue activa.";
+  const fallback = "No pudimos confirmar el borrado. Vuelve a entrar para comprobar si tu cuenta sigue existiendo.";
   try {
     const body: unknown = await response.json();
     if (
@@ -164,6 +164,13 @@ export default function AccountDeletionFlow() {
         method: "POST",
         headers: { authorization: `Bearer ${idToken}` },
       });
+      if (response.status === 401) {
+        // La sesión pasó del límite de frescura del API: se cierra y el flujo
+        // vuelve a la identificación en vez de dejar una sesión inservible.
+        const message = await responseErrorMessage(response);
+        await signOut(auth);
+        throw new Error(message);
+      }
       if (!response.ok) {
         throw new Error(await responseErrorMessage(response));
       }
@@ -176,7 +183,7 @@ export default function AccountDeletionFlow() {
         message:
           error instanceof Error
             ? error.message
-            : "No pudimos eliminar tu cuenta. Tu cuenta sigue activa.",
+            : "No pudimos confirmar el borrado. Vuelve a entrar para comprobar si tu cuenta sigue existiendo.",
       });
     }
   }
