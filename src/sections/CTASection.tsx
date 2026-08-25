@@ -40,7 +40,7 @@ export default function CTAOverlay() {
           ${isVisible ? "animate-slide-up" : ""}`}
       >
         {/* Sin antetítulo manuscrito. Caveat baja a un solo uso en todo el
-            producto —la firma del dorso de la polaroid del equipo— y "Descubre
+            producto (la firma del dorso de la polaroid del equipo) y "Descubre
             lo nuestro" ya vive dentro del wordmark, que se ve en el pie y en el
             logo del hero: aquí era la tercera repetición del mismo lema. */}
 

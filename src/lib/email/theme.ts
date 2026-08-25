@@ -51,7 +51,7 @@ export const C = {
  *  Un correo no carga la tipografía de marca, así que aquí no hay Bricolage ni
  *  Plus Jakarta: hay dos roles y sus mejores equivalentes instalados. `display`
  *  arranca por Trebuchet, que es el mismo primer recambio que la web declara
- *  detrás de Bricolage — un grotesco con carácter, no el serif de antes, que
+ *  detrás de Bricolage: un grotesco con carácter, no el serif de antes, que
  *  contaba una marca que ya no existe.
  *
  *  Tampoco hay mono: salió del sistema. Las cifras van en `display` y los

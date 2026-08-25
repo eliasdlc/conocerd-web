@@ -66,7 +66,7 @@ const BACKDROP = `data:image/svg+xml;utf8,${encodeURIComponent(
 
 // Dos familias y dos roles, los mismos del sitio: la de titular para el titular
 // y las cifras, la de etiqueta para todo lo demás. Salieron JetBrains Mono, que
-// dejó el sistema, y Caveat, que baja a un solo uso en todo el producto — la
+// dejó el sistema, y Caveat, que baja a un solo uso en todo el producto: la
 // firma del dorso de la polaroid del equipo, que no aparece en esta tarjeta.
 export async function loadOgFonts() {
   const [display, label, labelSemi] = await Promise.all([

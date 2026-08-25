@@ -14,10 +14,10 @@
      bajo un nombre hasheado.
 
      Tres roles y una excepción, los mismos que la app:
-       display  Bricolage Grotesque — titulares y cifras de carretera
-       label    Plus Jakarta Sans   — botones, chips, etiquetas, overlines
-       sans     Inter               — cuerpo y metadatos
-       hand     Caveat              — sólo la firma del dorso de la polaroid
+       display  Bricolage Grotesque : titulares y cifras de carretera
+       label    Plus Jakarta Sans   : botones, chips, etiquetas, overlines
+       sans     Inter               : cuerpo y metadatos
+       hand     Caveat              : sólo la firma del dorso de la polaroid
 
      No hay familia mono: las cifras que la llevaban van en `display` y los
      metadatos en `sans`. */
@@ -34,11 +34,11 @@
      como texto grande, y por eso el relleno coral exige etiqueta ≥19 w700. */
   --color-ink:         #0F1A2E;  /* 16.45:1 sobre cream */
   --color-ink-2:       #090F1B;  /* extremo del degradado de tinta */
-  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper — texto de segundo plano */
+  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper, texto de segundo plano */
   --color-coral:       #E0552F;  /* acción y selección; NUNCA decoración */
   --color-coral-soft:  #FFE7DF;
   --color-coral-ink:   #B23410;  /* 5.86:1 sobre cream, 5.23:1 sobre coral-soft */
-  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink — el acento SOBRE tinta */
+  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink: el acento SOBRE tinta */
   --color-mango-soft:  #FFE6C8;
   --color-mango-ink:   #985409;  /* 4.83:1 sobre mango-soft, 5.82:1 sobre paper */
   --color-mint:        #25CCB8;
@@ -452,8 +452,8 @@ body::after {
   .crd-destinos-heading { left: 16px !important; bottom: calc(46% + 26px) !important; }
   /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
      cristal del tema y ahí la sombra únicamente emborrona el canto de las
-     letras; aquí no hay panel —lo que separa del mapa es el velo crema de la
-     escena— y sin halo el titular se cruza con la toponimia cuando asoma por
+     letras; aquí no hay panel (lo que separa del mapa es el velo crema de la
+     escena) y sin halo el titular se cruza con la toponimia cuando asoma por
      encima del velo. */
   .crd-destinos-heading h2 {
     text-shadow: 0 1px 2px rgba(253, 248, 240, .95), 0 0 16px rgba(253, 248, 240, .6);
@@ -539,12 +539,7 @@ body::after {
 }
 
 /* ── Acento editorial ─────────────────────────────────────────────────────────
-   La itálica de Fraunces sustituye al <strong> coral (audit §3): antes el
-   énfasis era negrita de color, que es lo que hace cualquier plantilla. En los
-   titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
-   —que va en Instrument— también trae la familia, y ahí es donde se nota que
-   el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
-/* El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
+   El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
    con Fraunces. La palabra acentuada va en la misma tipografía que la frase que
    la contiene y se distingue sólo por la tinta. Va en <em>, que es la etiqueta
    semántica correcta, y por eso hay que apagarle la cursiva del navegador.
@@ -562,8 +557,8 @@ body::after {
 /* ── Píldora del nav ──────────────────────────────────────────────────────────
    Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
    crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
-   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema —la
-   misma receta que todo lo que flota sobre el mapa— y ahí sí se apoya con e1.
+   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema, la
+   misma receta que todo lo que flota sobre el mapa, y ahí sí se apoya con e1.
 
    El blur va en CSS y no en utilidades con variante `data-`: las dos
    escribirían la misma custom property de Tailwind y el orden de capas
@@ -613,7 +608,7 @@ body::after {
   pointer-events: none;
 }
 .crd-navlink:hover,
-.crd-navlink[aria-current="page"] {
+.crd-navlink[aria-current="location"] {
   color: var(--color-ink);
   font-weight: 700;
 }

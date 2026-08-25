@@ -4,7 +4,7 @@ import Link from "next/link";
 // Shell compartido de las páginas legales: prosa legible, sin journey ni mapa.
 //
 // Los estilos venían inline de antes del sistema de tokens y quedaron fuera del
-// primer restyling — legales y 404 se veían de otra época que el resto del
+// primer restyling: legales y 404 se veían de otra época que el resto del
 // sitio. Ahora usan los mismos tokens; la prosa la estila .crd-legal desde
 // globals.css.
 

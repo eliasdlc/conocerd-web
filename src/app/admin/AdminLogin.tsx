@@ -2,7 +2,7 @@
 
 // Puerta del panel interno. Era la única superficie del repo fuera del sistema:
 // estilos en línea, Plus Jakarta escrita en literal y un botón de degradado
-// coral con halo. Ahora es la card del panel y nada más — un panel interno no
+// coral con halo. Ahora es la card del panel y nada más: un panel interno no
 // inventa su propio idioma.
 
 import { useActionState, useState } from "react";

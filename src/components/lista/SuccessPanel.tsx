@@ -5,7 +5,7 @@
 //
 //  Un registro por correo no devuelve nada tangible, así que el logro hay que
 //  fabricarlo: el sello de llegada de la app a escala de web, confeti que se
-//  apaga solo, y acto seguido la única acción que sí puede hacer ahora mismo —
+//  apaga solo, y acto seguido la única acción que sí puede hacer ahora mismo:
 //  seguirnos en Instagram. Sin esa acción, el éxito es un callejón sin salida.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ const IN = "animate-[crdListaIn_.5s_cubic-bezier(.16,1,.3,1)_both]";
  *
  *  El resplandor es `e2-mint`, el único uso de ese resplandor fuera de la app,
  *  y por la misma razón: la pieza tiene que leer encendida, no levantada. El
- *  halo que se expandía murió con él —era una segunda animación diciendo lo
+ *  halo que se expandía murió con él, era una segunda animación diciendo lo
  *  mismo. El radio del anillo es 42 y no otro porque 2π·42 = 264, que es el
  *  dashoffset exacto del que parte el trazo. */
 function AchievementSeal({ icon }: { icon: IconName }) {

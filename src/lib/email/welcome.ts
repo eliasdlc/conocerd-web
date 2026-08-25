@@ -141,7 +141,7 @@ function copyFor(audience: Audience, who: WelcomeRecipient): Copy {
     ctaBody:
       "La demo del mapa ya funciona en la página: eliges los lugares, te dice cuánto manejas entre uno y otro por carretera de verdad, y te manda el itinerario escrito al correo.",
     ctaLabel: "Armar mi ruta",
-    ctaColor: C.mango,
+    ctaColor: C.ink,
     ps: "PS: si conoces un negocio que debería estar en el mapa, reenvíale este correo — también pueden apuntarse.",
     footerNote:
       "Te llegó esto porque te apuntaste a la lista de espera de ConoceRD como viajero.",

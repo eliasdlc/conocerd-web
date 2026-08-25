@@ -17,7 +17,7 @@ const PHOTO_CREDITS = [
 // El cierre del sitio, sobre tinta: cuatro columnas (marca, explora, producto,
 // contacto) sobre un degradado de tinta a 135°, la misma superficie del panel
 // de tinta de la app. No es tema oscuro: es una superficie. Por eso la acción
-// se invierte —píldora de papel con texto en tinta— en vez de teñirse de coral.
+// se invierte (píldora de papel con texto en tinta) en vez de teñirse de coral.
 //
 // El piso de lo atenuado es el 55 %: blanco al 55 % sobre ink da 6.00:1 y pasa
 // AA. Nada baja de ahí. La atribución de fotos iba al 35 % y reprobaba.

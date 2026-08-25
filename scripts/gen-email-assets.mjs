@@ -111,8 +111,8 @@ try {
       `/dev/email-assets respondió ${res?.status()}. ¿Está el servidor de desarrollo levantado en ${BASE}?`
     );
   }
-  // Las fuentes llegan por next/font: sin esperarlas, el mono del sello sale
-  // con la tipografía de reserva y las líneas cambian de ancho.
+  // Las fuentes llegan por next/font: sin esperarlas, el lettering del sello
+  // sale con la tipografía de reserva y las líneas cambian de ancho.
   await page.evaluate(() => document.fonts.ready);
 
   const targets = await page.$$eval("[data-asset]", (els) =>

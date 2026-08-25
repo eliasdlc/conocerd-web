@@ -82,10 +82,13 @@ export function divider(): string {
  * Outlook ignora el fondo de un enlace en línea. El padding va en el <td> por
  * la misma razón.
  */
+/* El relleno por defecto es la tinta y no el mango: la etiqueta va a 15 w700 y
+ * blanco sobre mango da 2.31:1. Es el mismo par que el sitio quitó de todos sus
+ * botones. Por debajo de 19 w700 el relleno del sistema es la tinta, 17.4:1. */
 export function button(
   href: string,
   label: string,
-  bg: string = C.mango,
+  bg: string = C.ink,
   fg = "#FFFFFF",
   align: "left" | "center" = "center"
 ): string {
