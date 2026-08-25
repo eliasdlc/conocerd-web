@@ -129,7 +129,7 @@ function copyFor(audience: Audience, who: WelcomeRecipient): Copy {
     tag: { text: "VIAJERO · FUNDADOR", bg: C.coralSoft, fg: C.coralInk },
     stampSlug: "viajero",
     eyebrow: "Credencial de fundador",
-    eyebrowColor: C.mangoOnInk,
+    eyebrowColor: C.mango,
     headline: name ? `${name}, ya eres fundador` : "Ya eres fundador",
     credentialBody:
       "Tu insignia queda para siempre en tu perfil. Sólo la tiene quien se apuntó antes de que la app abriera: después del lanzamiento ya no se puede conseguir.",
@@ -183,7 +183,7 @@ export async function renderWelcomeEmail(
     // izquierda: después del panel oscuro, el aire es lo que marca el ritmo.
     row(
       `${kicker(c.ctaEyebrow)}
-       <h2 style="margin:9px 0 0 0;font:700 23px/1.2 ${F.serif};color:${C.ink};">${esc(c.ctaTitle)}</h2>
+       <h2 style="margin:9px 0 0 0;font:700 23px/1.2 ${F.display};color:${C.ink};">${esc(c.ctaTitle)}</h2>
        <p style="margin:10px 0 20px 0;font:400 15px/1.6 ${F.sans};color:${C.muted};">${esc(c.ctaBody)}</p>
        ${button(DEMO_URL, c.ctaLabel, c.ctaColor, "#FFFFFF", "left")}`,
       "0 0 32px 0"

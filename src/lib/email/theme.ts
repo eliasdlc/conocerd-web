@@ -14,14 +14,17 @@ export const C = {
   cream: "#FDF8F0",
   cream2: "#F5EFE2",
   paper: "#FFFFFF",
-  ink: "#264653",
-  ink2: "#1D3A45",
-  muted: "#5B6B72",
-  muted2: "#66747B",
+  ink: "#0F1A2E",
+  ink2: "#090F1B",
+  ink3: "#3B5073",
+  muted: "#677080",
+  muted2: "#7D8594",
   line: "#EBE6D9",
+  lineStrong: "#D9D2C1",
   mango: "#FF8D16",
   mangoSoft: "#FFE6C8",
-  coral: "#F76C4D",
+  mangoInk: "#985409",
+  coral: "#E0552F",
   coralInk: "#B23410",
   coralSoft: "#FFE7DF",
   mint: "#25CCB8",
@@ -29,20 +32,33 @@ export const C = {
   mintSoft: "#C6F3EB",
 
   // Sobre el panel de tinta (la credencial). Las reglas se invierten: aquí el
-  // texto claro es el que tiene contraste y el mango puro se queda en 4.3:1,
-  // así que sube un punto de luz. El mint sí pasa tal cual (5:1).
+  // texto claro es el que tiene contraste.
+  //
+  // Con la tinta anterior (#264653) el mango puro se quedaba en 4.3:1 y hacía
+  // falta un `mangoOnInk` aclarado. Sobre la tinta nueva el mango de marca da
+  // 7.51:1, así que ese apaño desaparece y el acento sobre tinta es el mismo
+  // hex en el correo y en la card del CTA del sitio.
   onInk: "#FFFFFF",
-  onInkSoft: "#CBDDE2",
-  onInkLabel: "#9DBDC5",
-  onInkLine: "#3E6673",
-  mangoOnInk: "#FFA94D",
+  onInkSoft: "#CBDDE2",   // 12.41:1 sobre ink
+  onInkLabel: "#9DBDC5",  // 8.72:1 sobre ink
+  // Hairline sobre tinta: es el blanco al 16 % del sistema, ya compuesto sobre
+  // la tinta. El correo no puede fiarse de rgba() en todos los clientes.
+  onInkLine: "#353F4F",
 } as const;
 
-/** Pilas de fuentes seguras para correo: nada de webfonts, nada de `var()`. */
+/** Pilas de fuentes seguras para correo: nada de webfonts, nada de `var()`.
+ *
+ *  Un correo no carga la tipografía de marca, así que aquí no hay Bricolage ni
+ *  Plus Jakarta: hay dos roles y sus mejores equivalentes instalados. `display`
+ *  arranca por Trebuchet, que es el mismo primer recambio que la web declara
+ *  detrás de Bricolage — un grotesco con carácter, no el serif de antes, que
+ *  contaba una marca que ya no existe.
+ *
+ *  Tampoco hay mono: salió del sistema. Las cifras van en `display` y los
+ *  metadatos en `sans`. */
 export const F = {
   sans: "Helvetica,Arial,sans-serif",
-  serif: "Georgia,'Times New Roman',serif",
-  mono: "ui-monospace,'SF Mono',Menlo,Consolas,monospace",
+  display: "'Trebuchet MS',Helvetica,Arial,sans-serif",
 } as const;
 
 /** Ancho de la columna. 560 entra en el panel de lectura de Outlook sin cortarse. */
