@@ -139,6 +139,65 @@ function readReferral(): string | undefined {
   }
 }
 
+// ─── Conmutador de audiencia ──────────────────────────────────────────────────
+//
+// Dos píldoras en `cream-2` con la elegida en `selected`, el mismo toggle de los
+// ajustes de la app. Sobre tinta el carril va en blanco al 10 % y la elegida en
+// `paper`. Se exporta porque en /lista no vive dentro del formulario: gobierna
+// la página entera y por eso va en su cabecera.
+
+export function AudienceToggle({
+  audience,
+  onChange,
+  tone = "light",
+  className = "",
+}: {
+  audience: Audience;
+  onChange: (a: Audience) => void;
+  tone?: Tone;
+  className?: string;
+}) {
+  const t = TONES[tone];
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="¿Quién eres?"
+      className={`flex gap-1 rounded-full p-1 ${t.toggleBg} ${className}`}
+    >
+      {AUDIENCES.map((a, i) => {
+        const active = a === audience;
+        return (
+          <button
+            key={a}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onChange(a)}
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              e.preventDefault();
+              const next = AUDIENCES[(i + 1) % AUDIENCES.length];
+              onChange(next);
+              refs.current[AUDIENCES.indexOf(next)]?.focus();
+            }}
+            className={`h-11 flex-1 cursor-pointer rounded-full border-none font-label text-copy font-bold transition-[background-color,color] duration-200 ${
+              active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
+            }`}
+          >
+            {AUDIENCE_LABEL[a]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -207,7 +266,6 @@ export default function SubscribeForm({
   // Controlado sólo este campo: es el único que se reescribe mientras se teclea.
   const [instagram, setInstagram] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  const toggleRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(persistReferral, []);
 
@@ -332,42 +390,11 @@ export default function SubscribeForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate className="w-full text-left">
-      {/* Toggle de audiencia */}
+      {/* Toggle de audiencia. En /lista vive en la cabecera de la página, no
+          aquí: allí gobierna el titular, los beneficios y las features, así que
+          pertenece a la página. Este render es para el CTA del journey. */}
       {!compact && !audienceLocked && (
-        <div
-          role="radiogroup"
-          aria-label="¿Quién eres?"
-          className={`mb-3.5 flex gap-1 rounded-full p-1 ${t.toggleBg}`}
-        >
-          {AUDIENCES.map((a, i) => {
-            const active = a === audience;
-            return (
-              <button
-                key={a}
-                ref={(el) => {
-                  toggleRefs.current[i] = el;
-                }}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                tabIndex={active ? 0 : -1}
-                onClick={() => setAudience(a)}
-                onKeyDown={(e) => {
-                  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-                  e.preventDefault();
-                  const next = AUDIENCES[(i + 1) % AUDIENCES.length];
-                  setAudience(next);
-                  toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
-                }}
-                className={`h-11 flex-1 cursor-pointer rounded-full border-none font-label text-copy font-bold transition-[background-color,color] duration-200 ${
-                  active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
-                }`}
-              >
-                {AUDIENCE_LABEL[a]}
-              </button>
-            );
-          })}
-        </div>
+        <AudienceToggle audience={audience} onChange={setAudience} tone={tone} className="mb-3.5" />
       )}
 
       {/* Campos de negocio — sólo cuando hacen falta */}

@@ -39,6 +39,7 @@ import PhoneMockup from "@/sections/PhoneMockup";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
 import { CategoryPin, GoalFlag, SelfPin, PIN_CHROME } from "@/components/map/pins";
 import { PANEL_SOLID } from "@/lib/surfaces";
+import Kicker from "@/components/Kicker";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { DESTINATIONS, type Destination } from "@/data/destinations";
 import type { LngLat } from "@/lib/geo";
@@ -755,6 +756,9 @@ function ViajerosFinal() {
             <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
           </div>
 
+          <Kicker icon="hiking" tone="mint" className="mb-2">
+            Para viajeros
+          </Kicker>
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,24px)] font-extrabold leading-[1.06] tracking-[-.02em] text-ink min-[900px]:pr-20">
             Tu próximo viaje, <em className="crd-accent">en tres paradas</em>
           </h2>
@@ -1064,6 +1068,9 @@ function NegociosFinal() {
             <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
           </div>
 
+          <Kicker icon="storefront" tone="coral" className="mb-2">
+            Para negocios
+          </Kicker>
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,24px)] font-extrabold leading-[1.06] tracking-[-.02em] text-ink min-[900px]:pr-20">
             Tres pasos para <em className="crd-accent">estar en la ruta</em>
           </h2>

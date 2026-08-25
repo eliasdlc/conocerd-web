@@ -6,9 +6,8 @@
 // al sello se retiró: repetida en cada escena no aportaba información y leía
 // como adorno.
 //
-// `variant="pill"` recupera la píldora pastel con icono para los eyebrows que
-// funcionan como etiqueta de audiencia (/lista: "Para viajeros" / "Para
-// negocios"), donde el sello mono se sentía frío.
+// `variant="pill"` es la píldora pastel con icono, para los eyebrows que
+// funcionan como etiqueta de audiencia y no como marca de bitácora.
 
 import Icon, { type IconName } from "@/components/Icon";
 

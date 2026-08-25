@@ -17,18 +17,17 @@ import Image from "next/image";
 import Link from "next/link";
 import Icon from "@/components/Icon";
 import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
-import SubscribeForm, { type SubscribeSuccess } from "@/components/SubscribeForm";
+import InstagramTile from "./InstagramTile";
+import SubscribeForm, { AudienceToggle, type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
-import InstagramGlyph from "./InstagramGlyph";
-import { CONTENT, INSTAGRAM, type Item } from "./content";
+import { CONTENT, type Item } from "./content";
 import { AUDIENCES, type Audience } from "@/lib/waitlist/schema";
-import Kicker from "@/components/Kicker";
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3 text-lead font-bold tracking-[-.015em] text-ink-2">
+    <h2 className="mb-3 font-display text-[20px] font-bold tracking-[-.02em] text-ink">
       {children}
     </h2>
   );
@@ -104,7 +103,7 @@ const AUDIENCE_TAB_LABEL: Record<Audience, string> = {
   negocio: "Tengo un negocio",
 };
 
-const FOOT_LINK = "text-xs text-muted-2 no-underline";
+const FOOT_LINK = "inline-flex h-11 items-center text-xs text-muted no-underline";
 
 export default function ListaExperience() {
   const [audience, setAudience] = useState<Audience>("viajero");
@@ -137,39 +136,32 @@ export default function ListaExperience() {
     <div className="crd-lista-grid">
       {/* ── Columna de marca y conversión ── */}
       <aside className="crd-lista-aside">
-        <Link
-          href="/"
-          aria-label="ConoceRD — ir al inicio"
-          className="crd-lista-in mb-[18px] inline-block"
-        >
-          <Image
-            src="/assets/logo.png"
-            alt="ConoceRD — Descubre lo nuestro"
-            width={210}
-            height={100}
-            priority
-            sizes="176px"
-            className="h-[clamp(62px,14vw,84px)] w-auto"
+        {/* La cabecera es el wordmark y el conmutador, nada más: aquí la marca
+            va en compacto —el bloque entero es del hero de la home— y el
+            conmutador gobierna la página, así que vive fuera del formulario. */}
+        <div className="crd-lista-in mb-[18px] flex flex-wrap items-center gap-4">
+          <Link href="/" aria-label="ConoceRD — ir al inicio" className="inline-block">
+            <Image
+              src="/assets/wordmark.svg"
+              alt="ConoceRD"
+              width={102}
+              height={32}
+              priority
+              className="h-8 w-auto"
+            />
+          </Link>
+          {/* Ancho acotado: el conmutador es cromo de cabecera, no un bloque de
+              contenido. Suelto en `flex-1` se comía media columna a 1440. */}
+          <AudienceToggle
+            audience={audience}
+            onChange={setAudience}
+            className="w-full max-w-[320px] flex-1 sm:w-auto"
           />
-        </Link>
-
-        <div className="crd-lista-in mb-2.5 [animation-delay:.06s]">
-          {/* Píldora de audiencia: cambia con el toggle (viajeros mint,
-              negocios coral) — la etiqueta pastel que abre la columna. */}
-          <Kicker
-            key={audience}
-            icon={c.eyebrowIcon}
-            variant="pill"
-            tone={audience === "negocio" ? "coral" : "mint"}
-            className="crd-lista-swap"
-          >
-            {c.eyebrow}
-          </Kicker>
         </div>
 
         <h1
           key={`h-${audience}`}
-          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,42px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2"
+          className="crd-lista-swap mb-2.5 font-display text-[clamp(28px,6.6vw,34px)] font-extrabold leading-[1.06] tracking-[-.03em] text-ink"
         >
           {c.headline} <em className="crd-accent">{c.headlineAccent}</em>
         </h1>
@@ -183,11 +175,12 @@ export default function ListaExperience() {
 
         {/* El formulario es la única acción de la página: siempre sobre el fold.
             overflow-visible porque el confeti del panel de éxito se sale. */}
-        <div className="crd-lista-in overflow-visible rounded-surface border border-line bg-white px-5 pb-[18px] pt-5 shadow-e1 [animation-delay:.12s]">
+        <div className="crd-lista-in overflow-visible rounded-surface border border-line bg-paper px-5 pb-[18px] pt-5 shadow-e1 [animation-delay:.12s]">
           <SubscribeForm
             key={formKey}
             tone="light"
             layout="full"
+            audienceLocked
             source="lista"
             audience={audience}
             onAudienceChange={setAudience}
@@ -196,9 +189,9 @@ export default function ListaExperience() {
           />
         </div>
 
-        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-tiny text-muted-2 [animation-delay:.18s]">
+        <div className="crd-lista-in mt-4 flex flex-wrap items-center gap-2 text-tiny text-muted [animation-delay:.18s]">
           <AppleGlyph size={15} />
-          <GooglePlayGlyph size={14} />
+          <GooglePlayGlyph size={15} mono />
           Próximamente en App Store y Google Play
         </div>
 
@@ -206,29 +199,7 @@ export default function ListaExperience() {
             las tiendas, es la vía real para no perder a quien llegó por el QR.
             Aquí aparece como acompañamiento; el empujón fuerte va después del
             registro, en el panel de éxito. */}
-        <a
-          href={INSTAGRAM.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="crd-lista-in crd-lista-ig-card mt-4 flex items-center gap-3 rounded-2xl border border-line bg-white/72 px-[15px] py-[13px] no-underline [animation-delay:.22s]"
-        >
-          <span
-            aria-hidden="true"
-            // Degradado oficial de Instagram: es la única presencia real de la
-            // marca hoy y merece reconocerse al primer vistazo (decisión del
-            // dueño, jul 2026 — revierte el monocromo del audit §3).
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-chip bg-[radial-gradient(circle_at_28%_110%,#FDF497_0%,#FD5949_45%,#D6249F_60%,#285AEB_90%)] text-white"
-          >
-            <InstagramGlyph size={20} />
-          </span>
-          <span>
-            <span className="block text-sm font-bold text-ink">{INSTAGRAM.handle}</span>
-            <span className="block text-tiny leading-[1.4] text-muted">
-              Los destinos que vamos sumando, antes de que salga la app.
-            </span>
-          </span>
-          <Icon name="arrow_outward" className="ml-auto text-xl text-muted-2" />
-        </a>
+        <InstagramTile className="crd-lista-in mt-4 [animation-delay:.22s]" />
       </aside>
 
       {/* ── Columna de argumento ── */}
@@ -277,22 +248,24 @@ export default function ListaExperience() {
         <button
           type="button"
           onClick={() => setAudience(audience === "viajero" ? "negocio" : "viajero")}
-          className="mb-6 flex w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-dashed border-[#F7B39D] bg-[#FFF4EE] px-[15px] py-[13px] text-left font-[inherit]"
+          // El par del puente son tokens: `#F7B39D` y `#FFF4EE` eran el mismo
+          // par coral sin nombre, escrito a mano.
+          className="mb-6 flex w-full cursor-pointer items-center gap-2.5 rounded-block border-[1.5px] border-dashed border-coral-ink bg-coral-soft px-[15px] py-[13px] text-left font-[inherit]"
         >
           <Icon
             name={audience === "viajero" ? "storefront" : "hiking"}
             className="text-feature text-coral-ink"
           />
-          <span className="text-copy leading-[1.45] text-muted">
+          <span className="text-copy leading-[1.45] text-ink-3">
             {audience === "viajero" ? (
               <>
                 ¿Tienes un negocio en RD?{" "}
-                <strong className="text-coral-ink">Mira lo que ConoceRD hace por ti</strong>
+                <strong className="font-label font-bold text-coral-ink">Mira lo que ConoceRD hace por ti</strong>
               </>
             ) : (
               <>
                 ¿También viajas por el país?{" "}
-                <strong className="text-coral-ink">Mira la app del viajero</strong>
+                <strong className="font-label font-bold text-coral-ink">Mira la app del viajero</strong>
               </>
             )}
           </span>
