@@ -122,6 +122,7 @@ export default function Footer() {
         <div className="flex gap-[18px]">
           <Link href="/privacidad" className="inline-flex h-11 items-center text-xs text-white/70 no-underline">Privacidad</Link>
           <Link href="/terminos" className="inline-flex h-11 items-center text-xs text-white/70 no-underline">Términos</Link>
+          <Link href="/eliminar-cuenta" className="inline-flex h-11 items-center text-xs text-white/70 no-underline">Eliminar cuenta</Link>
         </div>
       </div>
     </footer>
