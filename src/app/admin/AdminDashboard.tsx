@@ -20,7 +20,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 
 import Icon from "@/components/Icon";
-import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "@/lib/waitlist/schema";
+import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "@/lib/waitlist/constants";
 import type { Subscriber } from "@/lib/waitlist/store";
 import type { Bucket, WaitlistStats } from "@/lib/waitlist/stats";
 import { logout } from "./actions";

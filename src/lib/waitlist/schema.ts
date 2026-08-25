@@ -1,40 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Contrato de la lista de espera: un solo esquema compartido entre el
-//  formulario (cliente) y el Route Handler (servidor). Si cambia un campo,
-//  cambia aquí y ambos lados fallan a la vez — que es lo que queremos.
+//  Validación de la lista de espera. Corre SÓLO en el servidor: el Route
+//  Handler es el único que hace `safeParse`, así que zod nunca llega al
+//  navegador. El vocabulario que el formulario sí necesita (audiencias, tipos
+//  de negocio, honeypot) vive en `constants.ts`, sin zod, y se importa desde
+//  allí en los dos lados.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from "zod";
-
-export const AUDIENCES = ["viajero", "negocio"] as const;
-export type Audience = (typeof AUDIENCES)[number];
-
-/** Tipos de negocio que ofrecemos en el selector. `otro` es la salida de emergencia. */
-export const BUSINESS_TYPES = [
-  "restaurante",
-  "hospedaje",
-  "tour",
-  "transporte",
-  "tienda",
-  "otro",
-] as const;
-export type BusinessType = (typeof BUSINESS_TYPES)[number];
-
-export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
-  restaurante: "Restaurante o bar",
-  hospedaje: "Hospedaje",
-  tour: "Tours y experiencias",
-  transporte: "Transporte",
-  tienda: "Tienda o artesanía",
-  otro: "Otro",
-};
-
-/**
- * Campo trampa para bots. Se renderiza oculto y con `autocomplete="off"`:
- * una persona nunca lo llena, un bot que rellena todo sí. Si viene con
- * contenido respondemos 200 sin guardar (no le decimos al bot que lo pillamos).
- */
-export const HONEYPOT_FIELD = "empresa_web";
+import { AUDIENCES, BUSINESS_TYPES, HONEYPOT_FIELD } from "@/lib/waitlist/constants";
 
 // Normaliza *antes* de validar: los teclados móviles capitalizan la primera
 // letra y pegan espacios al final, y " Elias@Ejemplo.COM " es un correo válido
@@ -113,8 +86,3 @@ export const subscribeSchema = z
   });
 
 export type SubscribeInput = z.infer<typeof subscribeSchema>;
-
-/** Respuesta del endpoint. El cliente sólo necesita distinguir estos casos. */
-export type SubscribeResult =
-  | { ok: true; status: "created" | "already_subscribed" }
-  | { ok: false; error: string; fields?: Record<string, string> };

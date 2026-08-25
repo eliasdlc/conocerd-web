@@ -9,7 +9,7 @@
 
 import type { NeonQueryFunction } from "@neondatabase/serverless";
 
-import type { Audience, BusinessType } from "./schema";
+import type { Audience, BusinessType } from "./constants";
 
 export type SubscriberInput = {
   email: string;

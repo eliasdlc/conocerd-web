@@ -6,7 +6,7 @@
 //  el registro se guarda igual y la landing sigue funcionando en local.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Audience } from "./schema";
+import type { Audience } from "./constants";
 
 export type EspContact = {
   email: string;

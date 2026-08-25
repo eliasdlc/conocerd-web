@@ -8,7 +8,7 @@
 //  agregados a la base — no antes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "./schema";
+import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "./constants";
 import type { Subscriber } from "./store";
 
 /**
