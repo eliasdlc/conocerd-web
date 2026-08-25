@@ -18,7 +18,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValueEvent, useTransform } from "motion/react";
+import { useMotionValueEvent, useTransform, type MotionValue } from "motion/react";
 import { useScene } from "@/context/SceneContext";
 import { SCENE_BANDS } from "@/lib/journey";
 import { scrollToSection } from "@/lib/journeyNav";
@@ -80,12 +80,36 @@ function useEnMovimiento(progress: ReturnType<typeof useScene>["progress"]): boo
   return moviendo;
 }
 
+/**
+ * Ata una escala del riel a un MotionValue escribiendo el `transform` en el
+ * nodo, sin pasar por React ni por el sistema de componentes de motion. Es el
+ * mismo resultado que un `<motion.span style={{scaleY}}>` y no arrastra el
+ * runtime de componentes a la home por dos rellenos de barra.
+ */
+function useEscala(value: MotionValue<number>, eje: "X" | "Y") {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useMotionValueEvent(value, "change", (v) => {
+    if (ref.current) ref.current.style.transform = `scale${eje}(${v})`;
+  });
+
+  // El primer frame: sin esto la barra arranca sin escala (llena) hasta que el
+  // scroll se mueva por primera vez.
+  useEffect(() => {
+    if (ref.current) ref.current.style.transform = `scale${eje}(${value.get()})`;
+  }, [value, eje]);
+
+  return ref;
+}
+
 export default function JourneyProgress() {
   const { progress } = useScene();
   const [activo, setActivo] = useState(0);
   const moviendo = useEnMovimiento(progress);
 
   const avance = useTransform(progress, avanceDeRiel);
+  const rielRef = useEscala(avance, "Y");
+  const barraRef = useEscala(avance, "X");
 
   // El índice cambia 7 veces en todo el recorrido: setState aquí no re-renderiza
   // por frame (el relleno sí va por frame, pero fuera de React vía MotionValue).
@@ -107,9 +131,9 @@ export default function JourneyProgress() {
               mueve el scroll directamente. Centrada en los 36px de la columna
               para que todos los puntos caigan sobre la misma línea. */}
           <span aria-hidden="true" className="absolute bottom-0 left-[17px] top-0 w-[2px] rounded-full bg-line-strong" />
-          <motion.span
+          <span
+            ref={rielRef}
             aria-hidden="true"
-            style={{ scaleY: avance }}
             className="absolute bottom-0 left-[17px] top-0 w-[2px] origin-top rounded-full bg-selected"
           />
 
@@ -152,7 +176,7 @@ export default function JourneyProgress() {
         aria-hidden="true"
         className="fixed inset-x-0 top-0 z-[90] h-[3px] bg-line-strong desk:hidden"
       >
-        <motion.span style={{ scaleX: avance }} className="block h-full origin-left bg-selected" />
+        <span ref={barraRef} className="block h-full origin-left bg-selected" />
       </div>
     </>
   );

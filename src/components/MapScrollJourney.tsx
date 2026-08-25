@@ -20,10 +20,15 @@ import ViajerosNegociosSection from "@/sections/ViajerosNegociosSection";
 import EquipoSection from "@/sections/EquipoSection";
 import CTASection from "@/sections/CTASection";
 
-// MapLibre is the journey's signature but not a prerequisite for readable Hero
-// HTML. Keep it in a separate client chunk so text and navigation can paint
-// before the WebGL runtime arrives.
-const Map = dynamic(() => import("@/components/map/Map").then((mod) => mod.Map), {
+// MapLibre es la firma del journey pero no un requisito para que el hero se
+// lea. El motor (1 MB con el CSS) llega en su propio chunk, después del primer
+// pintado, y el resto de la página no lo espera.
+//
+// Que esto funcione depende de que nadie más importe `engine`: las secciones
+// consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
+// de valor desde el grafo inicial devolvería el motor al HTML de arranque y
+// este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
+const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 

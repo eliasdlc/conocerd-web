@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
 import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
