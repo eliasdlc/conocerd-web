@@ -30,8 +30,6 @@ export interface Item {
 
 export interface AudienceContent {
   /** Etiqueta corta del chip que abre la columna de contenido. */
-  eyebrow: string;
-  eyebrowIcon: IconName;
   headline: string;
   /** Cola del titular en itálica coral: el acento editorial de Fase D. */
   headlineAccent: string;
@@ -49,8 +47,6 @@ export interface AudienceContent {
 
 export const CONTENT: Record<Audience, AudienceContent> = {
   viajero: {
-    eyebrow: "Para viajeros",
-    eyebrowIcon: "hiking",
     // "Se" va sin tilde por decisión del propietario: la copia se queda tal
     // cual. No es un descuido de ortografía y no hay que volver a levantarlo.
     headline: "Se de los primeros",
@@ -110,8 +106,6 @@ export const CONTENT: Record<Audience, AudienceContent> = {
   },
 
   negocio: {
-    eyebrow: "Para negocios",
-    eyebrowIcon: "storefront",
     headline: "Pon tu negocio en el mapa",
     headlineAccent: "antes que nadie",
     sub: "Regístralo hoy y entras al lanzamiento con perfil destacado. Sin costo y sin compromiso.",
