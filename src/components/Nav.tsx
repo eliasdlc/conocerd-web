@@ -4,6 +4,8 @@ import Button from "./Button";
 import BrandPin from "./BrandPin";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
+import { chapterOfScene } from "@/lib/journey";
+import { useScene } from "@/context/SceneContext";
 
 const LINKS = [
   { label: "Destinos", target: "trigger-polaroid-0" },
@@ -13,12 +15,22 @@ const LINKS = [
   { label: "Equipo", target: "trigger-equipo" },
 ];
 
-// #15 — píldora flotante sin wordmark: solo nav + botón Descargar.
-// Visible en todo el recorrido, CTA y footer incluidos (decisión del dueño,
-// jul 2026): las escenas con contenido cerca del tope reservan la franja
-// --crd-nav-clear (globals.css) así que no se solapan.
+// Píldora flotante sin wordmark en reposo: en el hero el logo ya está en
+// pantalla a tamaño completo y repetirlo sobraría. Visible en todo el
+// recorrido, CTA y footer incluidos (decisión del dueño, jul 2026): las
+// escenas con contenido cerca del tope reservan la franja --crd-nav-clear
+// (globals.css) así que no se solapan.
+//
+// El botón va relleno de `selected` y no de coral: mide 40 de alto y a ese
+// tamaño el blanco sobre coral da 3.81:1, que sólo pasa como texto grande.
 export default function Nav() {
   const pillRef = useRef<HTMLDivElement>(null);
+  // El enlace activo se marca con peso y tinta, nunca con el acento: el coral
+  // de la web es para acciones. Se compara por capítulo, no por escena: los
+  // seis polaroids son un solo "Destinos" y el enlace tiene que quedarse
+  // encendido en los seis.
+  const { activeScene } = useScene();
+  const capituloActivo = chapterOfScene(activeScene);
 
   // Mantiene la lógica de fondo al hacer scroll: la píldora se vuelve más
   // sólida (y con más sombra) una vez te alejas del tope. Sólo conmuta un
@@ -38,9 +50,7 @@ export default function Nav() {
     <nav className="fixed left-1/2 top-4 z-[100] max-w-[calc(100vw-24px)] -translate-x-1/2">
       <div
         ref={pillRef}
-        className="crd-nav-pill group flex items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(8px,1.4vw,18px)] [scrollbar-width:none]
-          bg-cream/60 shadow-e1
-          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-e1"
+        className="crd-nav-pill group flex h-14 items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-[var(--crd-glass-line)] pl-[clamp(10px,1.6vw,18px)] pr-[6px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(4px,1vw,10px)] [scrollbar-width:none]"
       >
         {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
             a tamaño completo y repetirlo sobraría. */}
@@ -69,15 +79,25 @@ export default function Nav() {
         {LINKS.map((l) => (
           <a
             key={l.target}
-            // .crd-navlink: subrayado animado con ::after y oculto en móvil.
+            // .crd-navlink: píldora invisible de 40, activo por peso y tinta,
+            // y oculto bajo 900px.
             className="crd-navlink whitespace-nowrap"
+            // "location" y no "page": los cinco enlaces no llevan a otras
+            // páginas, mueven la cámara dentro de ésta. "page" le diría al
+            // lector de pantalla que cambió de documento.
+            aria-current={
+              chapterOfScene(l.target.replace("trigger-", "")) === capituloActivo
+                ? "location"
+                : undefined
+            }
             href={`#${l.target}`}
+            data-label={l.label}
             onClick={(e) => {
               e.preventDefault();
               scrollToSection(l.target);
             }}
           >
-            {l.label}
+            <span>{l.label}</span>
           </a>
         ))}
         {/* La app aún no está publicada: el CTA más visible del sitio lleva a la

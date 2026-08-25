@@ -1,13 +1,13 @@
 "use client";
 
 import SubscribeForm from "@/components/SubscribeForm";
-import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
+import { AppleGlyph, GooglePlayGlyph, StoreBadge } from "@/components/StoreGlyphs";
 import { useScene } from "@/context/SceneContext";
 import { requestSubscribe, useSubscribeIntent } from "@/hooks/useSubscribeIntent";
 
 const STORES: { glyph: React.ReactNode; store: string }[] = [
-  { glyph: <AppleGlyph size={20} />, store: "App Store" },
-  { glyph: <GooglePlayGlyph size={18} />, store: "Google Play" },
+  { glyph: <AppleGlyph size={16} />, store: "App Store" },
+  { glyph: <GooglePlayGlyph size={16} />, store: "Google Play" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -35,22 +35,22 @@ export default function CTAOverlay() {
         // en el momento de la conversión. El borde superior claro es luz de
         // canto —la card es un objeto sólido apoyado sobre la escena— y la
         // textura topográfica la aporta .crd-cta-card en globals.css.
-        className={`crd-cta-card w-full max-w-[640px] rounded-[28px] border-t border-white/[0.14] bg-ink-2 p-[26px_20px] text-center shadow-[0_32px_80px_rgba(0,0,0,0.40)]
+        className={`crd-cta-card w-full max-w-[640px] rounded-surface border-t border-white/[0.16] bg-ink p-[26px_20px] text-center shadow-e1
           desk:p-[44px_clamp(28px,5vw,60px)]
           ${isVisible ? "animate-slide-up" : ""}`}
       >
-        {/* Handwritten kicker */}
-        <div className="mb-1 font-hand text-[clamp(28px,4vw,40px)] font-bold leading-none text-mint desk:mb-1.5">
-          Descubre lo nuestro
-        </div>
+        {/* Sin antetítulo manuscrito. Caveat baja a un solo uso en todo el
+            producto (la firma del dorso de la polaroid del equipo) y "Descubre
+            lo nuestro" ya vive dentro del wordmark, que se ve en el pie y en el
+            logo del hero: aquí era la tercera repetición del mismo lema. */}
 
         {/* Main heading */}
-        <h2 className="m-0 mb-2.5 font-display text-[clamp(28px,5vw,50px)] font-bold leading-[1.04] tracking-[-.012em] text-white desk:mb-3.5">
+        <h2 className="m-0 mb-2.5 font-display text-[clamp(28px,5vw,34px)] font-extrabold leading-[1.04] tracking-[-.03em] text-white desk:mb-3.5">
           Tu próxima aventura<br />empieza <em className="crd-accent-on-ink">aquí</em>
         </h2>
 
         {/* Subtext */}
-        <p className="mx-auto mb-4 max-w-[460px] text-body leading-[1.55] text-white/76 desk:mb-5">
+        <p className="mx-auto mb-4 max-w-[460px] text-body leading-[1.55] text-white/70 desk:mb-5">
           ConoceRD está en camino. Déjanos tu correo y entra a la lista de fundadores: serás
           de los primeros en explorar la República Dominicana que no aparece en las guías.
         </p>
@@ -66,34 +66,23 @@ export default function CTAOverlay() {
             con el "próximamente" compartido encima — con la leyenda por badge
             miden ~150px cada uno y no caben lado a lado ni en 360px. */}
         <div className="mb-3 desk:mb-3.5">
-          <div className="mb-1.5 text-micro font-bold uppercase tracking-[.08em] text-white/55 desk:hidden">
+          <div className="mb-1.5 font-label text-micro font-extrabold uppercase tracking-[.08em] text-white/70 desk:hidden">
             Próximamente en
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 desk:gap-2.5">
             {STORES.map((btn) => (
-              <div
-                key={btn.store}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.14] bg-white/[0.07] px-2.5 py-1.5 text-white/62 desk:gap-2 desk:px-3.5 desk:py-2"
-              >
-                {btn.glyph}
-                <span className="text-left leading-[1.2]">
-                  <span className="hidden text-micro font-bold uppercase tracking-[.08em] text-white/72 desk:block">
-                    Próximamente en
-                  </span>
-                  <span className="text-copy font-bold">{btn.store}</span>
-                </span>
-              </div>
+              <StoreBadge key={btn.store} store={btn.store} glyph={btn.glyph} />
             ))}
           </div>
         </div>
 
         {/* Atajo a la audiencia B2B sin salir de la card */}
-        <div className="text-copy text-white/55">
+        <div className="text-body text-white/70">
           ¿Tienes un negocio?{" "}
           <button
             type="button"
             onClick={() => requestSubscribe("negocio")}
-            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-copy font-bold text-mango"
+            className="cursor-pointer border-none bg-transparent p-0 font-[inherit] text-body font-bold text-mango"
           >
             Regístralo aquí →
           </button>

@@ -14,10 +14,10 @@
      bajo un nombre hasheado.
 
      Tres roles y una excepción, los mismos que la app:
-       display  Bricolage Grotesque — titulares y cifras de carretera
-       label    Plus Jakarta Sans   — botones, chips, etiquetas, overlines
-       sans     Inter               — cuerpo y metadatos
-       hand     Caveat              — sólo la firma del dorso de la polaroid
+       display  Bricolage Grotesque : titulares y cifras de carretera
+       label    Plus Jakarta Sans   : botones, chips, etiquetas, overlines
+       sans     Inter               : cuerpo y metadatos
+       hand     Caveat              : sólo la firma del dorso de la polaroid
 
      No hay familia mono: las cifras que la llevaban van en `display` y los
      metadatos en `sans`. */
@@ -34,11 +34,11 @@
      como texto grande, y por eso el relleno coral exige etiqueta ≥19 w700. */
   --color-ink:         #0F1A2E;  /* 16.45:1 sobre cream */
   --color-ink-2:       #090F1B;  /* extremo del degradado de tinta */
-  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper — texto de segundo plano */
+  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper, texto de segundo plano */
   --color-coral:       #E0552F;  /* acción y selección; NUNCA decoración */
   --color-coral-soft:  #FFE7DF;
   --color-coral-ink:   #B23410;  /* 5.86:1 sobre cream, 5.23:1 sobre coral-soft */
-  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink — el acento SOBRE tinta */
+  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink: el acento SOBRE tinta */
   --color-mango-soft:  #FFE6C8;
   --color-mango-ink:   #985409;  /* 4.83:1 sobre mango-soft, 5.82:1 sobre paper */
   --color-mint:        #25CCB8;
@@ -104,7 +104,6 @@
      abajo en este archivo. El stagger sigue siendo inline (animationDelay),
      porque depende del índice. */
   --animate-slide-up: slideUpIn .45s cubic-bezier(.16,1,.3,1) both;
-  --animate-live-dot: crdLiveDot 1.4s ease-in-out infinite;
 }
 
 /* ── Cristal del tema ─────────────────────────────────────────────────────────
@@ -224,11 +223,6 @@ body::after {
   transition: transform .2s ease;
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
-
-@keyframes crdLiveDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .4; transform: scale(.7); }
-}
 
 /* Hero entrance */
 @keyframes crdLogoIn {
@@ -417,7 +411,7 @@ body::after {
      botón como único contenido, el padding izquierdo iguala al derecho (8px)
      para que la píldora quede simétrica alrededor del botón. */
   .crd-navlink { display: none !important; }
-  .crd-nav-pill { padding-left: 8px !important; }
+  .crd-nav-pill { padding-left: 6px !important; }
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
@@ -456,6 +450,14 @@ body::after {
      alta (bottom 12%, con su rotación) rozaba el titular en pantallas ~800px
      de alto. */
   .crd-destinos-heading { left: 16px !important; bottom: calc(46% + 26px) !important; }
+  /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
+     cristal del tema y ahí la sombra únicamente emborrona el canto de las
+     letras; aquí no hay panel (lo que separa del mapa es el velo crema de la
+     escena) y sin halo el titular se cruza con la toponimia cuando asoma por
+     encima del velo. */
+  .crd-destinos-heading h2 {
+    text-shadow: 0 1px 2px rgba(253, 248, 240, .95), 0 0 16px rgba(253, 248, 240, .6);
+  }
   .crd-destinos-card {
     width: min(196px, calc(100vw - 116px)) !important;
     padding: 9px 9px 0 !important;
@@ -491,7 +493,7 @@ body::after {
   .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
   .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
   /* +36px: en estas pantallas la pila sube ~43px por el panel de pasos y a 54%
-     el titular quedaba debajo de la carta. El halo del text-shadow lo mantiene
+     el titular quedaba debajo de la carta. El halo de arriba lo mantiene
      legible aunque asome por encima del velo crema. */
   .crd-destinos-heading { bottom: calc(54% + 36px) !important; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
@@ -532,17 +534,12 @@ body::after {
    nada ni pelearse con el `overflow-y: auto` que la card usa en móvil. */
 .crd-cta-card {
   background-image:
-    repeating-radial-gradient(circle at 84% 8%, rgba(255,255,255,.05) 0 1px, transparent 1px 27px),
+    repeating-radial-gradient(circle at 84% 8%, rgba(255,255,255,.04) 0 1px, transparent 1px 27px),
     repeating-radial-gradient(circle at 12% 94%, rgba(255,255,255,.04) 0 1px, transparent 1px 35px);
 }
 
 /* ── Acento editorial ─────────────────────────────────────────────────────────
-   La itálica de Fraunces sustituye al <strong> coral (audit §3): antes el
-   énfasis era negrita de color, que es lo que hace cualquier plantilla. En los
-   titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
-   —que va en Instrument— también trae la familia, y ahí es donde se nota que
-   el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
-/* El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
+   El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
    con Fraunces. La palabra acentuada va en la misma tipografía que la frase que
    la contiene y se distingue sólo por la tinta. Va en <em>, que es la etiqueta
    semántica correcta, y por eso hay que apagarle la cursiva del navegador.
@@ -557,27 +554,64 @@ body::after {
    7.51:1 contra los 4.56:1 del coral. */
 .crd-accent-on-ink { color: var(--color-mango); }
 
+/* ── Píldora del nav ──────────────────────────────────────────────────────────
+   Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
+   crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
+   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema, la
+   misma receta que todo lo que flota sobre el mapa, y ahí sí se apoya con e1.
+
+   El blur va en CSS y no en utilidades con variante `data-`: las dos
+   escribirían la misma custom property de Tailwind y el orden de capas
+   decidiría cuál gana, que es justo lo que no se quiere depurar. */
+.crd-nav-pill {
+  background: color-mix(in srgb, var(--color-cream) 60%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
+}
+.crd-nav-pill[data-solid="true"] {
+  background: var(--crd-glass);
+  backdrop-filter: var(--crd-glass-blur);
+  box-shadow: var(--shadow-e1);
+}
+
+/* El enlace es UI, no titular: familia de etiqueta y su propia píldora
+   invisible de 40, para que el área táctil exista aunque no se vea. El
+   subrayado animado y el hover coral mueren: el acento de la web es para
+   acciones, y marcar el enlace activo con él lo convertía en decoración.
+
+   El activo sube de 600 a 700, y eso ensancha la palabra. En una píldora que
+   además scrollea en horizontal, ese ensanche mueve los cinco enlaces cada vez
+   que cambias de capítulo. El grid de una sola celda con un fantasma en 700
+   reserva siempre el ancho del peso mayor, así que la píldora no se mueve
+   nunca: es la misma caja en los tres estados. */
 .crd-navlink {
-  position: relative;
+  display: inline-grid;
+  place-items: center;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
   text-decoration: none;
   color: var(--color-ink-3);
-  /* El nav es UI, no titular: la familia de etiqueta, nunca la de display. */
   font-family: var(--font-label);
   font-weight: 600;
-  font-size: var(--text-body);
-  padding: 4px 2px;
+  font-size: 13.5px;
   transition: color .2s;
 }
-.crd-navlink:hover { color: var(--color-ink); }
+.crd-navlink > span,
 .crd-navlink::after {
-  content: '';
-  position: absolute;
-  left: 0; bottom: -3px;
-  height: 2px; width: 0;
-  background: var(--color-coral);
-  transition: width .25s ease;
+  grid-area: 1 / 1;
 }
-.crd-navlink:hover::after { width: 100%; }
+.crd-navlink::after {
+  content: attr(data-label);
+  font-weight: 700;
+  visibility: hidden;
+  pointer-events: none;
+}
+.crd-navlink:hover,
+.crd-navlink[aria-current="location"] {
+  color: var(--color-ink);
+  font-weight: 700;
+}
 
 /* Nunca `scale`: un CTA que crece bajo el cursor es la mitad del look de
    plantilla. El botón se despega del papel al pasar por encima y se hunde al
@@ -659,10 +693,9 @@ body::after {
 
 .crd-lista-main { margin-top: 32px; }
 
-.crd-lista-ig-card { transition: background .2s, border-color .2s, transform .2s; }
+.crd-lista-ig-card { transition: border-color .2s, transform .2s; }
 .crd-lista-ig-card:hover {
-  background: #fff;
-  border-color: #D9D2C1;
+  border-color: var(--color-line-strong);
   transform: translateY(-2px);
 }
 
@@ -691,10 +724,6 @@ body::after {
   75%  { transform: scale(.96) rotate(-2deg); }
   100% { opacity: 1; transform: scale(1) rotate(0); }
 }
-@keyframes crdHalo {
-  0%   { opacity: .55; transform: scale(.5); }
-  100% { opacity: 0;   transform: scale(2.1); }
-}
 @keyframes crdCheckDraw {
   from { stroke-dashoffset: 34; }
   to   { stroke-dashoffset: 0; }
@@ -718,12 +747,6 @@ body::after {
   pointer-events: none;
   animation: crdConfettiFly 1.5s cubic-bezier(.2,.6,.35,1) both;
 }
-
-/* El CTA de Instagram era el único elemento del sitio con el degradado oficial
-   de otra marca a todo color; en ink pesa igual sin competir. La sombra de
-   calcomanía del hover murió con el resto: la pieza se levanta, no se despega. */
-.crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3); }
-.crd-ig-cta:hover { transform: translateY(-2px); }
 
 /* Sello de pasaporte: el estado "conseguido" de cada cupón de /lista. Es la
    receta del sello de llegada de la app a escala micro: borde de 2 más
@@ -781,27 +804,32 @@ body::after {
    monta (lo decide el componente con matchMedia). */
 
 /* ───────────────────── Páginas legales ────────────────────── */
-/* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
-   el contenido es markup semántico y se estila una vez desde el shell.
-   La regla tipográfica de Fase D vale también aquí: el serif sólo en el H1;
-   los H2 van a 17px, por debajo del umbral de 20, así que son sans 700. */
+/* Prosa larga: el resto del sitio usa clases por componente, pero aquí el
+   contenido es markup semántico y se estila una vez desde el shell. Es la
+   única superficie del sitio con estilos de prosa.
+
+   El umbral de 20px con el que convivían los H2 era una regla del serif
+   anterior, que sólo se usaba en titulares grandes. La familia de titular de
+   hoy no tiene ese límite: los subtítulos van en ella, a 20. */
 .crd-legal {
   color: var(--color-ink);
-  font-size: var(--text-body);
-  line-height: 1.7;
+  font-size: var(--text-lead);
+  line-height: 1.6;
 }
 .crd-legal h1 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -.012em;
-  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  font-size: clamp(28px, 5vw, 34px);
   line-height: 1.1;
   margin: 0 0 6px;
   color: var(--color-ink);
 }
 .crd-legal h2 {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-lead);
+  letter-spacing: -.02em;
+  font-size: 20px;
   margin: 30px 0 8px;
   color: var(--color-ink);
 }
@@ -811,7 +839,9 @@ body::after {
    párrafo partido. */
 .crd-legal ul { margin: 0 0 14px; padding-left: 20px; list-style: disc; }
 .crd-legal li { margin-bottom: 7px; }
-.crd-legal a { color: var(--color-coral-ink); }
+/* El único subrayado del sitio: en prosa larga el color solo no basta para
+   decir "esto es un enlace". */
+.crd-legal a { color: var(--color-coral-ink); text-decoration: underline; }
 .crd-legal-date {
   font-size: var(--text-tiny);
   color: var(--color-muted);

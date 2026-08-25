@@ -1,14 +1,13 @@
 // Sello de expedición de cada escena.
 //
 // Marca de bitácora: número de capítulo y nombre en español. Es el rol
-// overline del sistema, así que va en la familia de etiqueta —nunca en la de
-// titular— y en mayúsculas con tracking amplio. La coordenada que acompañaba
+// overline del sistema, así que va en la familia de etiqueta (nunca en la de
+// titular) y en mayúsculas con tracking amplio. La coordenada que acompañaba
 // al sello se retiró: repetida en cada escena no aportaba información y leía
 // como adorno.
 //
-// `variant="pill"` recupera la píldora pastel con icono para los eyebrows que
-// funcionan como etiqueta de audiencia (/lista: "Para viajeros" / "Para
-// negocios"), donde el sello mono se sentía frío.
+// `variant="pill"` es la píldora pastel con icono, para los eyebrows que
+// funcionan como etiqueta de audiencia y no como marca de bitácora.
 
 import Icon, { type IconName } from "@/components/Icon";
 

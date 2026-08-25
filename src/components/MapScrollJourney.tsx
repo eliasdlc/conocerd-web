@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type maplibregl from "maplibre-gl";
-import { SceneProvider, useScene } from "@/context/SceneContext";
+import { useScene } from "@/context/SceneContext";
 import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
@@ -250,12 +250,10 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
 // ─── Public export ────────────────────────────────────────────────────────────
 
+// El <SceneProvider> no vive aquí sino en JourneyHome: el nav también lee la
+// escena activa para marcar su enlace, y es hermano del journey, no hijo.
 export default function MapScrollJourney() {
   const mapRef = useRef<maplibregl.Map | null>(null);
 
-  return (
-    <SceneProvider>
-      <MapScrollInner mapRef={mapRef} />
-    </SceneProvider>
-  );
+  return <MapScrollInner mapRef={mapRef} />;
 }

@@ -4,12 +4,12 @@ import Link from "next/link";
 // Shell compartido de las páginas legales: prosa legible, sin journey ni mapa.
 //
 // Los estilos venían inline de antes del sistema de tokens y quedaron fuera del
-// restyling de Fase D — legales y 404 se veían de otra época que el resto del
-// sitio (audit 5.8). Ahora usan los mismos tokens; la prosa la estila .crd-legal
-// desde globals.css, que ya pasó al serif editorial.
+// primer restyling: legales y 404 se veían de otra época que el resto del
+// sitio. Ahora usan los mismos tokens; la prosa la estila .crd-legal desde
+// globals.css.
 
 const FOOT_LINK =
-  "inline-flex min-h-[44px] items-center px-2 text-tiny text-muted-2 no-underline";
+  "inline-flex min-h-[44px] items-center px-2 text-tiny text-muted no-underline";
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -206,7 +206,7 @@ function TeamPolaroid({
           >
             {/* Frente: la foto pegada al papel, con sus cintitas */}
             <span
-              className="crd-tape relative block rounded-md bg-white px-3 pb-0 pt-3 shadow-e1 [backface-visibility:hidden]"
+              className="crd-tape relative block rounded-[6px] border border-line bg-[#FFFDF7] px-3 pb-0 pt-3 shadow-e1 [backface-visibility:hidden]"
               aria-hidden={flipped}
             >
               <CornerTape className="-right-3.5 top-5 rotate-[48deg]" />
@@ -232,14 +232,16 @@ function TeamPolaroid({
                 )}
                 {/* Señal de que la foto se voltea */}
                 <span
-                  className="absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-white/88 text-ink shadow-[0_1px_3px_rgba(38,70,83,0.18)]"
+                  className="absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
                   aria-hidden="true"
                 >
                   <FlipGlyph />
                 </span>
               </span>
               <span className="block pb-3 pt-2.5">
-                <span className="block font-hand text-2xl font-bold leading-none text-ink">
+                {/* El nombre deja la manuscrita: Caveat baja a un solo uso en
+                    todo el producto, y es la firma del dorso. */}
+                <span className="block font-display text-lg font-bold leading-tight tracking-[-.02em] text-ink">
                   {member.name}
                 </span>
                 <span
@@ -253,16 +255,15 @@ function TeamPolaroid({
 
             {/* Dorso: la bio en sans legible; solo la firma va a mano */}
             <span
-              className="crd-tape absolute inset-0 flex flex-col overflow-hidden rounded-md bg-[#FFFDF7] px-3.5 pb-3 pt-3.5 shadow-e1 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              className="crd-tape absolute inset-0 flex flex-col overflow-hidden rounded-[6px] border border-line bg-[#FFFDF7] px-3.5 pb-3 pt-3.5 shadow-e1 [backface-visibility:hidden] [transform:rotateY(180deg)]"
               aria-hidden={!flipped}
             >
-              <span
-                className="block font-label text-micro font-extrabold uppercase tracking-[.12em]"
-                style={{ color: member.color }}
-              >
+              {/* El área va en mintInk en las dos personas: el dorso no
+                  repite el tono del rol, que ya vive en el frente. */}
+              <span className="block font-label text-micro font-extrabold uppercase tracking-[.12em] text-mint-ink">
                 {member.tags}
               </span>
-              <span className="mt-1.5 block flex-1 overflow-y-auto text-[clamp(11px,0.85vw,13px)] font-medium leading-[1.5] text-ink [scrollbar-width:thin]">
+              <span className="mt-1.5 block flex-1 overflow-y-auto text-[11.5px] leading-[1.5] text-ink [scrollbar-width:thin]">
                 {member.bioLong}
               </span>
               <span className="mt-1.5 flex items-end justify-between gap-2">
@@ -287,23 +288,26 @@ function TeamPolaroid({
 
 // ─── Roadmap "en vivo" ────────────────────────────────────────────────────────
 
+// El anillo de 4 en `paper` no es decoración: es lo que tapa el riel por
+// detrás del punto. El resplandor lo lleva SÓLO el paso actual, porque es el
+// único que lleva acento: un paso hecho con resplandor diría que sigue vivo.
 function StepDot({ state }: { state: "done" | "current" | "next" }) {
   if (state === "done") {
     return (
-      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-mint-ink text-white ring-4 ring-white">
+      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-mint-ink text-white ring-4 ring-paper">
         <Icon name="check" className="text-[13px]" />
       </span>
     );
   }
   if (state === "current") {
     return (
-      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-coral text-white ring-4 ring-white">
+      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-coral text-white shadow-e2 ring-4 ring-paper">
         <Icon name="rocket_launch" className="text-[13px]" />
       </span>
     );
   }
   return (
-    <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full border-2 border-dashed border-muted-2/70 bg-white ring-4 ring-white" />
+    <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full border-2 border-dashed border-line-strong bg-paper ring-4 ring-paper" />
   );
 }
 
@@ -326,10 +330,11 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         En esto estamos <em className="crd-accent">ahora mismo</em>
       </h3>
 
-      {/* Barra de avance: se llena al entrar la escena (trigger-driven) */}
-      <div className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-ink/10" aria-hidden="true">
+      {/* Riel de avance: se llena al entrar la escena, con 0.9s de retardo.
+          Va en `selected` y no en el acento: el avance es un estado. */}
+      <div className="mt-2.5 h-[2px] overflow-hidden rounded-full bg-line-strong" aria-hidden="true">
         <div
-          className="h-full rounded-full bg-coral transition-[width] duration-1000 ease-out"
+          className="h-full rounded-full bg-selected transition-[width] duration-1000 ease-out"
           style={{
             width: visible ? `${((CURRENT_STEP + 0.5) / ROADMAP.length) * 100}%` : "0%",
             transitionDelay: "0.9s",
@@ -341,7 +346,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         {/* raíl punteado que une los pasos */}
         <span
           aria-hidden="true"
-          className="absolute bottom-4 left-[13.5px] top-4 w-0 border-l-2 border-dashed border-coral/40"
+          className="absolute bottom-4 left-[13.5px] top-4 w-0 border-l-2 border-dashed border-line-strong"
         />
         {ROADMAP.map((s, i) => {
           const state = i < done ? "done" : i === done ? "current" : "next";
@@ -350,7 +355,9 @@ function RoadmapCard({ visible }: { visible: boolean }) {
               <StepDot state={state} />
               <div className="min-w-0 pt-0.5">
                 <span
-                  className={`block text-tiny font-bold leading-[1.25] ${state === "next" ? "text-muted" : "text-ink"}`}
+                  className={`block font-label text-mini leading-[1.25] ${
+                    state === "current" ? "font-bold text-ink" : "font-semibold text-muted"
+                  }`}
                 >
                   {s.name}
                 </span>
@@ -450,8 +457,11 @@ export default function EquipoSection() {
                 </div>
               ))}
             </div>
+            {/* La pista es interfaz, no contenido, así que deja la manuscrita:
+                Caveat sólo vive en la firma del dorso. Píldora de cristal del
+                tema, como todo lo que flota sobre el mapa. */}
             <p
-              className={`m-0 -rotate-1 rounded-full bg-cream/92 px-3.5 py-1 font-hand text-lg font-bold leading-none text-ink/85 shadow-[0_1px_4px_rgba(38,70,83,0.10)] backdrop-blur-[6px] ${
+              className={`m-0 rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-3.5 py-1.5 font-label text-micro font-extrabold uppercase leading-none tracking-[.12em] text-muted backdrop-blur-[24px] backdrop-saturate-[1.8] ${
                 isVisible ? "equipo6-line" : "opacity-0"
               }`}
               style={isVisible ? { animationDelay: "0.85s" } : undefined}
