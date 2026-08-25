@@ -9,9 +9,15 @@
 //
 //  Los datos llegan ya resueltos desde el servidor; aquí sólo vive el estado de
 //  búsqueda y filtro, que no vale una vuelta al servidor.
+//
+//  Era la única superficie del repo fuera del sistema: estilos en línea, la
+//  familia de etiqueta escrita en literal y tres tonos de gris a mano. No
+//  inventa nada propio: adopta las piezas del panel de negocios, porque es un
+//  panel.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 
 import Icon from "@/components/Icon";
 import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "@/lib/waitlist/schema";
@@ -19,28 +25,15 @@ import type { Subscriber } from "@/lib/waitlist/store";
 import type { Bucket, WaitlistStats } from "@/lib/waitlist/stats";
 import { logout } from "./actions";
 
-const INK = "#1D3A45";
-const TEXT = "#264653";
-const MUTED = "#5B6B72";
-const BORDER = "#EBE6D9";
-const TEAL = "#0C6A60";
-const ORANGE = "#B23410";
-
-const CARD: React.CSSProperties = {
-  background: "#fff",
-  border: `1px solid ${BORDER}`,
-  borderRadius: 18,
-  padding: "16px 18px",
-};
-
-const HEADING: React.CSSProperties = {
-  margin: "0 0 12px",
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontWeight: 800,
-  fontSize: 14,
-  letterSpacing: "-.01em",
-  color: INK,
-};
+/** Card del panel: superficie apoyada, radio 22, una sola sombra. */
+const CARD = "rounded-surface border border-line bg-paper px-[18px] py-4 shadow-e1";
+const HEADING = "m-0 mb-3 font-label text-copy font-bold tracking-[-.01em] text-ink";
+/** Secundaria del panel: 40 de alto, papel con hairline. */
+const ACTION =
+  "inline-flex h-10 cursor-pointer items-center gap-[7px] rounded-full border border-line bg-paper px-4 font-label text-copy font-bold text-ink no-underline";
+const EMPTY = "m-0 text-copy text-muted";
+const LINK = "text-mint-ink no-underline";
+const DASH = <span className="text-muted-2">—</span>;
 
 const DATE_TIME = new Intl.DateTimeFormat("es-DO", {
   day: "2-digit",
@@ -57,53 +50,56 @@ function formatDate(iso: string): string {
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 
-function Kpi({ label, value, hint, color }: { label: string; value: number; hint?: string; color: string }) {
+/** La cifra va en la familia de titular: es el dato, no una etiqueta. El tono
+ *  dice de qué audiencia habla, y es el mismo del resto del producto — negocio
+ *  es mango, no coral. */
+function Kpi({
+  label,
+  value,
+  hint,
+  tone = "ink",
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  tone?: "ink" | "mint" | "mango";
+}) {
+  const color =
+    tone === "mint" ? "text-mint-ink" : tone === "mango" ? "text-mango-ink" : "text-ink";
   return (
-    <div style={CARD}>
-      <div style={{ color: MUTED, fontSize: 12, fontWeight: 600, letterSpacing: ".02em" }}>{label}</div>
+    <div className={CARD}>
+      <div className="text-tiny font-semibold tracking-[.02em] text-muted">{label}</div>
       <div
-        style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: 34,
-          lineHeight: 1.1,
-          letterSpacing: "-.03em",
-          color,
-          marginTop: 2,
-        }}
+        className={`mt-0.5 font-display text-[26px] font-extrabold leading-[1.1] tracking-[-.03em] ${color}`}
       >
         {value}
       </div>
-      {hint && <div style={{ color: MUTED, fontSize: 12, marginTop: 2 }}>{hint}</div>}
+      {hint && <div className="mt-0.5 text-tiny text-muted">{hint}</div>}
     </div>
   );
 }
 
 /** Barras horizontales: comparan categorías con etiquetas largas mejor que un pastel. */
 function BarList({ buckets, total, empty }: { buckets: Bucket[]; total: number; empty: string }) {
-  if (buckets.length === 0) {
-    return <p style={{ margin: 0, color: MUTED, fontSize: 13 }}>{empty}</p>;
-  }
+  if (buckets.length === 0) return <p className={EMPTY}>{empty}</p>;
   const max = Math.max(...buckets.map((b) => b.count), 1);
   return (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 9 }}>
+    <ul className="m-0 grid list-none gap-[9px] p-0">
       {buckets.map((b) => (
         <li key={b.key}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 13, color: TEXT }}>
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.label}</span>
-            <span style={{ color: MUTED, flexShrink: 0 }}>
+          <div className="flex justify-between gap-2.5 text-copy text-ink">
+            <span className="truncate">{b.label}</span>
+            <span className="flex-none text-muted">
               {b.count}
               {total > 0 && ` · ${Math.round((b.count / total) * 100)}%`}
             </span>
           </div>
-          <div style={{ height: 7, borderRadius: 999, background: "#F5EFE2", marginTop: 4, overflow: "hidden" }}>
+          {/* Tono pleno, sin degradado: una barra es un gráfico, y un gráfico
+              con degradado dice que el valor cambia a lo largo de la barra. */}
+          <div className="mt-1 h-[7px] overflow-hidden rounded-full bg-cream-2">
             <div
-              style={{
-                width: `${(b.count / max) * 100}%`,
-                height: "100%",
-                borderRadius: 999,
-                background: "linear-gradient(90deg,#25CCB8,#0C6A60)",
-              }}
+              className="h-full rounded-full bg-mint-ink"
+              style={{ width: `${(b.count / max) * 100}%` }}
             />
           </div>
         </li>
@@ -122,83 +118,53 @@ function BarList({ buckets, total, empty }: { buckets: Bucket[]; total: number; 
  */
 function DailyChart({ daily }: { daily: Bucket[] }) {
   const max = Math.max(...daily.map((d) => d.count), 1);
+  const hoy = daily[daily.length - 1]?.key;
   return (
     <>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 92 }}>
+      <div className="flex h-[92px] items-end gap-1">
         {daily.map((d) => (
-          <div
-            key={d.key}
-            style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
-          >
-            <span style={{ fontSize: 11, fontWeight: 700, color: TEAL, minHeight: 14 }}>
-              {d.count || ""}
-            </span>
+          <div key={d.key} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+            <span className="min-h-[14px] text-mini font-bold text-mint-ink">{d.count || ""}</span>
             <div
               title={`${d.label}: ${d.count}`}
-              style={{
-                width: "100%",
-                // Altura mínima visible: una barra de 0 px no se distingue de un
-                // hueco, y hay que poder ver que ese día existió y quedó vacío.
-                height: `${Math.max((d.count / max) * 60, 3)}px`,
-                borderRadius: 4,
-                background: d.count ? "linear-gradient(180deg,#25CCB8,#0C6A60)" : "#EBE6D9",
-              }}
+              className={`w-full rounded-[4px] ${
+                d.count === 0
+                  ? "bg-line"
+                  : d.key === hoy
+                    ? "bg-selected"
+                    : "bg-mint-ink"
+              }`}
+              // Altura mínima visible: una barra de 0 px no se distingue de un
+              // hueco, y hay que poder ver que ese día existió y quedó vacío.
+              style={{ height: `${Math.max((d.count / max) * 60, 3)}px` }}
             />
-            <span style={{ fontSize: 10, color: MUTED }}>{Number(d.key.slice(8))}</span>
+            <span className="text-micro text-muted">{Number(d.key.slice(8))}</span>
           </div>
         ))}
       </div>
-      <p style={{ margin: "8px 0 0", color: MUTED, fontSize: 11.5 }}>
-        {daily[0]?.label} — {daily[daily.length - 1]?.label} (hora de RD)
+      <p className="m-0 mt-2 text-mini text-muted">
+        {daily[0]?.label} — {daily[daily.length - 1]?.label} · zona horaria America/Santo_Domingo
       </p>
     </>
   );
 }
 
-function Pill({ children, tone }: { children: React.ReactNode; tone: "teal" | "orange" }) {
-  const c = tone === "teal" ? { bg: "#C6F3EB", fg: TEAL } : { bg: "#FFE6C8", fg: "#985409" };
+/** La audiencia va como par de tono, la misma pareja que en todo el producto. */
+function Pill({ audience }: { audience: Audience }) {
+  const tone =
+    audience === "negocio" ? "bg-mango-soft text-mango-ink" : "bg-mint-soft text-mint-ink";
   return (
     <span
-      style={{
-        display: "inline-block",
-        background: c.bg,
-        color: c.fg,
-        fontSize: 11,
-        fontWeight: 800,
-        letterSpacing: ".04em",
-        textTransform: "uppercase",
-        borderRadius: 999,
-        padding: "3px 9px",
-        whiteSpace: "nowrap",
-      }}
+      className={`inline-block whitespace-nowrap rounded-full px-[9px] py-[3px] font-label text-mini font-extrabold uppercase tracking-[.04em] ${tone}`}
     >
-      {children}
+      {audience}
     </span>
   );
 }
 
-const TH: React.CSSProperties = {
-  textAlign: "left",
-  padding: "9px 12px",
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
-  fontWeight: 700,
-  fontSize: 11.5,
-  letterSpacing: ".06em",
-  textTransform: "uppercase",
-  color: MUTED,
-  whiteSpace: "nowrap",
-  borderBottom: `1px solid ${BORDER}`,
-};
-
-const TD: React.CSSProperties = {
-  padding: "10px 12px",
-  fontSize: 13,
-  color: TEXT,
-  borderBottom: `1px solid #F3EEE3`,
-  verticalAlign: "top",
-};
-
-const LINK: React.CSSProperties = { color: TEAL, textDecoration: "none" };
+const TH =
+  "border-b border-line px-3 py-[9px] text-left font-label text-mini font-extrabold uppercase tracking-[.06em] text-muted whitespace-nowrap";
+const TD = "border-b border-line px-3 py-2.5 align-top text-copy text-ink";
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
 
@@ -233,81 +199,34 @@ export default function AdminDashboard({
   }, [rows, filter, query]);
 
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        background: "linear-gradient(180deg,#FDF8F0 0%,#F5EFE2 100%)",
-        padding: "28px clamp(14px,4vw,32px) 56px",
-      }}
-    >
-      <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+    <main className="min-h-dvh bg-[linear-gradient(180deg,var(--color-cream)_0%,var(--color-cream-2)_100%)] px-[clamp(14px,4vw,32px)] pb-14 pt-7">
+      <div className="mx-auto max-w-[1180px]">
         {/* ── Cabecera ── */}
-        <header
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-end",
-            gap: 12,
-            marginBottom: 20,
-          }}
-        >
-          <div style={{ flex: "1 1 240px" }}>
-            <h1
-              style={{
-                margin: 0,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 800,
-                fontSize: "clamp(24px,4vw,32px)",
-                letterSpacing: "-.028em",
-                color: INK,
-              }}
-            >
+        <header className="mb-5 flex flex-wrap items-end gap-3">
+          <div className="flex-[1_1_240px]">
+            <Image
+              src="/assets/wordmark.svg"
+              alt="ConoceRD"
+              width={90}
+              height={28}
+              className="mb-2 h-7 w-auto"
+            />
+            <h1 className="m-0 font-display text-2xl font-extrabold tracking-[-.028em] text-ink">
               Lista de espera
             </h1>
-            <p style={{ margin: "3px 0 0", color: MUTED, fontSize: 13.5 }}>
+            <p className="m-0 mt-[3px] text-copy text-muted">
               Registros de /lista ·{" "}
               {storeKind === "neon" ? "base de datos Neon" : "archivo local de desarrollo"}
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <a
-              href="/api/admin/export"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                height: 40,
-                padding: "0 16px",
-                borderRadius: 12,
-                background: "#fff",
-                border: `1px solid ${BORDER}`,
-                color: TEXT,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                fontWeight: 700,
-                fontSize: 13.5,
-                textDecoration: "none",
-              }}
-            >
-              <Icon name="download" style={{ fontSize: 18 }} />
-              Exportar CSV
+          <div className="flex flex-wrap gap-2">
+            <a href="/api/admin/export" className={ACTION}>
+              <Icon name="download" className="text-lg" />
+              CSV
             </a>
             <form action={logout}>
-              <button
-                type="submit"
-                style={{
-                  height: 40,
-                  padding: "0 16px",
-                  borderRadius: 12,
-                  background: "#fff",
-                  border: `1px solid ${BORDER}`,
-                  color: MUTED,
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  cursor: "pointer",
-                }}
-              >
+              <button type="submit" className={ACTION}>
                 Salir
               </button>
             </form>
@@ -315,42 +234,27 @@ export default function AdminDashboard({
         </header>
 
         {/* ── Totales ── */}
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))",
-            gap: 12,
-            marginBottom: 14,
-          }}
-        >
-          <Kpi label="Total registrados" value={stats.total} color={INK} />
-          <Kpi label="Viajeros" value={stats.byAudience.viajero} color={TEAL} />
-          <Kpi label="Negocios" value={stats.byAudience.negocio} color={ORANGE} />
+        <section className="mb-3.5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
+          <Kpi label="Total registrados" value={stats.total} />
+          <Kpi label="Viajeros" value={stats.byAudience.viajero} tone="mint" />
+          <Kpi label="Negocios" value={stats.byAudience.negocio} tone="mango" />
           <Kpi
             label="Últimas 24 h"
             value={stats.last24h}
             hint={`${stats.last7d} en los últimos 7 días`}
-            color={INK}
           />
         </section>
 
         {/* ── Ritmo ── */}
-        <section style={{ ...CARD, marginBottom: 14 }}>
-          <h2 style={HEADING}>Altas por día (últimos 14 días)</h2>
+        <section className={`${CARD} mb-3.5`}>
+          <h2 className={HEADING}>Altas por día (últimos 14 días)</h2>
           <DailyChart daily={stats.daily} />
         </section>
 
         {/* ── Composición ── */}
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-            gap: 12,
-            marginBottom: 14,
-          }}
-        >
-          <div style={CARD}>
-            <h2 style={HEADING}>Negocios por tipo</h2>
+        <section className="mb-3.5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+          <div className={CARD}>
+            <h2 className={HEADING}>Negocios por tipo</h2>
             <BarList
               buckets={stats.byBusinessType}
               total={stats.byAudience.negocio}
@@ -358,17 +262,15 @@ export default function AdminDashboard({
             />
           </div>
 
-          <div style={CARD}>
-            <h2 style={HEADING}>De dónde vinieron</h2>
+          <div className={CARD}>
+            <h2 className={HEADING}>De dónde vinieron</h2>
             <BarList buckets={stats.byRef} total={stats.total} empty="Sin registros todavía." />
           </div>
 
-          <div style={CARD}>
-            <h2 style={HEADING}>Contacto de los negocios</h2>
+          <div className={CARD}>
+            <h2 className={HEADING}>Contacto de los negocios</h2>
             {stats.byAudience.negocio === 0 ? (
-              <p style={{ margin: 0, color: MUTED, fontSize: 13 }}>
-                Sin negocios registrados todavía.
-              </p>
+              <p className={EMPTY}>Sin negocios registrados todavía.</p>
             ) : (
               <BarList
                 buckets={[
@@ -383,18 +285,9 @@ export default function AdminDashboard({
         </section>
 
         {/* ── Filas ── */}
-        <section style={{ ...CARD, padding: 0, overflow: "hidden" }}>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              alignItems: "center",
-              padding: "14px 16px",
-              borderBottom: `1px solid ${BORDER}`,
-            }}
-          >
-            <div style={{ display: "flex", gap: 4, padding: 4, background: "#F5EFE2", borderRadius: 999 }}>
+        <section className="overflow-hidden rounded-surface border border-line bg-paper shadow-e1">
+          <div className="flex flex-wrap items-center gap-2.5 border-b border-line px-4 py-3.5">
+            <div className="flex gap-1 rounded-full bg-cream-2 p-1">
               {FILTERS.map((f) => {
                 const active = f.key === filter;
                 return (
@@ -403,18 +296,9 @@ export default function AdminDashboard({
                     type="button"
                     onClick={() => setFilter(f.key)}
                     aria-pressed={active}
-                    style={{
-                      height: 32,
-                      padding: "0 14px",
-                      borderRadius: 999,
-                      border: "none",
-                      cursor: "pointer",
-                      background: active ? TEXT : "transparent",
-                      color: active ? "#fff" : MUTED,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      fontWeight: 700,
-                      fontSize: 13,
-                    }}
+                    className={`h-8 cursor-pointer rounded-full border-none px-3.5 font-label text-copy font-bold ${
+                      active ? "bg-selected text-on-selected" : "bg-transparent text-muted"
+                    }`}
                   >
                     {f.label}
                   </button>
@@ -422,105 +306,95 @@ export default function AdminDashboard({
               })}
             </div>
 
+            {/* Borde `muted-2`: el gris #98A3A9 de antes daba 2.58:1 contra el
+                papel y el buscador no tenía canto. */}
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por correo, negocio, Instagram…"
               aria-label="Buscar registros"
-              style={{
-                flex: "1 1 200px",
-                minWidth: 0,
-                height: 40,
-                padding: "0 14px",
-                borderRadius: 12,
-                border: `1px solid ${BORDER}`,
-                background: "#fff",
-                color: TEXT,
-                fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
-                fontSize: 14,
-                outline: "none",
-              }}
+              className="h-10 min-w-0 flex-[1_1_200px] rounded-full border border-muted-2 bg-paper px-3.5 font-sans text-[14px] text-ink placeholder:text-muted"
             />
 
-            <span style={{ color: MUTED, fontSize: 13, whiteSpace: "nowrap" }}>
+            <span className="whitespace-nowrap text-copy text-muted">
               {visible.length} de {rows.length}
             </span>
           </div>
 
           {/* La tabla no cabe en un móvil: scrollea ella, no la página. */}
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] border-collapse">
               <thead>
                 <tr>
-                  <th style={TH}>Contacto</th>
-                  <th style={TH}>Tipo</th>
-                  <th style={TH}>Negocio</th>
-                  <th style={TH}>Instagram</th>
-                  <th style={TH}>WhatsApp</th>
-                  <th style={TH}>Origen</th>
-                  <th style={TH}>Registro</th>
+                  <th className={TH}>Contacto</th>
+                  <th className={TH}>Tipo</th>
+                  <th className={TH}>Negocio</th>
+                  <th className={TH}>Instagram</th>
+                  <th className={TH}>WhatsApp</th>
+                  <th className={TH}>Origen</th>
+                  <th className={TH}>Registro</th>
                 </tr>
               </thead>
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.email}>
-                    <td style={TD}>
-                      <a href={`mailto:${r.email}`} style={LINK}>
+                    <td className={TD}>
+                      <a href={`mailto:${r.email}`} className={LINK}>
                         {r.email}
                       </a>
-                      {r.name && <div style={{ color: MUTED, fontSize: 12 }}>{r.name}</div>}
+                      {r.name && <div className="text-tiny text-muted">{r.name}</div>}
                     </td>
-                    <td style={TD}>
-                      <Pill tone={r.audience === "negocio" ? "orange" : "teal"}>{r.audience}</Pill>
+                    <td className={TD}>
+                      <Pill audience={r.audience} />
                     </td>
-                    <td style={TD}>
-                      {r.businessName ?? <span style={{ color: "#B9C1C4" }}>—</span>}
+                    <td className={TD}>
+                      {r.businessName ?? DASH}
                       {r.businessType && (
-                        <div style={{ color: MUTED, fontSize: 12 }}>
+                        <div className="text-tiny text-muted">
                           {BUSINESS_TYPE_LABELS[r.businessType as BusinessType] ?? r.businessType}
                         </div>
                       )}
                     </td>
-                    <td style={TD}>
+                    <td className={TD}>
                       {r.instagram ? (
                         <a
                           href={`https://instagram.com/${r.instagram}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={LINK}
+                          className={LINK}
                         >
                           @{r.instagram}
                         </a>
                       ) : (
-                        <span style={{ color: "#B9C1C4" }}>—</span>
+                        DASH
                       )}
                     </td>
-                    <td style={TD}>
+                    <td className={TD}>
                       {r.whatsapp ? (
                         <a
                           href={`https://wa.me/${r.whatsapp.replace(/[^\d]/g, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={LINK}
+                          className={LINK}
                         >
                           {r.whatsapp}
                         </a>
                       ) : (
-                        <span style={{ color: "#B9C1C4" }}>—</span>
+                        DASH
                       )}
                     </td>
-                    <td style={TD}>
-                      <span style={{ color: MUTED }}>{r.ref ?? "directo"}</span>
+                    <td className={TD}>
+                      <span className="text-muted">{r.ref ?? "directo"}</span>
                     </td>
-                    <td style={{ ...TD, whiteSpace: "nowrap", color: MUTED }}>{formatDate(r.createdAt)}</td>
+                    <td className={`${TD} whitespace-nowrap text-muted`}>{formatDate(r.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {visible.length === 0 && (
-              <p style={{ margin: 0, padding: "28px 16px", textAlign: "center", color: MUTED, fontSize: 14 }}>
+              <p className="m-0 px-4 py-7 text-center text-[14px] text-muted">
                 {rows.length === 0
                   ? "Todavía no hay registros."
                   : "Ningún registro coincide con la búsqueda."}
