@@ -219,17 +219,20 @@ const GLYPH_MAIL = "M3 6.8h18v10.4H3zM3 7.2l9 6.2 9-6.2";
 
 // ─── Pin de parada: el pin ORIGINAL de la app + numerito ink ─────────────────
 
-function StopBadge({ n, size = 18 }: { n: number; size?: number }) {
+// El número vive FUERA del relleno del pin: metido dentro tapaba el glifo de
+// categoría, que es lo que dice qué es la parada. Badge de 20 en tinta con un
+// reborde crema de 1.5, que es lo que lo separa del pin que tiene debajo.
+function StopBadge({ n, size = 20 }: { n: number; size?: number }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute grid place-items-center rounded-full border border-cream/95 bg-ink font-label font-extrabold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
+      className="absolute grid place-items-center rounded-full border-[1.5px] border-cream bg-ink font-label font-extrabold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
       style={{
         width: size,
         height: size,
         right: -size * 0.28,
         top: -size * 0.28,
-        fontSize: Math.round(size * 0.58),
+        fontSize: 10.5,
       }}
     >
       {n}
@@ -238,7 +241,7 @@ function StopBadge({ n, size = 18 }: { n: number; size?: number }) {
 }
 
 /** En ruta el destino conserva su pin de categoría; el número lo diferencia. */
-function RoutePin({ d, n, size = 30 }: { d: Destination; n: number; size?: number }) {
+function RoutePin({ d, n, size = 34 }: { d: Destination; n: number; size?: number }) {
   return (
     <span className="relative block">
       <CategoryPin category={d.category} size={size} />

@@ -1,13 +1,13 @@
 "use client";
 
 import SubscribeForm from "@/components/SubscribeForm";
-import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
+import { AppleGlyph, GooglePlayGlyph, StoreBadge } from "@/components/StoreGlyphs";
 import { useScene } from "@/context/SceneContext";
 import { requestSubscribe, useSubscribeIntent } from "@/hooks/useSubscribeIntent";
 
 const STORES: { glyph: React.ReactNode; store: string }[] = [
-  { glyph: <AppleGlyph size={20} />, store: "App Store" },
-  { glyph: <GooglePlayGlyph size={18} />, store: "Google Play" },
+  { glyph: <AppleGlyph size={16} />, store: "App Store" },
+  { glyph: <GooglePlayGlyph size={16} />, store: "Google Play" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -66,23 +66,12 @@ export default function CTAOverlay() {
             con el "próximamente" compartido encima — con la leyenda por badge
             miden ~150px cada uno y no caben lado a lado ni en 360px. */}
         <div className="mb-3 desk:mb-3.5">
-          <div className="mb-1.5 text-micro font-bold uppercase tracking-[.08em] text-white/55 desk:hidden">
+          <div className="mb-1.5 font-label text-micro font-extrabold uppercase tracking-[.08em] text-white/70 desk:hidden">
             Próximamente en
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 desk:gap-2.5">
             {STORES.map((btn) => (
-              <div
-                key={btn.store}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.14] bg-white/[0.07] px-2.5 py-1.5 text-white/62 desk:gap-2 desk:px-3.5 desk:py-2"
-              >
-                {btn.glyph}
-                <span className="text-left leading-[1.2]">
-                  <span className="hidden text-micro font-bold uppercase tracking-[.08em] text-white/72 desk:block">
-                    Próximamente en
-                  </span>
-                  <span className="text-copy font-bold">{btn.store}</span>
-                </span>
-              </div>
+              <StoreBadge key={btn.store} store={btn.store} glyph={btn.glyph} />
             ))}
           </div>
         </div>

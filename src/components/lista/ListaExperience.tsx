@@ -35,22 +35,26 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Beneficio de la lista de espera, dibujado como cupón de pasaporte (audit §3,
- * movimiento 9): borde troquelado, número de sello en mono y, al registrarse,
- * el sello estampado en diagonal. Antes era una card blanca con borde gris e
- * icono en cuadradito pastel — el momento más genérico del sitio.
+ * Beneficio de la lista de espera, dibujado como cupón de pasaporte: borde
+ * troquelado, baldosa de tono y, al registrarse, el sello estampado en diagonal
+ * y escalonado por índice.
+ *
+ * El fondo del cupón conseguido es `#EAFBF7` literal y no `mint-soft`: es la
+ * superficie contra la que se midió el sello, que va a .90 de opacidad y ahí da
+ * 4.92:1. Sobre `mint-soft` la misma tinta cae a 4.41:1 y el sello reprueba
+ * siendo texto de 10.
  */
 function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; index: number }) {
   return (
     <li
-      className={`relative flex items-start gap-[13px] overflow-hidden rounded-block border border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
-        unlocked ? "border-mint bg-[#EAFBF7]" : "border-muted-2/35 bg-white"
+      className={`relative flex items-start gap-[13px] overflow-hidden rounded-block border-[1.5px] border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
+        unlocked ? "border-mint-ink bg-[#EAFBF7]" : "border-line-strong bg-paper"
       }`}
     >
       <span
         aria-hidden="true"
         className={`relative flex size-10 shrink-0 items-center justify-center rounded-chip transition-colors duration-[350ms] ease-in-out ${
-          unlocked ? "bg-mint" : "bg-mango-soft"
+          unlocked ? "bg-mint-ink" : "bg-mango-soft"
         }`}
       >
         <Icon
@@ -59,15 +63,19 @@ function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; in
         />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-body font-bold text-ink">{item.title}</div>
-        <p className="mt-0.5 text-copy leading-[1.5] text-muted">{item.desc}</p>
+        <div className="font-label text-body font-bold text-ink">{item.title}</div>
+        {/* Conseguido, el cuerpo sube a ink-3: en `muted` sobre el tinte mint
+            daba 4.14:1 y reprobaba. */}
+        <p className={`mt-0.5 text-copy leading-[1.5] ${unlocked ? "text-ink-3" : "text-muted"}`}>
+          {item.desc}
+        </p>
       </div>
 
       {unlocked && (
         <span
           // Escalonado: los tres sellos no deben caer a la vez, y el retardo
           // depende del índice → va por style.
-          className="crd-sello absolute -right-3 bottom-2 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both]"
+          className="crd-sello absolute -right-3 bottom-2 animate-[crdPerkTick_.45s_cubic-bezier(.2,.9,.3,1.3)_both] [--crd-sello-rot:-6deg]"
           style={{ animationDelay: `${index * 0.12 + 0.15}s` }}
         >
           Sellado
@@ -82,7 +90,7 @@ function FeatureRow({ item }: { item: Item }) {
     <li className="flex items-start gap-3">
       <Icon name={item.icon} className="mt-px shrink-0 text-feature text-mint-ink" />
       <div>
-        <div className="text-body font-bold text-ink">{item.title}</div>
+        <div className="font-label text-body font-bold text-ink">{item.title}</div>
         <p className="mt-px text-copy leading-[1.5] text-muted">{item.desc}</p>
       </div>
     </li>

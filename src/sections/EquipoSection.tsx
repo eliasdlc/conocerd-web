@@ -287,23 +287,26 @@ function TeamPolaroid({
 
 // ─── Roadmap "en vivo" ────────────────────────────────────────────────────────
 
+// El anillo de 4 en `paper` no es decoración: es lo que tapa el riel por
+// detrás del punto. El resplandor lo lleva SÓLO el paso actual, porque es el
+// único que lleva acento: un paso hecho con resplandor diría que sigue vivo.
 function StepDot({ state }: { state: "done" | "current" | "next" }) {
   if (state === "done") {
     return (
-      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-mint-ink text-white ring-4 ring-white">
+      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-mint-ink text-white ring-4 ring-paper">
         <Icon name="check" className="text-[13px]" />
       </span>
     );
   }
   if (state === "current") {
     return (
-      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-coral text-white ring-4 ring-white">
+      <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full bg-coral text-white shadow-e2 ring-4 ring-paper">
         <Icon name="rocket_launch" className="text-[13px]" />
       </span>
     );
   }
   return (
-    <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full border-2 border-dashed border-muted-2/70 bg-white ring-4 ring-white" />
+    <span className="relative z-[1] flex size-7 flex-none items-center justify-center rounded-full border-2 border-dashed border-line-strong bg-paper ring-4 ring-paper" />
   );
 }
 
@@ -326,10 +329,11 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         En esto estamos <em className="crd-accent">ahora mismo</em>
       </h3>
 
-      {/* Barra de avance: se llena al entrar la escena (trigger-driven) */}
-      <div className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-ink/10" aria-hidden="true">
+      {/* Riel de avance: se llena al entrar la escena, con 0.9s de retardo.
+          Va en `selected` y no en el acento: el avance es un estado. */}
+      <div className="mt-2.5 h-[2px] overflow-hidden rounded-full bg-line-strong" aria-hidden="true">
         <div
-          className="h-full rounded-full bg-coral transition-[width] duration-1000 ease-out"
+          className="h-full rounded-full bg-selected transition-[width] duration-1000 ease-out"
           style={{
             width: visible ? `${((CURRENT_STEP + 0.5) / ROADMAP.length) * 100}%` : "0%",
             transitionDelay: "0.9s",
@@ -341,7 +345,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
         {/* raíl punteado que une los pasos */}
         <span
           aria-hidden="true"
-          className="absolute bottom-4 left-[13.5px] top-4 w-0 border-l-2 border-dashed border-coral/40"
+          className="absolute bottom-4 left-[13.5px] top-4 w-0 border-l-2 border-dashed border-line-strong"
         />
         {ROADMAP.map((s, i) => {
           const state = i < done ? "done" : i === done ? "current" : "next";
@@ -350,7 +354,9 @@ function RoadmapCard({ visible }: { visible: boolean }) {
               <StepDot state={state} />
               <div className="min-w-0 pt-0.5">
                 <span
-                  className={`block text-tiny font-bold leading-[1.25] ${state === "next" ? "text-muted" : "text-ink"}`}
+                  className={`block font-label text-mini leading-[1.25] ${
+                    state === "current" ? "font-bold text-ink" : "font-semibold text-muted"
+                  }`}
                 >
                   {s.name}
                 </span>

@@ -177,7 +177,14 @@ export default function DestinosOverlay() {
               onClick={isFront ? cycle : undefined}
               // El desparrame de la pila es dato por carta (--pile-left permite
               // el corrimiento móvil sin pasar por JS).
-              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
+              //
+              // El reset del botón NO lleva `border-0` ni `bg-transparent`: las
+              // dos escriben la misma propiedad que el papel de la polaroid y,
+              // como el orden lo decide Tailwind al emitir y no el className,
+              // ganaban ellas. La carta llevaba el papel sin pintar y el pie se
+              // leía sobre el mapa. `p-0` sí puede quedarse: `px-3`/`pt-3` son
+              // más específicas y le ganan.
+              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
                 isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
               }`}
               style={{
@@ -229,7 +236,7 @@ export default function DestinosOverlay() {
                     // largos ("Pueblo & valle") lo empujaban fuera de la foto.
                     <span
                       aria-hidden="true"
-                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/92 text-ink"
+                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
                     >
                       <Icon name="arrow_forward" className="text-sm" />
                     </span>
@@ -247,7 +254,7 @@ export default function DestinosOverlay() {
                 }`}
               >
                 <PolaroidCaption name={pol.name} meta={pol.meta} />
-                <p className="crd-destinos-desc m-0 mt-1 text-mini leading-[1.4] text-muted">{pol.desc}</p>
+                <p className="crd-destinos-desc m-0 mt-1 text-tiny leading-[1.4] text-ink-3">{pol.desc}</p>
               </div>
             </motion.button>
           );
