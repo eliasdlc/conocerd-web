@@ -1,8 +1,8 @@
 // Sello de expedición de cada escena.
 //
 // Marca de bitácora: número de capítulo y nombre en español. Es el rol
-// overline del sistema, así que va en la familia de etiqueta —nunca en la de
-// titular— y en mayúsculas con tracking amplio. La coordenada que acompañaba
+// overline del sistema, así que va en la familia de etiqueta (nunca en la de
+// titular) y en mayúsculas con tracking amplio. La coordenada que acompañaba
 // al sello se retiró: repetida en cada escena no aportaba información y leía
 // como adorno.
 //

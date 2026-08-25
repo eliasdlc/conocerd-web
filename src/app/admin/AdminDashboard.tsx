@@ -33,7 +33,7 @@ const ACTION =
   "inline-flex h-10 cursor-pointer items-center gap-[7px] rounded-full border border-line bg-paper px-4 font-label text-copy font-bold text-ink no-underline";
 const EMPTY = "m-0 text-copy text-muted";
 const LINK = "text-mint-ink no-underline";
-const DASH = <span className="text-muted-2">—</span>;
+const DASH = <span className="text-muted-2">sin dato</span>;
 
 const DATE_TIME = new Intl.DateTimeFormat("es-DO", {
   day: "2-digit",
@@ -45,13 +45,13 @@ const DATE_TIME = new Intl.DateTimeFormat("es-DO", {
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : DATE_TIME.format(d);
+  return Number.isNaN(d.getTime()) ? "sin fecha" : DATE_TIME.format(d);
 }
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 
 /** La cifra va en la familia de titular: es el dato, no una etiqueta. El tono
- *  dice de qué audiencia habla, y es el mismo del resto del producto — negocio
+ *  dice de qué audiencia habla, y es el mismo del resto del producto: negocio
  *  es mango, no coral. */
 function Kpi({
   label,
@@ -143,7 +143,7 @@ function DailyChart({ daily }: { daily: Bucket[] }) {
         ))}
       </div>
       <p className="m-0 mt-2 text-mini text-muted">
-        {daily[0]?.label} — {daily[daily.length - 1]?.label} · zona horaria America/Santo_Domingo
+        {daily[0]?.label} a {daily[daily.length - 1]?.label} · zona horaria America/Santo_Domingo
       </p>
     </>
   );

@@ -9,9 +9,9 @@ import { SITE_URL } from "@/lib/site";
 // Instrument Sans + JetBrains Mono) mientras la app hablaba el suyo; el
 // sistema de diseño las unifica en las tres familias de la app:
 //
-//   display  Bricolage Grotesque — titulares y cifras de carretera
-//   label    Plus Jakarta Sans   — botones, chips, etiquetas y overlines
-//   body     Inter               — todo el texto corrido
+//   display  Bricolage Grotesque : titulares y cifras de carretera
+//   label    Plus Jakarta Sans   : botones, chips, etiquetas y overlines
+//   body     Inter               : todo el texto corrido
 //
 // El mono desaparece del sistema: las cifras que antes lo llevaban (km, horas,
 // sellos) van en Bricolage, y los metadatos en Inter. El acento editorial ya no

@@ -196,7 +196,7 @@ export default function HeroOverlay() {
           {/* El titular y el subtítulo eran un solo párrafo, y el hero no tenía
               jerarquía: la primera pantalla del sitio no llevaba titular.
               El h1 sigue arrancando con la marca para lectores de pantalla y
-              para SEO —el logo es una imagen— pero lo que se ve es el titular.
+              para SEO (el logo es una imagen) pero lo que se ve es el titular.
 
               `opsz 96` es la regla de portada: Bricolage tiene eje óptico y a
               44 pide el corte de titular grande, no el de texto. Una sola
@@ -206,7 +206,7 @@ export default function HeroOverlay() {
             className="m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
             style={{ fontVariationSettings: '"opsz" 96' }}
           >
-            <span className="sr-only">ConoceRD — Descubre lo nuestro. </span>
+            <span className="sr-only">ConoceRD, descubre lo nuestro. </span>
             La app que te lleva a la República Dominicana{" "}
             <em className="crd-accent">auténtica</em>
           </h1>

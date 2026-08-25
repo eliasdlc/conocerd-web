@@ -137,10 +137,10 @@ export default function ListaExperience() {
       {/* ── Columna de marca y conversión ── */}
       <aside className="crd-lista-aside">
         {/* La cabecera es el wordmark y el conmutador, nada más: aquí la marca
-            va en compacto —el bloque entero es del hero de la home— y el
+            va en compacto (el bloque entero es del hero de la home) y el
             conmutador gobierna la página, así que vive fuera del formulario. */}
         <div className="crd-lista-in mb-[18px] flex flex-wrap items-center gap-4">
-          <Link href="/" aria-label="ConoceRD — ir al inicio" className="inline-block">
+          <Link href="/" aria-label="ConoceRD, ir al inicio" className="inline-block">
             <Image
               src="/assets/wordmark.svg"
               alt="ConoceRD"

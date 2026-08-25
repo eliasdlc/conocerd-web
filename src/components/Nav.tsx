@@ -79,10 +79,16 @@ export default function Nav() {
         {LINKS.map((l) => (
           <a
             key={l.target}
-            // .crd-navlink: subrayado animado con ::after y oculto en móvil.
+            // .crd-navlink: píldora invisible de 40, activo por peso y tinta,
+            // y oculto bajo 900px.
             className="crd-navlink whitespace-nowrap"
+            // "location" y no "page": los cinco enlaces no llevan a otras
+            // páginas, mueven la cámara dentro de ésta. "page" le diría al
+            // lector de pantalla que cambió de documento.
             aria-current={
-              chapterOfScene(l.target.replace("trigger-", "")) === capituloActivo ? "page" : undefined
+              chapterOfScene(l.target.replace("trigger-", "")) === capituloActivo
+                ? "location"
+                : undefined
             }
             href={`#${l.target}`}
             data-label={l.label}

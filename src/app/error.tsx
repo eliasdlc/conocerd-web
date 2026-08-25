@@ -3,8 +3,10 @@
 // Red de seguridad de ruta: cualquier error de render que antes dejaba la
 // página en blanco cae aquí, con marca y en español.
 //
-// Sin iconos a propósito, y nada más se carga: si lo que falló fue el bundle,
-// una página de error que importa medio producto falla con él.
+// Sin el set de iconos y sin una sola pieza del producto, a propósito: si lo
+// que falló fue el bundle, una página de error que importa medio sitio falla
+// con él. Lo único que entra es el wordmark, que es un SVG estático servido
+// por next/image, ya presente en el bundle de cualquier ruta.
 
 import { useEffect } from "react";
 import Image from "next/image";

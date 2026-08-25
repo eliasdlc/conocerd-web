@@ -1,6 +1,6 @@
 // Superficies flotantes sobre el mapa. El mismo concepto estaba escrito de tres
-// formas distintas entre escenas consecutivas —20px cream/92, 22px white/96 y
-// 16px cream/88— con tres radios y tres fondos, y ninguna de las tres era la
+// formas distintas entre escenas consecutivas (20px cream/92, 22px white/96 y
+// 16px cream/88) con tres radios y tres fondos, y ninguna de las tres era la
 // receta del sistema.
 //
 // Son dos variantes de verdad, no una:
