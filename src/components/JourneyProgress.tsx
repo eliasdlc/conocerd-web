@@ -8,6 +8,9 @@
 //  debajo — la primera pantalla se lee como una página completa. Este riel es
 //  esa referencia: cuántos capítulos hay, en cuál estás y cuánto queda.
 //
+//  El avance es un estado, no una acción: va en el mismo relleno que las
+//  barras de progreso de la app (`selected`), nunca en el acento.
+//
 //  Todo su movimiento sale del progreso de scroll (MotionValue), nunca de un
 //  reloj en reposo. En desktop vive en el borde derecho con etiquetas; en móvil
 //  se reduce a una barra de 3px en el borde superior, que es la convención que
@@ -103,11 +106,11 @@ export default function JourneyProgress() {
           {/* La pista y su relleno: el relleno es la única pieza animada y lo
               mueve el scroll directamente. Centrada en los 36px de la columna
               para que todos los puntos caigan sobre la misma línea. */}
-          <span aria-hidden="true" className="absolute bottom-0 left-[17px] top-0 w-[2px] rounded-full bg-ink/12" />
+          <span aria-hidden="true" className="absolute bottom-0 left-[17px] top-0 w-[2px] rounded-full bg-line-strong" />
           <motion.span
             aria-hidden="true"
             style={{ scaleY: avance }}
-            className="absolute bottom-0 left-[17px] top-0 w-[2px] origin-top rounded-full bg-mango"
+            className="absolute bottom-0 left-[17px] top-0 w-[2px] origin-top rounded-full bg-selected"
           />
 
           {CAPITULOS.map((c, i) => (
@@ -121,25 +124,23 @@ export default function JourneyProgress() {
                 {/* Absoluta: la etiqueta no debe ensanchar la columna ni robar
                     el hover del contenido que tiene debajo. */}
                 <span
-                  className={`pointer-events-none absolute right-[calc(100%-2px)] whitespace-nowrap rounded-full bg-cream/95 px-2 py-[3px] font-label text-micro font-extrabold uppercase tracking-[.1em] shadow-e1 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 ${
-                    activo === i ? "text-ink-2" : "text-muted"
+                  className={`pointer-events-none absolute right-[calc(100%-2px)] whitespace-nowrap rounded-full bg-cream/95 px-2 py-[3px] font-label text-mini transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 ${
+                    activo === i ? "font-bold text-ink" : "font-semibold text-muted"
                   } ${activo === i && moviendo ? "opacity-100" : "opacity-0"}`}
                 >
                   {c.nombre}
                 </span>
+                {/* Un punto de 8 por capítulo, todos iguales, con un anillo de
+                    crema que separa el punto de la pista. Quien dice dónde
+                    estás es el relleno: cada capítulo ocupa exactamente una
+                    fila, así que el borde del relleno cruza su punto a mitad de
+                    banda. Un punto activo más gordo contaría lo mismo dos
+                    veces y le quitaría el trabajo al riel. */}
                 <span
-                  className={`grid shrink-0 place-items-center rounded-full border-2 transition-all duration-200 ${
-                    activo === i
-                      ? "size-4 border-mango bg-cream"
-                      : i < activo
-                        ? "size-2.5 border-transparent bg-mango"
-                        : "size-2.5 border-transparent bg-ink/20 group-hover:bg-ink/30"
+                  className={`size-2 shrink-0 rounded-full ring-[3px] ring-cream transition-colors duration-200 ${
+                    i <= activo ? "bg-selected" : "bg-line-strong group-hover:bg-muted-2"
                   }`}
-                >
-                  {/* Punto interior del capítulo activo: el aro solo no se lee
-                      como "estás aquí" a 10px de distancia. */}
-                  {activo === i && <span className="block size-1.5 rounded-full bg-mango" />}
-                </span>
+                />
               </button>
             </li>
           ))}
@@ -149,9 +150,9 @@ export default function JourneyProgress() {
       {/* ── Móvil: barra fina en el borde superior ── */}
       <div
         aria-hidden="true"
-        className="fixed inset-x-0 top-0 z-[90] h-[3px] bg-ink/10 desk:hidden"
+        className="fixed inset-x-0 top-0 z-[90] h-[3px] bg-line-strong desk:hidden"
       >
-        <motion.span style={{ scaleX: avance }} className="block h-full origin-left bg-mango" />
+        <motion.span style={{ scaleX: avance }} className="block h-full origin-left bg-selected" />
       </div>
     </>
   );

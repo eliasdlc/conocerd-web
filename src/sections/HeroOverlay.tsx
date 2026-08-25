@@ -113,7 +113,9 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
     <button
       type="button"
       onClick={() => scrollToSection("trigger-polaroid-0")}
-      className={`crd-scroll-cue group flex cursor-pointer flex-col items-center gap-1 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
+      // min-h-12: el área táctil es 48 aunque la overline y el chevron sumen
+      // menos. Un cue que no se puede tocar en el pulgar es un adorno.
+      className={`crd-scroll-cue group flex min-h-12 cursor-pointer flex-col items-center justify-center gap-1 px-3 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
         compacto ? "gap-0.5" : ""
       }`}
     >
@@ -126,7 +128,7 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         key={empujon}
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-[22px]"}`}
+        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-5"}`}
         // El contador, no un booleano: deja auditar desde el DOM que el empujón
         // se detiene (máximo 3, y menos si el visitante scrollea antes).
         data-empujon={empujon > 0 ? empujon : undefined}
@@ -134,8 +136,8 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         <polyline
           points="5,8 12,16 19,8"
           fill="none"
-          stroke="#E0552F"
-          strokeWidth="3"
+          stroke="var(--color-coral)"
+          strokeWidth="2.6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />

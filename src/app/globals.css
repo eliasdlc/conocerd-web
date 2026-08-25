@@ -417,7 +417,7 @@ body::after {
      botón como único contenido, el padding izquierdo iguala al derecho (8px)
      para que la píldora quede simétrica alrededor del botón. */
   .crd-navlink { display: none !important; }
-  .crd-nav-pill { padding-left: 8px !important; }
+  .crd-nav-pill { padding-left: 6px !important; }
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
@@ -557,27 +557,64 @@ body::after {
    7.51:1 contra los 4.56:1 del coral. */
 .crd-accent-on-ink { color: var(--color-mango); }
 
+/* ── Píldora del nav ──────────────────────────────────────────────────────────
+   Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
+   crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
+   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema —la
+   misma receta que todo lo que flota sobre el mapa— y ahí sí se apoya con e1.
+
+   El blur va en CSS y no en utilidades con variante `data-`: las dos
+   escribirían la misma custom property de Tailwind y el orden de capas
+   decidiría cuál gana, que es justo lo que no se quiere depurar. */
+.crd-nav-pill {
+  background: color-mix(in srgb, var(--color-cream) 60%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
+}
+.crd-nav-pill[data-solid="true"] {
+  background: var(--crd-glass);
+  backdrop-filter: var(--crd-glass-blur);
+  box-shadow: var(--shadow-e1);
+}
+
+/* El enlace es UI, no titular: familia de etiqueta y su propia píldora
+   invisible de 40, para que el área táctil exista aunque no se vea. El
+   subrayado animado y el hover coral mueren: el acento de la web es para
+   acciones, y marcar el enlace activo con él lo convertía en decoración.
+
+   El activo sube de 600 a 700, y eso ensancha la palabra. En una píldora que
+   además scrollea en horizontal, ese ensanche mueve los cinco enlaces cada vez
+   que cambias de capítulo. El grid de una sola celda con un fantasma en 700
+   reserva siempre el ancho del peso mayor, así que la píldora no se mueve
+   nunca: es la misma caja en los tres estados. */
 .crd-navlink {
-  position: relative;
+  display: inline-grid;
+  place-items: center;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
   text-decoration: none;
   color: var(--color-ink-3);
-  /* El nav es UI, no titular: la familia de etiqueta, nunca la de display. */
   font-family: var(--font-label);
   font-weight: 600;
-  font-size: var(--text-body);
-  padding: 4px 2px;
+  font-size: 13.5px;
   transition: color .2s;
 }
-.crd-navlink:hover { color: var(--color-ink); }
+.crd-navlink > span,
 .crd-navlink::after {
-  content: '';
-  position: absolute;
-  left: 0; bottom: -3px;
-  height: 2px; width: 0;
-  background: var(--color-coral);
-  transition: width .25s ease;
+  grid-area: 1 / 1;
 }
-.crd-navlink:hover::after { width: 100%; }
+.crd-navlink::after {
+  content: attr(data-label);
+  font-weight: 700;
+  visibility: hidden;
+  pointer-events: none;
+}
+.crd-navlink:hover,
+.crd-navlink[aria-current="page"] {
+  color: var(--color-ink);
+  font-weight: 700;
+}
 
 /* Nunca `scale`: un CTA que crece bajo el cursor es la mitad del look de
    plantilla. El botón se despega del papel al pasar por encima y se hunde al
