@@ -136,6 +136,12 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         dragPan,
         dragRotate,
         touchZoomRotate,
+        // El crossfade entre niveles de tile mantiene el mapa en estado
+        // "fundiendo": conserva y mezcla dos juegos de tiles, y sigue
+        // repintando aunque la cámara esté quieta. En un journey que vuela de
+        // z1.15 a z11.5 eso es permanente, y el fundido no se aprecia porque
+        // la cámara ya se está moviendo.
+        fadeDuration: 0,
       });
     } catch (err) {
       // WebGL no disponible: maplibre lanza durante la construcción.
