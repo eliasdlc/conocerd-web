@@ -113,11 +113,11 @@ export default function AccountDeletionFlow() {
 
   if (!firebaseConfig.ok || !configuredAuth) {
     return (
-      <section className="rounded-panel border border-mango/30 bg-white/75 p-6 shadow-card" role="status">
-        <span className="grid size-11 place-items-center rounded-tile bg-mango-soft text-mango-ink">
+      <section className="rounded-surface border border-mango/30 bg-paper p-6 shadow-e1" role="status">
+        <span className="grid size-11 place-items-center rounded-chip bg-mango-soft text-mango-ink">
           <Icon name="lock" className="text-feature" />
         </span>
-        <p className="mb-1 mt-5 font-mono text-micro font-bold uppercase tracking-[.14em] text-mango-ink">
+        <p className="mb-1 mt-5 font-label text-micro font-bold uppercase tracking-[.14em] text-mango-ink">
           Servicio temporalmente no disponible
         </p>
         <h2 className="mt-0 text-[22px]">Solicita ayuda por correo</h2>
@@ -200,11 +200,11 @@ export default function AccountDeletionFlow() {
 
   if (workflow.screen === "success") {
     return (
-      <section className="rounded-panel border border-mint/35 bg-white/80 p-6 shadow-panel" role="status">
-        <span className="grid size-11 place-items-center rounded-tile bg-mint-soft text-mint-ink">
+      <section className="rounded-surface border border-mint/35 bg-paper p-6 shadow-e1" role="status">
+        <span className="grid size-11 place-items-center rounded-chip bg-mint-soft text-mint-ink">
           <Icon name="check_circle" className="text-feature" />
         </span>
-        <p className="mb-1 mt-5 font-mono text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
+        <p className="mb-1 mt-5 font-label text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
           Proceso completado
         </p>
         <h2 className="mt-0 text-[22px]">Tu cuenta fue eliminada</h2>
@@ -218,16 +218,16 @@ export default function AccountDeletionFlow() {
 
   if (workflow.screen === "confirm" || workflow.screen === "deleting") {
     return (
-      <section className="rounded-panel border border-coral/25 bg-white/80 p-6 shadow-panel">
-        <p className="mb-1 font-mono text-micro font-bold uppercase tracking-[.14em] text-coral-ink">
+      <section className="rounded-surface border border-coral/25 bg-paper p-6 shadow-e1">
+        <p className="mb-1 font-label text-micro font-bold uppercase tracking-[.14em] text-coral-ink">
           Paso 2 de 3
         </p>
         <h2 className="mt-0 text-[22px]">Confirma la cuenta</h2>
-        <div className="mb-5 rounded-card bg-cream-2 p-4">
+        <div className="mb-5 rounded-block bg-cream-2 p-4">
           {workflow.account?.displayName && (
             <p className="mb-1 font-bold">{workflow.account.displayName}</p>
           )}
-          <p className="mb-0 font-mono text-sm">{workflow.account?.email}</p>
+          <p className="mb-0 text-sm">{workflow.account?.email}</p>
         </div>
 
         <label className="flex cursor-pointer items-start gap-3">
@@ -275,8 +275,8 @@ export default function AccountDeletionFlow() {
   }
 
   return (
-    <section className="rounded-panel border border-line bg-white/80 p-6 shadow-panel">
-      <p className="mb-1 font-mono text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
+    <section className="rounded-surface border border-line bg-paper p-6 shadow-e1">
+      <p className="mb-1 font-label text-micro font-bold uppercase tracking-[.14em] text-mint-ink">
         Paso 1 de 3
       </p>
       <h2 className="mt-0 text-[22px]">Inicia sesión para continuar</h2>
@@ -317,9 +317,9 @@ export default function AccountDeletionFlow() {
         </button>
       </form>
 
-      <div className="my-4 flex items-center gap-3 text-muted-2" aria-hidden="true">
+      <div className="my-4 flex items-center gap-3 text-muted" aria-hidden="true">
         <span className="h-px flex-1 bg-line" />
-        <span className="font-mono text-tiny uppercase">o</span>
+        <span className="font-label text-tiny uppercase">o</span>
         <span className="h-px flex-1 bg-line" />
       </div>
 

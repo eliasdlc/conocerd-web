@@ -6,34 +6,34 @@ import Icon from "@/components/Icon";
 import { PIN_SHADOW } from "./chrome";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Pin de categoría (#4). Portado de conocerd_map_pins.html (app_map_markers.dart):
-//  círculo de color + ícono Material, borde crema y sombra de contacto.
-//  Renderizado en HTML/CSS (en vez de <foreignObject>) para nitidez consistente
-//  dentro de los markers HTML de MapLibre.
+//  Pin de categoría. Un solo ADN con el pin de la app, pieza por pieza, para
+//  que el producto tenga un solo pin:
+//
+//   · círculo de 34 con el relleno vivo de la categoría,
+//   · anillo INTERIOR de 2.5 en la tinta de esa categoría, que es lo que le da
+//     canto de día (el borde crema al 95 % rendía 1.09:1 contra el mapa),
+//   · glifo de 17 al centro en `ink`, no en blanco: en blanco reprobaba 3:1 en
+//     las cinco categorías (playa 2.02, aventura 2.31, naturaleza 2.78, gastro
+//     2.91, cultura 3.05) y en tinta da de 5.71 a 8.62:1,
+//   · sombra de contacto neutra.
+//
+//  El glifo en tinta cambia a la vez aquí y en app_map_marker_bytes.dart: el
+//  pin es uno solo.
+//
+//  Se renderiza en HTML/CSS (en vez de <foreignObject>) para nitidez
+//  consistente dentro de los markers HTML de MapLibre.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type PinState = "default" | "upcoming" | "done";
 
-// Estados exactos del HTML de referencia.
-// `fill` undefined ⇒ usa el color de marca de la categoría.
-const STATE: Record<
-  PinState,
-  { fill?: string; fillOpacity: number; borderOpacity: number; iconOpacity: number; shadowAlpha: number }
-> = {
-  default: { fillOpacity: 1, borderOpacity: 0.95, iconOpacity: 1, shadowAlpha: 0.28 },
-  upcoming: { fill: "#F76C4D", fillOpacity: 1, borderOpacity: 0.95, iconOpacity: 1, shadowAlpha: 0.28 },
-  done: { fill: "#43A047", fillOpacity: 0.78, borderOpacity: 0.7, iconOpacity: 0.85, shadowAlpha: 0.18 },
+// `fill`/`ring` undefined ⇒ el par de la categoría (color + tinta).
+const STATE: Record<PinState, { fill?: string; ring?: string; opacity: number }> = {
+  default: { opacity: 1 },
+  /** Próxima parada de la ruta: el acento, como en el mapa de la app. */
+  upcoming: { fill: "#E0552F", ring: "#B23410", opacity: 1 },
+  /** Parada ya visitada: el mint del sistema, atenuado. */
+  done: { fill: "#25CCB8", ring: "#0C6A60", opacity: 0.8 },
 };
-
-const CREAM = "253,248,240"; // --color-cream (#FDF8F0) en RGB, para el borde
-
-function hexToRgb(hex: string): string {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `${r},${g},${b}`;
-}
 
 export interface CategoryPinProps {
   category: Category;
@@ -42,10 +42,11 @@ export interface CategoryPinProps {
   size?: number;
 }
 
-export function CategoryPin({ category, state = "default", size = 36 }: CategoryPinProps) {
+export function CategoryPin({ category, state = "default", size = 34 }: CategoryPinProps) {
   const meta = CATEGORY_META[category];
   const s = STATE[state];
-  const fillRgb = hexToRgb(s.fill ?? meta.color);
+  const fill = s.fill ?? meta.color;
+  const ring = s.ring ?? meta.ink;
 
   return (
     <div
@@ -53,9 +54,11 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
         width: size,
         height: size,
         borderRadius: "50%",
-        background: `rgba(${fillRgb},${s.fillOpacity})`,
-        border: `2px solid rgba(${CREAM},${s.borderOpacity})`,
-        boxShadow: state === "done" ? `0 2px 5px rgba(0,0,0,${s.shadowAlpha})` : PIN_SHADOW,
+        background: fill,
+        opacity: s.opacity,
+        // El anillo va por dentro para que no engorde el pin: dos pines
+        // adyacentes en el mapa se tocan por el borde, no por el halo.
+        boxShadow: `inset 0 0 0 2.5px ${ring}, ${PIN_SHADOW}`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -64,10 +67,7 @@ export function CategoryPin({ category, state = "default", size = 36 }: Category
     >
       <Icon
         name={meta.icon}
-        style={{
-          fontSize: Math.round(size * 0.52),
-          color: `rgba(255,255,255,${s.iconOpacity})`,
-        }}
+        style={{ fontSize: Math.round(size * 0.5), color: "var(--color-ink)" }}
       />
     </div>
   );

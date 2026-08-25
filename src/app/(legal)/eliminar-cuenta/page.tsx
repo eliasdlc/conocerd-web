@@ -34,7 +34,7 @@ export default function EliminarCuentaPage() {
         <div>
           <section aria-labelledby="datos-heading">
             <div className="mb-4 flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-tile bg-mango-soft text-mango-ink">
+              <span className="grid size-10 shrink-0 place-items-center rounded-chip bg-mango-soft text-mango-ink">
                 <Icon name="verified" className="text-feature" />
               </span>
               <div>
@@ -44,7 +44,7 @@ export default function EliminarCuentaPage() {
             </div>
 
             <div className="grid gap-3 min-[620px]:grid-cols-2">
-              <div className="rounded-card border border-coral/25 bg-coral-soft/65 p-5">
+              <div className="rounded-block border border-coral/25 bg-coral-soft/65 p-5">
                 <h3 className="mb-3 text-body font-bold text-coral-ink">Se borra</h3>
                 <ul className="mb-0 space-y-2 pl-0! [list-style:none]!">
                   {DELETED_DATA.map((item) => (
@@ -56,7 +56,7 @@ export default function EliminarCuentaPage() {
                 </ul>
               </div>
 
-              <div className="rounded-card border border-mint/30 bg-mint-soft/65 p-5">
+              <div className="rounded-block border border-mint/30 bg-mint-soft/65 p-5">
                 <h3 className="mb-3 text-body font-bold text-mint-ink">Se conserva</h3>
                 <p className="mb-0">
                   El texto y el rating de tus reseñas permanecen para no romper la conversación
@@ -76,7 +76,7 @@ export default function EliminarCuentaPage() {
                 ["03", "Elimina", "Acepta el borrado irreversible y recibe confirmación."],
               ].map(([number, title, copy]) => (
                 <li key={number} className="border-t-2 border-ink/15 pt-3">
-                  <span className="font-mono text-micro font-bold text-coral-ink">{number}</span>
+                  <span className="font-label text-micro font-bold text-coral-ink">{number}</span>
                   <strong className="mt-1 block text-copy text-ink-2">{title}</strong>
                   <span className="mt-1 block text-copy leading-[1.55] text-muted">{copy}</span>
                 </li>
@@ -87,7 +87,7 @@ export default function EliminarCuentaPage() {
 
         <aside aria-label="Solicitud de eliminación">
           <AccountDeletionFlow />
-          <p className="mt-4 text-center text-tiny leading-[1.55] text-muted-2">
+          <p className="mt-4 text-center text-tiny leading-[1.55] text-muted">
             Nunca aceptamos un correo escrito como prueba de identidad.
           </p>
         </aside>

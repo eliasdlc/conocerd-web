@@ -40,31 +40,38 @@ type Tone = "light" | "dark";
 const TONES: Record<Tone, {
   text: string; muted: string; field: string; prefix: string; toggleBg: string;
   toggleActive: string; toggleInactive: string; error: string; success: string;
-  successBox: string;
+  successBox: string; successBody: string;
 }> = {
   dark: {
     text: "text-white",
-    muted: "text-white/66",
-    field: "border-white/22 bg-white/10 text-white",
-    prefix: "text-white/72",
+    muted: "text-white/70",
+    field: "border-white/28 bg-white/[0.08] text-white",
+    prefix: "text-white/70",
     toggleBg: "bg-white/10",
-    toggleActive: "bg-white text-ink-2",
+    toggleActive: "bg-paper text-ink",
     toggleInactive: "text-white/75",
+    // Sobre tinta el `danger` del sistema (#B42318) es ilegible: ahí el rojo
+    // sube de luz. El token vive para el tono claro.
     error: "text-[#FFB3A0]",
     success: "text-mint",
     successBox: "border-mint/35 bg-mint/[0.14]",
+    successBody: "text-white/70",
   },
   light: {
     text: "text-ink",
     muted: "text-muted",
-    field: "border-line bg-white text-ink",
+    // El borde va en `muted-2` y no en `line`: con `line` daba 1.25:1 y el
+    // campo desaparecía contra el papel.
+    field: "border-muted-2 bg-paper text-ink",
     prefix: "text-muted",
     toggleBg: "bg-cream-2",
-    toggleActive: "bg-ink text-white",
+    toggleActive: "bg-selected text-on-selected",
     toggleInactive: "text-muted",
-    error: "text-coral-ink",
+    error: "text-danger",
     success: "text-mint-ink",
-    successBox: "border-mint bg-mint-soft",
+    successBox: "border-mint-ink bg-mint-soft",
+    // En `muted` el cuerpo del éxito sobre mint-soft daba 4.14:1 y reprobaba.
+    successBody: "text-ink-3",
   },
 };
 
@@ -73,7 +80,7 @@ const TONES: Record<Tone, {
 // Sin `outline-none`: las utilities le ganan al anillo de focus global de
 // @layer base (globals.css) y los campos del embudo quedaban sin focus visible
 // al navegar con teclado (audit 5.2).
-const FIELD = "h-12 w-full rounded-card border px-3.5 font-sans text-body";
+const FIELD = "h-12 w-full rounded-ctrl border px-3.5 font-sans text-body";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
@@ -130,6 +137,65 @@ function readReferral(): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+// ─── Conmutador de audiencia ──────────────────────────────────────────────────
+//
+// Dos píldoras en `cream-2` con la elegida en `selected`, el mismo toggle de los
+// ajustes de la app. Sobre tinta el carril va en blanco al 10 % y la elegida en
+// `paper`. Se exporta porque en /lista no vive dentro del formulario: gobierna
+// la página entera y por eso va en su cabecera.
+
+export function AudienceToggle({
+  audience,
+  onChange,
+  tone = "light",
+  className = "",
+}: {
+  audience: Audience;
+  onChange: (a: Audience) => void;
+  tone?: Tone;
+  className?: string;
+}) {
+  const t = TONES[tone];
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="¿Quién eres?"
+      className={`flex gap-1 rounded-full p-1 ${t.toggleBg} ${className}`}
+    >
+      {AUDIENCES.map((a, i) => {
+        const active = a === audience;
+        return (
+          <button
+            key={a}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onChange(a)}
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+              e.preventDefault();
+              const next = AUDIENCES[(i + 1) % AUDIENCES.length];
+              onChange(next);
+              refs.current[AUDIENCES.indexOf(next)]?.focus();
+            }}
+            className={`h-11 flex-1 cursor-pointer rounded-full border-none font-label text-copy font-bold transition-[background-color,color] duration-200 ${
+              active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
+            }`}
+          >
+            {AUDIENCE_LABEL[a]}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -200,7 +266,6 @@ export default function SubscribeForm({
   // Controlado sólo este campo: es el único que se reescribe mientras se teclea.
   const [instagram, setInstagram] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  const toggleRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(persistReferral, []);
 
@@ -299,16 +364,16 @@ export default function SubscribeForm({
       <div
         role="status"
         aria-live="polite"
-        className={`flex items-start gap-3 rounded-2xl border text-left ${t.successBox} ${
+        className={`flex items-start gap-3 rounded-block border text-left ${t.successBox} ${
           compact ? "px-3.5 py-3" : "px-[18px] py-4"
         }`}
       >
         <Icon name="check_circle" className={`shrink-0 text-2xl ${t.success}`} />
         <div>
-          <div className={`text-body font-bold ${t.text}`}>
+          <div className={`font-label text-body font-bold ${t.text}`}>
             {alreadyIn ? "Ya estabas en la lista" : copy.title}
           </div>
-          <p className={`mt-[3px] text-copy leading-[1.5] ${t.muted}`}>
+          <p className={`mt-[3px] text-copy leading-[1.5] ${t.successBody}`}>
             {alreadyIn
               ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
               : copy.body}
@@ -325,42 +390,11 @@ export default function SubscribeForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate className="w-full text-left">
-      {/* Toggle de audiencia */}
+      {/* Toggle de audiencia. En /lista vive en la cabecera de la página, no
+          aquí: allí gobierna el titular, los beneficios y las features, así que
+          pertenece a la página. Este render es para el CTA del journey. */}
       {!compact && !audienceLocked && (
-        <div
-          role="radiogroup"
-          aria-label="¿Quién eres?"
-          className={`mb-3.5 flex gap-1 rounded-full p-1 ${t.toggleBg}`}
-        >
-          {AUDIENCES.map((a, i) => {
-            const active = a === audience;
-            return (
-              <button
-                key={a}
-                ref={(el) => {
-                  toggleRefs.current[i] = el;
-                }}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                tabIndex={active ? 0 : -1}
-                onClick={() => setAudience(a)}
-                onKeyDown={(e) => {
-                  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-                  e.preventDefault();
-                  const next = AUDIENCES[(i + 1) % AUDIENCES.length];
-                  setAudience(next);
-                  toggleRefs.current[AUDIENCES.indexOf(next)]?.focus();
-                }}
-                className={`h-11 flex-1 cursor-pointer rounded-full border-none text-copy font-bold transition-[background-color,color] duration-200 ${
-                  active ? t.toggleActive : `bg-transparent ${t.toggleInactive}`
-                }`}
-              >
-                {AUDIENCE_LABEL[a]}
-              </button>
-            );
-          })}
-        </div>
+        <AudienceToggle audience={audience} onChange={setAudience} tone={tone} className="mb-3.5" />
       )}
 
       {/* Campos de negocio — sólo cuando hacen falta */}
@@ -391,7 +425,7 @@ export default function SubscribeForm({
               className={`${field} cursor-pointer`}
             >
               {BUSINESS_TYPES.map((b) => (
-                <option key={b} value={b} style={{ color: "#264653" }}>
+                <option key={b} value={b} style={{ color: "#0F1A2E" }}>
                   {BUSINESS_TYPE_LABELS[b]}
                 </option>
               ))}
@@ -470,8 +504,15 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-white crd-sticker disabled:cursor-progress disabled:opacity-75 ${
-            compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
+          // La primaria del sistema: 54 de alto y etiqueta 19/700, que es
+          // exactamente el cuerpo desde el que blanco sobre coral pasa AA
+          // (3.81:1). En la variante compacta del pie no cabe una pieza de 54,
+          // así que ahí se queda en 48 y se rellena de `selected`, que da
+          // 17.39:1 a cualquier tamaño.
+          className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border-none font-label font-bold disabled:cursor-progress disabled:opacity-75 ${
+            compact
+              ? "h-12 bg-selected px-4 text-body text-on-selected"
+              : "h-[54px] bg-coral px-[26px] text-[19px] text-white shadow-e2 max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >
           {submitting ? "Enviando…" : isBusiness ? "Registrar negocio" : "Unirme"}
@@ -502,7 +543,9 @@ export default function SubscribeForm({
           type="checkbox"
           required
           aria-invalid={Boolean(fieldErrors.consent)}
-          className="size-[22px] shrink-0 accent-coral"
+          // La selección del sistema es `selected`, nunca el acento: el coral
+          // marca acciones, y una casilla marcada es estado.
+          className="size-[22px] shrink-0 rounded-[6px] accent-selected"
         />
         <span>
           Acepto recibir correos de ConoceRD sobre el lanzamiento. Puedo darme de baja cuando

@@ -99,23 +99,38 @@ export default function DestinosOverlay() {
 
   return (
     <>
-      {/* Ruta real por carretera que une los 6 destinos (solo en el finale) */}
+      {/* Ruta real por carretera que une los 6 destinos (solo en el finale).
+          Es la cinta de ruta de la app: trazo de 3 en coral con un borde de 1
+          en coralInk. Van dos capas porque MapLibre no dibuja contorno de
+          línea; el casing entra primero y por eso queda debajo. */}
       {isFinale && (
-        <MapRoute
-          id="destinos-route"
-          coordinates={ROUTE_COORDS}
-          color="#F76C4D"
-          width={3}
-          opacity={0.9}
-          dashArray={[2, 2]}
-        />
+        <>
+          <MapRoute
+            id="destinos-route-casing"
+            coordinates={ROUTE_COORDS}
+            color="#B23410"
+            width={5}
+            opacity={0.9}
+            dashArray={[1.2, 1.2]}
+          />
+          <MapRoute
+            id="destinos-route"
+            coordinates={ROUTE_COORDS}
+            color="#E0552F"
+            width={3}
+            opacity={0.9}
+            dashArray={[2, 2]}
+          />
+        </>
       )}
 
       {/* Map pins rendered via MapMarker portals (positioned by maplibre on the canvas) */}
       {POLAROIDS.filter((_, i) => i < visibleCount).map((pol) => (
         <MapMarker key={pol.id} longitude={pol.coords[0]} latitude={pol.coords[1]}>
           <MarkerContent>
-            <div className={`size-3.5 rounded-full bg-coral ${PIN_CHROME}`} />
+            <div
+              className={`size-3.5 rounded-full bg-coral ring-2 ring-inset ring-coral-ink ${PIN_CHROME}`}
+            />
           </MarkerContent>
           <MarkerLabel position="top">{pol.name}</MarkerLabel>
         </MapMarker>
@@ -138,16 +153,20 @@ export default function DestinosOverlay() {
 
         {/* Section heading — appears above the pile on first polaroid.
             El bottom de móvil (43%) lo fija .crd-destinos-heading en globals.css,
-            así que aquí basta el valor de desktop. En desktop lleva el chip
-            crema con blur: sin él, el H2 caía sobre la toponimia del mapa y
-            competían píxel a píxel (audit 2.1). En móvil el velo crema de la
-            escena ya hace ese trabajo. */}
+            así que aquí basta el valor de desktop. En desktop va sobre el
+            cristal del tema: sin él, el H2 caía sobre la toponimia del mapa y
+            competían píxel a píxel. En móvil el velo crema de la escena ya
+            hace ese trabajo.
+
+            La sombra de texto doble murió con el rediseño: era la que separaba
+            el titular del mapa antes de que existiera el panel, y con panel
+            debajo sólo emborronaba el canto de las letras. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-card desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-surface desk:border desk:border-[var(--crd-glass-line)] desk:bg-[var(--crd-glass)] desk:px-4 desk:py-3.5 desk:shadow-e1 desk:backdrop-blur-[24px] desk:backdrop-saturate-[1.8] ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
-          <h2 className="m-0 font-display text-[clamp(22px,3vw,38px)] font-bold leading-[1.08] tracking-[-.012em] text-ink-2 [text-shadow:0_1px_2px_rgba(253,248,240,0.95),0_0_16px_rgba(253,248,240,0.6)]">
+          <h2 className="m-0 font-display text-[clamp(22px,3vw,30px)] font-extrabold leading-[1.08] tracking-[-.02em] text-ink">
             Recuerdos que aún
             <br />
             <em className="crd-accent">no has vivido</em>
@@ -177,7 +196,14 @@ export default function DestinosOverlay() {
               onClick={isFront ? cycle : undefined}
               // El desparrame de la pila es dato por carta (--pile-left permite
               // el corrimiento móvil sin pasar por JS).
-              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none border-0 bg-transparent p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
+              //
+              // El reset del botón NO lleva `border-0` ni `bg-transparent`: las
+              // dos escriben la misma propiedad que el papel de la polaroid y,
+              // como el orden lo decide Tailwind al emitir y no el className,
+              // ganaban ellas. La carta llevaba el papel sin pintar y el pie se
+              // leía sobre el mapa. `p-0` sí puede quedarse: `px-3`/`pt-3` son
+              // más específicas y le ganan.
+              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
                 isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
               }`}
               style={{
@@ -229,7 +255,7 @@ export default function DestinosOverlay() {
                     // largos ("Pueblo & valle") lo empujaban fuera de la foto.
                     <span
                       aria-hidden="true"
-                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/92 text-ink"
+                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
                     >
                       <Icon name="arrow_forward" className="text-sm" />
                     </span>
@@ -247,7 +273,7 @@ export default function DestinosOverlay() {
                 }`}
               >
                 <PolaroidCaption name={pol.name} meta={pol.meta} />
-                <p className="crd-destinos-desc m-0 mt-1 text-mini leading-[1.4] text-muted">{pol.desc}</p>
+                <p className="crd-destinos-desc m-0 mt-1 text-tiny leading-[1.4] text-ink-3">{pol.desc}</p>
               </div>
             </motion.button>
           );

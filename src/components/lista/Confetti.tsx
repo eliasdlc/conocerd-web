@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const COLORS = ["#F76C4D", "#FF8D16", "#25CCB8", "#0C6A60", "#FFC94D"];
+const COLORS = ["#E0552F", "#FF8D16", "#25CCB8", "#0C6A60", "#FFC94D"];
 const COUNT = 26;
 const LIFETIME_MS = 1900;
 
