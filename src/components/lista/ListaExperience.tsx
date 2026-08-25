@@ -43,13 +43,13 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function PerkCard({ item, unlocked, index }: { item: Item; unlocked: boolean; index: number }) {
   return (
     <li
-      className={`relative flex items-start gap-[13px] overflow-hidden rounded-card border border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
+      className={`relative flex items-start gap-[13px] overflow-hidden rounded-block border border-dashed px-[15px] py-3.5 transition-[background-color,border-color] duration-[350ms] ease-in-out ${
         unlocked ? "border-mint bg-[#EAFBF7]" : "border-muted-2/35 bg-white"
       }`}
     >
       <span
         aria-hidden="true"
-        className={`relative flex size-10 shrink-0 items-center justify-center rounded-tile transition-colors duration-[350ms] ease-in-out ${
+        className={`relative flex size-10 shrink-0 items-center justify-center rounded-chip transition-colors duration-[350ms] ease-in-out ${
           unlocked ? "bg-mint" : "bg-mango-soft"
         }`}
       >
@@ -175,7 +175,7 @@ export default function ListaExperience() {
 
         {/* El formulario es la única acción de la página: siempre sobre el fold.
             overflow-visible porque el confeti del panel de éxito se sale. */}
-        <div className="crd-lista-in overflow-visible rounded-panel border border-line bg-white px-5 pb-[18px] pt-5 shadow-modal [animation-delay:.12s]">
+        <div className="crd-lista-in overflow-visible rounded-surface border border-line bg-white px-5 pb-[18px] pt-5 shadow-e1 [animation-delay:.12s]">
           <SubscribeForm
             key={formKey}
             tone="light"
@@ -209,7 +209,7 @@ export default function ListaExperience() {
             // Degradado oficial de Instagram: es la única presencia real de la
             // marca hoy y merece reconocerse al primer vistazo (decisión del
             // dueño, jul 2026 — revierte el monocromo del audit §3).
-            className="flex size-[38px] shrink-0 items-center justify-center rounded-tile bg-[radial-gradient(circle_at_28%_110%,#FDF497_0%,#FD5949_45%,#D6249F_60%,#285AEB_90%)] text-white"
+            className="flex size-[38px] shrink-0 items-center justify-center rounded-chip bg-[radial-gradient(circle_at_28%_110%,#FDF497_0%,#FD5949_45%,#D6249F_60%,#285AEB_90%)] text-white"
           >
             <InstagramGlyph size={20} />
           </span>

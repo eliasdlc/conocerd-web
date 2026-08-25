@@ -22,7 +22,7 @@ import type { IconName } from "@/components/Icon";
  *  emita después —no la que se escriba después en el className— y las cartas
  *  se salían del posicionamiento. Cada consumidor declara su posición; lo que
  *  el papel garantiza es que haya una (la cinta se ancla a ella).*/
-export const POLAROID_PAPER = "crd-tape rounded-md bg-white px-3 pb-0 pt-3 shadow-panel";
+export const POLAROID_PAPER = "crd-tape rounded-md bg-white px-3 pb-0 pt-3 shadow-e1";
 
 export function PolaroidMedia({
   image,
@@ -80,7 +80,7 @@ export function PolaroidCaption({ name, meta }: { name: string; meta?: string })
   return (
     <>
       <div className="font-hand text-2xl font-bold leading-none text-[#0F1A2E]">{name}</div>
-      <div className="mt-[3px] font-mono text-mini text-muted">{meta}</div>
+      <div className="mt-[3px] text-mini text-muted">{meta}</div>
     </>
   );
 }

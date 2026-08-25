@@ -34,7 +34,7 @@ function applyBrandPaint(map: maplibregl.Map) {
   // no ensuciar la consola con "Cannot style non-existing layer".
   if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
   if (map.getLayer("admin_country")) {
-    map.setPaintProperty("admin_country", "line-color", "#264653");
+    map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
     map.setPaintProperty("admin_country", "line-width", 2);
   }
 

@@ -10,8 +10,8 @@ export default function NotFound() {
     <main className="flex min-h-dvh flex-col items-center justify-center bg-cream px-6 text-center">
       {/* El pin que se cayó del mapa: la misma silueta del logo, volcada. A 44
           lleva la flor de Bayahíbe en la ventana. */}
-      <BrandPin size={44} color="#F76C4D" className="mb-5 rotate-[18deg] [filter:drop-shadow(0_5px_6px_rgba(38,70,83,.22))]" />
-      <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-muted">
+      <BrandPin size={44} color="#E0552F" className="mb-5 rotate-[18deg] [filter:drop-shadow(0_5px_6px_rgba(38,70,83,.22))]" />
+      <p className="m-0 font-label text-mini font-extrabold uppercase tracking-[.16em] text-muted">
         404 · Esta ruta no existe
       </p>
       <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2">
@@ -23,7 +23,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-7 inline-flex h-12 items-center rounded-full bg-mango px-6 text-body font-bold text-white no-underline crd-sticker"
+        className="mt-7 inline-flex h-12 items-center rounded-full bg-selected px-6 text-body font-bold text-on-selected no-underline"
       >
         Volver al inicio
       </Link>

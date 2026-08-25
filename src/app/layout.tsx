@@ -1,48 +1,49 @@
 import type { Metadata } from "next";
-import { Fraunces, Instrument_Sans, Caveat, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter, Caveat } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
-// Tipografía de marca (audit §3). Inter + Plus Jakarta ExtraBold con tracking
-// negativo era la fórmula del titular SaaS genérico y no decía nada del Caribe
-// ni conectaba con el logo, que es rotulación a mano. Fraunces sí: es el serif
-// de las guías de viaje, y su itálica hace de acento donde antes había un
-// <strong> coral.
+// Tipografía de marca. La web hablaba su propio idioma (Fraunces serif +
+// Instrument Sans + JetBrains Mono) mientras la app hablaba el suyo; el
+// sistema de diseño las unifica en las tres familias de la app:
 //
-// Presupuesto (audit 5.6c): entran cuando salen las otras dos, nunca conviven.
-// Medido sobre el subset latin en woff2 — Fraunces 700 romana (17.8 KB) +
-// itálica (22.5 KB) + Instrument variable 400..700 (29.4 KB) = 69.7 KB, contra
-// los 73.8 KB de Inter + Plus Jakarta. El neto baja.
+//   display  Bricolage Grotesque — titulares y cifras de carretera
+//   label    Plus Jakarta Sans   — botones, chips, etiquetas y overlines
+//   body     Inter               — todo el texto corrido
 //
-// Fraunces sólo en un peso: 700 cubre todos los titulares y ahorra los 17.7 KB
-// del 600, que a estos tamaños casi no se distingue.
-const fraunces = Fraunces({
+// El mono desaparece del sistema: las cifras que antes lo llevaban (km, horas,
+// sellos) van en Bricolage, y los metadatos en Inter. El acento editorial ya no
+// es una itálica de otra familia, sino la misma Bricolage en coralInk.
+//
+// Bricolage es variable con eje óptico: el titular del hero pide `opsz 96` (la
+// regla de portada) y el resto se queda en el óptico por defecto.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: "700",
-  style: ["normal", "italic"],
-  variable: "--font-fraunces",
+  axes: ["opsz"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-const instrumentSans = Instrument_Sans({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-instrument",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Caveat sobrevive con un solo uso en todo el producto: la firma del dorso de
+// la polaroid del equipo. Es tinta de contenido, como una foto, no un rol
+// tipográfico del sistema.
 const caveat = Caveat({
   subsets: ["latin"],
-  weight: ["700"],
   variable: "--font-caveat",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-jetbrains",
   display: "swap",
 });
 
@@ -82,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      className={`${fraunces.variable} ${instrumentSans.variable} ${caveat.variable} ${jetbrainsMono.variable}`}
+      className={`${bricolage.variable} ${plusJakarta.variable} ${inter.variable} ${caveat.variable}`}
     >
       <head>
         {/* Unregister any stale service workers from other projects on this port */}

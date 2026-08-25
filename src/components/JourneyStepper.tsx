@@ -59,7 +59,7 @@ export default function JourneyStepper({
         visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex items-center gap-3 rounded-full bg-cream/95 py-2 pl-2 pr-2 shadow-panel backdrop-blur-[8px]">
+      <div className="flex items-center gap-3 rounded-full bg-cream/95 py-2 pl-2 pr-2 shadow-e1 backdrop-blur-[8px]">
         {/* Escena anterior */}
         <button
           type="button"
@@ -75,7 +75,7 @@ export default function JourneyStepper({
 
         {/* Capítulo activo + puntos de capítulo tocables */}
         <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-mono text-micro font-bold uppercase tracking-[.15em] text-muted">
+          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-label text-micro font-extrabold uppercase tracking-[.15em] text-muted">
             {CHAPTERS[activeChapter].label}
           </span>
           <div className="flex items-center gap-[5px]">

@@ -104,7 +104,7 @@ export default function DestinosOverlay() {
         <MapRoute
           id="destinos-route"
           coordinates={ROUTE_COORDS}
-          color="#F76C4D"
+          color="#E0552F"
           width={3}
           opacity={0.9}
           dashArray={[2, 2]}
@@ -143,7 +143,7 @@ export default function DestinosOverlay() {
             competían píxel a píxel (audit 2.1). En móvil el velo crema de la
             escena ya hace ese trabajo. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-card desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-block desk:border desk:border-line/80 desk:bg-cream/88 desk:px-3.5 desk:py-3 desk:backdrop-blur-[8px] ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >

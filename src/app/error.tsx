@@ -25,7 +25,7 @@ export default function ErrorPage({
         aria-hidden="true"
         className="mb-6 block size-3.5 rounded-full border-[2.5px] border-white bg-coral shadow-[0_0_0_6px_rgba(247,108,77,0.25)]"
       />
-      <p className="m-0 font-mono text-mini font-bold uppercase tracking-[.16em] text-coral-ink">
+      <p className="m-0 font-label text-mini font-extrabold uppercase tracking-[.16em] text-coral-ink">
         Error inesperado
       </p>
       <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2">
@@ -39,7 +39,7 @@ export default function ErrorPage({
         <button
           type="button"
           onClick={() => unstable_retry()}
-          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-mango px-6 text-body font-bold text-white crd-sticker transition-[transform,box-shadow] duration-200"
+          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-selected px-6 text-body font-bold text-on-selected transition-[transform,box-shadow] duration-200"
         >
           Reintentar
         </button>
