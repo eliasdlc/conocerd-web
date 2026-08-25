@@ -174,10 +174,6 @@ export default function HeroOverlay() {
         {/* Velo crema: en móvil el texto cae sobre el globo y las etiquetas del
             mapa se cruzaban con el titular. */}
         <div className="crd-mobile-scrim h-[56%]" />
-        {/* Título real para lectores de pantalla / SEO (el logo es imagen). */}
-        <h1 className="sr-only">
-          ConoceRD — Descubre lo nuestro: la app de turismo auténtico en República Dominicana
-        </h1>
 
         {/* relative z-1: el velo es un elemento posicionado y pintaría encima de
             este bloque (que es un hijo estático del flex). */}
@@ -197,9 +193,25 @@ export default function HeroOverlay() {
             sizes="(max-width: 899px) 82vw, min(42vw, 480px)"
             className="crd-hero-logo block h-auto w-[min(82vw,460px)] desk:w-[min(42vw,480px)]"
           />
-          <p className="crd-hero-copy m-0 mt-3.5 max-w-[520px] text-[clamp(17px,2.2vw,21px)] font-medium leading-[1.5] text-ink">
+          {/* El titular y el subtítulo eran un solo párrafo, y el hero no tenía
+              jerarquía: la primera pantalla del sitio no llevaba titular.
+              El h1 sigue arrancando con la marca para lectores de pantalla y
+              para SEO —el logo es una imagen— pero lo que se ve es el titular.
+
+              `opsz 96` es la regla de portada: Bricolage tiene eje óptico y a
+              44 pide el corte de titular grande, no el de texto. Una sola
+              palabra acentuada, y en coralInk: el coral vivo como texto da
+              2.76:1. */}
+          <h1
+            className="m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
+            style={{ fontVariationSettings: '"opsz" 96' }}
+          >
+            <span className="sr-only">ConoceRD — Descubre lo nuestro. </span>
             La app que te lleva a la República Dominicana{" "}
-            <em className="crd-accent">auténtica</em>: negocios locales y experiencias reales, en una sola ruta.
+            <em className="crd-accent">auténtica</em>
+          </h1>
+          <p className="crd-hero-copy m-0 mt-3 max-w-[520px] text-lead leading-[1.45] text-ink">
+            Negocios locales y experiencias reales, en una sola ruta.
           </p>
           <div className="crd-hero-actions mt-[26px] flex flex-wrap justify-center gap-3.5 desk:justify-start">
             <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>
