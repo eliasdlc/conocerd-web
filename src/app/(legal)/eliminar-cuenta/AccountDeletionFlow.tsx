@@ -292,7 +292,7 @@ export default function AccountDeletionFlow() {
             type="email"
             autoComplete="email"
             required
-            className="min-h-12 rounded-chip border border-line bg-white px-3 font-normal outline-none transition-shadow focus:border-mint focus:ring-3 focus:ring-mint/20"
+            className="h-12 rounded-ctrl border border-muted-2 bg-paper px-3.5 font-sans text-body text-ink placeholder:text-muted outline-none focus:border-ink"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -303,7 +303,7 @@ export default function AccountDeletionFlow() {
             type="password"
             autoComplete="current-password"
             required
-            className="min-h-12 rounded-chip border border-line bg-white px-3 font-normal outline-none transition-shadow focus:border-mint focus:ring-3 focus:ring-mint/20"
+            className="h-12 rounded-ctrl border border-muted-2 bg-paper px-3.5 font-sans text-body text-ink placeholder:text-muted outline-none focus:border-ink"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />

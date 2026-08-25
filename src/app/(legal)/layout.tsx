@@ -31,7 +31,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
 
         <div className="crd-legal">{children}</div>
 
-        <div className="mt-9 flex gap-2 border-t border-line pt-3.5">
+        <div className="mt-9 flex flex-wrap gap-2 border-t border-line pt-3.5">
           <Link href="/privacidad" className={FOOT_LINK}>Privacidad</Link>
           <Link href="/terminos" className={FOOT_LINK}>Términos</Link>
           <Link href="/eliminar-cuenta" className={FOOT_LINK}>Eliminar cuenta</Link>
