@@ -1,11 +1,13 @@
 "use client";
 
-// Red de seguridad de ruta (audit 5.1): cualquier error de render que antes
-// dejaba la página en blanco cae aquí, con marca y en español. Sin iconos de
-// Material a propósito — una página de error no debe depender de recursos
-// externos.
+// Red de seguridad de ruta: cualquier error de render que antes dejaba la
+// página en blanco cae aquí, con marca y en español.
+//
+// Sin iconos a propósito, y nada más se carga: si lo que falló fue el bundle,
+// una página de error que importa medio producto falla con él.
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function ErrorPage({
@@ -21,33 +23,38 @@ export default function ErrorPage({
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-cream px-6 text-center">
-      <span
-        aria-hidden="true"
-        className="mb-6 block size-3.5 rounded-full border-[2.5px] border-white bg-coral shadow-[0_0_0_6px_rgba(247,108,77,0.25)]"
+      {/* El punto coral con halo murió: el acento no decora, y un halo del
+          color del relleno era el cliché que el sistema quitó de todo el
+          sitio. La marca la pone el wordmark. */}
+      <Image
+        src="/assets/wordmark.svg"
+        alt="ConoceRD"
+        width={101}
+        height={32}
+        className="mb-6 h-8 w-auto"
       />
-      <p className="m-0 font-label text-mini font-extrabold uppercase tracking-[.16em] text-coral-ink">
-        Error inesperado
-      </p>
-      <h1 className="mb-3 mt-2 font-display text-[clamp(26px,5vw,40px)] font-bold leading-[1.1] tracking-[-.012em] text-ink-2">
-        Algo se salió de la ruta
+      <h1 className="mb-3 font-display text-[clamp(26px,5vw,34px)] font-extrabold leading-[1.1] tracking-[-.03em] text-ink">
+        Algo se salió de <em className="crd-accent">la ruta</em>
       </h1>
-      <p className="m-0 max-w-[420px] text-body leading-[1.6] text-muted">
+      <p className="m-0 max-w-[420px] text-lead leading-[1.6] text-muted">
         No fue tu culpa: algo falló de nuestro lado. Prueba a reintentar y, si
         sigue pasando, vuelve al inicio.
       </p>
       <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+        {/* La primaria del sistema: 54 con la etiqueta a 19/700, que es el
+            cuerpo desde el que blanco sobre coral pasa AA (3.81:1). */}
         <button
           type="button"
           onClick={() => unstable_retry()}
-          className="crd-button inline-flex h-12 cursor-pointer items-center rounded-full bg-selected px-6 text-body font-bold text-on-selected transition-[transform,box-shadow] duration-200"
+          className="crd-button inline-flex h-[54px] cursor-pointer items-center rounded-full bg-coral px-[26px] font-label text-[19px] font-bold text-white shadow-e2 transition-[transform,box-shadow] duration-200"
         >
           Reintentar
         </button>
         <Link
           href="/"
-          className="inline-flex h-12 items-center rounded-full border-2 border-ink px-6 text-body font-bold text-ink no-underline"
+          className="inline-flex h-[54px] items-center rounded-full border-[1.5px] border-line-strong px-[26px] font-label text-[19px] font-bold text-ink no-underline"
         >
-          Volver al inicio
+          Ir al inicio
         </Link>
       </div>
     </main>

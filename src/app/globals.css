@@ -809,27 +809,32 @@ body::after {
    monta (lo decide el componente con matchMedia). */
 
 /* ───────────────────── Páginas legales ────────────────────── */
-/* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
-   el contenido es markup semántico y se estila una vez desde el shell.
-   La regla tipográfica de Fase D vale también aquí: el serif sólo en el H1;
-   los H2 van a 17px, por debajo del umbral de 20, así que son sans 700. */
+/* Prosa larga: el resto del sitio usa clases por componente, pero aquí el
+   contenido es markup semántico y se estila una vez desde el shell. Es la
+   única superficie del sitio con estilos de prosa.
+
+   El umbral de 20px con el que convivían los H2 era una regla del serif
+   anterior, que sólo se usaba en titulares grandes. La familia de titular de
+   hoy no tiene ese límite: los subtítulos van en ella, a 20. */
 .crd-legal {
   color: var(--color-ink);
-  font-size: var(--text-body);
-  line-height: 1.7;
+  font-size: var(--text-lead);
+  line-height: 1.6;
 }
 .crd-legal h1 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -.012em;
-  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  font-size: clamp(28px, 5vw, 34px);
   line-height: 1.1;
   margin: 0 0 6px;
   color: var(--color-ink);
 }
 .crd-legal h2 {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-lead);
+  letter-spacing: -.02em;
+  font-size: 20px;
   margin: 30px 0 8px;
   color: var(--color-ink);
 }
@@ -839,7 +844,9 @@ body::after {
    párrafo partido. */
 .crd-legal ul { margin: 0 0 14px; padding-left: 20px; list-style: disc; }
 .crd-legal li { margin-bottom: 7px; }
-.crd-legal a { color: var(--color-coral-ink); }
+/* El único subrayado del sitio: en prosa larga el color solo no basta para
+   decir "esto es un enlace". */
+.crd-legal a { color: var(--color-coral-ink); text-decoration: underline; }
 .crd-legal-date {
   font-size: var(--text-tiny);
   color: var(--color-muted);
