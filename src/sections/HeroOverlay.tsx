@@ -6,28 +6,21 @@ import Button from "@/components/Button";
 import { useScene } from "@/context/SceneContext";
 import { scrollToSection } from "@/lib/journeyNav";
 import { MapMarker, MarkerContent } from "@/components/map/Map";
+import BrandPin from "@/components/BrandPin";
 
 // Centro aprox. de RD — mismo punto que el keyframe `hero` de la cámara.
 const RD_COORDS: [number, number] = [-70.1627, 18.7357];
 
-// Pin de ubicación (gota coral) que marca RD sobre el globo. Como es un
-// MapMarker, maplibre lo mantiene pegado a estas coords ⇒ viaja con el globo
-// mientras levita/gira.
+// Pin que marca RD sobre el globo: el pin de la marca, el mismo que llevan la
+// píldora del nav y el 404. Antes era una gota coral genérica de stock, que es
+// justo el pin que cualquier mapa dibuja por defecto. Como es un MapMarker,
+// maplibre lo mantiene pegado a estas coords ⇒ viaja con el globo mientras
+// levita/gira.
 function HeroPin() {
   return (
-    <svg
-      width={34}
-      height={46}
-      viewBox="0 0 34 46"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]"
-    >
-      <path
-        d="M17 1C8.7 1 2 7.7 2 16c0 10.5 13 27 14.1 28.3a1.2 1.2 0 0 0 1.8 0C19 43 32 26.5 32 16 32 7.7 25.3 1 17 1Z"
-        fill="#E0552F" stroke="#fff" strokeWidth="2" />
-      <circle cx="17" cy="16" r="5.5" fill="#fff" />
-    </svg>
+    <span className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]">
+      <BrandPin size={34} color="var(--color-mango)" />
+    </span>
   );
 }
 
@@ -180,17 +173,17 @@ export default function HeroOverlay() {
         <div className="crd-hero-content relative z-[1] flex max-w-[460px] flex-col items-center desk:max-w-[520px] desk:items-start">
           <Image
             id="crd-logo"
-            src="/assets/logo.png"
-            alt="ConoceRD — Descubre Lo Nuestro"
-            width={760}
-            height={363}
+            src="/assets/logo.svg"
+            alt="ConoceRD, descubre lo nuestro"
+            width={1296}
+            height={595}
             priority
-            // El logo es el elemento LCP de la home y se estaba sirviendo a
-            // 760w para pintarse a ~320 en móvil: 303 KiB tirados según la
-            // línea base de Lighthouse. Con `sizes` el navegador elige del
-            // srcset. La altura declarada ahora respeta la proporción real del
-            // archivo (4096×1958), que no cuadraba con la anterior.
-            sizes="(max-width: 899px) 82vw, min(42vw, 480px)"
+            // Vector. El logo es el elemento LCP de la home y el PNG pesaba
+            // 735 KB para pintarse a ~480 px: el SVG son 32 KB (10 KB en el
+            // cable) y no se degrada a ningún ancho, así que sobra el srcset.
+            // `unoptimized` porque el optimizador de Next rechaza SVG salvo
+            // con dangerouslyAllowSVG, y un vector no tiene nada que optimizar.
+            unoptimized
             className="crd-hero-logo block h-auto w-[min(82vw,460px)] desk:w-[min(42vw,480px)]"
           />
           {/* El titular y el subtítulo eran un solo párrafo, y el hero no tenía

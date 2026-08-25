@@ -37,7 +37,7 @@ import Icon, { type IconName } from "@/components/Icon";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
-import { CategoryPin, GoalFlag, SelfPin, PIN_CHROME } from "@/components/map/pins";
+import { CategoryPin, GoalPin, SelfPin, PIN_CHROME } from "@/components/map/pins";
 import { PANEL_SOLID } from "@/lib/surfaces";
 import Kicker from "@/components/Kicker";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
@@ -140,7 +140,7 @@ type Paso = {
   titulo: string;
   desc: string;
   icon?: IconName;
-  meta?: boolean; // true = bandera de meta
+  meta?: boolean; // true = pin de meta en vez de baldosa de icono
 };
 
 const PASOS_VIAJERO: Paso[] = [
@@ -156,11 +156,6 @@ const PASOS_NEGOCIO: Paso[] = [
   { icon: "verified", titulo: "Escaneas y aplicas el beneficio", desc: "El QR del cliente, el visitante verificado y su descuento aplicado al instante." },
   { meta: true, titulo: "Sabes qué funciona", desc: "De dónde vienen, tu calificación y las horas pico de tu semana." },
 ];
-
-// Línea punteada de la ruta — la firma de la card (v3), compartida por ambas.
-const PUNTEADA = {
-  backgroundImage: "repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 9px)",
-};
 
 /** `&v6paso=1..3` en la URL fija la parada activa inicial (demo/capturas). */
 function pasoInicial(): number {
@@ -219,8 +214,14 @@ function PinDeParada({ paso, activo }: { paso: Paso; activo: boolean }) {
   return (
     <span className="relative block size-9 shrink-0">
       {paso.meta ? (
-        <span className={`absolute -left-0.5 -top-1 transition-transform duration-200 ${activo ? "scale-110" : ""}`}>
-          <GoalFlag size={44} />
+        // La meta lleva el pin de la marca con el damero: la silueta se
+        // invierte sobre la fila seleccionada, igual que la baldosa de al lado.
+        <span
+          className={`absolute inset-0 flex items-center justify-center transition-transform duration-200 ${
+            activo ? "scale-110" : ""
+          }`}
+        >
+          <GoalPin size={32} color={activo ? "#FFFFFF" : "var(--color-ink)"} />
         </span>
       ) : (
         // Este círculo vive DENTRO de la card, no sobre el mapa: no lleva la
@@ -287,12 +288,6 @@ function RailDePasos({
 }) {
   return (
     <ol aria-label={label} className="relative m-0 flex list-none flex-col gap-1 p-0">
-      {/* la línea punteada que une las paradas — el alma de la card */}
-      <span
-        aria-hidden="true"
-        className="absolute bottom-[30px] left-[25.5px] top-[30px] w-px opacity-70"
-        style={PUNTEADA}
-      />
       {pasos.map((p, i) => (
         <li
           key={p.titulo}
@@ -342,12 +337,26 @@ function RailDePasos({
             </span>
 
             {/* Tiempo del paso mientras la demo corre sola: se lee como "esto
-                avanza" y desaparece en cuanto el usuario toma el control. */}
+                avanza" y desaparece en cuanto el usuario toma el control.
+
+                No es una barrita pegada al fondo de la fila: es la fila
+                llenándose. Un velo que la recorre de izquierda a derecha y un
+                canto mango —el acento SOBRE tinta— que avanza con él, los dos
+                recortados por el radio de la fila. Nace y muere con la demo,
+                así que no hay repintado en reposo. */}
             {auto && activo === i && (
-              <span aria-hidden="true" className="absolute inset-x-2 bottom-[3px] h-[2px] overflow-hidden rounded-full bg-white/[0.22]">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-hidden rounded-block"
+              >
                 <span
-                  key={i}
-                  className="crd-paso-auto block size-full rounded-full bg-white"
+                  key={`velo-${i}`}
+                  className="crd-paso-auto absolute inset-0 bg-white/[0.07]"
+                  style={{ animationDuration: `${PASO_AUTO_MS}ms` }}
+                />
+                <span
+                  key={`canto-${i}`}
+                  className="crd-paso-auto absolute inset-x-0 bottom-0 h-[3px] bg-mango"
                   style={{ animationDuration: `${PASO_AUTO_MS}ms` }}
                 />
               </span>
@@ -694,7 +703,7 @@ function ViajerosFinal() {
         </>
       )}
 
-      {/* Paradas: pin de la app; visitada = done; la meta lleva bandera. */}
+      {/* Paradas: pin de la app; visitada = done; la meta lleva el damero. */}
       {visible &&
         F_STOPS.map((d, i) => {
           const esMeta = i === F_STOPS.length - 1;
@@ -708,7 +717,7 @@ function ViajerosFinal() {
                     <span key={`ping-${i}-${Math.floor(t / GPS_LOOP)}`} className="vn6-ping absolute inset-[-6px] rounded-full border-2 border-mango" />
                   )}
                   {esMeta ? (
-                    <GoalFlag size={40} />
+                    <GoalPin size={30} className="[filter:drop-shadow(0_3px_7px_rgba(0,0,0,.30))]" />
                   ) : (
                     <CategoryPin category={d.category} state={visitada ? "done" : "default"} size={28} />
                   )}
@@ -1027,25 +1036,12 @@ function NegociosFinal() {
                   <span key={ultima.key} className="vn6-ping absolute inset-[-5px] rounded-full border-2 border-mango" />
                 )}
                 <div
-                  className={`flex size-10 items-center justify-center rounded-full bg-mango text-ink ring-[2.5px] ring-inset ring-mango-ink ${PIN_CHROME}`}
+                  className={`flex size-10 items-center justify-center rounded-full bg-mango-deep text-white ring-[2.5px] ring-inset ring-mango-ink ${PIN_CHROME}`}
                 >
                   <Icon name="storefront" className="text-feature" />
                 </div>
               </div>
             </div>
-            {ultima && (
-              // En móvil el toast a la derecha se salía del viewport (hasta
-              // 31 px cortados): ahí va debajo del pin, centrado.
-              <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 max-[899px]:left-1/2 max-[899px]:top-[calc(100%+6px)] max-[899px]:-translate-x-1/2 max-[899px]:translate-y-0">
-                <div
-                  key={ultima.key}
-                  className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-2.5 py-1 font-label text-micro font-bold text-ink shadow-e1 backdrop-blur-[24px] backdrop-saturate-[1.8]"
-                >
-                  <Icon name="check_circle" className="text-sm text-mint-ink" />
-                  {ultima.nombre} llegó desde {ultima.origen}
-                </div>
-              </div>
-            )}
           </MarkerContent>
         </MapMarker>
       )}

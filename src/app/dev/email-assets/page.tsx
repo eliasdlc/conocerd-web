@@ -26,14 +26,15 @@ export default function EmailAssetsDevPage() {
           alrededor del sello al pegarlo en el correo. */}
       <style>{"html,body{background:transparent!important}"}</style>
 
-      {/* El logo principal, reducido al tamaño real del correo. */}
+      {/* El logo principal, reducido al tamaño real del correo. Sale del mismo
+          SVG que sirve la home: si el logo cambia, el correo cambia con él. */}
       <figure style={{ margin: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element -- la foto la
             toma Chromium sobre el archivo original; next/image serviría un
             derivado optimizado y perdería el control del tamaño exacto. */}
         <img
           data-asset="logo"
-          src="/assets/logo.png"
+          src="/assets/logo.svg"
           alt="ConoceRD"
           width={EMAIL_ASSET_PX.logoWidth}
           style={{ display: "block", height: "auto" }}

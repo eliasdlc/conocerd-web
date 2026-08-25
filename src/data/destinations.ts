@@ -53,14 +53,21 @@ export type CategoryMeta = {
   icon: IconName;
   color: string;
   ink: string;
+  /**
+   * Relleno del pin del mapa, que lleva el glifo en BLANCO. Es `color`
+   * profundizado hacia `ink` hasta pasar 3:1 contra blanco —el mínimo de un
+   * objeto gráfico— sin dejar de leerse como el color de la categoría: en
+   * `color` puro el glifo blanco daba de 2.02:1 (playa) a 3.05:1 (cultura).
+   */
+  deep: string;
 };
 
 export const CATEGORY_META: Record<Category, CategoryMeta> = {
-  playa: { label: "Playas", icon: "beach_access", color: "#25CCB8", ink: "#0C6A60" },
-  naturaleza: { label: "Naturaleza", icon: "forest", color: "#4CAF50", ink: "#2E7D32" },
-  gastronomia: { label: "Gastro", icon: "restaurant", color: "#F76C4D", ink: "#B23410" },
-  cultura: { label: "Cultura", icon: "account_balance", color: "#2D9CDB", ink: "#1F6FA8" },
-  aventura: { label: "Aventura", icon: "hiking", color: "#FF8D16", ink: "#985409" },
+  playa: { label: "Playas", icon: "beach_access", color: "#25CCB8", ink: "#0C6A60", deep: "#1B9F90" },
+  naturaleza: { label: "Naturaleza", icon: "forest", color: "#4CAF50", ink: "#2E7D32", deep: "#44A148" },
+  gastronomia: { label: "Gastro", icon: "restaurant", color: "#F76C4D", ink: "#B23410", deep: "#EB6446" },
+  cultura: { label: "Cultura", icon: "account_balance", color: "#2D9CDB", ink: "#1F6FA8", deep: "#2B96D4" },
+  aventura: { label: "Aventura", icon: "hiking", color: "#FF8D16", ink: "#985409", deep: "#D67611" },
 };
 
 export const CATEGORIES = Object.keys(CATEGORY_META) as Category[];
@@ -432,11 +439,15 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.35, 18.85], zoom: 6.8, pitch: 0, bearing: 0,
     mobile: { zoom: 5.9 },
   },
-  // El negocio (Santiago) vive al noroeste del centro de la isla: con el centro
-  // genérico quedaba pegado al borde superior, bajo el nav.
+  // El protagonista de la escena es el negocio (Santiago), así que la cámara se
+  // centra EN él: con un centro genérico quedaba arriba a la izquierda, debajo
+  // del nav y detrás de la estampa del panel, y no se veía. Centrado, cae en el
+  // carril libre entre el panel y el teléfono en cualquier ancho de desktop.
+  // El zoom baja de 8.5 a 7.6 porque a 8.5 el país no cabía: hacen falta ~3.7°
+  // de longitud y a 8.5 la ventana solo enseñaba 2.8°.
   negocios: {
-    center: [-70.30, 19.00], zoom: 8.5, pitch: 18, bearing: 0,
-    mobile: { center: [-70.62, 19.38], zoom: 7.2, pitch: 12 },
+    center: [-70.6901, 19.4517], zoom: 7.6, pitch: 12, bearing: 0,
+    mobile: { zoom: 6.1, pitch: 8 },
   },
   // Santiago de los Caballeros: la ciudad desde donde se construye ConoceRD.
   equipo: {
