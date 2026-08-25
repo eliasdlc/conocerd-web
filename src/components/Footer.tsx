@@ -101,10 +101,10 @@ export default function Footer() {
 
       {/* Legal */}
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-white/10 px-[clamp(20px,5vw,56px)] py-4">
-        <p className="m-0 w-full font-mono text-[10px] leading-[1.7] text-white/35">
+        <p className="m-0 w-full text-[10px] leading-[1.7] text-white/35">
           Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}.
         </p>
-        <div className="font-mono text-xs text-white/45">
+        <div className="text-xs text-white/45">
           © 2026 ConoceRD · Hecho con orgullo en RD
         </div>
         <div className="flex gap-[18px]">

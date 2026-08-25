@@ -223,7 +223,7 @@ function StopBadge({ n, size = 18 }: { n: number; size?: number }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute grid place-items-center rounded-full border border-cream/95 bg-ink font-mono font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
+      className="absolute grid place-items-center rounded-full border border-cream/95 bg-ink font-label font-extrabold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
       style={{
         width: size,
         height: size,
@@ -276,7 +276,7 @@ function CardBody({
           {d.rating.toFixed(1)}
         </div>
       </div>
-      <div className="mt-0.5 font-mono text-micro text-muted">
+      <div className="mt-0.5 text-micro text-muted">
         {d.province} · {meta.label}
       </div>
       <p className={`leading-[1.45] text-muted ${compact ? "mt-1 text-mini" : "mt-1.5 text-tiny"}`}>
@@ -293,12 +293,12 @@ function CardBody({
         ))}
       </div>
       {inRoute ? (
-        <div className="mt-2 flex items-center gap-1.5 font-mono text-micro font-bold text-mango-ink">
+        <div className="mt-2 flex items-center gap-1.5 font-label text-micro font-bold text-mango-ink">
           <Icon name="route" className="text-sm" />
           Parada {stopIndex + 1} de tu ruta
         </div>
       ) : showArrival ? (
-        <div className="mt-2 flex items-center gap-1.5 font-mono text-micro font-bold text-mint-ink">
+        <div className="mt-2 flex items-center gap-1.5 font-display text-micro font-bold text-mint-ink">
           <Icon name="route" className="text-sm" />A {Math.round(pairKm(last, d.id))} km ·{" "}
           {fmtDur(pairMin(last, d.id))} de {DEST[last].name}
         </div>
@@ -370,7 +370,7 @@ function PinCard({
       {side === "bottom" && (
         <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-white" />
       )}
-      <div className="overflow-hidden rounded-card border border-line bg-white shadow-modal">
+      <div className="overflow-hidden rounded-block border border-line bg-white shadow-e1">
         <div className="relative h-[104px] w-full bg-cream-2">
           <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
         </div>
@@ -492,14 +492,14 @@ function PresetCard({
       onClick={onSelect}
       aria-pressed={active}
       aria-label={`Cargar la ruta ${preset.name}: ${data} de manejo`}
-      className={`flex cursor-pointer items-center gap-2.5 rounded-card border-[1.5px] text-left transition-[border-color,background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
+      className={`flex cursor-pointer items-center gap-2.5 rounded-block border-[1.5px] text-left transition-[border-color,background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
         active
-          ? "border-mango bg-mango-soft shadow-card"
+          ? "border-mango bg-mango-soft shadow-e1"
           : "border-line bg-white hover:border-mango/60"
       } ${compact ? "w-[248px] flex-none p-2" : "w-full p-2"}`}
     >
       <span
-        className={`relative flex-none overflow-hidden rounded-tile bg-cream-2 ${
+        className={`relative flex-none overflow-hidden rounded-chip bg-cream-2 ${
           compact ? "size-11" : "size-12"
         }`}
       >
@@ -513,7 +513,7 @@ function PresetCard({
         {!compact && (
           <span className="mt-px block truncate text-mini text-muted">{preset.tagline}</span>
         )}
-        <span className="mt-px block whitespace-nowrap font-mono text-micro font-bold text-mint-ink">
+        <span className="mt-px block whitespace-nowrap font-display text-micro font-bold text-mint-ink">
           {data}
         </span>
       </span>
@@ -539,7 +539,7 @@ function CategoryFilter({
     <div
       role="group"
       aria-label="Filtrar destinos por categoría"
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];
@@ -551,7 +551,7 @@ function CategoryFilter({
             onClick={() => onToggle(cat)}
             aria-pressed={on}
             title={meta.label}
-            className="grid h-[60px] w-[60px] cursor-pointer content-center justify-items-center gap-1 rounded-tile border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5"
+            className="grid h-[60px] w-[60px] cursor-pointer content-center justify-items-center gap-1 rounded-chip border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5"
             style={{
               borderColor: on ? meta.color : "transparent",
               background: on
@@ -1027,7 +1027,7 @@ export default function MapaSection() {
                   <button
                     type="button"
                     onClick={optimize}
-                    className="crd-sticker flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+                    className="flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-selected px-3 py-2 text-tiny font-bold text-on-selected"
                   >
                     <Glyph d={GLYPH_SORT} className="text-sm" />
                     Ordena mejor · te ahorras {saveKm} km
@@ -1082,13 +1082,13 @@ export default function MapaSection() {
                       <div className="flex items-center gap-2.5 py-1">
                         <span
                           aria-hidden="true"
-                          className="grid size-[22px] flex-none place-items-center rounded-full bg-mango font-mono text-mini font-bold text-white"
+                          className="grid size-[22px] flex-none place-items-center rounded-full bg-mango font-label text-mini font-bold text-white"
                         >
                           {i + 1}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-xs font-bold text-ink">{d.name}</div>
-                          <div className="truncate font-mono text-micro text-muted">
+                          <div className="truncate text-micro text-muted">
                             {d.province}
                           </div>
                         </div>
@@ -1115,7 +1115,7 @@ export default function MapaSection() {
 
                       {/* Tramo hacia la siguiente parada: km y minutos reales */}
                       {i < stops.length - 1 && (
-                        <div className="ml-[10px] border-l-2 border-dashed border-mango/60 py-1 pl-[19px] font-mono text-micro text-muted-2">
+                        <div className="ml-[10px] border-l-2 border-dashed border-mango/60 py-1 pl-[19px] text-micro text-muted-2">
                           {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
                           {fmtDur(pairMin(id, stops[i + 1]))} manejando
                         </div>
@@ -1158,7 +1158,7 @@ export default function MapaSection() {
               {/* El cuño da el gesto; los datos hay que poder leerlos, y dentro
                   del anillo a este tamaño no se leen. */}
               <p
-                className="mapa6-rise mt-1 font-mono text-micro font-bold uppercase tracking-[.1em] text-muted"
+                className="mapa6-rise mt-1 font-display text-micro font-bold uppercase tracking-[.1em] text-muted"
                 style={{ animationDelay: ".3s" }}
               >
                 {stops.length} paradas · {totalKm} km · {fmtDurShort(totalMin)}
@@ -1255,7 +1255,7 @@ export default function MapaSection() {
         <div className="flex-none border-t border-line bg-cream-2/70">
           <div className="grid grid-cols-3">
             <div className="px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {stops.length}
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1263,7 +1263,7 @@ export default function MapaSection() {
               </div>
             </div>
             <div className="border-l border-line px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {totalKm} km
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1271,7 +1271,7 @@ export default function MapaSection() {
               </div>
             </div>
             <div className="border-l border-line px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {fmtDurShort(totalMin)}
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1339,7 +1339,7 @@ export default function MapaSection() {
         {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
             en móvil ambos viven dentro del sheet del itinerario). */}
         <div
-          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[300px] -translate-y-1/2 rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
+          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[300px] -translate-y-1/2 rounded-surface px-4 py-4 shadow-e1 max-[899px]:hidden`}
         >
           <h2 className="m-0 font-display text-[22px] font-bold leading-tight text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
@@ -1366,7 +1366,7 @@ export default function MapaSection() {
         <section
           ref={panelRef}
           aria-label="Tu itinerario"
-          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none max-[899px]:pb-[var(--crd-stepper-h)] ${
+          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-surface shadow-e1 max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none max-[899px]:pb-[var(--crd-stepper-h)] ${
             sel ? "max-[899px]:hidden" : ""
           } ${stamped ? "mapa6-kick" : ""} ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
           style={dragY !== 0 ? { transform: `translateY(${dragY}px)` } : undefined}
@@ -1379,10 +1379,10 @@ export default function MapaSection() {
           <div
             role="dialog"
             aria-label={sel.name}
-            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-panel p-3 shadow-modal motion-reduce:animate-none min-[900px]:hidden`}
+            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-surface p-3 shadow-e1 motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
-              <div className="relative size-[92px] flex-none overflow-hidden rounded-tile bg-cream-2">
+              <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
                 <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1411,7 +1411,7 @@ export default function MapaSection() {
               <button
                 type="button"
                 onClick={optimize}
-                className="crd-sticker mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+                className="mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-selected px-3 py-2 text-tiny font-bold text-on-selected"
               >
                 <Glyph d={GLYPH_SORT} className="text-sm" />
                 Ordena mejor · te ahorras {saveKm} km

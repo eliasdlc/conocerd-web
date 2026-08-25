@@ -10,88 +10,113 @@
   --breakpoint-desk: 900px;
 
   /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
-     nombre literal ('Fraunces') NO resuelve, porque next/font sirve cada
-     familia bajo un nombre hasheado. */
-  /* `display` es el serif editorial y sólo se usa en titulares (≥20px) y en el
-     acento itálico; todo lo demás —cuerpo, botones, nav, etiquetas— es `sans`.
-     Mezclarlos era lo que hacía el sitio antes, y de ahí salía el look de
-     plantilla. Fraunces sólo tiene el peso 700 cargado: `font-extrabold` no
-     existe en esta paleta tipográfica. */
-  --font-sans:    var(--font-instrument), system-ui, sans-serif;
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
+     nombre literal ('Inter') NO resuelve, porque next/font sirve cada familia
+     bajo un nombre hasheado.
+
+     Tres roles y una excepción, los mismos que la app:
+       display  Bricolage Grotesque — titulares y cifras de carretera
+       label    Plus Jakarta Sans   — botones, chips, etiquetas, overlines
+       sans     Inter               — cuerpo y metadatos
+       hand     Caveat              — sólo la firma del dorso de la polaroid
+
+     No hay familia mono: las cifras que la llevaban van en `display` y los
+     metadatos en `sans`. */
+  --font-sans:    var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), "Trebuchet MS", system-ui, sans-serif;
+  --font-label:   var(--font-jakarta), system-ui, sans-serif;
   --font-hand:    var(--font-caveat), cursive;
 
-  --color-ink:        #264653;
-  --color-ink-2:      #1D3A45;
-  --color-coral:      #F76C4D;
-  --color-coral-soft: #FFE7DF;
-  --color-mango:      #FF8D16;
-  --color-mango-soft: #FFE6C8;
-  --color-mint:       #25CCB8;
-  --color-mint-soft:  #C6F3EB;
-  --color-cream:      #FDF8F0;
-  --color-cream-2:    #F5EFE2;
-  --color-line:       #EBE6D9;
-  --color-muted:      #5B6B72;   /* darkened for WCAG AA on light bg (was #7A8A91, 3.4:1) */
-  --color-muted-2:    #66747B;   /* darkened for WCAG AA on light bg (was #97A2A8, 2.6:1) */
-  /* Accessible "ink" variants of brand hues — for COLORED TEXT on light surfaces only.
-     Keep the bright brand hues for fills, borders and dots. */
-  --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
-  --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
-  --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
+  /* ── Color · los nueve roles ──────────────────────────────────────────────
+     Misma paleta que la app en modo día. El sistema anterior tenía su propia
+     tinta (#264653) y su propio coral (#F76C4D); ninguno de los dos sobrevive:
+     el coral vivo con texto blanco daba 2.91:1 y era el relleno del botón
+     primario de todo el sitio. El coral profundizado da 3.81:1, que pasa AA
+     como texto grande, y por eso el relleno coral exige etiqueta ≥19 w700. */
+  --color-ink:         #0F1A2E;  /* 16.45:1 sobre cream */
+  --color-ink-2:       #090F1B;  /* extremo del degradado de tinta */
+  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper — texto de segundo plano */
+  --color-coral:       #E0552F;  /* acción y selección; NUNCA decoración */
+  --color-coral-soft:  #FFE7DF;
+  --color-coral-ink:   #B23410;  /* 5.86:1 sobre cream, 5.23:1 sobre coral-soft */
+  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink — el acento SOBRE tinta */
+  --color-mango-soft:  #FFE6C8;
+  --color-mango-ink:   #985409;  /* 4.83:1 sobre mango-soft, 5.82:1 sobre paper */
+  --color-mint:        #25CCB8;
+  --color-mint-soft:   #C6F3EB;
+  --color-mint-ink:    #0C6A60;  /* 5.37:1 sobre mint-soft, 6.47:1 sobre paper */
+  --color-paper:       #FFFFFF;
+  --color-cream:       #FDF8F0;
+  --color-cream-2:     #F5EFE2;
+  --color-line:        #EBE6D9;
+  --color-line-strong: #D9D2C1;
+  --color-muted:       #677080;  /* 4.72:1 sobre cream, 4.99:1 sobre paper */
+  --color-muted-2:     #7D8594;  /* borde de campo: con `line` daba 1.25:1 */
+  --color-danger:      #B42318;  /* 6.57:1 sobre blanco; separado del coral */
+  --color-danger-soft: #FEE4E2;
 
-  /* ── Elevación ────────────────────────────────────────────────────────────
-     Había 18 sombras ad-hoc sobre el mismo ink para lo que en realidad son
-     tres niveles (audit 4.3). Cada token es el centro de su grupo, así que
-     migrar una sombra concreta mueve como mucho un par de píxeles de blur.
-     Se mantienen fuera de la escala, por ser efectos y no elevación: el
-     mockup del teléfono (tres capas) y el anillo de foco coral. */
-  --shadow-card:  0 6px 18px rgba(38,70,83,.14);
-  --shadow-panel: 0 12px 32px rgba(38,70,83,.18);
-  --shadow-modal: 0 26px 58px rgba(38,70,83,.20);
-  /* Sombra sticker de los CTA (audit §3, movimiento 3). Los botones llevaban
-     un halo del mismo color que el relleno —el cliché de plantilla 2019— y
-     sobre crema se leía como neón. Un offset duro y neutro los convierte en
-     calcomanías pegadas al papel, que es el lenguaje del resto del sitio
-     (polaroids, sellos). Sin blur a propósito: el blur es elevación y de eso
-     ya se encarga la escala de arriba. */
-  --shadow-sticker: 0 3px 0 rgba(38,70,83,.18);
-  /* Halo de color: sólo para pines sobre el mapa, donde el contraste contra la
-     cartografía sí necesita ayuda. Ningún botón lo usa ya. */
-  --shadow-glow-coral: 0 6px 20px rgba(247,108,77,.34);
+  /* Relleno de TODO lo seleccionado, y de toda acción cuya etiqueta no llegue
+     a 19 w700. Es `ink`, y con blanco encima da 17.39:1 a cualquier tamaño:
+     por eso resuelve los botones donde el coral reprueba. Tiene nombre propio
+     porque el rol es distinto del de la tinta de texto. */
+  --color-selected:    #0F1A2E;
+  --color-on-selected: #FFFFFF;
 
-  /* ── Radios ───────────────────────────────────────────────────────────────
-     13 radios arbitrarios convivían con la escala de Tailwind, y las baldosas
-     de icono usaban cuatro tratamientos distintos para el mismo elemento
-     (9px asimétrico / 7px / 11px / full — audit 4.6). Nombres propios para no
-     pisar `rounded-md|xl|2xl`, que el proyecto sí usa. */
-  --radius-chip:  10px;
-  --radius-tile:  11px;
-  --radius-card:  14px;
-  --radius-panel: 22px;
+  /* ── Elevación · una sola sombra por nivel ────────────────────────────────
+     Las tres sombras teñidas (card / panel / modal) eran tres respuestas al
+     mismo problema y la calcomanía era una cuarta. Quedan dos niveles y un
+     resplandor:
+
+       e1  superficie apoyada. Una sola capa, siempre la misma.
+       e2  el resplandor del propio acento, y SÓLO bajo la acción primaria.
+           No es sombra ni sustituto de sombra: es lo que hace que una pieza
+           lea encendida en vez de levantada.
+
+     `glow-coral` sobrevive porque no es elevación: es el halo que los pines
+     necesitan contra la cartografía. */
+  --shadow-e1:      0 10px 30px rgba(38,70,83,.08);
+  --shadow-e2:      0 8px 22px -6px rgba(224,85,47,.35);
+  --shadow-e2-mint: 0 8px 22px -6px rgba(37,204,184,.35);
+  --shadow-glow-coral: 0 6px 20px rgba(224,85,47,.34);
+
+  /* ── Radios · el nombre dice el tamaño del elemento ───────────────────────
+     Un chip dentro de una card nunca se ve como una copia pequeña de la card.
+     Regla de anidado: el radio interior es el exterior menos su propio
+     padding, nunca mayor. Los 6/3 de la polaroid no están aquí a propósito:
+     son el artefacto, no la escala. */
+  --radius-chip:    12px;  /* baldosa, badge, miniatura */
+  --radius-ctrl:    16px;  /* input, segmento, celda de filtro */
+  --radius-block:   18px;  /* fila, banner, bloque seleccionable */
+  --radius-surface: 22px;  /* card, sheet, panel */
 
   /* ── Tipografía ───────────────────────────────────────────────────────────
-     17 tamaños arbitrarios con saltos de medio píxel (9.5→10→10.5→…), fruto
-     de ajustar cada caso a ojo (audit 4.4). Siete tokens cubren ~70 usos; el
-     mayor desplazamiento al migrar es de 0.5px. Los tamaños realmente únicos
-     (19, 26, 38, 42) siguen inline. Nombres propios para no pisar la escala
+     Siete tokens cubren ~70 usos. Los tamaños realmente únicos (19, 26, 34,
+     38, 42, 44, 52) siguen inline. Nombres propios para no pisar la escala
      `text-xs…text-3xl` de Tailwind, que el proyecto usa en 56 sitios. */
-  --text-micro:   10px;    /* absorbe 9.5 / 10 / 10.5 */
-  --text-mini:    11px;    /* absorbe 11 / 11.5 */
+  --text-micro:   10px;
+  --text-mini:    11px;
   --text-tiny:    12.5px;
-  --text-copy:    13.5px;  /* absorbe 13 / 13.5 */
-  --text-body:    15px;    /* absorbe 14.5 / 15 / 15.5 */
+  --text-copy:    13.5px;
+  --text-body:    15px;
   --text-lead:    17px;
   --text-feature: 22px;
 
-  /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
-     Los @keyframes viven más abajo en este archivo.
-     slideUpIn se usaba con 0.4s / 0.45s / 0.5s en 8 sitios distintos; aquí se
-     unifica en un solo token. El stagger sigue siendo inline (animationDelay),
+  /* Animaciones como utilidades: `animate-slide-up`. Los @keyframes viven más
+     abajo en este archivo. El stagger sigue siendo inline (animationDelay),
      porque depende del índice. */
   --animate-slide-up: slideUpIn .45s cubic-bezier(.16,1,.3,1) both;
   --animate-live-dot: crdLiveDot 1.4s ease-in-out infinite;
+}
+
+/* ── Cristal del tema ─────────────────────────────────────────────────────────
+   Una sola receta para todo lo que flota sobre el mapa. Había tres (92 % con
+   blur 16, 96 % con blur 18, 88 %) y ninguna era la de la app. Ésta sí: la
+   superficie a 84 %, blur 24 con saturación 1.8, y un hairline de cristal.
+   Se puede bajar del 92 al 84 sin perder nada porque el texto ink sobre este
+   cristal, con lo más oscuro del mapa debajo, sigue dando 14.89:1. */
+:root {
+  --crd-glass:      rgba(253, 248, 240, .84);
+  --crd-glass-line: rgba(38, 70, 83, .08);
+  --crd-glass-blur: blur(24px) saturate(1.8);
 }
 
 html {
@@ -154,11 +179,11 @@ html {
 body {
   margin: 0;
   background: #FDF8F0;
-  color: #264653;
+  color: var(--color-ink);
   font-family: var(--font-sans);
   min-height: 100vh;
 }
-::selection { background: #FFE6C8; color: #264653; }
+::selection { background: var(--color-mango-soft); color: var(--color-ink); }
 
 /* ── Grano de papel (audit §3, movimiento 4) ──────────────────────────────────
    Los fondos crema eran gradientes radiales perfectamente lisos: "gradiente de
@@ -275,7 +300,7 @@ body::after {
   background:
     radial-gradient(60% 50% at 18% 16%, rgba(37,204,184,.10), transparent 70%),
     radial-gradient(55% 45% at 84% 24%, rgba(255,141,22,.10), transparent 70%),
-    radial-gradient(60% 50% at 50% 98%, rgba(247,108,77,.08), transparent 70%),
+    radial-gradient(60% 50% at 50% 98%, rgba(224,85,47,.08), transparent 70%),
     var(--color-cream);
 }
 
@@ -353,7 +378,7 @@ body::after {
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
-    border-radius: var(--radius-panel) var(--radius-panel) 0 0 !important;
+    border-radius: var(--radius-surface) var(--radius-surface) 0 0 !important;
     max-height: min(62dvh, 520px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -368,7 +393,7 @@ body::after {
        que no entra en la escala de elevación, que proyecta hacia abajo. */
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
-  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: #B5C0BD; margin: -10px auto 14px; }
+  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: var(--color-line-strong); margin: -10px auto 14px; }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
     /* Único scroll "de página" permitido en móvil: el contenido de Equipo no
@@ -517,55 +542,57 @@ body::after {
    titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
    —que va en Instrument— también trae la familia, y ahí es donde se nota que
    el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
-.crd-accent {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  color: var(--color-coral-ink);
-}
-/* Sobre la card ink del CTA el coral accesible se apaga; ahí manda el vivo. */
+/* El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
+   con Fraunces. La palabra acentuada va en la misma tipografía que la frase que
+   la contiene y se distingue sólo por la tinta. Va en <em>, que es la etiqueta
+   semántica correcta, y por eso hay que apagarle la cursiva del navegador.
+   Una sola palabra acentuada por titular: dos ya es ruido. */
+.crd-accent,
 .crd-accent-on-ink {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  color: var(--color-mango);
+  font-style: normal;
+  font-weight: inherit;
 }
+.crd-accent { color: var(--color-coral-ink); }        /* 5.86:1 sobre cream */
+/* Sobre tinta el coral accesible se apaga: ahí el acento es el mango, que da
+   7.51:1 contra los 4.56:1 del coral. */
+.crd-accent-on-ink { color: var(--color-mango); }
 
 .crd-navlink {
   position: relative;
   text-decoration: none;
-  color: #264653;
-  /* El nav es UI, no titular: sans 600. El serif se reserva a los titulares. */
-  font-family: var(--font-sans);
+  color: var(--color-ink-3);
+  /* El nav es UI, no titular: la familia de etiqueta, nunca la de display. */
+  font-family: var(--font-label);
   font-weight: 600;
   font-size: var(--text-body);
   padding: 4px 2px;
   transition: color .2s;
 }
-.crd-navlink:hover { color: #F76C4D; }
+.crd-navlink:hover { color: var(--color-ink); }
 .crd-navlink::after {
   content: '';
   position: absolute;
   left: 0; bottom: -3px;
   height: 2px; width: 0;
-  background: #F76C4D;
+  background: var(--color-coral);
   transition: width .25s ease;
 }
 .crd-navlink:hover::after { width: 100%; }
 
-/* El `scale` del hover era la otra mitad del look de plantilla: un CTA que
-   crece bajo el cursor. Ahora el botón se despega del papel al pasar por
-   encima y se hunde al pulsar — el offset de la sombra hace el trabajo, no la
-   escala. Los estados viven aquí porque :active tiene que ganarle a :hover. */
+/* Nunca `scale`: un CTA que crece bajo el cursor es la mitad del look de
+   plantilla. El botón se despega del papel al pasar por encima y se hunde al
+   pulsar. Los estados viven aquí porque :active tiene que ganarle a :hover.
+
+   La calcomanía (sombra de offset duro) murió con el sistema anterior: la
+   acción primaria se enciende con el resplandor de su propio acento (e2), no
+   se pega al papel. Por eso el hover sólo mueve la pieza y el resplandor lo
+   pone la variante. */
 .crd-button:hover {
   transform: translateY(-2px);
 }
 .crd-button:active {
   transform: translateY(1px) !important;
 }
-.crd-sticker { box-shadow: var(--shadow-sticker); }
-.crd-button.crd-sticker:hover  { box-shadow: 0 5px 0 rgba(38,70,83,.18); }
-.crd-button.crd-sticker:active { box-shadow: 0 1px 0 rgba(38,70,83,.18) !important; }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */
 /* Va en @layer base a propósito: el CSS sin capa le gana a las utilidades de
@@ -574,7 +601,7 @@ body::after {
    `focus-visible:outline-*` puesto en un componente. */
 @layer base {
   :where(a, button, [role="button"], input, select, textarea):focus-visible {
-    outline: 2px solid #F76C4D;
+    outline: 2px solid var(--color-coral);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -607,7 +634,7 @@ body::after {
 .crd-lista-blooms {
   background:
     radial-gradient(620px 420px at 12% -6%, rgba(37,204,184,.20), transparent 70%),
-    radial-gradient(560px 400px at 96% 8%, rgba(247,108,77,.16), transparent 72%),
+    radial-gradient(560px 400px at 96% 8%, rgba(224,85,47,.16), transparent 72%),
     radial-gradient(700px 500px at 78% 104%, rgba(255,141,22,.13), transparent 74%);
 }
 
@@ -693,9 +720,10 @@ body::after {
 }
 
 /* El CTA de Instagram era el único elemento del sitio con el degradado oficial
-   de otra marca a todo color; en ink pesa igual sin competir (audit §3, mov. 9). */
-.crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3), box-shadow .2s; }
-.crd-ig-cta:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(38,70,83,.18); }
+   de otra marca a todo color; en ink pesa igual sin competir. La sombra de
+   calcomanía del hover murió con el resto: la pieza se levanta, no se despega. */
+.crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3); }
+.crd-ig-cta:hover { transform: translateY(-2px); }
 
 /* Sello de pasaporte: el estado "conseguido" de cada cupón de /lista. Es la
    receta del sello de llegada de la app a escala micro: borde de 2 más
@@ -718,9 +746,9 @@ body::after {
   border: 2px solid var(--color-mint-ink);
   border-radius: 6px;
   padding: 4px 11px;
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--text-micro);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--color-mint-ink);
@@ -769,13 +797,13 @@ body::after {
   font-size: clamp(28px, 5vw, 38px);
   line-height: 1.1;
   margin: 0 0 6px;
-  color: #1D3A45;
+  color: var(--color-ink);
 }
 .crd-legal h2 {
   font-weight: 700;
   font-size: var(--text-lead);
   margin: 30px 0 8px;
-  color: #1D3A45;
+  color: var(--color-ink);
 }
 .crd-legal p { margin: 0 0 14px; }
 /* `list-style: disc` explícito: el preflight de Tailwind lo quita de todos los
@@ -785,8 +813,7 @@ body::after {
 .crd-legal li { margin-bottom: 7px; }
 .crd-legal a { color: var(--color-coral-ink); }
 .crd-legal-date {
-  font-family: var(--font-mono);
   font-size: var(--text-tiny);
-  color: #66747B;
+  color: var(--color-muted);
   margin-bottom: 26px !important;
 }

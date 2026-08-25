@@ -25,7 +25,7 @@ function HeroPin() {
     >
       <path
         d="M17 1C8.7 1 2 7.7 2 16c0 10.5 13 27 14.1 28.3a1.2 1.2 0 0 0 1.8 0C19 43 32 26.5 32 16 32 7.7 25.3 1 17 1Z"
-        fill="#F76C4D" stroke="#fff" strokeWidth="2" />
+        fill="#E0552F" stroke="#fff" strokeWidth="2" />
       <circle cx="17" cy="16" r="5.5" fill="#fff" />
     </svg>
   );
@@ -119,7 +119,7 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
     >
       {/* Móvil ya no se desliza: el recorrido avanza tocando (este cue o el
           panel de pasos de abajo). */}
-      <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
+      <span className="font-label text-micro font-extrabold uppercase tracking-[.16em]">
         {compacto ? "Toca para explorar" : "Explora"}
       </span>
       <svg
@@ -134,7 +134,7 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         <polyline
           points="5,8 12,16 19,8"
           fill="none"
-          stroke="#F76C4D"
+          stroke="#E0552F"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -206,7 +206,7 @@ export default function HeroOverlay() {
             {/* Ghost, no relleno: dos botones llenos del mismo peso —mango y
                 mint— se anulaban mutuamente y el hero no decía cuál es la
                 acción principal (audit §3). */}
-            <Button variant="outline" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
+            <Button variant="ghost" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
               Soy un negocio
             </Button>
           </div>

@@ -39,8 +39,8 @@ export default function Nav() {
       <div
         ref={pillRef}
         className="crd-nav-pill group flex items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-line/90 py-2 pl-[clamp(12px,1.8vw,22px)] pr-2 backdrop-blur-[18px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(8px,1.4vw,18px)] [scrollbar-width:none]
-          bg-cream/60 shadow-card
-          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-panel"
+          bg-cream/60 shadow-e1
+          data-[solid=true]:bg-cream/92 data-[solid=true]:shadow-e1"
       >
         {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
             a tamaño completo y repetirlo sobraría. */}
@@ -83,7 +83,7 @@ export default function Nav() {
         {/* La app aún no está publicada: el CTA más visible del sitio lleva a la
             lista de espera, no a una descarga que no existe. */}
         <Button
-          variant="primary"
+          variant="selected"
           size="sm"
           icon="notifications_active"
           onClick={() => requestSubscribe("viajero")}

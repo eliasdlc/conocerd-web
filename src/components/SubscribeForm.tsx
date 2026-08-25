@@ -73,7 +73,7 @@ const TONES: Record<Tone, {
 // Sin `outline-none`: las utilities le ganan al anillo de focus global de
 // @layer base (globals.css) y los campos del embudo quedaban sin focus visible
 // al navegar con teclado (audit 5.2).
-const FIELD = "h-12 w-full rounded-card border px-3.5 font-sans text-body";
+const FIELD = "h-12 w-full rounded-block border px-3.5 font-sans text-body";
 
 const AUDIENCE_LABEL: Record<Audience, string> = {
   viajero: "Soy viajero",
@@ -391,7 +391,7 @@ export default function SubscribeForm({
               className={`${field} cursor-pointer`}
             >
               {BUSINESS_TYPES.map((b) => (
-                <option key={b} value={b} style={{ color: "#264653" }}>
+                <option key={b} value={b} style={{ color: "#0F1A2E" }}>
                   {BUSINESS_TYPE_LABELS[b]}
                 </option>
               ))}
@@ -470,7 +470,7 @@ export default function SubscribeForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-card border-none bg-mango text-body font-bold text-white crd-sticker disabled:cursor-progress disabled:opacity-75 ${
+          className={`inline-flex h-12 items-center gap-2 whitespace-nowrap rounded-full border-none bg-selected text-body font-bold text-on-selected disabled:cursor-progress disabled:opacity-75 ${
             compact ? "px-4" : "px-[22px] max-desk:w-full max-desk:justify-center"
           } ${submitting ? "" : "cursor-pointer"}`}
         >

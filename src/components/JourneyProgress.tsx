@@ -121,7 +121,7 @@ export default function JourneyProgress() {
                 {/* Absoluta: la etiqueta no debe ensanchar la columna ni robar
                     el hover del contenido que tiene debajo. */}
                 <span
-                  className={`pointer-events-none absolute right-[calc(100%-2px)] whitespace-nowrap rounded-full bg-cream/95 px-2 py-[3px] font-mono text-micro font-bold uppercase tracking-[.1em] shadow-card transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 ${
+                  className={`pointer-events-none absolute right-[calc(100%-2px)] whitespace-nowrap rounded-full bg-cream/95 px-2 py-[3px] font-label text-micro font-extrabold uppercase tracking-[.1em] shadow-e1 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100 ${
                     activo === i ? "text-ink-2" : "text-muted"
                   } ${activo === i && moviendo ? "opacity-100" : "opacity-0"}`}
                 >

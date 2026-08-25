@@ -206,7 +206,7 @@ function TeamPolaroid({
           >
             {/* Frente: la foto pegada al papel, con sus cintitas */}
             <span
-              className="crd-tape relative block rounded-md bg-white px-3 pb-0 pt-3 shadow-panel [backface-visibility:hidden]"
+              className="crd-tape relative block rounded-md bg-white px-3 pb-0 pt-3 shadow-e1 [backface-visibility:hidden]"
               aria-hidden={flipped}
             >
               <CornerTape className="-right-3.5 top-5 rotate-[48deg]" />
@@ -243,7 +243,7 @@ function TeamPolaroid({
                   {member.name}
                 </span>
                 <span
-                  className="mt-1 block font-mono text-mini font-bold leading-[1.35]"
+                  className="mt-1 block font-label text-mini font-bold leading-[1.35]"
                   style={{ color: member.color }}
                 >
                   {member.role}
@@ -253,11 +253,11 @@ function TeamPolaroid({
 
             {/* Dorso: la bio en sans legible; solo la firma va a mano */}
             <span
-              className="crd-tape absolute inset-0 flex flex-col overflow-hidden rounded-md bg-[#FFFDF7] px-3.5 pb-3 pt-3.5 shadow-panel [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              className="crd-tape absolute inset-0 flex flex-col overflow-hidden rounded-md bg-[#FFFDF7] px-3.5 pb-3 pt-3.5 shadow-e1 [backface-visibility:hidden] [transform:rotateY(180deg)]"
               aria-hidden={!flipped}
             >
               <span
-                className="block font-mono text-micro font-bold uppercase tracking-[.12em]"
+                className="block font-label text-micro font-extrabold uppercase tracking-[.12em]"
                 style={{ color: member.color }}
               >
                 {member.tags}
@@ -272,7 +272,7 @@ function TeamPolaroid({
                 >
                   — {member.name.split(" ")[0]}
                 </span>
-                <span className="flex items-center gap-1 font-mono text-micro text-muted">
+                <span className="flex items-center gap-1 text-micro text-muted">
                   <FlipGlyph size={11} />
                   volver
                 </span>
@@ -312,7 +312,7 @@ function RoadmapCard({ visible }: { visible: boolean }) {
   return (
     <section
       aria-label="En qué va ConoceRD ahora mismo"
-      className={`relative w-[clamp(280px,26vw,352px)] rounded-panel ${PANEL_SOLID} px-5 pb-5 pt-4 shadow-panel max-[899px]:w-full ${
+      className={`relative w-[clamp(280px,26vw,352px)] rounded-surface ${PANEL_SOLID} px-5 pb-5 pt-4 shadow-e1 max-[899px]:w-full ${
         visible ? "animate-slide-up" : "opacity-0"
       }`}
       style={visible ? { animationDelay: "0.55s" } : undefined}

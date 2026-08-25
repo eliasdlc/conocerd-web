@@ -317,7 +317,7 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
         fontSize: 11,
         fontFamily: "var(--font-caveat), cursive",
         fontWeight: 700,
-        color: "#264653",
+        color: "#0F1A2E",
         boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
         pointerEvents: "none",
       }}
@@ -344,7 +344,7 @@ export function MarkerTooltip({ children }: { children: React.ReactNode }) {
             bottom: "calc(100% + 8px)",
             left: "50%",
             transform: "translateX(-50%)",
-            background: "#264653",
+            background: "#0F1A2E",
             color: "#fff",
             borderRadius: 8,
             padding: "4px 10px",
@@ -399,7 +399,7 @@ export function MarkerPopup({ children, onClose }: MarkerPopupProps) {
             cursor: "pointer",
             fontSize: 18,
             lineHeight: 1,
-            color: "#5B6B72",
+            color: "#677080",
           }}
           aria-label="Cerrar"
         >
@@ -538,7 +538,7 @@ export interface MapRouteProps {
 export function MapRoute({
   id,
   coordinates,
-  color = "#F76C4D",
+  color = "#E0552F",
   width = 3,
   opacity = 1,
   dashArray,
@@ -749,7 +749,7 @@ export interface MapClusterLayerProps {
 export function MapClusterLayer({
   id,
   data,
-  color = "#F76C4D",
+  color = "#E0552F",
   clusterRadius = 50,
   maxZoom = 14,
 }: MapClusterLayerProps) {

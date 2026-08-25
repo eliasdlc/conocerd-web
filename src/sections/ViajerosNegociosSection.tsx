@@ -144,7 +144,7 @@ type Paso = {
 };
 
 const PASOS_VIAJERO: Paso[] = [
-  { icon: "explore", color: "#F76C4D", titulo: "Descubre lugares reales", desc: "Destinos poco conocidos, recomendados por gente que ya fue. No el mismo top 10 de siempre." },
+  { icon: "explore", color: "#E0552F", titulo: "Descubre lugares reales", desc: "Destinos poco conocidos, recomendados por gente que ya fue. No el mismo top 10 de siempre." },
   { icon: "route", color: "#FF8D16", titulo: "Arma tu ruta", desc: "Paradas, distancias y tiempos por carreteras reales. El plan completo, en tu bolsillo." },
   { meta: true, titulo: "Vive y guarda el recuerdo", desc: "Fotos, sellos por destino y tu diario de viaje para presumir después." },
 ];
@@ -248,7 +248,7 @@ function PistaDeInteraccion({ texto, visible }: { texto: string; visible: boolea
       }`}
     >
       <div className="overflow-hidden">
-        <span className="mb-2 flex w-fit items-center gap-1.5 rounded-full bg-mango-soft px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-[.06em] text-mango-ink">
+        <span className="mb-2 flex w-fit items-center gap-1.5 rounded-full bg-mango-soft px-2.5 py-1 font-label text-micro font-extrabold uppercase tracking-[.06em] text-mango-ink">
           {/* Cursor: la única forma inequívoca de decir "pasa el mouse". */}
           <svg viewBox="0 0 24 24" className="size-3 shrink-0" aria-hidden="true">
             <path
@@ -299,7 +299,7 @@ function RailDePasos({
             onMouseEnter={() => onActivo(i)}
             onFocus={() => onActivo(i)}
             aria-current={activo === i ? "step" : undefined}
-            className={`group relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-card border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+            className={`group relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-block border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
               activo === i
                 ? "border-line bg-cream"
                 : "border-transparent bg-transparent hover:bg-cream/60"
@@ -365,12 +365,12 @@ function PilaDePantallas({ pantallas, activo }: { pantallas: React.ReactNode[]; 
 /** Chip EN VIVO del bottom-sheet móvil: espeja lo que pasa en el mapa. */
 function ChipEnVivo({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 hidden items-center gap-2 rounded-card border border-line bg-cream px-3 py-2 max-desk:flex">
+    <div className="mb-3 hidden items-center gap-2 rounded-block border border-line bg-cream px-3 py-2 max-desk:flex">
       <span className="flex shrink-0 items-center gap-1 rounded-full bg-mint-soft px-2 py-[3px]">
         <span className="block size-[6px] animate-live-dot rounded-full bg-mint" />
         <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
       </span>
-      <span className="min-w-0 flex-1 truncate font-mono text-micro font-bold text-ink">{children}</span>
+      <span className="min-w-0 flex-1 truncate font-label text-micro font-bold text-ink">{children}</span>
     </div>
   );
 }
@@ -670,7 +670,7 @@ function ViajerosFinal() {
           <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#FFFFFF" width={6.5} opacity={0.9} />
           <MapRoute id="vn6-ruta" coordinates={F_ROUTE.pts} color="#FF8D16" width={3.2} opacity={0.95} />
           {traveled && (
-            <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#264653" width={3.2} opacity={0.32} />
+            <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#0F1A2E" width={3.2} opacity={0.32} />
           )}
         </>
       )}
@@ -727,7 +727,7 @@ function ViajerosFinal() {
             -translate-y-1/2 a la propiedad `translate`, que sobreviviría y
             dejaría el sheet flotando a media pantalla. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-surface min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-e1 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
@@ -764,7 +764,7 @@ function ViajerosFinal() {
 
           <div className="mt-3 border-t border-dashed border-line pt-3">
             <Button
-              variant="primary"
+              variant="selected"
               icon="notifications_active"
               className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
               onClick={() => requestSubscribe("viajero")}
@@ -818,7 +818,7 @@ const NEGOCIO: LngLat = [-70.6901, 19.4517]; // Santiago
 type ClienteDef = { id: string; nombre: string; origen: string; color: string };
 
 const ROSTER: ClienteDef[] = [
-  { id: "aguilas", nombre: "Yeni", origen: "Pedernales", color: "#F76C4D" },
+  { id: "aguilas", nombre: "Yeni", origen: "Pedernales", color: "#E0552F" },
   { id: "jarabacoa", nombre: "Carmen", origen: "Jarabacoa", color: "#25CCB8" },
   { id: "puerto-plata", nombre: "María", origen: "Puerto Plata", color: "#FF8D16" },
   { id: "zona-colonial", nombre: "Joel", origen: "Sto. Domingo", color: "#2D9CDB" },
@@ -829,7 +829,7 @@ const ROSTER: ClienteDef[] = [
   { id: "la-romana", nombre: "Ana", origen: "La Romana", color: "#B23410" },
   { id: "charcos", nombre: "Diego", origen: "Imbert", color: "#25CCB8" },
   { id: "lago-enriquillo", nombre: "Wanda", origen: "Independencia", color: "#2D9CDB" },
-  { id: "limon", nombre: "Samuel", origen: "El Limón", color: "#F76C4D" },
+  { id: "limon", nombre: "Samuel", origen: "El Limón", color: "#E0552F" },
 ];
 
 const LLEGADA_CADA = 2600; // ms entre llegadas (cadencia del negocio)
@@ -964,7 +964,7 @@ function NegociosFinal() {
           return (
             <MapMarker key={`orig-${c.id}`} longitude={lng} latitude={lat}>
               <MarkerContent>
-                <span className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white/95 px-2 py-[3px] font-mono text-micro font-bold text-ink shadow-card">
+                <span className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white/95 px-2 py-[3px] font-label text-micro font-bold text-ink shadow-e1">
                   <span className="inline-block size-[6px] rounded-full" style={{ background: c.color }} />
                   {c.origen}
                 </span>
@@ -982,7 +982,7 @@ function NegociosFinal() {
             <MapMarker key={`cli-${c.id}`} longitude={pos[0]} latitude={pos[1]}>
               <MarkerContent>
                 <span
-                  className={`vn6-in flex size-[22px] items-center justify-center rounded-full font-mono text-[10px] font-bold text-white ${PIN_CHROME}`}
+                  className={`vn6-in flex size-[22px] items-center justify-center rounded-full font-label text-[10px] font-bold text-white ${PIN_CHROME}`}
                   style={{ background: c.color }}
                 >
                   {c.nombre[0]}
@@ -997,7 +997,7 @@ function NegociosFinal() {
         <MapMarker longitude={NEGOCIO[0]} latitude={NEGOCIO[1]} anchor="bottom">
           <MarkerContent>
             <div className="flex flex-col items-center gap-1">
-              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-card">
+              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-e1">
                 Tu negocio
               </div>
               <div className="relative">
@@ -1015,7 +1015,7 @@ function NegociosFinal() {
               <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 max-[899px]:left-1/2 max-[899px]:top-[calc(100%+6px)] max-[899px]:-translate-x-1/2 max-[899px]:translate-y-0">
                 <div
                   key={ultima.key}
-                  className="vn6-in whitespace-nowrap rounded-full border border-line bg-white/95 px-2.5 py-1 text-micro font-bold text-ink shadow-card"
+                  className="vn6-in whitespace-nowrap rounded-full border border-line bg-white/95 px-2.5 py-1 text-micro font-bold text-ink shadow-e1"
                 >
                   <span className="mr-1.5 inline-block size-[6px] rounded-full align-middle" style={{ background: ultima.color }} />
                   {ultima.nombre} llegó desde {ultima.origen}
@@ -1036,7 +1036,7 @@ function NegociosFinal() {
         {/* La gran card del negocio — misma anatomía que la de viajeros
             (mismo prefijo min-[900px] para no flotar en móvil). */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-surface min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-e1 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
@@ -1071,7 +1071,7 @@ function NegociosFinal() {
 
           <div className="mt-3 border-t border-dashed border-line pt-3">
             <Button
-              variant="mint"
+              variant="selected"
               icon="add_business"
               className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
               onClick={() => requestSubscribe("negocio")}
