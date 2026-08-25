@@ -25,7 +25,7 @@ function HeroPin() {
     >
       <path
         d="M17 1C8.7 1 2 7.7 2 16c0 10.5 13 27 14.1 28.3a1.2 1.2 0 0 0 1.8 0C19 43 32 26.5 32 16 32 7.7 25.3 1 17 1Z"
-        fill="#F76C4D" stroke="#fff" strokeWidth="2" />
+        fill="#E0552F" stroke="#fff" strokeWidth="2" />
       <circle cx="17" cy="16" r="5.5" fill="#fff" />
     </svg>
   );
@@ -113,20 +113,22 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
     <button
       type="button"
       onClick={() => scrollToSection("trigger-polaroid-0")}
-      className={`crd-scroll-cue group flex cursor-pointer flex-col items-center gap-1 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
+      // min-h-12: el área táctil es 48 aunque la overline y el chevron sumen
+      // menos. Un cue que no se puede tocar en el pulgar es un adorno.
+      className={`crd-scroll-cue group flex min-h-12 cursor-pointer flex-col items-center justify-center gap-1 px-3 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
         compacto ? "gap-0.5" : ""
       }`}
     >
       {/* Móvil ya no se desliza: el recorrido avanza tocando (este cue o el
           panel de pasos de abajo). */}
-      <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
+      <span className="font-label text-micro font-extrabold uppercase tracking-[.16em]">
         {compacto ? "Toca para explorar" : "Explora"}
       </span>
       <svg
         key={empujon}
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-[22px]"}`}
+        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-5"}`}
         // El contador, no un booleano: deja auditar desde el DOM que el empujón
         // se detiene (máximo 3, y menos si el visitante scrollea antes).
         data-empujon={empujon > 0 ? empujon : undefined}
@@ -134,8 +136,8 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         <polyline
           points="5,8 12,16 19,8"
           fill="none"
-          stroke="#F76C4D"
-          strokeWidth="3"
+          stroke="var(--color-coral)"
+          strokeWidth="2.6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -172,10 +174,6 @@ export default function HeroOverlay() {
         {/* Velo crema: en móvil el texto cae sobre el globo y las etiquetas del
             mapa se cruzaban con el titular. */}
         <div className="crd-mobile-scrim h-[56%]" />
-        {/* Título real para lectores de pantalla / SEO (el logo es imagen). */}
-        <h1 className="sr-only">
-          ConoceRD — Descubre lo nuestro: la app de turismo auténtico en República Dominicana
-        </h1>
 
         {/* relative z-1: el velo es un elemento posicionado y pintaría encima de
             este bloque (que es un hijo estático del flex). */}
@@ -195,9 +193,25 @@ export default function HeroOverlay() {
             sizes="(max-width: 899px) 82vw, min(42vw, 480px)"
             className="crd-hero-logo block h-auto w-[min(82vw,460px)] desk:w-[min(42vw,480px)]"
           />
-          <p className="crd-hero-copy m-0 mt-3.5 max-w-[520px] text-[clamp(17px,2.2vw,21px)] font-medium leading-[1.5] text-ink">
+          {/* El titular y el subtítulo eran un solo párrafo, y el hero no tenía
+              jerarquía: la primera pantalla del sitio no llevaba titular.
+              El h1 sigue arrancando con la marca para lectores de pantalla y
+              para SEO (el logo es una imagen) pero lo que se ve es el titular.
+
+              `opsz 96` es la regla de portada: Bricolage tiene eje óptico y a
+              44 pide el corte de titular grande, no el de texto. Una sola
+              palabra acentuada, y en coralInk: el coral vivo como texto da
+              2.76:1. */}
+          <h1
+            className="m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
+            style={{ fontVariationSettings: '"opsz" 96' }}
+          >
+            <span className="sr-only">ConoceRD, descubre lo nuestro. </span>
             La app que te lleva a la República Dominicana{" "}
-            <em className="crd-accent">auténtica</em>: negocios locales y experiencias reales, en una sola ruta.
+            <em className="crd-accent">auténtica</em>
+          </h1>
+          <p className="crd-hero-copy m-0 mt-3 max-w-[520px] text-lead leading-[1.45] text-ink">
+            Negocios locales y experiencias reales, en una sola ruta.
           </p>
           <div className="crd-hero-actions mt-[26px] flex flex-wrap justify-center gap-3.5 desk:justify-start">
             <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>
@@ -206,7 +220,7 @@ export default function HeroOverlay() {
             {/* Ghost, no relleno: dos botones llenos del mismo peso —mango y
                 mint— se anulaban mutuamente y el hero no decía cuál es la
                 acción principal (audit §3). */}
-            <Button variant="outline" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
+            <Button variant="ghost" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
               Soy un negocio
             </Button>
           </div>

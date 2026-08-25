@@ -309,15 +309,17 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
         position: "absolute",
         ...posStyle,
         whiteSpace: "nowrap",
-        background: "rgba(255,255,255,0.92)",
-        backdropFilter: "blur(8px)",
-        border: "1px solid #EBE6D9",
-        borderRadius: 8,
+        background: "var(--crd-glass)",
+        backdropFilter: "blur(24px) saturate(1.8)",
+        border: "1px solid var(--crd-glass-line)",
+        borderRadius: 999,
         padding: "3px 8px",
         fontSize: 11,
-        fontFamily: "var(--font-caveat), cursive",
+        // La etiqueta del marcador es interfaz, no contenido: deja la
+        // manuscrita, que en el sistema vive sólo en la firma del equipo.
+        fontFamily: "var(--font-jakarta), system-ui, sans-serif",
         fontWeight: 700,
-        color: "#264653",
+        color: "#0F1A2E",
         boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
         pointerEvents: "none",
       }}
@@ -344,7 +346,7 @@ export function MarkerTooltip({ children }: { children: React.ReactNode }) {
             bottom: "calc(100% + 8px)",
             left: "50%",
             transform: "translateX(-50%)",
-            background: "#264653",
+            background: "#0F1A2E",
             color: "#fff",
             borderRadius: 8,
             padding: "4px 10px",
@@ -399,7 +401,7 @@ export function MarkerPopup({ children, onClose }: MarkerPopupProps) {
             cursor: "pointer",
             fontSize: 18,
             lineHeight: 1,
-            color: "#5B6B72",
+            color: "#677080",
           }}
           aria-label="Cerrar"
         >
@@ -538,7 +540,7 @@ export interface MapRouteProps {
 export function MapRoute({
   id,
   coordinates,
-  color = "#F76C4D",
+  color = "#E0552F",
   width = 3,
   opacity = 1,
   dashArray,
@@ -749,7 +751,7 @@ export interface MapClusterLayerProps {
 export function MapClusterLayer({
   id,
   data,
-  color = "#F76C4D",
+  color = "#E0552F",
   clusterRadius = 50,
   maxZoom = 14,
 }: MapClusterLayerProps) {

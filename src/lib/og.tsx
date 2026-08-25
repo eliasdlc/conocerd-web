@@ -24,12 +24,13 @@ import { join } from "node:path";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-const INK = "#264653";
-const INK_2 = "#1D3A45";
+const INK = "#0F1A2E";
+const INK_2 = "#090F1B";
 const CREAM = "#FDF8F0";
-const CORAL = "#F76C4D";
+const CORAL = "#E0552F";
+const CORAL_INK = "#B23410";
 const MANGO = "#FF8D16";
-const MUTED = "#5B6B72";
+const MUTED = "#677080";
 
 /** Las tres polaroids del deck que mejor resumen el país: playa, cascada, río. */
 const PHOTOS = [
@@ -51,7 +52,7 @@ const BACKDROP = `data:image/svg+xml;utf8,${encodeURIComponent(
     <defs>
       <radialGradient id="mint"><stop offset="0" stop-color="#25CCB8" stop-opacity=".24"/><stop offset="1" stop-color="#25CCB8" stop-opacity="0"/></radialGradient>
       <radialGradient id="mango"><stop offset="0" stop-color="#FF8D16" stop-opacity=".22"/><stop offset="1" stop-color="#FF8D16" stop-opacity="0"/></radialGradient>
-      <radialGradient id="coral"><stop offset="0" stop-color="#F76C4D" stop-opacity=".18"/><stop offset="1" stop-color="#F76C4D" stop-opacity="0"/></radialGradient>
+      <radialGradient id="coral"><stop offset="0" stop-color="${CORAL}" stop-opacity=".18"/><stop offset="1" stop-color="${CORAL}" stop-opacity="0"/></radialGradient>
     </defs>
     <rect width="1200" height="630" fill="${CREAM}"/>
     <circle cx="90" cy="90" r="300" fill="url(#mint)"/>
@@ -63,18 +64,20 @@ const BACKDROP = `data:image/svg+xml;utf8,${encodeURIComponent(
   </svg>`
 )}`;
 
+// Dos familias y dos roles, los mismos del sitio: la de titular para el titular
+// y las cifras, la de etiqueta para todo lo demás. Salieron JetBrains Mono, que
+// dejó el sistema, y Caveat, que baja a un solo uso en todo el producto: la
+// firma del dorso de la polaroid del equipo, que no aparece en esta tarjeta.
 export async function loadOgFonts() {
-  const [display, displaySemi, hand, mono] = await Promise.all([
+  const [display, label, labelSemi] = await Promise.all([
+    readFile(asset("BricolageGrotesque-ExtraBold.ttf")),
     readFile(asset("PlusJakartaSans-ExtraBold.ttf")),
     readFile(asset("PlusJakartaSans-SemiBold.ttf")),
-    readFile(asset("Caveat-Bold.ttf")),
-    readFile(asset("JetBrainsMono-Bold.ttf")),
   ]);
   return [
-    { name: "Plus Jakarta Sans", data: display, weight: 800 as const, style: "normal" as const },
-    { name: "Plus Jakarta Sans", data: displaySemi, weight: 600 as const, style: "normal" as const },
-    { name: "Caveat", data: hand, weight: 700 as const, style: "normal" as const },
-    { name: "JetBrains Mono", data: mono, weight: 700 as const, style: "normal" as const },
+    { name: "Bricolage Grotesque", data: display, weight: 800 as const, style: "normal" as const },
+    { name: "Plus Jakarta Sans", data: label, weight: 800 as const, style: "normal" as const },
+    { name: "Plus Jakarta Sans", data: labelSemi, weight: 600 as const, style: "normal" as const },
   ];
 }
 
@@ -88,7 +91,7 @@ const FAN = [
 ];
 
 export interface OgCardProps {
-  /** Kicker mono, estilo expedición. */
+  /** Overline de expedición, en la familia de etiqueta. */
   eyebrow: string;
   /** Dos líneas: el salto es explícito para que no dependa del ancho del glifo. */
   title: [string, string];
@@ -133,10 +136,12 @@ export async function OgCard({ eyebrow, title, subtitle, badge }: OgCardProps) {
           style={{
             display: "flex",
             marginTop: 22,
-            fontFamily: "JetBrains Mono",
             fontSize: 15,
+            fontWeight: 800,
             letterSpacing: 2.2,
-            color: CORAL,
+            // El coral vivo como texto sobre crema da 2.76:1; la tinta coral
+            // da 5.86:1 y es la que vale para texto de color sobre claro.
+            color: CORAL_INK,
           }}
         >
           {eyebrow}
@@ -147,6 +152,7 @@ export async function OgCard({ eyebrow, title, subtitle, badge }: OgCardProps) {
             <div
               key={line}
               style={{
+                fontFamily: "Bricolage Grotesque",
                 fontSize: 46,
                 fontWeight: 800,
                 color: INK,
@@ -204,17 +210,29 @@ export async function OgCard({ eyebrow, title, subtitle, badge }: OgCardProps) {
             flexDirection: "column",
             width: 236,
             padding: "12px 12px 0",
-            borderRadius: 8,
-            background: "#FFFFFF",
-            boxShadow: "0 12px 32px rgba(38,70,83,.18)",
+            borderRadius: 6,
+            background: "#FFFDF7",
+            boxShadow: "0 10px 30px rgba(38,70,83,.08)",
             transform: `rotate(${FAN[i].rotate}deg)`,
           }}
         >
           <img src={photos[i]} width={212} height={159} style={{ borderRadius: 3 }} alt="" />
-          <div style={{ display: "flex", fontFamily: "Caveat", fontSize: 30, color: INK, marginTop: 8 }}>
+          {/* El pie de la polaroid deja la manuscrita, como en el sitio: el
+              nombre va en la familia de titular. */}
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Bricolage Grotesque",
+              fontSize: 22,
+              fontWeight: 800,
+              letterSpacing: -0.4,
+              color: INK,
+              marginTop: 8,
+            }}
+          >
             {photo.name}
           </div>
-          <div style={{ display: "flex", fontFamily: "JetBrains Mono", fontSize: 11, color: MUTED, marginTop: 2, marginBottom: 14 }}>
+          <div style={{ display: "flex", fontSize: 11, fontWeight: 600, color: MUTED, marginTop: 2, marginBottom: 14 }}>
             {photo.meta}
           </div>
         </div>

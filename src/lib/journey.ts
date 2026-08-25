@@ -63,6 +63,11 @@ export const CHAPTERS: Chapter[] = SCENES.reduce<Chapter[]>((out, s, i) => {
   return out;
 }, []);
 
+/** Capítulo al que pertenece una escena, por nombre. */
+export function chapterOfScene(name: string): string | undefined {
+  return SCENES.find((s) => s.name === name)?.chapter;
+}
+
 /** Capítulo al que pertenece un índice de escena. */
 export function chapterIndexOfScene(sceneIndex: number): number {
   const i = CHAPTERS.findIndex((c) => sceneIndex <= c.last);

@@ -4,4 +4,4 @@ export { SelfPin } from "./SelfPin";
 export type { SelfPinProps } from "./SelfPin";
 export { GoalFlag } from "./GoalFlag";
 export type { GoalFlagProps } from "./GoalFlag";
-export { PIN_BORDER, PIN_SHADOW, PIN_CHROME } from "./chrome";
+export { PIN_SHADOW, PIN_CHROME } from "./chrome";

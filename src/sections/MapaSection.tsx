@@ -219,17 +219,20 @@ const GLYPH_MAIL = "M3 6.8h18v10.4H3zM3 7.2l9 6.2 9-6.2";
 
 // ─── Pin de parada: el pin ORIGINAL de la app + numerito ink ─────────────────
 
-function StopBadge({ n, size = 18 }: { n: number; size?: number }) {
+// El número vive FUERA del relleno del pin: metido dentro tapaba el glifo de
+// categoría, que es lo que dice qué es la parada. Badge de 20 en tinta con un
+// reborde crema de 1.5, que es lo que lo separa del pin que tiene debajo.
+function StopBadge({ n, size = 20 }: { n: number; size?: number }) {
   return (
     <span
       aria-hidden="true"
-      className="absolute grid place-items-center rounded-full border border-cream/95 bg-ink font-mono font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
+      className="absolute grid place-items-center rounded-full border-[1.5px] border-cream bg-ink font-label font-extrabold text-white shadow-[0_1px_3px_rgba(0,0,0,.3)]"
       style={{
         width: size,
         height: size,
         right: -size * 0.28,
         top: -size * 0.28,
-        fontSize: Math.round(size * 0.58),
+        fontSize: 10.5,
       }}
     >
       {n}
@@ -238,7 +241,7 @@ function StopBadge({ n, size = 18 }: { n: number; size?: number }) {
 }
 
 /** En ruta el destino conserva su pin de categoría; el número lo diferencia. */
-function RoutePin({ d, n, size = 30 }: { d: Destination; n: number; size?: number }) {
+function RoutePin({ d, n, size = 34 }: { d: Destination; n: number; size?: number }) {
   return (
     <span className="relative block">
       <CategoryPin category={d.category} size={size} />
@@ -276,7 +279,7 @@ function CardBody({
           {d.rating.toFixed(1)}
         </div>
       </div>
-      <div className="mt-0.5 font-mono text-micro text-muted">
+      <div className="mt-0.5 text-micro text-muted">
         {d.province} · {meta.label}
       </div>
       <p className={`leading-[1.45] text-muted ${compact ? "mt-1 text-mini" : "mt-1.5 text-tiny"}`}>
@@ -293,12 +296,12 @@ function CardBody({
         ))}
       </div>
       {inRoute ? (
-        <div className="mt-2 flex items-center gap-1.5 font-mono text-micro font-bold text-mango-ink">
+        <div className="mt-2 flex items-center gap-1.5 font-label text-micro font-bold text-mango-ink">
           <Icon name="route" className="text-sm" />
           Parada {stopIndex + 1} de tu ruta
         </div>
       ) : showArrival ? (
-        <div className="mt-2 flex items-center gap-1.5 font-mono text-micro font-bold text-mint-ink">
+        <div className="mt-2 flex items-center gap-1.5 font-display text-micro font-bold text-mint-ink">
           <Icon name="route" className="text-sm" />A {Math.round(pairKm(last, d.id))} km ·{" "}
           {fmtDur(pairMin(last, d.id))} de {DEST[last].name}
         </div>
@@ -324,7 +327,7 @@ function CardAction({
     <button
       type="button"
       onClick={onRemove}
-      className={`inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border-[1.5px] border-coral-ink/45 bg-white font-bold text-coral-ink transition-colors duration-150 hover:bg-coral-soft focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${className}`}
+      className={`inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border-[1.5px] border-coral-ink/45 bg-paper font-label font-bold text-coral-ink transition-colors duration-150 hover:bg-coral-soft focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${className}`}
     >
       <Icon name="close" className="text-sm" />
       Quitar de la ruta
@@ -333,7 +336,9 @@ function CardAction({
     <button
       type="button"
       onClick={onAdd}
-      className={`inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-mango font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${className}`}
+      // No se rellena de mango: blanco sobre mango da 2.31:1. A este cuerpo
+      // el relleno del sistema es `selected`.
+      className={`inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-selected font-label font-bold text-on-selected transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${className}`}
     >
       <Glyph d={GLYPH_PLUS} className="text-sm" />
       Añadir parada a {name.split(" ")[0]}
@@ -368,16 +373,16 @@ function PinCard({
     >
       {/* Punta al pin: antes de la card para que la card tape su mitad interna */}
       {side === "bottom" && (
-        <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-white" />
+        <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-paper" />
       )}
-      <div className="overflow-hidden rounded-card border border-line bg-white shadow-modal">
+      <div className="overflow-hidden rounded-block border border-line bg-paper shadow-e1">
         <div className="relative h-[104px] w-full bg-cream-2">
           <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
         </div>
         <div className="px-3 pb-3 pt-2.5">
           <CardBody d={d} stopIndex={stopIndex} stops={stops} />
           <div
-            className={`mt-2.5 flex h-8 items-center justify-center gap-1.5 rounded-full text-micro font-bold ${
+            className={`mt-2.5 flex h-8 items-center justify-center gap-1.5 rounded-full font-label text-micro font-bold ${
               inRoute ? "bg-coral-soft text-coral-ink" : "bg-mango-soft text-mango-ink"
             }`}
           >
@@ -387,7 +392,7 @@ function PinCard({
         </div>
       </div>
       {side === "top" && (
-        <span className="absolute left-1/2 top-full size-3.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-line bg-white" />
+        <span className="absolute left-1/2 top-full size-3.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-r border-line bg-paper" />
       )}
     </div>
   );
@@ -449,9 +454,9 @@ function DestinationPin({
             <span
               className={`grid place-items-center rounded-full transition-transform duration-150 ${
                 isHovered
-                  ? "scale-110 ring-4 ring-mango/35"
+                  ? "scale-110 ring-4 ring-selected/25"
                   : isSelected
-                    ? "max-[899px]:scale-110 max-[899px]:ring-4 max-[899px]:ring-mango/35"
+                    ? "max-[899px]:scale-110 max-[899px]:ring-4 max-[899px]:ring-selected/25"
                     : ""
               }`}
             >
@@ -492,14 +497,17 @@ function PresetCard({
       onClick={onSelect}
       aria-pressed={active}
       aria-label={`Cargar la ruta ${preset.name}: ${data} de manejo`}
-      className={`flex cursor-pointer items-center gap-2.5 rounded-card border-[1.5px] text-left transition-[border-color,background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
+      // El viaje recomendado es un objetivo seleccionable, no una acción: al
+      // elegirlo se rellena entero de `selected`, la regla vigente. El borde de
+      // color sobre fondo teñido es la receta que el gate descartó.
+      className={`flex cursor-pointer items-center gap-2.5 rounded-block border-[1.5px] text-left transition-[border-color,background-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${
         active
-          ? "border-mango bg-mango-soft shadow-card"
-          : "border-line bg-white hover:border-mango/60"
+          ? "border-selected bg-selected shadow-e1"
+          : "border-line bg-paper hover:border-muted-2"
       } ${compact ? "w-[248px] flex-none p-2" : "w-full p-2"}`}
     >
       <span
-        className={`relative flex-none overflow-hidden rounded-tile bg-cream-2 ${
+        className={`relative flex-none overflow-hidden rounded-chip bg-cream-2 ${
           compact ? "size-11" : "size-12"
         }`}
       >
@@ -507,13 +515,25 @@ function PresetCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-tiny font-bold text-ink">{preset.name}</span>
-          {active && <Icon name="check_circle" className="flex-none text-sm text-mango-ink" />}
+          <span
+            className={`truncate font-label text-tiny font-bold ${active ? "text-on-selected" : "text-ink"}`}
+          >
+            {preset.name}
+          </span>
+          {active && <Icon name="check_circle" className="flex-none text-sm text-on-selected" />}
         </span>
         {!compact && (
-          <span className="mt-px block truncate text-mini text-muted">{preset.tagline}</span>
+          <span
+            className={`mt-px block truncate text-mini ${active ? "text-white/70" : "text-muted"}`}
+          >
+            {preset.tagline}
+          </span>
         )}
-        <span className="mt-px block whitespace-nowrap font-mono text-micro font-bold text-mint-ink">
+        <span
+          className={`mt-px block whitespace-nowrap font-display text-micro font-bold ${
+            active ? "text-on-selected" : "text-mint-ink"
+          }`}
+        >
           {data}
         </span>
       </span>
@@ -533,35 +553,38 @@ function CategoryFilter({
   cats: Set<Category>;
   onToggle: (c: Category) => void;
 }) {
-  const all = cats.size === 0;
-
   return (
     <div
       role="group"
       aria-label="Filtrar destinos por categoría"
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-panel p-1.5 shadow-panel max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];
-        const on = all || cats.has(cat);
+        // El relleno marca lo que el visitante ELIGIÓ, no lo que se está
+        // pintando. Con el conjunto vacío se ven todos los pines, pero ninguna
+        // celda está elegida: si el reposo se rellenara entero, el dock sería
+        // una barra de tinta maciza y "elegido" dejaría de significar nada.
+        const picked = cats.has(cat);
         return (
           <button
             key={cat}
             type="button"
             onClick={() => onToggle(cat)}
-            aria-pressed={on}
+            aria-pressed={picked}
             title={meta.label}
-            className="grid h-[60px] w-[60px] cursor-pointer content-center justify-items-center gap-1 rounded-tile border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5"
-            style={{
-              borderColor: on ? meta.color : "transparent",
-              background: on
-                ? `linear-gradient(0deg, ${meta.color}22, ${meta.color}22), #FFFFFF`
-                : "rgba(255,255,255,.55)",
-              color: on ? meta.ink : "var(--color-muted)",
-            }}
+            // La categoría la dice el glifo, no el color de la celda: el color
+            // de categoría es información y teñir la celda con él confundía
+            // "esta es la de playas" con "esta está elegida". La elegida se
+            // rellena de `selected` y su glifo pasa a relleno al 22 %.
+            className={`grid h-16 w-16 cursor-pointer content-center justify-items-center gap-1 rounded-ctrl border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5 ${
+              picked
+                ? "border-selected bg-selected text-on-selected"
+                : "border-line bg-paper text-ink-3"
+            }`}
           >
-            <Icon name={meta.icon} className="text-lg leading-none" />
-            <span className="w-full truncate text-center text-[9.5px] font-bold leading-none tracking-[-.01em] max-[899px]:text-[8.5px]">
+            <Icon name={meta.icon} active={picked} className="text-lg leading-none" />
+            <span className="w-full truncate text-center font-label text-[9.5px] font-bold leading-none tracking-[-.01em] max-[899px]:text-[8.5px]">
               {meta.label}
             </span>
           </button>
@@ -986,7 +1009,7 @@ export default function MapaSection() {
         aria-label={sheetOpen ? "Contraer el panel de tu ruta" : "Expandir el panel de tu ruta"}
         className="flex h-8 w-full flex-none cursor-grab touch-none items-center justify-center border-0 bg-transparent p-0 active:cursor-grabbing min-[900px]:hidden"
       >
-        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-[#B5C0BD]" />
+        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-line-strong" />
       </button>
 
       <div className={sheetOpen ? "contents" : "max-[899px]:hidden min-[900px]:contents"}>
@@ -1011,7 +1034,7 @@ export default function MapaSection() {
                     <button
                       type="button"
                       onClick={clearRoute}
-                      className="cursor-pointer border-0 bg-transparent p-0 text-mini font-bold text-coral-ink"
+                      className="cursor-pointer border-0 bg-transparent p-0 font-label text-mini font-bold text-coral-ink"
                     >
                       Limpiar
                     </button>
@@ -1027,7 +1050,10 @@ export default function MapaSection() {
                   <button
                     type="button"
                     onClick={optimize}
-                    className="crd-sticker flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+                    // Sugerencia, no acción principal: píldora de tono, no
+                    // relleno de selección. La calcomanía mint murió con la
+                    // sombra de offset, no por contraste.
+                    className="flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint-soft px-3 py-2 font-label text-tiny font-bold text-mint-ink"
                   >
                     <Glyph d={GLYPH_SORT} className="text-sm" />
                     Ordena mejor · te ahorras {saveKm} km
@@ -1082,13 +1108,13 @@ export default function MapaSection() {
                       <div className="flex items-center gap-2.5 py-1">
                         <span
                           aria-hidden="true"
-                          className="grid size-[22px] flex-none place-items-center rounded-full bg-mango font-mono text-mini font-bold text-white"
+                          className="grid size-[22px] flex-none place-items-center rounded-full bg-selected font-label text-mini font-bold text-on-selected"
                         >
                           {i + 1}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-xs font-bold text-ink">{d.name}</div>
-                          <div className="truncate font-mono text-micro text-muted">
+                          <div className="truncate text-micro text-muted">
                             {d.province}
                           </div>
                         </div>
@@ -1115,7 +1141,7 @@ export default function MapaSection() {
 
                       {/* Tramo hacia la siguiente parada: km y minutos reales */}
                       {i < stops.length - 1 && (
-                        <div className="ml-[10px] border-l-2 border-dashed border-mango/60 py-1 pl-[19px] font-mono text-micro text-muted-2">
+                        <div className="ml-[10px] border-l-2 border-dashed border-mint py-1 pl-[19px] text-mini text-muted">
                           {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
                           {fmtDur(pairMin(id, stops[i + 1]))} manejando
                         </div>
@@ -1158,7 +1184,7 @@ export default function MapaSection() {
               {/* El cuño da el gesto; los datos hay que poder leerlos, y dentro
                   del anillo a este tamaño no se leen. */}
               <p
-                className="mapa6-rise mt-1 font-mono text-micro font-bold uppercase tracking-[.1em] text-muted"
+                className="mapa6-rise mt-1 font-display text-micro font-bold uppercase tracking-[.1em] text-muted"
                 style={{ animationDelay: ".3s" }}
               >
                 {stops.length} paradas · {totalKm} km · {fmtDurShort(totalMin)}
@@ -1218,7 +1244,7 @@ export default function MapaSection() {
                       <button
                         type="submit"
                         disabled={save.k === "sending"}
-                        className="my-1 inline-flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-mango px-3.5 text-tiny font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
+                        className="my-1 inline-flex h-9 flex-none cursor-pointer items-center gap-1.5 rounded-full bg-selected px-3.5 font-label text-tiny font-bold text-on-selected transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-70"
                       >
                         {save.k === "sending" ? "Enviando…" : "Envíamelo"}
                       </button>
@@ -1255,7 +1281,7 @@ export default function MapaSection() {
         <div className="flex-none border-t border-line bg-cream-2/70">
           <div className="grid grid-cols-3">
             <div className="px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {stops.length}
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1263,7 +1289,7 @@ export default function MapaSection() {
               </div>
             </div>
             <div className="border-l border-line px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {totalKm} km
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1271,7 +1297,7 @@ export default function MapaSection() {
               </div>
             </div>
             <div className="border-l border-line px-2 py-2.5 text-center">
-              <div className="font-mono text-lg font-bold leading-tight text-ink">
+              <div className="font-display text-lg font-bold leading-tight text-ink">
                 {fmtDurShort(totalMin)}
               </div>
               <div className="text-micro font-semibold uppercase tracking-wide text-muted">
@@ -1284,7 +1310,9 @@ export default function MapaSection() {
               <button
                 type="button"
                 onClick={startSave}
-                className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-mango text-tiny font-bold text-white transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+                // "Guardar viaje" es 48 de alto: por debajo de 19 w700 el
+                // relleno del sistema es `selected`, no el acento.
+                className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-selected font-label text-tiny font-bold text-on-selected transition-transform duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
               >
                 <Glyph d={GLYPH_SAVE} className="text-sm" />
                 Guardar viaje
@@ -1339,9 +1367,9 @@ export default function MapaSection() {
         {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
             en móvil ambos viven dentro del sheet del itinerario). */}
         <div
-          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[300px] -translate-y-1/2 rounded-panel px-4 py-4 shadow-panel max-[899px]:hidden`}
+          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 shadow-e1 max-[899px]:hidden`}
         >
-          <h2 className="m-0 font-display text-[22px] font-bold leading-tight text-ink">
+          <h2 className="m-0 font-display text-[20px] font-bold leading-tight tracking-[-.02em] text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
           </h2>
           <p className="mt-1 text-tiny leading-[1.5] text-muted">
@@ -1366,7 +1394,7 @@ export default function MapaSection() {
         <section
           ref={panelRef}
           aria-label="Tu itinerario"
-          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-panel shadow-panel max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none max-[899px]:pb-[var(--crd-stepper-h)] ${
+          className={`${PANEL_SOLID} pointer-events-auto absolute right-[clamp(16px,3%,40px)] top-1/2 flex max-h-[70vh] w-[316px] -translate-y-1/2 flex-col overflow-hidden rounded-surface shadow-e1 max-[899px]:inset-x-0 max-[899px]:bottom-0 max-[899px]:top-auto max-[899px]:max-h-[70dvh] max-[899px]:w-auto max-[899px]:translate-y-0 max-[899px]:rounded-b-none max-[899px]:pb-[var(--crd-stepper-h)] ${
             sel ? "max-[899px]:hidden" : ""
           } ${stamped ? "mapa6-kick" : ""} ${dragging ? "" : "max-[899px]:transition-transform max-[899px]:duration-300 max-[899px]:ease-out"}`}
           style={dragY !== 0 ? { transform: `translateY(${dragY}px)` } : undefined}
@@ -1379,10 +1407,10 @@ export default function MapaSection() {
           <div
             role="dialog"
             aria-label={sel.name}
-            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-panel p-3 shadow-modal motion-reduce:animate-none min-[900px]:hidden`}
+            className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-surface p-3 shadow-e1 motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
-              <div className="relative size-[92px] flex-none overflow-hidden rounded-tile bg-cream-2">
+              <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
                 <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1411,7 +1439,7 @@ export default function MapaSection() {
               <button
                 type="button"
                 onClick={optimize}
-                className="crd-sticker mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint px-3 py-2 text-tiny font-bold text-ink-2"
+                className="mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-mint-soft px-3 py-2 font-label text-tiny font-bold text-mint-ink"
               >
                 <Glyph d={GLYPH_SORT} className="text-sm" />
                 Ordena mejor · te ahorras {saveKm} km
