@@ -13,7 +13,7 @@
 //  que la promesa no se bifurque entre páginas.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Audience } from "@/lib/waitlist/schema";
+import type { Audience } from "@/lib/waitlist/constants";
 import type { IconName } from "@/components/Icon";
 
 export interface Item {

@@ -21,11 +21,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { Caveat } from "next/font/google";
 import { useReducedMotion } from "motion/react";
 import Icon from "@/components/Icon";
 import { useScene } from "@/context/SceneContext";
 import { PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
+
+// La manuscrita se declara aquí y no en el layout raíz porque tiene un solo uso
+// en todo el producto: la firma del dorso de estas polaroids. Declarada arriba,
+// se precargaba en cada página del sitio (incluida /privacidad) para una firma
+// que vive al final del journey y sólo aparece al voltear la carta.
+//
+// Se aplica con `className` y no con una variable CSS: un `--font-caveat` que
+// vive fuera de `:root` no puede resolver el rol `--font-hand`, que se computa
+// allí. Es tinta de contenido, como una foto, no un rol del sistema.
+//
+// `preload: false`: no compite por ancho de banda con el hero. El navegador la
+// pide cuando llega a pintarla.
+const caveat = Caveat({ subsets: ["latin"], display: "swap", preload: false });
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -268,7 +282,7 @@ function TeamPolaroid({
               </span>
               <span className="mt-1.5 flex items-end justify-between gap-2">
                 <span
-                  className="block -rotate-2 font-hand text-xl font-bold leading-none"
+                  className={`${caveat.className} block -rotate-2 text-xl font-bold leading-none`}
                   style={{ color: member.color }}
                 >
                   — {member.name.split(" ")[0]}

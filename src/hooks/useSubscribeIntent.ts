@@ -13,7 +13,7 @@
 
 import { useEffect, useState } from "react";
 import { scrollToSection } from "@/lib/journeyNav";
-import type { Audience } from "@/lib/waitlist/schema";
+import type { Audience } from "@/lib/waitlist/constants";
 
 const EVENT = "crd:subscribe-intent";
 

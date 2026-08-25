@@ -21,7 +21,7 @@ import InstagramTile from "./InstagramTile";
 import SubscribeForm, { AudienceToggle, type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
 import { CONTENT, type Item } from "./content";
-import { AUDIENCES, type Audience } from "@/lib/waitlist/schema";
+import { AUDIENCES, type Audience } from "@/lib/waitlist/constants";
 
 // ─── Piezas ───────────────────────────────────────────────────────────────────
 

@@ -26,7 +26,7 @@ import {
   HONEYPOT_FIELD,
   type Audience,
   type SubscribeResult,
-} from "@/lib/waitlist/schema";
+} from "@/lib/waitlist/constants";
 
 // ─── Tono visual ──────────────────────────────────────────────────────────────
 // El form vive sobre la card oscura del CTA, sobre el footer y sobre el crema de
