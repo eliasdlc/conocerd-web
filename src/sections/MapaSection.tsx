@@ -35,7 +35,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MapRoute } from "@/components/map/context";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,

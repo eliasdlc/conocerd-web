@@ -1,218 +1,41 @@
 "use client";
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  La mitad del mapa que NO necesita maplibre en runtime.
+//
+//  Aquí vive todo lo que las secciones importan (`useMap`, `MapMarker`,
+//  `MapRoute`, las envolturas de marcador) y ninguna de esas piezas construye
+//  un objeto de maplibre por su cuenta: unas sólo hablan con la instancia del
+//  mapa que ya existe, y `MapMarker` recibe el propio módulo por contexto.
+//
+//  Eso es lo que permite que el runtime de WebGL (1 MB) llegue por import
+//  dinámico de verdad: `import type` se borra al compilar, así que este archivo
+//  entra en el grafo inicial sin arrastrar el motor detrás. El motor vive en
+//  `engine.tsx` y es quien puebla este contexto.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import type { Feature, LineString } from "geojson";
-import maplibregl from "maplibre-gl";
-import React, {
-  createContext,
-  forwardRef,
-  useContext,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import type maplibregl from "maplibre-gl";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const MAP_STYLES = {
-  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-} as const;
 
 // ─── Context ─────────────────────────────────────────────────────────────────
 
-const MapContext = createContext<maplibregl.Map | null>(null);
+/**
+ * El motor publica dos cosas: la instancia del mapa y el módulo de maplibre.
+ * El módulo viaja por aquí y no por un import para que nadie que consuma el
+ * contexto lo meta en el grafo inicial.
+ */
+export interface MapContextValue {
+  map: maplibregl.Map;
+  gl: typeof maplibregl;
+}
+
+export const MapContext = createContext<MapContextValue | null>(null);
 
 export function useMap(): maplibregl.Map | null {
-  return useContext(MapContext);
+  return useContext(MapContext)?.map ?? null;
 }
-
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-export interface ViewState {
-  center?: [number, number];
-  zoom?: number;
-  bearing?: number;
-  pitch?: number;
-}
-
-export interface InitialViewState {
-  longitude?: number;
-  latitude?: number;
-  zoom?: number;
-  bearing?: number;
-  pitch?: number;
-}
-
-export interface MapProps {
-  theme?: "light" | "dark";
-  styles?: string;
-  projection?: { type: string };
-  viewport?: ViewState;
-  onViewportChange?: (viewport: ViewState) => void;
-  onLoad?: (map: maplibregl.Map) => void;
-  loading?: React.ReactNode;
-  initialViewState?: InitialViewState;
-  interactive?: boolean;
-  attributionControl?: boolean;
-  scrollZoom?: boolean;
-  dragPan?: boolean;
-  dragRotate?: boolean;
-  touchZoomRotate?: boolean;
-  children?: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-// ─── Map ─────────────────────────────────────────────────────────────────────
-
-export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
-  {
-    theme = "light",
-    styles,
-    projection,
-    viewport,
-    onViewportChange,
-    onLoad,
-    loading,
-    initialViewState,
-    interactive = true,
-    attributionControl = true,
-    scrollZoom = true,
-    dragPan = true,
-    dragRotate = true,
-    touchZoomRotate = true,
-    children,
-    className,
-    style,
-  },
-  ref
-) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const [ready, setReady] = useState(false);
-  // El contenido del sitio vive como children de este componente: si el mapa no
-  // puede arrancar (sin WebGL, style.json del CDN caído), `failed` suelta los
-  // children igual y la página fluye sobre el fondo crema en vez de quedar en
-  // blanco.
-  const [failed, setFailed] = useState(false);
-
-  // Recompute after the `ready` render without pretending the ref itself is a
-  // hook dependency; `mapRef.current` is populated immediately before setReady.
-  useImperativeHandle(ref, () => mapRef.current as maplibregl.Map);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const styleUrl =
-      styles ?? MAP_STYLES[theme as keyof typeof MAP_STYLES] ?? MAP_STYLES.light;
-
-    const center: [number, number] =
-      initialViewState?.longitude !== undefined
-        ? [initialViewState.longitude, initialViewState.latitude ?? 0]
-        : (viewport?.center ?? [-70.1627, 18.7357]);
-
-    let map: maplibregl.Map | null = null;
-    let removed = false;
-
-    const fail = (err: unknown) => {
-      console.error("[Map] el mapa no pudo inicializar — contenido sin mapa:", err);
-      if (map && !removed) {
-        removed = true;
-        try {
-          map.remove();
-        } catch {}
-      }
-      map = null;
-      mapRef.current = null;
-      setFailed(true);
-    };
-
-    try {
-      map = new maplibregl.Map({
-        container: containerRef.current,
-        style: styleUrl,
-        center,
-        zoom: initialViewState?.zoom ?? viewport?.zoom ?? 5,
-        bearing: initialViewState?.bearing ?? viewport?.bearing ?? 0,
-        pitch: initialViewState?.pitch ?? viewport?.pitch ?? 0,
-        interactive,
-        attributionControl: attributionControl ? undefined : false,
-        scrollZoom,
-        dragPan,
-        dragRotate,
-        touchZoomRotate,
-      });
-    } catch (err) {
-      // WebGL no disponible: maplibre lanza durante la construcción.
-      fail(err);
-      return;
-    }
-
-    // Fallo del estilo (CDN caído): llega como evento `error` antes de que el
-    // estilo cargue y `load` no va a disparar nunca. Los errores de tiles
-    // sueltos ocurren con el estilo ya cargado y no entran aquí.
-    map.on("error", (e) => {
-      if (map && !mapRef.current && !map.isStyleLoaded()) fail(e.error ?? e);
-    });
-
-    map.on("load", () => {
-      if (!map) return;
-      if (projection?.type) {
-        map.setProjection({ type: projection.type as "mercator" | "globe" });
-      }
-      onLoad?.(map);
-      mapRef.current = map;
-      setReady(true);
-    });
-
-    if (onViewportChange) {
-      map.on("moveend", () => {
-        if (!map) return;
-        const c = map.getCenter();
-        onViewportChange({
-          center: [c.lng, c.lat],
-          zoom: map.getZoom(),
-          bearing: map.getBearing(),
-          pitch: map.getPitch(),
-        });
-      });
-    }
-
-    return () => {
-      setReady(false);
-      mapRef.current = null;
-      if (map && !removed) {
-        removed = true;
-        map.remove();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    // eslint-disable-next-line react-hooks/refs -- ref leído tras `ready`; valor estable post-load
-    <MapContext.Provider value={ready ? mapRef.current : null}>
-      <div
-        ref={containerRef}
-        className={className}
-        style={{ width: "100%", height: "100%", ...style }}
-      />
-      {!ready && !failed && loading}
-      {/* Los children se pintan desde el primer render, sin esperar a que
-          MapLibre cargue estilo y tiles. Antes se esperaba, y eso ataba el LCP
-          de la home —el logo del hero— a la inicialización del mapa: 8.6 s en
-          la línea base móvil de Lighthouse (audit 5.6). Los markers y las
-          rutas ya se enganchan solos cuando el mapa aparece: todos consumen
-          `useMap()`, que devuelve null hasta entonces, y sus efectos dependen
-          de él. El fondo crema con halos hace de póster mientras tanto. */}
-      {children}
-    </MapContext.Provider>
-  );
-});
-
-Map.displayName = "Map";
 
 // ─── MapMarker ───────────────────────────────────────────────────────────────
 
@@ -239,7 +62,7 @@ export function MapMarker({
   zIndex,
   children,
 }: MapMarkerProps) {
-  const map = useMap();
+  const ctx = useContext(MapContext);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const [el, setEl] = useState<HTMLDivElement | null>(null);
 
@@ -251,11 +74,11 @@ export function MapMarker({
   }, []);
 
   useEffect(() => {
-    if (!map || !el) return;
+    if (!ctx || !el) return;
 
-    const marker = new maplibregl.Marker({ element: el, anchor, offset })
+    const marker = new ctx.gl.Marker({ element: el, anchor, offset })
       .setLngLat([longitude, latitude])
-      .addTo(map);
+      .addTo(ctx.map);
 
     markerRef.current = marker;
     return () => {
@@ -264,7 +87,7 @@ export function MapMarker({
     };
   // anchor and offset are stable refs — omitting to avoid spurious remounts
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, el]);
+  }, [ctx, el]);
 
   useEffect(() => {
     markerRef.current?.setLngLat([longitude, latitude]);
@@ -421,4 +244,3 @@ export function MapRoute({
 
   return null;
 }
-

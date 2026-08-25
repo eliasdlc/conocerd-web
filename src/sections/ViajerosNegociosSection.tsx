@@ -36,7 +36,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import Icon, { type IconName } from "@/components/Icon";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
-import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
 import { CategoryPin, GoalPin, SelfPin, PIN_CHROME } from "@/components/map/pins";
 import { PANEL_SOLID } from "@/lib/surfaces";
 import Kicker from "@/components/Kicker";
