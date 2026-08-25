@@ -41,6 +41,7 @@
   --color-mango:       #FF8D16;  /* 7.51:1 sobre ink: el acento SOBRE tinta */
   --color-mango-soft:  #FFE6C8;
   --color-mango-ink:   #985409;  /* 4.83:1 sobre mango-soft, 5.82:1 sobre paper */
+  --color-mango-deep:  #D67611;  /* 3.25:1 con blanco: relleno que carga glifo blanco */
   --color-mint:        #25CCB8;
   --color-mint-soft:   #C6F3EB;
   --color-mint-ink:    #0C6A60;  /* 5.37:1 sobre mint-soft, 6.47:1 sobre paper */
