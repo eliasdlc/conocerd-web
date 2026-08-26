@@ -98,6 +98,14 @@ export default function Footer() {
         {/* Contacto */}
         <div>
           <div className={HEADING}>Contacto</div>
+          {/* El formulario primero: llega al panel y se puede atender. El
+              correo se queda debajo porque es el canal que nombran las páginas
+              legales, y quitarlo de aquí las dejaría apuntando a un sitio sin
+              enlace. */}
+          <Link href="/contacto" className={`${LINK} leading-[1.8]`}>
+            <Icon name="report_problem" className="text-[15px]" />
+            Reportar un problema
+          </Link>
           <a href="mailto:contacto@conocerd.app" className={`${LINK} leading-[1.8]`}>
             <Icon name="mail" className="text-[15px]" />
             contacto@conocerd.app
