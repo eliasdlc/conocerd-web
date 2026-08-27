@@ -59,7 +59,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // PROTOTIPO: `?motor=` elige quién conduce en escritorio (ver lib/journeyMotor).
   // El teléfono ignora la query — su motor es el de pasos pase lo que pase.
-  const { motor, globo, resolved: motorResolved } = useJourneyMotor();
+  const { motor, globo, dpr, resolved: motorResolved } = useJourneyMotor();
   const resolved = viewportResolved && motorResolved;
   /** ¿Conduce el motor de pasos? Siempre en teléfono, y en escritorio con `?motor=pasos`. */
   const porPasos = isMobile || motor === "pasos";
@@ -218,6 +218,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             bearing: -20,
           }}
           onLoad={handleLoad}
+          pixelRatio={dpr}
           interactive={false}
           scrollZoom={false}
           dragPan={false}

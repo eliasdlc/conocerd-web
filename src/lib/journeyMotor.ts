@@ -31,6 +31,11 @@ export interface JourneyMotor {
   /** `false` con `?globo=off`: apaga la rotación en reposo del hero. */
   globo: boolean;
   /**
+   * `?dpr=1` fija la resolución del buffer del mapa en vez de dejar que
+   * MapLibre use `devicePixelRatio`. `undefined` = comportamiento de hoy.
+   */
+  dpr?: number;
+  /**
    * `false` hasta que se lee la URL. Los motores se quedan quietos mientras
    * tanto, igual que hacen con el viewport: un frame conduciendo el motor
    * equivocado deja la cámara en otra escena.
@@ -38,12 +43,14 @@ export interface JourneyMotor {
   resolved: boolean;
 }
 
-function parse(search: string): { motor: Motor; globo: boolean } {
+function parse(search: string): { motor: Motor; globo: boolean; dpr?: number } {
   const q = new URLSearchParams(search);
   const m = q.get("motor");
+  const dpr = Number(q.get("dpr"));
   return {
     motor: m === "vuelos" || m === "pasos" ? m : "actual",
     globo: q.get("globo") !== "off",
+    dpr: Number.isFinite(dpr) && dpr > 0 ? dpr : undefined,
   };
 }
 

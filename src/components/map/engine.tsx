@@ -56,6 +56,12 @@ export interface MapProps {
   children?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  /**
+   * PROTOTIPO. Resolución del buffer del canvas. MapLibre usa
+   * `devicePixelRatio` completo, así que en una pantalla HiDPI dibuja cuatro
+   * veces los píxeles. Sólo se puede fijar en el constructor.
+   */
+  pixelRatio?: number;
 }
 
 // ─── Map ─────────────────────────────────────────────────────────────────────
@@ -79,6 +85,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     children,
     className,
     style,
+    pixelRatio,
   },
   ref
 ) {
@@ -142,6 +149,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         // z1.15 a z11.5 eso es permanente, y el fundido no se aprecia porque
         // la cámara ya se está moviendo.
         fadeDuration: 0,
+        ...(pixelRatio ? { pixelRatio } : {}),
       });
     } catch (err) {
       // WebGL no disponible: maplibre lanza durante la construcción.
@@ -158,6 +166,10 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
 
     map.on("load", () => {
       if (!map) return;
+      // PROTOTIPO: la instancia queda accesible para poder medir ablaciones del
+      // estilo y de la proyección en vivo, sin recompilar entre variante y
+      // variante. Se va con el prototipo.
+      (window as unknown as { __crdMap?: maplibregl.Map }).__crdMap = map;
       if (projection?.type) {
         map.setProjection({ type: projection.type as "mercator" | "globe" });
       }
