@@ -17,14 +17,14 @@
        display  Bricolage Grotesque : titulares y cifras de carretera
        label    Plus Jakarta Sans   : botones, chips, etiquetas, overlines
        sans     Inter               : cuerpo y metadatos
-       hand     Caveat              : sólo la firma del dorso de la polaroid
 
      No hay familia mono: las cifras que la llevaban van en `display` y los
-     metadatos en `sans`. */
+     metadatos en `sans`. Tampoco hay familia manuscrita: Caveat tenía un solo
+     consumidor (la firma del dorso de la polaroid del equipo) y ahora se
+     declara y se aplica allí mismo, como tinta de contenido y no como rol. */
   --font-sans:    var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-bricolage), "Trebuchet MS", system-ui, sans-serif;
   --font-label:   var(--font-jakarta), system-ui, sans-serif;
-  --font-hand:    var(--font-caveat), cursive;
 
   /* ── Color · los nueve roles ──────────────────────────────────────────────
      Misma paleta que la app en modo día. El sistema anterior tenía su propia

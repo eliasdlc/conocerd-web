@@ -35,7 +35,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MapRoute } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MapRoute } from "@/components/map/context";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
@@ -53,7 +53,49 @@ import pairs from "@/data/routes/pairs.json";
 const IDS = pairs.ids as string[];
 const KM = pairs.km as number[][];
 const MIN = pairs.min as number[][];
-const LEGS = pairs.legs as unknown as Record<string, [number, number][]>;
+
+/** Geometría por carretera entre dos destinos, indexada por `a|b`. */
+type RoadLegs = Record<string, [number, number][]>;
+
+// Los 153 tramos pesan 547 KB y sólo hacen falta si alguien arma una ruta, así
+// que viven en `public/data/route-legs.json` y no en el bundle. Se piden una
+// vez por sesión, al elegir la primera parada; hasta que llegan, `legCoords`
+// cae a la cuerda recta y la ruta se ve enseguida.
+let legsCache: RoadLegs | null = null;
+let legsRequest: Promise<RoadLegs> | null = null;
+
+function loadRoadLegs(): Promise<RoadLegs> {
+  legsRequest ??= fetch("/data/route-legs.json")
+    .then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json() as Promise<{ legs: RoadLegs }>;
+    })
+    .then((d) => (legsCache = d.legs))
+    .catch((err) => {
+      // La ruta sigue dibujándose recta: se degrada, no se rompe. Pero si esto
+      // pasa en producción el mapa miente sobre las carreteras, así que grita.
+      console.error("[MapaSection] no se pudo cargar la geometría de carretera:", err);
+      return (legsCache = {});
+    });
+  return legsRequest;
+}
+
+function useRoadLegs(needed: boolean): RoadLegs | null {
+  const [legs, setLegs] = useState<RoadLegs | null>(legsCache);
+
+  useEffect(() => {
+    if (!needed || legs) return;
+    let alive = true;
+    loadRoadLegs().then((l) => {
+      if (alive) setLegs(l);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [needed, legs]);
+
+  return legs;
+}
 
 const DEST: Record<string, Destination> = Object.fromEntries(
   DESTINATIONS.map((d) => [d.id, d])
@@ -67,10 +109,10 @@ function pairMin(a: string, b: string): number {
 }
 
 /** Geometría carretera a→b; invierte el leg si está guardado como b→a. */
-function legCoords(a: string, b: string): [number, number][] {
-  const direct = LEGS[`${a}|${b}`];
+function legCoords(a: string, b: string, legs: RoadLegs | null): [number, number][] {
+  const direct = legs?.[`${a}|${b}`];
   if (direct) return direct;
-  const rev = LEGS[`${b}|${a}`];
+  const rev = legs?.[`${b}|${a}`];
   if (rev) return [...rev].reverse();
   return [DEST[a].coords, DEST[b].coords];
 }
@@ -967,6 +1009,7 @@ export default function MapaSection() {
 
   // Ruta por carreteras reales: concatena los legs precalculados entre paradas
   // consecutivas (con un stub corto pin→carretera en cada extremo).
+  const roadLegs = useRoadLegs(stops.length > 0);
   const route = useMemo(() => {
     if (stops.length < 2) return null;
     const coords: [number, number][] = [];
@@ -977,11 +1020,11 @@ export default function MapaSection() {
       const b = stops[i + 1];
       km += pairKm(a, b);
       min += pairMin(a, b);
-      const leg = [DEST[a].coords, ...legCoords(a, b), DEST[b].coords];
+      const leg = [DEST[a].coords, ...legCoords(a, b, roadLegs), DEST[b].coords];
       coords.push(...(i === 0 ? leg : leg.slice(1)));
     }
     return { coords, km: Math.round(km), min: Math.round(min) };
-  }, [stops]);
+  }, [stops, roadLegs]);
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;

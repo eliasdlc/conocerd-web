@@ -5,7 +5,7 @@ import Image from "next/image";
 import Button from "@/components/Button";
 import { useScene } from "@/context/SceneContext";
 import { scrollToSection } from "@/lib/journeyNav";
-import { MapMarker, MarkerContent } from "@/components/map/Map";
+import { MapMarker, MarkerContent } from "@/components/map/context";
 import BrandPin from "@/components/BrandPin";
 
 // Centro aprox. de RD — mismo punto que el keyframe `hero` de la cámara.

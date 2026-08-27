@@ -21,7 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { CONTENT } from "@/components/lista/content";
-import type { Audience } from "@/lib/waitlist/schema";
+import type { Audience } from "@/lib/waitlist/constants";
 
 import { loadEmailAssets, type RenderMode } from "./assets";
 import {

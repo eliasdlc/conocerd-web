@@ -13,7 +13,8 @@ import { after } from "next/server";
 import { renderWelcomeEmail, sendWelcomeEmail } from "@/lib/email/welcome";
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
-import { HONEYPOT_FIELD, subscribeSchema, type SubscribeResult } from "@/lib/waitlist/schema";
+import { HONEYPOT_FIELD, type SubscribeResult } from "@/lib/waitlist/constants";
+import { subscribeSchema } from "@/lib/waitlist/schema";
 import { getWaitlistStore } from "@/lib/waitlist/store";
 
 const RATE_LIMIT = { limit: 5, windowMs: 60_000 };

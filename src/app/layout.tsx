@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter, Caveat } from "next/font/google";
+import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
@@ -16,6 +15,9 @@ import { SITE_URL } from "@/lib/site";
 // El mono desaparece del sistema: las cifras que antes lo llevaban (km, horas,
 // sellos) van en Bricolage, y los metadatos en Inter. El acento editorial ya no
 // es una itálica de otra familia, sino la misma Bricolage en coralInk.
+//
+// La manuscrita (Caveat) no está aquí: es tinta de contenido con un solo uso, y
+// se declara en la sección que la usa para no precargarla en todo el sitio.
 //
 // Bricolage es variable con eje óptico: el titular del hero pide `opsz 96` (la
 // regla de portada) y el resto se queda en el óptico por defecto.
@@ -35,15 +37,6 @@ const plusJakarta = Plus_Jakarta_Sans({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-});
-
-// Caveat sobrevive con un solo uso en todo el producto: la firma del dorso de
-// la polaroid del equipo. Es tinta de contenido, como una foto, no un rol
-// tipográfico del sistema.
-const caveat = Caveat({
-  subsets: ["latin"],
-  variable: "--font-caveat",
   display: "swap",
 });
 
@@ -83,12 +76,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      className={`${bricolage.variable} ${plusJakarta.variable} ${inter.variable} ${caveat.variable}`}
+      className={`${bricolage.variable} ${plusJakarta.variable} ${inter.variable}`}
     >
-      <head>
-        {/* Unregister any stale service workers from other projects on this port */}
-        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));` }} />
-      </head>
       <body>
         {children}
         {/* Vistas de página y los cuatro eventos del embudo (src/lib/analytics).

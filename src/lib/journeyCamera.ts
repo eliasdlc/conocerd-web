@@ -51,6 +51,9 @@ export function getIdleBearing() {
 /** Escribe en el mapa el frame correspondiente al progreso `p` (0..1). */
 export function applyJourneyFrame(map: maplibregl.Map | null | undefined, p: number) {
   if (!map || activeFlight) return;
+  // Pestaña oculta: el rAF del mapa no corre y nadie está mirando. Escribir
+  // aquí sólo deja trabajo acumulado para cuando la pestaña vuelva.
+  if (typeof document !== "undefined" && document.hidden) return;
   const cam = cameraAtProgress(p, viewport);
   map.jumpTo({
     center: cam.center,

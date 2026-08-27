@@ -36,7 +36,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import Icon, { type IconName } from "@/components/Icon";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
-import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
+import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
 import { CategoryPin, GoalPin, SelfPin, PIN_CHROME } from "@/components/map/pins";
 import { PANEL_SOLID } from "@/lib/surfaces";
 import Kicker from "@/components/Kicker";
@@ -45,6 +45,7 @@ import { DESTINATIONS, type Destination } from "@/data/destinations";
 import type { LngLat } from "@/lib/geo";
 import StampCRD from "@/components/StampCRD";
 import pairs from "@/data/routes/pairs.json";
+import featuredLegs from "@/data/routes/legs-featured.json";
 import featured from "@/data/routes/featured-route.json";
 
 // ─── Utilidades geográficas ──────────────────────────────────────────────────
@@ -69,12 +70,14 @@ function bearing(a: [number, number], b: [number, number]): number {
 
 const idxDe = (id: string) => pairs.ids.indexOf(id);
 
-/** Tramo por carretera A→B de pairs.json (invierte la clave si hace falta). */
+// Tramo por carretera A→B (invierte la clave si hace falta). Sale del
+// subconjunto de `legs-featured.json`: los 12 tramos hacia Santiago que esta
+// sección dibuja, no la matriz completa, que vive fuera del bundle.
 function tramo(a: string, b: string): [number, number][] {
   const ia = idxDe(a);
   const ib = idxDe(b);
   const key = ia < ib ? `${a}|${b}` : `${b}|${a}`;
-  const leg = (pairs.legs as Record<string, number[][]>)[key] ?? [];
+  const leg = (featuredLegs.legs as Record<string, number[][]>)[key] ?? [];
   const pts = leg.map((c) => [c[0], c[1]] as [number, number]);
   return ia < ib ? pts : [...pts].reverse();
 }

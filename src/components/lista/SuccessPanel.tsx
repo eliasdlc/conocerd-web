@@ -13,7 +13,7 @@ import Confetti from "./Confetti";
 import InstagramTile from "./InstagramTile";
 import Icon, { type IconName } from "@/components/Icon";
 import { CONTENT } from "./content";
-import type { Audience } from "@/lib/waitlist/schema";
+import type { Audience } from "@/lib/waitlist/constants";
 
 // La clase es una constante literal, no una plantilla: Tailwind escanea el
 // código fuente en busca de nombres de clase, así que una clase construida por

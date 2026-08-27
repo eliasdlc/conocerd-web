@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { useMotionValue, type MotionValue } from "motion/react";
 
 type SceneContextValue = {
@@ -17,11 +17,14 @@ export function SceneProvider({ children }: { children: React.ReactNode }) {
   // may decide how to drive the journey, but it never decides its first scene.
   const [activeScene, setActiveScene] = useState<string>("hero");
   const progress = useMotionValue(0);
-  return (
-    <SceneContext.Provider value={{ activeScene, setActiveScene, progress }}>
-      {children}
-    </SceneContext.Provider>
+  // Sin memo, el objeto es nuevo en cada render y todo consumidor se vuelve a
+  // renderizar aunque la escena no haya cambiado. `setActiveScene` y `progress`
+  // son estables, así que el value sólo cambia cuando cambia la escena.
+  const value = useMemo(
+    () => ({ activeScene, setActiveScene, progress }),
+    [activeScene, progress]
   );
+  return <SceneContext.Provider value={value}>{children}</SceneContext.Provider>;
 }
 
 export function useScene(): SceneContextValue {
