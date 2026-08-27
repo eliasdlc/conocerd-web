@@ -41,7 +41,12 @@ export interface InitialViewState {
 export interface MapProps {
   theme?: "light" | "dark";
   styles?: string;
-  projection?: { type: string };
+  /**
+   * La spec de MapLibre, no un `{type: string}`: `type` acepta también una
+   * expresión de zoom, que es como se pide un globo que pase a mercator a
+   * partir de cierto acercamiento.
+   */
+  projection?: maplibregl.ProjectionSpecification;
   viewport?: ViewState;
   onViewportChange?: (viewport: ViewState) => void;
   onLoad?: (map: maplibregl.Map) => void;
@@ -170,9 +175,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
       // estilo y de la proyección en vivo, sin recompilar entre variante y
       // variante. Se va con el prototipo.
       (window as unknown as { __crdMap?: maplibregl.Map }).__crdMap = map;
-      if (projection?.type) {
-        map.setProjection({ type: projection.type as "mercator" | "globe" });
-      }
+      if (projection) map.setProjection(projection);
       onLoad?.(map);
       mapRef.current = map;
       setReady(true);

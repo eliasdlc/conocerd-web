@@ -9,6 +9,7 @@ import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { useJourneyMotor } from "@/lib/journeyMotor";
+import { aligerarEstilo, proyeccionPara } from "@/lib/journeyMapaLigero";
 import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
@@ -59,7 +60,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // PROTOTIPO: `?motor=` elige quién conduce en escritorio (ver lib/journeyMotor).
   // El teléfono ignora la query — su motor es el de pasos pase lo que pase.
-  const { motor, globo, dpr, resolved: motorResolved } = useJourneyMotor();
+  const { motor, globo, dpr, estilo, proj, resolved: motorResolved } = useJourneyMotor();
   const resolved = viewportResolved && motorResolved;
   /** ¿Conduce el motor de pasos? Siempre en teléfono, y en escritorio con `?motor=pasos`. */
   const porPasos = isMobile || motor === "pasos";
@@ -181,10 +182,13 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
       applyBrandPaint(map);
+      // PROTOTIPO: el recorte del basemap va antes del primer frame, así el
+      // mapa nunca llega a dibujar las capas que se van a apagar.
+      aligerarEstilo(map, estilo);
       measureViewport();
       applyJourneyFrame(map, progress.get());
     },
-    [progress]
+    [progress, estilo]
   );
 
   return (
@@ -209,7 +213,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         <Map
           ref={mapRef}
           theme="light"
-          projection={{ type: "globe" }}
+          projection={proyeccionPara(proj)}
           initialViewState={{
             longitude: -70.1627,
             latitude: 18.7357,
