@@ -57,6 +57,10 @@ const SNAP_EPSILON = 0.002;
 const FLIGHT_BASE_MS = 700;
 const FLIGHT_PER_TRACK_MS = 900;
 const FLIGHT_MAX_MS = 1500;
+// PROTOTIPO (camara: "vuelos"): lo que dura el vuelo de un keyframe al
+// siguiente. Es el equivalente de escritorio a un paso del panel móvil, que
+// mide 1150 ms; se acorta porque aquí el gesto de scroll ya empujó la mitad.
+const FLIGHT_STEP_MS = 900;
 
 // Firefox entrega deltas en líneas (deltaMode 1); ~40 px por línea es la
 // convención que usan los normalizadores de scroll.
@@ -106,6 +110,13 @@ export interface UseJourneyScrollOptions {
   onSceneChange: (name: string) => void;
   /** Gated: sólo conduce en desktop y con el viewport ya resuelto. */
   enabled: boolean;
+  /**
+   * PROTOTIPO. `"frame"` es el motor de hoy: cada frame de scroll escribe la
+   * cámara entera. `"vuelos"` desacopla las dos cosas — el scroll mueve los
+   * overlays y la cámara sale en UN vuelo cada vez que cambia el keyframe más
+   * cercano, así el mapa deja de repintar entre escena y escena.
+   */
+  camara?: "frame" | "vuelos";
 }
 
 export interface JourneyScrollControls {
@@ -119,6 +130,7 @@ export function useJourneyScroll({
   progress,
   onSceneChange,
   enabled,
+  camara = "frame",
 }: UseJourneyScrollOptions): JourneyScrollControls {
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -241,20 +253,44 @@ export function useJourneyScroll({
   });
 
   const lastScene = useRef<string>("");
+  // PROTOTIPO (camara: "vuelos"): último keyframe al que se despachó un vuelo.
+  // -1 = todavía ninguno, así el efecto de montaje puede asentar la cámara sin
+  // volar desde el view inicial.
+  const flownTo = useRef(-1);
 
   const apply = useCallback(
     (p: number) => {
       progress.set(p);
-      // Durante un vuelo de nav, applyJourneyFrame es no-op (journeyCamera):
-      // progreso y overlays avanzan, la cámara es del vuelo.
-      applyJourneyFrame(mapRef.current, p);
+      if (camara === "vuelos") {
+        // La cámara deja de seguir al scroll frame a frame. Se mira cuál es el
+        // keyframe más cercano y, sólo cuando ese índice cambia, sale un vuelo
+        // hacia él: entre vuelo y vuelo el mapa no repinta, que es justo lo que
+        // la auditoría midió como el 89 % del hilo.
+        const i = nearestSceneIndex(p);
+        if (i !== flownTo.current) {
+          const previo = flownTo.current;
+          flownTo.current = i;
+          const map = mapRef.current;
+          const destino = sceneTargetProgress(i);
+          // El primer asentamiento y el modo reducido no vuelan: se escriben.
+          if (map && !reduceMotion && previo >= 0) {
+            flyToJourneyFrame(map, destino, FLIGHT_STEP_MS, () => {});
+          } else {
+            applyJourneyFrame(map, destino);
+          }
+        }
+      } else {
+        // Durante un vuelo de nav, applyJourneyFrame es no-op (journeyCamera):
+        // progreso y overlays avanzan, la cámara es del vuelo.
+        applyJourneyFrame(mapRef.current, p);
+      }
       const scene = sceneAtProgress(p);
       if (scene !== lastScene.current) {
         lastScene.current = scene;
         onSceneChange(scene);
       }
     },
-    [progress, mapRef, onSceneChange]
+    [progress, mapRef, onSceneChange, camara, reduceMotion]
   );
 
   // ── Salto de navegación (nav, riel, footer, hash) ───────────────────────────
@@ -286,6 +322,11 @@ export function useJourneyScroll({
       // La cámara hace UN vuelo directo mientras el estado ya está en destino.
       // Orden importa: el vuelo toma la cámara ANTES del apply, que si no
       // escribiría un jumpTo al destino y no habría nada que volar.
+      //
+      // En modo "vuelos" el apply de abajo despacharía ADEMÁS su propio vuelo
+      // al mismo keyframe, cancelando este a mitad de arco. Dar el índice por
+      // volado antes de tiempo lo evita: el destino es el mismo.
+      flownTo.current = sceneIndex;
       const ms = Math.round(Math.min(FLIGHT_MAX_MS, FLIGHT_BASE_MS + FLIGHT_PER_TRACK_MS * dist));
       flyToJourneyFrame(map, targetP, ms, () => {
         // Aterrizó: la escritura por-frame retoma desde el mismo frame en el
@@ -367,6 +408,11 @@ export function useJourneyScroll({
     if (!enabled) return;
     measureViewport();
 
+    // El motor arranca ASENTADO, nunca volando: al montar (o al volver del
+    // modo pasos) la cámara se escribe directa en el keyframe más cercano, y
+    // sólo a partir del siguiente cambio de índice empiezan los vuelos.
+    if (camara === "vuelos") flownTo.current = -1;
+
     const el = containerRef.current;
     const carried = progress.get();
     if (carried > 0.001 && el) {
@@ -398,7 +444,7 @@ export function useJourneyScroll({
     return () => {
       window.removeEventListener("resize", onResize);
     };
-  }, [enabled, apply, chase, containerRef, progress, reduceMotion, scrollYProgress, smooth]);
+  }, [enabled, apply, camara, chase, containerRef, progress, reduceMotion, scrollYProgress, smooth]);
 
   return { jumpToScene };
 }

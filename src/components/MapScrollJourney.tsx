@@ -8,6 +8,7 @@ import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
+import { useJourneyMotor } from "@/lib/journeyMotor";
 import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
@@ -56,6 +57,14 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   const outerRef = useRef<HTMLDivElement>(null);
   const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
+  // PROTOTIPO: `?motor=` elige quién conduce en escritorio (ver lib/journeyMotor).
+  // El teléfono ignora la query — su motor es el de pasos pase lo que pase.
+  const { motor, globo, resolved: motorResolved } = useJourneyMotor();
+  const resolved = viewportResolved && motorResolved;
+  /** ¿Conduce el motor de pasos? Siempre en teléfono, y en escritorio con `?motor=pasos`. */
+  const porPasos = isMobile || motor === "pasos";
+  const camara = motor === "vuelos" ? "vuelos" : "frame";
+
   // El journey móvil bloquea el scroll de la página; solo se libera al final
   // para dejar bajar al footer (y se vuelve a bloquear al regresar arriba).
   const [unlocked, setUnlocked] = useState(false);
@@ -72,16 +81,19 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     mapRef,
     progress,
     onSceneChange: setActiveScene,
-    enabled: viewportResolved && !isMobile,
+    enabled: resolved && !porPasos,
+    camara,
   });
   const { goTo, next, prev, index } = useJourneySteps({
-    enabled: viewportResolved && isMobile,
+    enabled: resolved && porPasos,
     mapRef,
     progress,
     onSceneChange: setActiveScene,
   });
 
-  useHeroIdleMotion(mapRef, progress, activeScene === "hero");
+  // `?globo=off` la apaga: en escritorio corre 10 s escribiendo la cámara por
+  // frame, y es un problema independiente del motor que se compara.
+  useHeroIdleMotion(mapRef, progress, globo && activeScene === "hero");
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena
   // en ambos modos. En desktop la navegación es teletransporte + vuelo directo
@@ -90,7 +102,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     return registerSceneJumper((scene) => {
       const i = SCENE_BANDS.findIndex((b) => b.name === scene);
       if (i < 0) return false;
-      if (isMobile) {
+      if (porPasos) {
         // Un link desde el footer llega con la página desbloqueada y abajo:
         // volver arriba y dejar que el motor de pasos anime hasta la escena.
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -100,15 +112,16 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       }
       return true;
     });
-  }, [isMobile, goTo, jumpToScene]);
+  }, [porPasos, goTo, jumpToScene]);
 
-  // Bloqueo del scroll de página en móvil. Con `overflow:hidden` un swipe
+  // Bloqueo del scroll de página cuando conduce el motor de pasos (siempre en
+  // el teléfono, y en escritorio con `?motor=pasos`). Con `overflow:hidden` un swipe
   // vertical no mueve la página, pero los bottom-sheets y la sección de equipo
   // siguen scrolleando POR DENTRO (a diferencia de `touch-action`, que los
   // habría anulado también). Ese scroll interno no cambia de escena: la escena
   // solo avanza desde el panel de pasos.
   useEffect(() => {
-    if (!viewportResolved || !isMobile || unlocked) return;
+    if (!resolved || !porPasos || unlocked) return;
     // Sobre <html> y no solo <body>: globals.css le pone `overflow-x: clip` al
     // root, y con el root en overflow no-visible el overflow del body deja de
     // propagarse al viewport (el bloqueo no llegaba a aplicarse).
@@ -122,12 +135,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       root.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [viewportResolved, isMobile, unlocked]);
+  }, [resolved, porPasos, unlocked]);
 
   // El panel es fijo: se retira cuando el usuario sale del journey al footer,
   // y al volver arriba el journey recupera el bloqueo del gesto vertical.
   useEffect(() => {
-    if (!isMobile) return;
+    if (!porPasos) return;
     const onScroll = () => {
       const y = window.scrollY;
       setStepperVisible(y < window.innerHeight * 0.3);
@@ -144,7 +157,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isMobile, unlocked]);
+  }, [porPasos, unlocked]);
 
   const goToFooter = useCallback(() => {
     setUnlocked(true);
@@ -179,6 +192,9 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       ref={outerRef}
       className="crd-journey"
       data-active-scene={activeScene}
+      // PROTOTIPO: con "pasos" el CSS colapsa la pista de scroll a 100dvh
+      // también en escritorio, igual que hace el media query del teléfono.
+      data-motor={motor}
       style={{ "--crd-track-vh": TRIGGER_TOTAL_VH } as React.CSSProperties}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
@@ -234,6 +250,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         onChapter={goTo}
         onEnd={goToFooter}
         visible={stepperVisible}
+        // El panel se oculta en escritorio salvo que sea quien conduce.
+        enEscritorio={motor === "pasos"}
       />
 
       {/* Anchor divs — pista nativa de scroll, solo desktop (en móvil no hay

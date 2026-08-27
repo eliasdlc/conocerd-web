@@ -26,6 +26,12 @@ export interface JourneyStepperProps {
   /** Última escena: el botón de avanzar sale del journey (footer). */
   onEnd: () => void;
   visible: boolean;
+  /**
+   * PROTOTIPO. El panel es del teléfono, así que por defecto se oculta en
+   * escritorio con `desk:hidden`. Con `?motor=pasos` es quien conduce también
+   * ahí y tiene que verse.
+   */
+  enEscritorio?: boolean;
 }
 
 function Chevron({ dir, className = "" }: { dir: "up" | "down"; className?: string }) {
@@ -50,6 +56,7 @@ export default function JourneyStepper({
   onChapter,
   onEnd,
   visible,
+  enEscritorio = false,
 }: JourneyStepperProps) {
   const activeChapter = chapterIndexOfScene(index);
   const isFirst = index === 0;
@@ -59,9 +66,9 @@ export default function JourneyStepper({
     <div
       role="group"
       aria-label="Navegación del recorrido"
-      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 desk:hidden ${
-        visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
-      }`}
+      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 ${
+        enEscritorio ? "" : "desk:hidden"
+      } ${visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >
       <div className="flex h-16 items-center gap-3 rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-[5px] shadow-e1 backdrop-blur-[24px] backdrop-saturate-[1.8]">
         {/* Escena anterior */}

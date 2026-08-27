@@ -313,6 +313,27 @@ body::after {
   .crd-journey-anchor { display: none; }
 }
 
+/* PROTOTIPO · `?motor=pasos` (src/lib/journeyMotor.ts) ────────────────────────
+   Si escritorio adopta el motor del teléfono, adopta también su geometría: sin
+   pista de scroll y sin anclas, porque el progreso ya no lo escribe el scroll
+   sino el panel. El media query de arriba hace esto mismo por debajo de 900px;
+   estas reglas lo extienden hacia arriba sin mirar el ancho. Se borran con el
+   prototipo. */
+.crd-journey[data-motor="pasos"] {
+  height: 100dvh;
+  overscroll-behavior: none;
+}
+.crd-journey[data-motor="pasos"] .crd-journey-anchor { display: none; }
+
+@media (min-width: 900px) {
+  /* El panel de pasos pasa a flotar también aquí, así que los overlays vuelven
+     a deberle su franja. En el teléfono ya lo hace el :root del media query. */
+  .crd-journey[data-motor="pasos"] { --crd-stepper-h: 84px; }
+  .crd-journey[data-motor="pasos"] .crd-ol-panel {
+    padding-bottom: calc(20px + var(--crd-stepper-h));
+  }
+}
+
 /* Alto reservado del panel de pasos móvil (JourneyStepper). 0 en desktop para
    que los calc() que lo usan sigan siendo válidos fuera del breakpoint. */
 :root { --crd-stepper-h: 0px; }
