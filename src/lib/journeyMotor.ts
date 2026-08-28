@@ -45,6 +45,8 @@ export interface JourneyMotor {
    * `"vivo"` es el motor de siempre.
    */
   mapa: "vivo" | "imagenes";
+  /** `?topos=rd` deja sólo los topónimos dominicanos. */
+  soloTopónimosRD: boolean;
   /**
    * `false` hasta que se lee la URL. Los motores se quedan quietos mientras
    * tanto, igual que hacen con el viewport: un frame conduciendo el motor
@@ -60,6 +62,7 @@ type Ajustes = {
   estilo: NivelEstilo;
   proj: NivelProyeccion;
   mapa: "vivo" | "imagenes";
+  soloTopónimosRD: boolean;
 };
 
 function parse(search: string): Ajustes {
@@ -74,6 +77,7 @@ function parse(search: string): Ajustes {
   const imagenes = q.get("mapa") === "imagenes";
   return {
     mapa: imagenes ? "imagenes" : "vivo",
+    soloTopónimosRD: q.get("topos") === "rd" || turbo,
     // Con las imágenes el motor por defecto es vuelos: el recorrido sigue
     // siendo continuo, sólo cambia quién dibuja el mapa.
     motor: m === "vuelos" || m === "pasos" ? m : turbo || imagenes ? "vuelos" : "actual",
@@ -100,6 +104,14 @@ const leerServidor = () => null;
 export function useJourneyMotor(): JourneyMotor {
   const search = useSyncExternalStore<string | null>(subscribe, leerCliente, leerServidor);
   if (search === null)
-    return { motor: "actual", globo: true, estilo: "completo", proj: "globe", mapa: "vivo", resolved: false };
+    return {
+      motor: "actual",
+      globo: true,
+      estilo: "completo",
+      proj: "globe",
+      mapa: "vivo",
+      soloTopónimosRD: false,
+      resolved: false,
+    };
   return { ...parse(search), resolved: true };
 }

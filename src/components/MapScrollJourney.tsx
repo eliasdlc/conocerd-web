@@ -9,7 +9,7 @@ import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { useJourneyMotor } from "@/lib/journeyMotor";
-import { aligerarEstilo, proyeccionPara } from "@/lib/journeyMapaLigero";
+import { aligerarEstilo, proyeccionPara, soloTopónimosDeRD } from "@/lib/journeyMapaLigero";
 import MapaEscenas from "@/components/map/MapaEscenas";
 import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
@@ -62,7 +62,16 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // PROTOTIPO: `?motor=` elige quién conduce en escritorio (ver lib/journeyMotor).
   // El teléfono ignora la query — su motor es el de pasos pase lo que pase.
-  const { motor, globo, dpr, estilo, proj, mapa, resolved: motorResolved } = useJourneyMotor();
+  const {
+    motor,
+    globo,
+    dpr,
+    estilo,
+    proj,
+    mapa,
+    soloTopónimosRD,
+    resolved: motorResolved,
+  } = useJourneyMotor();
   const porImagenes = mapa === "imagenes";
   const resolved = viewportResolved && motorResolved;
   /** ¿Conduce el motor de pasos? Siempre en teléfono, y en escritorio con `?motor=pasos`. */
@@ -188,6 +197,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       // PROTOTIPO: el recorte del basemap va antes del primer frame, así el
       // mapa nunca llega a dibujar las capas que se van a apagar.
       aligerarEstilo(map, estilo);
+      if (soloTopónimosRD) soloTopónimosDeRD(map);
       // El generador de escenas pregunta por la cámara de cualquier progreso,
       // no sólo la de los keyframes: los tramos con mucho salto de zoom llevan
       // fotogramas intermedios y tienen que salir de esta misma matemática.
@@ -204,7 +214,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       measureViewport();
       applyJourneyFrame(map, progress.get());
     },
-    [progress, estilo]
+    [progress, estilo, soloTopónimosRD]
   );
 
   return (

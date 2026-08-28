@@ -95,3 +95,111 @@ export function proyeccionPara(nivel: NivelProyeccion): maplibregl.ProjectionSpe
     type: ["interpolate", ["linear"], ["zoom"], 4, "vertical-perspective", 7, "mercator"],
   };
 }
+
+// ─── Etiquetas: sólo las de aquí ─────────────────────────────────────────────
+
+/**
+ * Caja de República Dominicana, con holgura. Sirve de filtro espacial para las
+ * etiquetas: lo que cae fuera no se dibuja.
+ */
+const CAJA_RD = {
+  type: "Polygon" as const,
+  coordinates: [
+    [
+      [-72.2, 17.3],
+      [-68.1, 17.3],
+      [-68.1, 20.2],
+      [-72.2, 20.2],
+      [-72.2, 17.3],
+    ],
+  ],
+};
+
+/**
+ * Deja en el mapa únicamente los topónimos de República Dominicana.
+ *
+ * En el globo del hero se leen CANADA, MEXICO, BRAZIL y otros veinte nombres
+ * que no son de lo que va este sitio, y en el vuelo aparecen ciudades de Haití
+ * y de Cuba. El filtro `within` los descarta por geometría, así que no hace
+ * falta enumerar países ni depender de que cada capa traiga `iso_a2`.
+ *
+ * Los nombres de mares y océanos NO entran aquí: no son países, y "Caribbean
+ * Sea" sí sitúa al visitante.
+ *
+ * Devuelve cuántas capas quedaron acotadas.
+ */
+/**
+ * Traduce un filtro en la sintaxis vieja de Mapbox a una expresión moderna.
+ *
+ * Hace falta porque las capas de Carto llegan con filtros del tipo
+ * `["all", ["==", "class", "town"]]`, y MapLibre valida cada filtro entero en
+ * una sintaxis o en la otra: meter un `within` dentro de un filtro viejo lo
+ * rechaza con "expected one of [==, !=, ...], within found" y el mapa no
+ * arranca. Convertido, las dos partes conviven.
+ */
+function aExpresión(f: unknown): unknown {
+  if (!Array.isArray(f) || f.length === 0) return f;
+  const [op, ...resto] = f as [string, ...unknown[]];
+  const campo = (k: unknown) => (k === "$type" ? ["geometry-type"] : ["get", k]);
+
+  switch (op) {
+    case "all":
+    case "any":
+      return [op, ...resto.map(aExpresión)];
+    case "none":
+      return ["!", ["any", ...resto.map(aExpresión)]];
+    case "has":
+      return ["has", resto[0]];
+    case "!has":
+      return ["!", ["has", resto[0]]];
+    case "in":
+      return ["in", campo(resto[0]), ["literal", resto.slice(1)]];
+    case "!in":
+      return ["!", ["in", campo(resto[0]), ["literal", resto.slice(1)]]];
+    case "==":
+    case "!=":
+    case ">":
+    case ">=":
+    case "<":
+    case "<=":
+      return [op, campo(resto[0]), resto[1]];
+    default:
+      // Ya era una expresión moderna.
+      return f;
+  }
+}
+
+/**
+ * Deja en el mapa únicamente los topónimos de República Dominicana.
+ *
+ * En el globo del hero se leen CANADA, MEXICO, BRAZIL y otros veinte nombres
+ * que no tienen que ver con este sitio, y durante el vuelo aparecen pueblos de
+ * Haití y de Cuba. El filtro `within` los descarta por geometría, así que no
+ * hay que enumerar países ni depender de que cada capa traiga `iso_a2`.
+ *
+ * Los nombres de mares y océanos NO entran aquí: no son países, y "Caribbean
+ * Sea" sí sitúa al visitante.
+ *
+ * Devuelve cuántas capas quedaron acotadas.
+ */
+export function soloTopónimosDeRD(map: maplibregl.Map): number {
+  const capas = (map.getStyle().layers ?? []).filter(
+    (capa) => capa.type === "symbol" && "source-layer" in capa && capa["source-layer"] === "place"
+  );
+
+  let acotadas = 0;
+  for (const capa of capas) {
+    try {
+      const previo = map.getFilter(capa.id);
+      const dentro = ["within", CAJA_RD];
+      const combinado = previo ? ["all", aExpresión(previo), dentro] : dentro;
+      map.setFilter(capa.id, combinado as maplibregl.FilterSpecification);
+      acotadas++;
+    } catch (err) {
+      // Una capa que el estilo ya no expone no es motivo para tumbar el mapa,
+      // pero sí conviene enterarse de que el filtro no se aplicó.
+      console.warn(`[mapa] no se pudo acotar ${capa.id}:`, err);
+    }
+  }
+  return acotadas;
+}
