@@ -13,13 +13,7 @@ import maplibregl from "maplibre-gl";
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapContext } from "@/components/map/context";
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const MAP_STYLES = {
-  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-} as const;
+import { MAP_STYLES } from "@/lib/basemap";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
