@@ -38,8 +38,17 @@ export default function Nav() {
   useEffect(() => {
     const pill = pillRef.current;
     if (!pill) return;
+    // Sólo se escribe cuando el estado cambia de verdad. Escribirlo en cada
+    // evento ensuciaba el atributo 344 veces por recorrido, y como sus hijos
+    // seleccionan por `group-data-[solid=…]`, cada escritura se cobraba en el
+    // siguiente recálculo de estilo: 62 a 70 ms por gesto, el 86 % de todo el
+    // tiempo de listeners de scroll de la página.
+    let solido: boolean | null = null;
     const onScroll = () => {
-      pill.dataset.solid = String(window.scrollY > 36);
+      const ahora = window.scrollY > 36;
+      if (ahora === solido) return;
+      solido = ahora;
+      pill.dataset.solid = String(ahora);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
