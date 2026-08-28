@@ -9,7 +9,8 @@ import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
-import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
+import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
@@ -212,11 +213,30 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
   // se queda en el view inicial hasta la primera interacción.
+  // Cancela el calentado de teselas si el componente se va antes de terminar.
+  const calentado = useRef<AbortController | null>(null);
+  useEffect(() => () => calentado.current?.abort(), []);
+
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
+
+      // Las teselas del resto del recorrido, una vez el mapa terminó de pintar
+      // lo que la persona mira ahora. Antes de `idle` competiría por la
+      // conexión con el encuadre actual y el efecto neto sería peor.
+      map.once("idle", () => {
+        if (calentado.current) return;
+        const ctl = new AbortController();
+        calentado.current = ctl;
+        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
+        // hasta 16.4 y TypeScript lo da por presente siempre.
+        const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;
+        if (ocioso) ocioso(arrancar, { timeout: 2000 });
+        else window.setTimeout(arrancar, 500);
+      });
     },
     [progress]
   );

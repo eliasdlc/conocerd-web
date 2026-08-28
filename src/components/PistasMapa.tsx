@@ -19,6 +19,14 @@ import { CARTO_HOSTS, CARTO_TILEJSON, MAP_STYLES } from "@/lib/basemap";
 //
 //  React sólo admite estos métodos desde un componente cliente, y los coloca en
 //  el <head> del HTML servido.
+//
+//  Aquí NO se precargan teselas, y se probó: traerlas mientras la página
+//  hidrata empeora el primer píxel del mapa de 2572 a 2995 ms con perfil de
+//  teléfono, porque en 4G la conexión es el recurso escaso y esas descargas
+//  retrasan los 269 KB del chunk de MapLibre. `priority: low` tampoco lo salva,
+//  porque las teselas salen de otros hosts y la prioridad HTTP/2 sólo ordena
+//  dentro de una misma conexión. Las teselas se calientan en
+//  `lib/calentarRecorrido`, y sólo cuando el mapa ya terminó de pintar.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function PistasMapa() {
