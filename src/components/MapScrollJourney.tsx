@@ -47,6 +47,16 @@ function applyBrandPaint(map: maplibregl.Map) {
   // grande que la esfera). `atmosphere-blend: 0` la apaga ⇒ el globo se recorta
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
   map.setSky({ "atmosphere-blend": 0 });
+
+  // `water_shadow` de Positron dibuja el mismo polígono de agua que `water`,
+  // desplazado, para simular una sombra bajo la costa. Con nuestro color de
+  // agua queda tapada al 100 %: no aporta un solo píxel y sí manda toda la
+  // geometría del océano una segunda vez. En el hero son 425,9k índices y 20
+  // draw calls por frame para no cambiar nada (medido: 0 px de diferencia
+  // sobre 2.073.600 en tres encuadres).
+  if (map.getLayer("water_shadow")) {
+    map.setLayoutProperty("water_shadow", "visibility", "none");
+  }
 }
 
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
