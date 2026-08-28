@@ -42,6 +42,14 @@ export interface MapProps {
   loading?: React.ReactNode;
   initialViewState?: InitialViewState;
   interactive?: boolean;
+  /**
+   * Multiplicador de la caché de tiles. MapLibre la dimensiona como
+   * `tilesDelViewport × maxTileCacheZoomLevels`, y su default de 5 deja 60
+   * tiles en escritorio y 30 en móvil. Sirve para recorridos que se quedan en
+   * una zona y vuelven a ella: sin esto cada regreso vuelve a pedir, parsear y
+   * subir a GPU los mismos tiles.
+   */
+  maxTileCacheZoomLevels?: number;
   attributionControl?: boolean;
   scrollZoom?: boolean;
   dragPan?: boolean;
@@ -65,6 +73,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     loading,
     initialViewState,
     interactive = true,
+    maxTileCacheZoomLevels,
     attributionControl = true,
     scrollZoom = true,
     dragPan = true,
@@ -125,6 +134,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
         bearing: initialViewState?.bearing ?? viewport?.bearing ?? 0,
         pitch: initialViewState?.pitch ?? viewport?.pitch ?? 0,
         interactive,
+        maxTileCacheZoomLevels,
         attributionControl: attributionControl ? undefined : false,
         scrollZoom,
         dragPan,

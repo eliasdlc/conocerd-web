@@ -8,7 +8,7 @@ import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
-import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
+import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -32,6 +32,25 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
+
+// Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
+// niveles de zoom pese al nombre: es `tilesDelViewport × multiplicador`, o sea
+// 60 tiles en escritorio (1440×900) y 30 en móvil (393×852) con el default de
+// 5. El recorrido toca ~230 tiles distintos, así que con 60 ranuras la caché
+// vive llena: medida en 3 pasadas da 60 de 60, sin una unidad de varianza, y
+// cada regreso a la isla obliga a re-pedir, re-parsear y volver a subir a GPU
+// las mismas teselas.
+//
+// 20 y no más porque el conjunto de trabajo real son ~145 tiles: con 240
+// ranuras la ocupación se estabiliza en 142 y las descargas repetidas de RD
+// bajan de 123 a 80 por recorrido (medianas de 3 pasadas). Con 720 ranuras el
+// número es 78, idéntico dentro del ruido: pasar de 20 solo gasta memoria.
+//
+// Lo que este número NO arregla son las ~78 descargas repetidas que quedan.
+// Esas no son desalojo: con 720 ranuras y 226 tiles distintos siguen ahí. Son
+// tiles que se sueltan antes de tener datos porque `applyJourneyFrame` escribe
+// la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
+const CACHE_NIVELES_DE_ZOOM = 20;
 
 // Applied once on map load — aligns water/border colors with brand palette
 function applyBrandPaint(map: maplibregl.Map) {
@@ -156,6 +175,24 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile, unlocked]);
 
+  // El mapa se construye con el encuadre real del hero para ESTE viewport, no
+  // con uno fijo de escritorio. Antes se construía siempre en z2.5: en móvil
+  // eso pedía teselas de z2 que `handleLoad` tiraba acto seguido al mover la
+  // cámara a z1.15, y el arranque cargaba dos juegos de teselas en vez de uno.
+  // `measureViewport` ya devuelve la referencia 1440×900 cuando no hay window,
+  // así que esto es seguro en el servidor; y el inicializador de `useState`
+  // corre una sola vez, no en cada render.
+  const [initialViewState] = useState(() => {
+    const cam = cameraAtProgress(0, measureViewport());
+    return {
+      longitude: cam.center[0],
+      latitude: cam.center[1],
+      zoom: cam.zoom,
+      pitch: cam.pitch,
+      bearing: cam.bearing,
+    };
+  });
+
   const goToFooter = useCallback(() => {
     setUnlocked(true);
     requestAnimationFrame(() => scrollToFooter());
@@ -204,13 +241,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           ref={mapRef}
           theme="light"
           projection={{ type: "globe" }}
-          initialViewState={{
-            longitude: -70.1627,
-            latitude: 18.7357,
-            zoom: 2.5,
-            pitch: 0,
-            bearing: -20,
-          }}
+          initialViewState={initialViewState}
+          maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
