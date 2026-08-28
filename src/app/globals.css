@@ -313,6 +313,47 @@ body::after {
   .crd-journey-anchor { display: none; }
 }
 
+/* PROTOTIPO · `?mapa=imagenes` (src/components/map/MapaEscenas.tsx) ──────────
+   Cada escena del recorrido es una imagen capturada del propio MapLibre. La
+   capa se promueve con translate3d + will-change para que escalarla y moverla
+   sea trabajo del compositor: es lo que hace que el recorrido vaya a 60 fps con
+   el hilo principal libre.
+
+   El inset negativo da margen alrededor del encuadre: al alejarse de su
+   keyframe la imagen se reduce, y sin ese margen se vería su borde. */
+.crd-mapa-capa {
+  position: absolute;
+  /* Más grande que la ventana. El fondo sólo se pinta DENTRO de la caja del
+     elemento, y el padding de cámara desplaza la capa ~338px a la derecha: con
+     la caja del tamaño exacto del viewport, esa franja quedaba fuera y se veía
+     el crema del fondo por la izquierda.
+     El inset no deforma la imagen porque `background-size` es un tamaño fijo,
+     no `cover`: la caja crece, la imagen se mantiene y sigue centrada. */
+  /* Margen SÓLO horizontal: el padding de cámara desplaza la capa en X (el
+     texto se reserva la izquierda), nunca en Y. Con -50% en los cuatro lados la
+     capa medía 2,25 veces el área de la pantalla y componer dos de ellas cuesta
+     más que el mapa que sustituyen. */
+  inset: 0 -30%;
+  /* Tamaño natural, NO `cover`. La imagen se capturó en un viewport de 1920px
+     CSS, así que representa 1920px de mundo a su zoom: pintarla a otro tamaño
+     cambia la escala del mapa. Con `cover` en una ventana de 1536 el globo del
+     hero salía un 20 % más pequeño que en el mapa vivo. Una ventana más
+     estrecha ve menos mundo, que es justo lo que hace el mapa de verdad. */
+  background-size: var(--crd-mapa-ancho, 1920px) auto;
+  background-position: center center;
+  background-repeat: no-repeat;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+/* El canvas de MapLibre cuando manda `?mapa=imagenes`: invisible, pero la
+   instancia sigue viva porque los marcadores le piden la proyección. Se oculta
+   sólo el <canvas>; los marcadores son hermanos suyos, no hijos, así que
+   sobreviven. */
+.crd-mapa-mudo canvas.maplibregl-canvas { opacity: 0; }
+
 /* PROTOTIPO · `?motor=pasos` (src/lib/journeyMotor.ts) ────────────────────────
    Si escritorio adopta el motor del teléfono, adopta también su geometría: sin
    pista de scroll y sin anclas, porque el progreso ya no lo escribe el scroll

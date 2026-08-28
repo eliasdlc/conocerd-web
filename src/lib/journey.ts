@@ -119,9 +119,9 @@ const lerpAngle = (a: number, b: number, t: number) => {
 
 // Web Mercator normalizado (0..1). Interpolar el centro en este espacio y no en
 // lat/lng crudos evita que la trayectoria se curve al alejarse del ecuador.
-const mercY = (lat: number) =>
+export const mercY = (lat: number) =>
   0.5 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / (2 * Math.PI);
-const mercLat = (y: number) =>
+export const mercLat = (y: number) =>
   ((Math.atan(Math.exp((0.5 - y) * 2 * Math.PI)) - Math.PI / 4) * 360) / Math.PI;
 
 // ─── Viewport ─────────────────────────────────────────────────────────────────

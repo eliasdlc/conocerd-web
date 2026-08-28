@@ -41,6 +41,11 @@ export interface JourneyMotor {
   /** `?proj=auto|mercator` cambia cuándo el globo deja de ser globo. */
   proj: NivelProyeccion;
   /**
+   * `?mapa=imagenes` sustituye MapLibre por una imagen capturada por escena.
+   * `"vivo"` es el motor de siempre.
+   */
+  mapa: "vivo" | "imagenes";
+  /**
    * `false` hasta que se lee la URL. Los motores se quedan quietos mientras
    * tanto, igual que hacen con el viewport: un frame conduciendo el motor
    * equivocado deja la cámara en otra escena.
@@ -54,6 +59,7 @@ type Ajustes = {
   dpr?: number;
   estilo: NivelEstilo;
   proj: NivelProyeccion;
+  mapa: "vivo" | "imagenes";
 };
 
 function parse(search: string): Ajustes {
@@ -65,11 +71,17 @@ function parse(search: string): Ajustes {
   // `?turbo` = las tres palancas que la medición señaló, sin tener que
   // acordarse de los tres parámetros por separado.
   const turbo = q.has("turbo");
+  const imagenes = q.get("mapa") === "imagenes";
   return {
-    motor: m === "vuelos" || m === "pasos" ? m : turbo ? "vuelos" : "actual",
-    globo: q.get("globo") !== "off" && !turbo,
+    mapa: imagenes ? "imagenes" : "vivo",
+    // Con las imágenes el motor por defecto es vuelos: el recorrido sigue
+    // siendo continuo, sólo cambia quién dibuja el mapa.
+    motor: m === "vuelos" || m === "pasos" ? m : turbo || imagenes ? "vuelos" : "actual",
+    globo: q.get("globo") !== "off" && !turbo && !imagenes,
     dpr: Number.isFinite(dpr) && dpr > 0 ? dpr : turbo ? 0.75 : undefined,
-    estilo: e === "medio" || e === "minimo" ? e : turbo ? "medio" : "completo",
+    // Con las imágenes MapLibre sólo hace de calculadora de proyección para
+    // los pines: teselar 93 capas para un canvas de 61x34 es trabajo tirado.
+    estilo: e === "medio" || e === "minimo" ? e : turbo ? "medio" : imagenes ? "minimo" : "completo",
     proj: pj === "auto" || pj === "mercator" ? pj : turbo ? "auto" : "globe",
   };
 }
@@ -88,6 +100,6 @@ const leerServidor = () => null;
 export function useJourneyMotor(): JourneyMotor {
   const search = useSyncExternalStore<string | null>(subscribe, leerCliente, leerServidor);
   if (search === null)
-    return { motor: "actual", globo: true, estilo: "completo", proj: "globe", resolved: false };
+    return { motor: "actual", globo: true, estilo: "completo", proj: "globe", mapa: "vivo", resolved: false };
   return { ...parse(search), resolved: true };
 }

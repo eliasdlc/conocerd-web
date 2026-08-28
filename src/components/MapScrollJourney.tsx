@@ -10,8 +10,10 @@ import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { useJourneyMotor } from "@/lib/journeyMotor";
 import { aligerarEstilo, proyeccionPara } from "@/lib/journeyMapaLigero";
+import MapaEscenas from "@/components/map/MapaEscenas";
 import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { cameraAtProgress, REFERENCE_VIEWPORT } from "@/lib/journey";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
@@ -60,7 +62,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // PROTOTIPO: `?motor=` elige quién conduce en escritorio (ver lib/journeyMotor).
   // El teléfono ignora la query — su motor es el de pasos pase lo que pase.
-  const { motor, globo, dpr, estilo, proj, resolved: motorResolved } = useJourneyMotor();
+  const { motor, globo, dpr, estilo, proj, mapa, resolved: motorResolved } = useJourneyMotor();
+  const porImagenes = mapa === "imagenes";
   const resolved = viewportResolved && motorResolved;
   /** ¿Conduce el motor de pasos? Siempre en teléfono, y en escritorio con `?motor=pasos`. */
   const porPasos = isMobile || motor === "pasos";
@@ -185,6 +188,19 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       // PROTOTIPO: el recorte del basemap va antes del primer frame, así el
       // mapa nunca llega a dibujar las capas que se van a apagar.
       aligerarEstilo(map, estilo);
+      // El generador de escenas pregunta por la cámara de cualquier progreso,
+      // no sólo la de los keyframes: los tramos con mucho salto de zoom llevan
+      // fotogramas intermedios y tienen que salir de esta misma matemática.
+      const w = window as unknown as {
+        __crdCamara?: (p: number) => unknown;
+        __crdBandas?: unknown;
+      };
+      // Viewport de REFERENCIA, no el real: el arco de zoom de un tramo se
+      // calcula para que los dos extremos quepan en pantalla, así que con otra
+      // ventana el vuelo pasa por zooms distintos y los fotogramas dejarían de
+      // calzar. El reproductor usa este mismo viewport.
+      w.__crdCamara = (prog: number) => cameraAtProgress(prog, REFERENCE_VIEWPORT);
+      w.__crdBandas = SCENE_BANDS.map((b) => ({ name: b.name, center: b.center }));
       measureViewport();
       applyJourneyFrame(map, progress.get());
     },
@@ -210,6 +226,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           radial-gradients de marca; como utilidad arbitraria sería ilegible, así
           que vive en .crd-journey-sticky. */}
       <div className="crd-journey-sticky sticky top-0 h-[100dvh] w-full overflow-hidden">
+        {/* PROTOTIPO `?mapa=imagenes`: las escenas capturadas van DEBAJO, y
+            MapLibre se queda arriba con el canvas oculto y a resolución mínima.
+            Sigue ahí porque es quien proyecta lat/lng a píxel para los pines y
+            las rutas; lo que se le quita es el trabajo de dibujar. */}
+        {porImagenes && <MapaEscenas />}
         <Map
           ref={mapRef}
           theme="light"
@@ -222,7 +243,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             bearing: -20,
           }}
           onLoad={handleLoad}
-          pixelRatio={dpr}
+          pixelRatio={porImagenes ? 0.04 : dpr}
+          className={porImagenes ? "crd-mapa-mudo" : undefined}
           interactive={false}
           scrollZoom={false}
           dragPan={false}
