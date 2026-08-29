@@ -444,7 +444,7 @@ export default function EquipoSection() {
 
         {/* La frase manifiesto (v5), con entrada suave línea a línea */}
         <div className="relative max-w-[780px] text-center">
-          <h2 className="m-0 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.14] tracking-[-.014em] text-ink-2">
+          <h2 className="crd-eq-manifiesto m-0 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.14] tracking-[-.014em] text-ink-2">
             {LINES.map((line, i) => (
               <span
                 key={i}
