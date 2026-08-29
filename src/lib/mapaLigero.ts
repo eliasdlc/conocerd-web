@@ -50,6 +50,66 @@ const RUIDO = [
 ];
 
 /**
+ * Capas que NO PINTAN UN SOLO PÍXEL en ninguna escena del recorrido, medido una
+ * por una el 29 de agosto de 2026.
+ *
+ * El método: se congela la escena (captura del lienzo del mapa y no de la
+ * página, así los overlays con sus animaciones quedan fuera; espera al evento
+ * `idle`; suelo de ruido comprobado con dos capturas idénticas antes de empezar)
+ * y se apaga cada capa comparando la captura con la de referencia. Diez
+ * encuadres del recorrido, de z1,15 a z12,5.
+ *
+ * La escena de Viajeros no admite comparación píxel a píxel: el avatar recorre
+ * la ruta dentro del propio lienzo y ninguna captura repite. Se verificó a ojo,
+ * con las 28 apagadas y encendidas: el basemap es el mismo.
+ *
+ * Casi todas son capas de zoom alto (edificios, números de portal, POIs), o la
+ * variante de una familia que a estos zooms no le toca pintar: de los cinco
+ * `place_city_dot_*` sólo pinta `z7`, y de los tres `watername_*` sólo `sea`.
+ *
+ * OJO si el recorrido cambia de zoom: esta lista vale para las cámaras que hay
+ * hoy. Una escena nueva por encima de z12,5 haría aparecer edificios y nombres
+ * de calle, y esta lista los estaría apagando sin que nadie se entere. Volver a
+ * pasar el instrumento si se toca `SCENE_CAMERAS`.
+ */
+const INVISIBLES = new Set([
+  // Zoom alto: no existen por debajo de z14.
+  "building",
+  "building-top",
+  "housenumber",
+  "poi_park",
+  "poi_stadium",
+  // Rampas de enlace: sólo aparecen al nivel de calle.
+  "road_mot_case_ramp",
+  "road_mot_fill_ramp",
+  "road_pri_case_ramp",
+  "road_pri_fill_ramp",
+  "road_trunk_case_ramp",
+  "road_trunk_fill_ramp",
+  // Relleno de vías que en estos encuadres sólo dibujan su contorno.
+  "road_sec_fill_noramp",
+  "road_trunk_fill_noramp",
+  // Nombres de vía: ninguno cabe a los zooms del recorrido.
+  "roadname_major",
+  "roadname_minor",
+  "roadname_pri",
+  "roadname_sec",
+  // Variantes de topónimo que nunca les toca pintar aquí.
+  "place_city_dot_r2",
+  "place_city_dot_r4",
+  "place_city_dot_r7",
+  "place_continent",
+  "place_country_1",
+  "place_hamlet",
+  "place_state",
+  "place_suburbs",
+  // Agua y suelo: de los tres nombres de agua sólo pinta `sea`.
+  "watername_lake",
+  "watername_ocean",
+  "landuse",
+]);
+
+/**
  * Apaga esas capas sobre un mapa ya cargado. `visibility: none` basta:
  * MapLibre no tesela ni dibuja una capa oculta, así que el ahorro es el mismo
  * que si no estuviera en el estilo.
@@ -59,7 +119,7 @@ const RUIDO = [
 export function aligerarEstilo(map: maplibregl.Map): number {
   let apagadas = 0;
   for (const capa of map.getStyle().layers ?? []) {
-    if (!RUIDO.some((r) => r.test(capa.id))) continue;
+    if (!RUIDO.some((r) => r.test(capa.id)) && !INVISIBLES.has(capa.id)) continue;
     try {
       map.setLayoutProperty(capa.id, "visibility", "none");
       apagadas++;
