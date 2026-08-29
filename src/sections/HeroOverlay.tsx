@@ -27,7 +27,7 @@ function HeroPin() {
 // ─── Hero overlay — escena 0 del journey ──────────────────────────────────────
 // Ya NO tiene su propio mapa: el globo es el <Map> compartido del journey, detrás.
 // El globo se encuadra a la derecha (desktop) / arriba (móvil) vía el padding de
-// cámara en useJourneyScroll; este overlay coloca el contenido en el hueco libre.
+// cámara en lib/journeyCamera; este overlay coloca el contenido en el hueco libre.
 //
 // El reparto móvil/desktop ya no pasa por useIsMobile: son variantes `desk:`, así
 // que el layout correcto se pinta en el primer frame, sin esperar a matchMedia.
