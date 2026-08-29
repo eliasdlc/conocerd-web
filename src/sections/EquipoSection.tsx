@@ -423,7 +423,10 @@ export default function EquipoSection() {
 
       {/* Sin pin ni etiqueta en el mapa: la escena vive en el overlay. */}
       <div
-        className={`crd-ol-equipo absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(18px,3.2vh,30px)] px-6 pb-8 pt-[88px] transition-opacity duration-500 ease-in-out ${
+        // Las dos franjas del cromo flotante, en los dos viewports: el panel de
+        // pasos ya no es sólo del teléfono. Con `pb-8` la última línea del
+        // manifiesto pasaba por detrás del cristal del panel hasta en 1440x900.
+        className={`crd-ol-equipo absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(18px,3.2vh,30px)] px-6 pb-[calc(16px+var(--crd-stepper-h))] pt-[var(--crd-nav-clear)] transition-opacity duration-500 ease-in-out ${
           isVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!isVisible}

@@ -393,7 +393,7 @@ function PilaDePantallas({ pantallas, activo }: { pantallas: React.ReactNode[]; 
 /** Chip EN VIVO del bottom-sheet móvil: espeja lo que pasa en el mapa. */
 function ChipEnVivo({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 hidden items-center gap-2 rounded-block border border-line bg-cream px-3 py-2 max-desk:flex">
+    <div className="crd-panel-vivo mb-3 hidden items-center gap-2 rounded-block border border-line bg-cream px-3 py-2 max-desk:flex">
       {/* El punto no pulsa. Una animación continua en reposo peguntea la GPU
           sin decir nada; lo que da vida a este chip es el contador que cambia.
           El anillo estático sigue leyéndose como "en vivo". */}
@@ -774,7 +774,7 @@ function ViajerosFinal() {
           <h2 className="m-0 font-display text-[clamp(20px,2.2vw,24px)] font-extrabold leading-[1.06] tracking-[-.02em] text-ink min-[900px]:pr-20">
             Tu próximo viaje, <em className="crd-accent">en tres paradas</em>
           </h2>
-          <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
+          <p className="crd-panel-lede mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
             Así funciona ConoceRD de principio a fin. Cada parada enseña la app de verdad.
           </p>
 
@@ -796,7 +796,7 @@ function ViajerosFinal() {
             label="Cómo funciona ConoceRD para viajeros, en 3 pasos"
           />
 
-          <div className="mt-3 border-t border-dashed border-line pt-3">
+          <div className="crd-panel-cta mt-3 border-t border-dashed border-line pt-3">
             <Button
               variant="selected"
               icon="notifications_active"
@@ -1075,7 +1075,7 @@ function NegociosFinal() {
           </h2>
           {/* En móvil el teléfono está oculto: prometer que "el teléfono salta"
               era una instrucción para un elemento que ahí no existe. */}
-          <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
+          <p className="crd-panel-lede mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
             Cada paso es un momento real de tu panel, grabado de la app.
           </p>
 
@@ -1095,7 +1095,7 @@ function NegociosFinal() {
             label="Cómo funciona ConoceRD para tu negocio, en 3 pasos"
           />
 
-          <div className="mt-3 border-t border-dashed border-line pt-3">
+          <div className="crd-panel-cta mt-3 border-t border-dashed border-line pt-3">
             <Button
               variant="selected"
               icon="add_business"

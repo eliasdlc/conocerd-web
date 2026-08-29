@@ -30,6 +30,9 @@ export type SceneDef = {
    * mismo sheet de 310px es el 36 % de un 14 Pro Max y el 48 % de un SE — y era
    * lo que dejaba la isla demasiado alta, con los pines del norte detrás de los
    * chips y una franja de mar muerta encima del panel.
+   *
+   * `padTopPx` solo se declara cuando la escena tiene cromo PROPIO arriba: por
+   * defecto vale `NAV_CLEAR_PX`, que es la píldora del nav y la llevan todas.
    */
   padTopPx?: number;
   padBottomPx?: number;
@@ -50,9 +53,9 @@ export const SCENES: SceneDef[] = [
   { name: "polaroid-4",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "polaroid-5",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "destinos-finale",  height:  95, chapter: "Destinos", padBottom: 0.52 },
-  // La única escena con cromo propio arriba (la fila de chips, que cuelga de
-  // --crd-nav-clear) y con un sheet de alto fijo abajo: su zona segura va en
-  // píxeles medidos, no en fracciones.
+  // La única que declara `padTopPx`, porque es la única con cromo propio
+  // arriba: 150 = la píldora del nav (NAV_CLEAR_PX, que llevan todas) más la
+  // fila de chips, que cuelga de ella. Abajo, un sheet de alto fijo.
   { name: "mapa",             height: 130, chapter: "Tu ruta",  padTopPx: 150, padBottomPx: 310 },
   { name: "viajeros",         height: 115, chapter: "Viajeros", padBottom: 0.58 },
   { name: "negocios",         height: 125, chapter: "Negocios", padBottom: 0.58 },
@@ -150,12 +153,22 @@ const MOBILE_REF_HEIGHT = 844;
 const MIN_FREE_BAND = 120;
 
 /**
+ * Holgura bajo la píldora del nav, en píxeles. Es el gemelo de `--crd-nav-clear`
+ * (globals.css) y tiene que valer lo mismo: la píldora flota sobre TODAS las
+ * escenas, no sólo sobre la del mapa, así que ninguna cámara puede encuadrar
+ * contra y=0. Sin esto los pines y la toponimia del norte de la isla se metían
+ * detrás de la píldora en cuanto la pantalla se acortaba — que es lo que hace
+ * Safari en iOS, donde un 15 Pro entrega 664 de alto y no 844.
+ */
+const NAV_CLEAR_PX = 84;
+
+/**
  * Zona segura móvil de una escena, en píxeles de pantalla. Si el cromo no cabe
  * (pantallas muy cortas, o en horizontal), ambos lados ceden en proporción:
  * la cámara nunca recibe un padding que no deje mapa donde encuadrar.
  */
 function safeAreaPx(def: SceneDef, height: number) {
-  const top = def.padTopPx ?? 0;
+  const top = def.padTopPx ?? NAV_CLEAR_PX;
   const bottom = Math.round(height * (def.padBottom ?? 0)) + (def.padBottomPx ?? 0);
   const disponible = height - MIN_FREE_BAND;
   if (top + bottom <= disponible) return { top, bottom };

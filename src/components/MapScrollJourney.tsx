@@ -292,7 +292,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           globo se movía verticalmente al aparecer/desaparecer. El fondo son tres
           radial-gradients de marca; como utilidad arbitraria sería ilegible, así
           que vive en .crd-journey-sticky. */}
-      <div className="crd-journey-sticky sticky top-0 h-[100dvh] w-full overflow-hidden">
+      {/* svh y no dvh: el recorrido tiene el scroll bloqueado, así que iOS
+          nunca retrae la barra de Safari y lo que se ve es SIEMPRE el viewport
+          pequeño. Con dvh la capa medía hasta 190px más de lo visible y todo lo
+          anclado abajo —el botón del sheet, el pie de la carta del CTA— caía
+          detrás del panel de pasos o fuera de pantalla. */}
+      <div className="crd-journey-sticky sticky top-0 h-[100svh] w-full overflow-hidden">
         <Map
           ref={mapRef}
           theme="light"
