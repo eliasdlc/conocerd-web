@@ -1,9 +1,9 @@
 // Navegación entre escenas del journey.
 //
-// Los enlaces del nav/footer apuntan a `trigger-<escena>`. Ambos modos pasan
-// por el "saltador" que el journey registra aquí: en desktop es teletransporte
-// + vuelo directo de cámara (jumpToScene), en móvil el motor de pasos. El
-// fallback por id queda para anclas fuera del journey.
+// Los enlaces del nav/footer apuntan a `trigger-<escena>`. Todos pasan por el
+// "saltador" que el recorrido registra aquí, y que anima con el motor de pasos
+// hasta el keyframe de esa escena. El fallback por id queda para anclas fuera
+// del recorrido.
 
 type SceneJumper = (scene: string) => boolean;
 

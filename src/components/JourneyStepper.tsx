@@ -3,12 +3,13 @@
 import { CHAPTERS, chapterIndexOfScene, SCENE_COUNT } from "@/lib/journey";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Panel de comando del journey en MÓVIL — pegado al borde inferior.
+//  Panel de comando del recorrido — pegado al borde inferior, en teléfono y en
+//  escritorio.
 //
-//  Reemplaza al scroll (decisión del dueño, ago 2026): cada toque avanza a un
-//  keyframe completo, así el usuario nunca queda "entre escenas" ni se pierde
-//  el vuelo de la cámara por deslizar demasiado rápido. El indicador agrupa
-//  las 13 escenas en 7 capítulos —13 puntos no se leen en 390px— y el capítulo
+//  Reemplaza al scroll: cada pulsación avanza a un keyframe completo, así nadie
+//  queda "entre escenas" ni se pierde el vuelo de la cámara por deslizar
+//  demasiado rápido o por la irregularidad del gesto. El indicador agrupa
+//  las 13 escenas en 7 capítulos (13 puntos no se leen en 390px) y el capítulo
 //  activo se ensancha en una barra que muestra el avance dentro de él (los 6
 //  destinos). Cada capítulo es tocable: salto directo.
 //
@@ -59,7 +60,7 @@ export default function JourneyStepper({
     <div
       role="group"
       aria-label="Navegación del recorrido"
-      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 desk:hidden ${
+      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 ${
         visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >

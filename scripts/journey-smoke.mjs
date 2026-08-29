@@ -41,7 +41,6 @@ for (const [width, height] of viewports) {
     await page.waitForSelector("h1", { timeout: 15_000 });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const isMobileViewport = width < 900;
     const initial = await page.evaluate(() => ({
       active: document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null,
       hero: document.querySelector("h1")?.textContent ?? null,
@@ -50,46 +49,31 @@ for (const [width, height] of viewports) {
       bodyOverflow: getComputedStyle(document.body).overflow,
       stepper: Boolean(document.querySelector('button[aria-label="Siguiente escena"]')),
     }));
-    // Contrato por modo: en móvil el journey bloquea el scroll de página y
-    // navega con el panel de pasos; en desktop el scroll debe quedar libre.
-    const scrollLockOk = isMobileViewport
-      ? initial.rootOverflow === "hidden" && initial.bodyOverflow === "hidden" && initial.stepper
-      : initial.rootOverflow !== "hidden" && initial.bodyOverflow !== "hidden";
+    // Contrato único desde que escritorio adoptó el motor de pasos: el
+    // recorrido bloquea el scroll de página y se navega con el panel.
+    const scrollLockOk =
+      initial.rootOverflow === "hidden" && initial.bodyOverflow === "hidden" && initial.stepper;
     if (!initial.hero?.includes("ConoceRD") || initial.active !== "hero" || initial.xOverflow || !scrollLockOk) {
       throw new Error(`Invalid cold load at ${width}x${height}: ${JSON.stringify(initial)}`);
     }
 
     for (const scene of scenes) {
-      if (isMobileViewport) {
-        // Sin pista de scroll en móvil: se avanza tocando "Siguiente escena".
-        // Las escenas del recorrido van en orden, así que basta pulsar hasta
-        // llegar (con reduced-motion cada paso es instantáneo).
-        for (let guard = 0; guard < 8; guard++) {
-          const active = await page.evaluate(
-            () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
-          );
-          if (active === scene) break;
-          await page.click('button[aria-label="Siguiente escena"]');
-          await new Promise((resolve) => setTimeout(resolve, 150));
-        }
-        await new Promise((resolve) => setTimeout(resolve, 600));
-      } else {
-        const scrollToScene = async () => {
-          await page.evaluate((target) => {
-            if (target === "hero") {
-              window.scrollTo(0, 0);
-              return;
-            }
-            const anchor = document.getElementById(`trigger-${target}`);
-            if (!anchor) throw new Error(`Missing anchor for ${target}`);
-            window.scrollTo(0, anchor.offsetTop + anchor.offsetHeight / 2 - window.innerHeight);
-          }, scene);
-        };
-        await scrollToScene();
-        await new Promise((resolve) => setTimeout(resolve, 80));
-        await scrollToScene();
-        await new Promise((resolve) => setTimeout(resolve, 1_200));
+      // No hay pista de scroll en ningún viewport: se avanza pulsando
+      // "Siguiente escena". Las escenas van en orden, así que basta pulsar
+      // hasta llegar. Se relee el estado antes de cada pulsación en vez de
+      // contar pulsaciones: con los paneles diferidos el atributo puede tardar
+      // un frame en actualizarse y contar de más pasaría de largo la escena.
+      for (let guard = 0; guard < 8; guard++) {
+        const active = await page.evaluate(
+          () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
+        );
+        if (active === scene) break;
+        const boton = await page.$('button[aria-label="Siguiente escena"]');
+        if (!boton) break;
+        await boton.click();
+        await new Promise((resolve) => setTimeout(resolve, 250));
       }
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const state = await page.evaluate(() => {
         const active = document.querySelector(".crd-journey")?.getAttribute("data-active-scene");
