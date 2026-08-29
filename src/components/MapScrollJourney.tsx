@@ -11,6 +11,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
+import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -92,6 +93,12 @@ function applyBrandPaint(map: maplibregl.Map) {
   if (map.getLayer("water_shadow")) {
     map.setLayoutProperty("water_shadow", "visibility", "none");
   }
+
+  // Los otros dos recortes al basemap, con su porqué y sus cifras en
+  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
+  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  aligerarEstilo(map);
+  soloTopónimosDeRD(map);
 }
 
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
@@ -288,7 +295,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         <Map
           ref={mapRef}
           theme="light"
-          projection={{ type: "globe" }}
+          projection={PROYECCION_DEL_RECORRIDO}
           initialViewState={initialViewState}
           maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
           onLoad={handleLoad}
