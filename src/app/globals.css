@@ -313,6 +313,19 @@ body::after {
   .crd-journey-anchor { display: none; }
 }
 
+/* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
+   inline porque el fundido tiene que poder anularse con prefers-reduced-motion,
+   y porque el color es tono de superficie, no un valor suelto. */
+.crd-globo-fantasma {
+  background: var(--color-cream-2);
+  border: 1px solid var(--color-line);
+  transition: opacity 500ms cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crd-globo-fantasma { transition: none; }
+}
+
 /* Alto reservado del panel de pasos móvil (JourneyStepper). 0 en desktop para
    que los calc() que lo usan sigan siendo válidos fuera del breakpoint. */
 :root { --crd-stepper-h: 0px; }

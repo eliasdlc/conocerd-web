@@ -12,6 +12,7 @@ import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/j
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
@@ -213,6 +214,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
   // se queda en el view inicial hasta la primera interacción.
+  // El disco del hero se retira en cuanto el mapa existe y ha pintado. `load`
+  // es el evento correcto y no `idle`: `idle` espera a que TODAS las teselas
+  // del encuadre esten, que con perfil de telefono son 950 ms mas, y la
+  // decision fue que el mapa aparezca lo antes posible.
+  const [mapaPinto, setMapaPinto] = useState(false);
+
   // Cancela el calentado de teselas si el componente se va antes de terminar.
   const calentado = useRef<AbortController | null>(null);
   useEffect(() => () => calentado.current?.abort(), []);
@@ -222,6 +229,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
+      setMapaPinto(true);
 
       // Las teselas del resto del recorrido, una vez el mapa terminó de pintar
       // lo que la persona mira ahora. Antes de `idle` competiría por la
@@ -278,6 +286,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           <EquipoSection />
           <CTASection />
         </Map>
+
+        {/* Ocupa el sitio del globo mientras el mapa no existe. Va aquí, entre
+            el canvas y el overlay, para que el mapa aparezca por debajo cuando
+            el disco se desvanece. */}
+        <DiscoDelGlobo visible={!mapaPinto} />
 
         {/* Fuera del <Map>: el mapa se carga con `ssr: false` y todo lo que
             cuelgue de él desaparece del HTML inicial. El hero es lo primero
