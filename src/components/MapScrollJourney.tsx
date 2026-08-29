@@ -8,9 +8,11 @@ import { useJourneyScroll } from "@/hooks/useJourneyScroll";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
-import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
-import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
+import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
+import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
@@ -32,6 +34,25 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
+
+// Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
+// niveles de zoom pese al nombre: es `tilesDelViewport × multiplicador`, o sea
+// 60 tiles en escritorio (1440×900) y 30 en móvil (393×852) con el default de
+// 5. El recorrido toca ~230 tiles distintos, así que con 60 ranuras la caché
+// vive llena: medida en 3 pasadas da 60 de 60, sin una unidad de varianza, y
+// cada regreso a la isla obliga a re-pedir, re-parsear y volver a subir a GPU
+// las mismas teselas.
+//
+// 20 y no más porque el conjunto de trabajo real son ~145 tiles: con 240
+// ranuras la ocupación se estabiliza en 142 y las descargas repetidas de RD
+// bajan de 123 a 80 por recorrido (medianas de 3 pasadas). Con 720 ranuras el
+// número es 78, idéntico dentro del ruido: pasar de 20 solo gasta memoria.
+//
+// Lo que este número NO arregla son las ~78 descargas repetidas que quedan.
+// Esas no son desalojo: con 720 ranuras y 226 tiles distintos siguen ahí. Son
+// tiles que se sueltan antes de tener datos porque `applyJourneyFrame` escribe
+// la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
+const CACHE_NIVELES_DE_ZOOM = 20;
 
 // Applied once on map load — aligns water/border colors with brand palette
 function applyBrandPaint(map: maplibregl.Map) {
@@ -156,6 +177,24 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile, unlocked]);
 
+  // El mapa se construye con el encuadre real del hero para ESTE viewport, no
+  // con uno fijo de escritorio. Antes se construía siempre en z2.5: en móvil
+  // eso pedía teselas de z2 que `handleLoad` tiraba acto seguido al mover la
+  // cámara a z1.15, y el arranque cargaba dos juegos de teselas en vez de uno.
+  // `measureViewport` ya devuelve la referencia 1440×900 cuando no hay window,
+  // así que esto es seguro en el servidor; y el inicializador de `useState`
+  // corre una sola vez, no en cada render.
+  const [initialViewState] = useState(() => {
+    const cam = cameraAtProgress(0, measureViewport());
+    return {
+      longitude: cam.center[0],
+      latitude: cam.center[1],
+      zoom: cam.zoom,
+      pitch: cam.pitch,
+      bearing: cam.bearing,
+    };
+  });
+
   const goToFooter = useCallback(() => {
     setUnlocked(true);
     requestAnimationFrame(() => scrollToFooter());
@@ -175,11 +214,37 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
   // se queda en el view inicial hasta la primera interacción.
+  // El disco del hero se retira en cuanto el mapa existe y ha pintado. `load`
+  // es el evento correcto y no `idle`: `idle` espera a que TODAS las teselas
+  // del encuadre esten, que con perfil de telefono son 950 ms mas, y la
+  // decision fue que el mapa aparezca lo antes posible.
+  const [mapaPinto, setMapaPinto] = useState(false);
+
+  // Cancela el calentado de teselas si el componente se va antes de terminar.
+  const calentado = useRef<AbortController | null>(null);
+  useEffect(() => () => calentado.current?.abort(), []);
+
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
+      setMapaPinto(true);
+
+      // Las teselas del resto del recorrido, una vez el mapa terminó de pintar
+      // lo que la persona mira ahora. Antes de `idle` competiría por la
+      // conexión con el encuadre actual y el efecto neto sería peor.
+      map.once("idle", () => {
+        if (calentado.current) return;
+        const ctl = new AbortController();
+        calentado.current = ctl;
+        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
+        // hasta 16.4 y TypeScript lo da por presente siempre.
+        const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;
+        if (ocioso) ocioso(arrancar, { timeout: 2000 });
+        else window.setTimeout(arrancar, 500);
+      });
     },
     [progress]
   );
@@ -204,13 +269,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           ref={mapRef}
           theme="light"
           projection={{ type: "globe" }}
-          initialViewState={{
-            longitude: -70.1627,
-            latitude: 18.7357,
-            zoom: 2.5,
-            pitch: 0,
-            bearing: -20,
-          }}
+          initialViewState={initialViewState}
+          maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
@@ -226,6 +286,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           <EquipoSection />
           <CTASection />
         </Map>
+
+        {/* Ocupa el sitio del globo mientras el mapa no existe. Va aquí, entre
+            el canvas y el overlay, para que el mapa aparezca por debajo cuando
+            el disco se desvanece. */}
+        <DiscoDelGlobo visible={!mapaPinto} />
 
         {/* Fuera del <Map>: el mapa se carga con `ssr: false` y todo lo que
             cuelgue de él desaparece del HTML inicial. El hero es lo primero
