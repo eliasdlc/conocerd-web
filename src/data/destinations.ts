@@ -388,8 +388,20 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   // polaroid ⇒ el globo baja y aterriza directo en el primer destino; la
   // escena "destinos-intro" (isla vacía con titular) se eliminó porque era
   // un frame muerto de scroll.
-  // Móvil: zoom 1.15 ⇒ diámetro ≈ 512·2^z/π ≈ 360px, cabe entero en 390px de
-  // ancho. Con 2.5 el globo medía 920px y se salía por los cuatro lados.
+  // Móvil: zoom 1.15 ⇒ el globo mide 337px de diámetro en 393 de ancho, así que
+  // cabe entero. Con 2.5 se salía por los cuatro lados.
+  //
+  // Ojo al elegir un zoom nuevo: `512·2^z/π` NO da el tamaño del globo, da el
+  // ancho del mundo en Mercator, y se pasa entre un 8 % en móvil y un 22 % en
+  // escritorio. Lo que manda es la perspectiva: la esfera se encoge cuanto más
+  // llena el viewport. El modelo que sí cuadra, ajustado contra seis medidas
+  // reales y con 0,5 % de error en el peor caso, vive en
+  // `components/DiscoDelGlobo.tsx` y es:
+  //
+  //   m = 512·2^zoom/π ;  diámetro = m · (1.0065 − 0.1956·m/alto)
+  //
+  // Y el tamaño depende del ALTO del viewport, no del ancho: a zoom 2.5 el
+  // globo mide 747px tanto en 1440x900 como en 1920x900, y 771 en 1080 de alto.
   hero: {
     center: [-70.1627, 18.7357], zoom: 2.5, pitch: 0, bearing: -20,
     mobile: { zoom: 1.15 },
