@@ -320,31 +320,6 @@ body::after {
   html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 
-/* El pie ocupa la pantalla entera. Sin esto, el tope del scroll deja a la vista
-   la cola de la escena del CTA por encima del pie —con la píldora del nav justo
-   encima de los botones de tienda— porque el pie mide menos que el viewport y
-   nunca llega a arriba del todo. Con una pantalla completa, llegar al final
-   enseña sólo el pie.
-
-   El bloque de columnas se centra en el alto sobrante (margen automático arriba
-   y abajo) y la línea legal se queda pegada al borde inferior. */
-.crd-footer {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  /* Escritorio: el pie mide la mitad de la pantalla, así que el bloque entero
-     (columnas + legal) se centra. Con la legal clavada abajo quedaba un vacío
-     de 300px entre ambos que se leía como un error de maquetación. */
-  justify-content: center;
-}
-
-@media (max-width: 899px) {
-  /* Móvil: el contenido casi llena la pantalla. Las columnas se centran en lo
-     que sobra y la línea legal se queda en el borde inferior, donde se espera. */
-  .crd-footer { justify-content: flex-start; }
-  .crd-footer-grid { margin-block: auto; }
-}
-
 /* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
    inline porque el fundido tiene que poder anularse con prefers-reduced-motion,
    y porque el color es tono de superficie, no un valor suelto. */
