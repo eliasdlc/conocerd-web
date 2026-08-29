@@ -11,6 +11,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
+import { calentadorTermino, engancharMapa } from "@/lib/medicion";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -226,6 +227,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
+      engancharMapa(map);
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
@@ -238,7 +240,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         if (calentado.current) return;
         const ctl = new AbortController();
         calentado.current = ctl;
-        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        const arrancar = () => {
+          const t0 = performance.now();
+          calentarRecorrido(currentViewport(), ctl.signal)
+            .then((n) => calentadorTermino(n, performance.now() - t0))
+            .catch(() => {});
+        };
         // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
         // hasta 16.4 y TypeScript lo da por presente siempre.
         const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;

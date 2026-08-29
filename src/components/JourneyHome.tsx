@@ -3,6 +3,7 @@ import Nav from "@/components/Nav";
 import MapScrollJourney from "@/components/MapScrollJourney";
 import Footer from "@/components/Footer";
 import PistasMapa from "@/components/PistasMapa";
+import SondaDeMedicion from "@/components/SondaDeMedicion";
 
 export default function JourneyHome() {
   return (
@@ -11,6 +12,7 @@ export default function JourneyHome() {
     // verdad que el riel y el panel de pasos.
     <SceneProvider>
       <PistasMapa />
+      <SondaDeMedicion />
       <a className="crd-skip-link" href="#main-content">
         Saltar al contenido
       </a>
