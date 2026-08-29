@@ -118,6 +118,10 @@ function pararFotogramas() {
 /** Se llama en la hidratación, antes de que exista el mapa. */
 export function arrancar() {
   if (!activa()) return;
+  // El informe queda alcanzable desde fuera para poder conducir la pagina con
+  // un automatizador y leer las mismas cifras que ve el panel. Solo con
+  // `?medir=1`, igual que todo lo demas de aqui.
+  (window as unknown as { __crdInforme?: () => Informe }).__crdInforme = informe;
   contexto().then((c) => { ctx = c; });
 
   const obs = (tipo: string, cb: (e: PerformanceEntry) => void, extra: Record<string, unknown> = {}) => {
