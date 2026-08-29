@@ -388,6 +388,13 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   // polaroid ⇒ el globo baja y aterriza directo en el primer destino; la
   // escena "destinos-intro" (isla vacía con titular) se eliminó porque era
   // un frame muerto de scroll.
+  // Escritorio a 1.95 y no a 2.5: a 2.5 el globo se salía por la derecha, y a 2.0
+  // cabe pero pide 14 teselas del mundo en vez de 10. Por debajo de 2.0 el nivel
+  // de tesela baja de z2 a z1 y el primer encuadre pasa de 2.419 KB a 394, un
+  // 84 % menos. El precio es que la isla se lee como un punto, y por eso el
+  // globo del hero va sin etiquetas: sin nombres de continente encima, el punto
+  // naranja del pin es lo único que hay que mirar.
+  //
   // Móvil: zoom 1.15 ⇒ el globo mide 337px de diámetro en 393 de ancho, así que
   // cabe entero. Con 2.5 se salía por los cuatro lados.
   //
@@ -403,7 +410,7 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   // Y el tamaño depende del ALTO del viewport, no del ancho: a zoom 2.5 el
   // globo mide 747px tanto en 1440x900 como en 1920x900, y 771 en 1080 de alto.
   hero: {
-    center: [-70.1627, 18.7357], zoom: 2.5, pitch: 0, bearing: -20,
+    center: [-70.1627, 18.7357], zoom: 1.95, pitch: 0, bearing: -20,
     mobile: { zoom: 1.15 },
   },
   // Los closeups en móvil bajan ~1.5 niveles: a z11.5 en un teléfono solo se ve

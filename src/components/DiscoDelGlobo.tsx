@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { paddingAtProgress, SCENE_BANDS } from "@/lib/journey";
-import { resolveCamera } from "@/data/destinations";
+import { cameraForBand, paddingAtProgress, SCENE_BANDS } from "@/lib/journey";
 import { MOBILE_BREAKPOINT } from "@/hooks/useIsMobile";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,7 +52,10 @@ type Caja = { diametro: number; cx: number; cy: number };
 function cajaDelGlobo(width: number, height: number): Caja {
   const mobile = width < MOBILE_BREAKPOINT;
   const v = { width, height, mobile };
-  const cam = resolveCamera(SCENE_BANDS[0].camera, mobile, width);
+  // La misma cámara que recibe MapLibre, no la del keyframe: en pantallas
+  // cortas el zoom se corrige por la franja libre y un disco calculado sin esa
+  // corrección aparecería un cuarto más grande que el globo que lo releva.
+  const cam = cameraForBand(SCENE_BANDS[0], v);
   const pad = paddingAtProgress(0, v);
 
   const mercator = (512 * 2 ** cam.zoom) / Math.PI;

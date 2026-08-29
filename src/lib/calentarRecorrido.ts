@@ -14,9 +14,8 @@
 //  sólo la precarga a destiempo.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
+import { cameraForBand, SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
 import { calentadorSaltado } from "@/lib/medicion";
-import { resolveCamera } from "@/data/destinations";
 import {
   plantillasDeTesela,
   teselasDeEncuadre,
@@ -39,7 +38,7 @@ import {
 export function teselasDelRecorrido(v: JourneyViewport): Tesela[] {
   const out: Tesela[] = [];
   for (const banda of SCENE_BANDS) {
-    const cam = resolveCamera(banda.camera, v.mobile, v.width);
+    const cam = cameraForBand(banda, v);
     for (const salto of [0, 1]) {
       const zoom = cam.zoom - salto;
       if (zoom < 3) continue;

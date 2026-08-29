@@ -23,6 +23,16 @@ export type SceneDef = {
    */
   padLeft?: number;
   padBottom?: number;
+  /**
+   * Zona segura en PÍXELES (solo móvil), para el cromo que mide lo mismo en
+   * toda pantalla: la píldora del nav y la fila de chips arriba, un sheet de
+   * altura fijada por su contenido abajo. Una fracción los describe mal — el
+   * mismo sheet de 310px es el 36 % de un 14 Pro Max y el 48 % de un SE — y era
+   * lo que dejaba la isla demasiado alta, con los pines del norte detrás de los
+   * chips y una franja de mar muerta encima del panel.
+   */
+  padTopPx?: number;
+  padBottomPx?: number;
 };
 
 // Alturas recalibradas: los 6 polaroids ocupaban 6 pantallas completas de
@@ -40,7 +50,10 @@ export const SCENES: SceneDef[] = [
   { name: "polaroid-4",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "polaroid-5",       height:  82, chapter: "Destinos", padBottom: 0.46 },
   { name: "destinos-finale",  height:  95, chapter: "Destinos", padBottom: 0.52 },
-  { name: "mapa",             height: 130, chapter: "Tu ruta",  padBottom: 0.34 },
+  // La única escena con cromo propio arriba (la fila de chips, que cuelga de
+  // --crd-nav-clear) y con un sheet de alto fijo abajo: su zona segura va en
+  // píxeles medidos, no en fracciones.
+  { name: "mapa",             height: 130, chapter: "Tu ruta",  padTopPx: 150, padBottomPx: 310 },
   { name: "viajeros",         height: 115, chapter: "Viajeros", padBottom: 0.58 },
   { name: "negocios",         height: 125, chapter: "Negocios", padBottom: 0.58 },
   { name: "equipo",           height: 100, chapter: "Equipo",   padBottom: 0.50 },
@@ -130,6 +143,52 @@ export type JourneyViewport = { width: number; height: number; mobile: boolean }
 
 export const REFERENCE_VIEWPORT: JourneyViewport = { width: 1440, height: 900, mobile: false };
 
+/** Alto de pantalla para el que están afinados los zooms `mobile` (390×844). */
+const MOBILE_REF_HEIGHT = 844;
+
+/** Franja mínima de mapa que una escena deja a la vista, pase lo que pase. */
+const MIN_FREE_BAND = 120;
+
+/**
+ * Zona segura móvil de una escena, en píxeles de pantalla. Si el cromo no cabe
+ * (pantallas muy cortas, o en horizontal), ambos lados ceden en proporción:
+ * la cámara nunca recibe un padding que no deje mapa donde encuadrar.
+ */
+function safeAreaPx(def: SceneDef, height: number) {
+  const top = def.padTopPx ?? 0;
+  const bottom = Math.round(height * (def.padBottom ?? 0)) + (def.padBottomPx ?? 0);
+  const disponible = height - MIN_FREE_BAND;
+  if (top + bottom <= disponible) return { top, bottom };
+  const k = Math.max(0, disponible) / (top + bottom);
+  return { top: Math.round(top * k), bottom: Math.round(bottom * k) };
+}
+
+/** Franja donde la escena se ve de verdad: la pantalla menos su cromo. */
+function freeBandHeight(def: SceneDef, height: number): number {
+  const { top, bottom } = safeAreaPx(def, height);
+  return Math.max(MIN_FREE_BAND, height - top - bottom);
+}
+
+/**
+ * Cámara de una escena, corregida por el tamaño real de su franja libre.
+ *
+ * `resolveCamera` escala el zoom por ANCHO de pantalla, que es la medida
+ * correcta mientras el límite sea lateral. En un teléfono corto el límite es
+ * el alto: entre la fila de chips y el sheet del itinerario quedan 207px en un
+ * iPhone SE contra 384 en la referencia, y con el mismo zoom la isla se salía
+ * por arriba — los pines de la costa norte terminaban detrás de los chips.
+ *
+ * Solo encoge, nunca agranda: crecer con el alto haría que la isla se saliera
+ * por los lados en pantallas altas y angostas.
+ */
+export function cameraForBand(band: SceneBand, v: JourneyViewport): Viewport {
+  const cam = resolveCamera(band.camera, v.mobile, v.width);
+  if (!v.mobile) return cam;
+  const ratio = freeBandHeight(band.def, v.height) / freeBandHeight(band.def, MOBILE_REF_HEIGHT);
+  if (ratio >= 1) return cam;
+  return { ...cam, zoom: cam.zoom + Math.log2(ratio) };
+}
+
 // ─── Tramos: perfil de vuelo tipo flyTo ───────────────────────────────────────
 //
 //  Problema real que resuelve esto: interpolar centro y zoom linealmente entre
@@ -168,8 +227,8 @@ function buildSegments(v: JourneyViewport): Segment[] {
   const fitPx = Math.max(220, Math.min(v.width, v.height) * 0.62);
 
   return SCENE_BANDS.slice(0, -1).map((band, i) => {
-    const a = resolveCamera(band.camera, v.mobile, v.width);
-    const b = resolveCamera(SCENE_BANDS[i + 1].camera, v.mobile, v.width);
+    const a = cameraForBand(band, v);
+    const b = cameraForBand(SCENE_BANDS[i + 1], v);
 
     const dx = (b.center[0] - a.center[0]) / 360;
     const dy = mercY(b.center[1]) - mercY(a.center[1]);
@@ -286,7 +345,7 @@ export function cameraAtProgress(p: number, v: JourneyViewport): Viewport {
   const at = segmentAt(p);
   if (!at) {
     const band = p <= bands[0].center ? bands[0] : bands[bands.length - 1];
-    return resolveCamera(band.camera, v.mobile, v.width);
+    return cameraForBand(band, v);
   }
 
   const seg = segmentsFor(v)[at.i];
@@ -316,20 +375,24 @@ export function paddingAtProgress(p: number, v: JourneyViewport) {
   const at = segmentAt(p);
 
   let padLeft: number;
-  let padBottom: number;
+  let top: number;
+  let bottom: number;
   if (!at) {
     const def = (p <= bands[0].center ? bands[0] : bands[bands.length - 1]).def;
     padLeft = def.padLeft ?? 0;
-    padBottom = def.padBottom ?? 0;
+    ({ top, bottom } = safeAreaPx(def, v.height));
   } else {
     const t = easeInOut(at.t);
     const a = bands[at.i].def;
     const b = bands[at.i + 1].def;
+    const sa = safeAreaPx(a, v.height);
+    const sb = safeAreaPx(b, v.height);
     padLeft = lerp(a.padLeft ?? 0, b.padLeft ?? 0, t);
-    padBottom = lerp(a.padBottom ?? 0, b.padBottom ?? 0, t);
+    top = Math.round(lerp(sa.top, sb.top, t));
+    bottom = Math.round(lerp(sa.bottom, sb.bottom, t));
   }
 
   return v.mobile
-    ? { top: 0, right: 0, bottom: Math.round(v.height * padBottom), left: 0 }
+    ? { top, right: 0, bottom, left: 0 }
     : { top: 0, right: 0, bottom: 0, left: Math.round(v.width * padLeft) };
 }

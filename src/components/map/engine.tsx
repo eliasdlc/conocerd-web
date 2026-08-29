@@ -36,7 +36,10 @@ export interface InitialViewState {
 export interface MapProps {
   theme?: "light" | "dark";
   styles?: string;
-  projection?: { type: string };
+  // La spec de MapLibre y no `{type: string}`: el tipo real admite una
+  // expresión de zoom, que es lo que usa el recorrido para pasar de globo a
+  // mercator a mitad de vuelo (lib/mapaLigero).
+  projection?: maplibregl.ProjectionSpecification;
   viewport?: ViewState;
   onViewportChange?: (viewport: ViewState) => void;
   onLoad?: (map: maplibregl.Map) => void;
@@ -168,9 +171,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
 
     map.on("load", () => {
       if (!map) return;
-      if (projection?.type) {
-        map.setProjection({ type: projection.type as "mercator" | "globe" });
-      }
+      if (projection) map.setProjection(projection);
       onLoad?.(map);
       mapRef.current = map;
       setReady(true);
