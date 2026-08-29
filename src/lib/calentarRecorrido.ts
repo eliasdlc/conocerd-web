@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
+import { calentadorSaltado } from "@/lib/medicion";
 import { resolveCamera } from "@/data/destinations";
 import {
   plantillasDeTesela,
@@ -64,13 +65,22 @@ async function calentar(teselas: Tesela[], señal?: AbortSignal, concurrencia = 
  * datos está puesto, o la conexión es de las lentas. Calentar el recorrido son
  * del orden de 1,8 MB, y eso no se le impone a nadie que haya dicho que no.
  */
-function conexionPideAhorrar(): boolean {
+function motivoParaNoGastar(): string | null {
   const nav = navigator as Navigator & {
-    connection?: { saveData?: boolean; effectiveType?: string };
+    connection?: { saveData?: boolean; effectiveType?: string; downlink?: number };
   };
   const c = nav.connection;
-  if (!c) return false;
-  return Boolean(c.saveData) || c.effectiveType === "2g" || c.effectiveType === "slow-2g";
+  if (!c) return null;
+  if (c.saveData) return "ahorro de datos activado";
+  if (c.effectiveType === "2g" || c.effectiveType === "slow-2g") return `conexion ${c.effectiveType}`;
+  // Medido en un telefono real: `effectiveType` decia 4g con 0,35 Mbps de
+  // bajada. Los 2 MB del calentador ahi son casi un minuto de descarga
+  // compitiendo con lo que la persona esta mirando, asi que la etiqueta no
+  // basta y hay que mirar el ancho de banda.
+  if (typeof c.downlink === "number" && c.downlink > 0 && c.downlink < 1.5) {
+    return `bajada de ${c.downlink} Mbps`;
+  }
+  return null;
 }
 
 /**
@@ -78,5 +88,11 @@ function conexionPideAhorrar(): boolean {
  * concurrencia 2 para no competir por la conexión con las teselas del encuadre
  * actual. Devuelve cuántas teselas quedaron en caché.
  */
-export const calentarRecorrido = (v: JourneyViewport, señal?: AbortSignal) =>
-  conexionPideAhorrar() ? Promise.resolve(0) : calentar(teselasDelRecorrido(v), señal, 2);
+export const calentarRecorrido = (v: JourneyViewport, señal?: AbortSignal) => {
+  const ahorro = motivoParaNoGastar();
+  if (ahorro) {
+    calentadorSaltado(ahorro);
+    return Promise.resolve(0);
+  }
+  return calentar(teselasDelRecorrido(v), señal, 2);
+};

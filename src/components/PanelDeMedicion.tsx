@@ -49,7 +49,9 @@ export default function PanelDeMedicion() {
     ["encuadre listo", fmt(datos.mapa.idle)],
     ["teselas", `${datos.teselas.cargadas} en total · ${datos.teselas.enElArranque} en el arranque · ${datos.teselas.enElRecorrido} al recorrer`],
     ["ultima tesela", fmt(datos.teselas.ultimaCargada)],
-    ["calentador", `${datos.calentador.teselas} teselas en ${fmt(datos.calentador.ms)}`],
+    ["calentador", datos.calentador.corrio ? `${datos.calentador.teselas} teselas en ${fmt(datos.calentador.ms)}` : `NO CORRIO: ${datos.calentador.motivo}`],
+    ["ahorro de datos", String(datos.red.ahorroDatos ?? "?")],
+    ["diagnostico", `${datos.diagnostico.recursosVistos} recursos, ${datos.diagnostico.chunksJS} chunks JS`],
   ];
 
   return (

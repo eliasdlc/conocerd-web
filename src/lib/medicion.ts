@@ -28,6 +28,7 @@ export type Medicion = {
   dispositivo: Record<string, unknown>;
   red: Record<string, unknown>;
   pagina: Record<string, number | null>;
+  diagnostico: Record<string, number>;
   mapa: Record<string, number | null>;
   teselas: {
     cargadas: number;
@@ -36,7 +37,7 @@ export type Medicion = {
     primeraCargada: number | null;
     ultimaCargada: number | null;
   };
-  calentador: { teselas: number; ms: number | null };
+  calentador: { teselas: number; ms: number | null; corrio: boolean; motivo: string };
   recursos: Array<{ que: string; empieza: number; termina: number; kb: number | null }>;
 };
 
@@ -48,7 +49,7 @@ export const midiendo = activa;
 const hitos: Record<string, number> = {};
 let cargadas = 0;
 let cargadasAlLlegarIdle: number | null = null;
-let calentador = { teselas: 0, ms: null as number | null };
+let calentador = { teselas: 0, ms: null as number | null, corrio: false, motivo: "no llego a arrancar" };
 
 const marca = (k: string) => {
   if (hitos[k] === undefined) hitos[k] = Math.round(performance.now());
@@ -88,7 +89,18 @@ export function engancharLienzo() {
 /** El calentador de teselas informa de lo que trajo. */
 export function calentadorTermino(teselas: number, ms: number) {
   if (!activa()) return;
-  calentador = { teselas, ms: Math.round(ms) };
+  calentador = { teselas, ms: Math.round(ms), corrio: teselas > 0, motivo: teselas > 0 ? "ok" : "0 teselas" };
+}
+
+/**
+ * El calentador se salta a sí mismo cuando el navegador pide ahorrar datos. Sin
+ * esto el informe traía un cero mudo, y en el primer teléfono real medido ese
+ * cero era justo el dato más importante: el ahorro de datos estaba puesto y por
+ * eso la precarga entera estaba apagada.
+ */
+export function calentadorSaltado(motivo: string) {
+  if (!activa()) return;
+  calentador = { teselas: 0, ms: 0, corrio: false, motivo };
 }
 
 type MapaMinimo = {
@@ -142,12 +154,16 @@ export function informe(): Medicion {
   const n = nav();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const c = (navigator as any).connection ?? {};
-  const chunkMapa = performance
+  // En el teléfono real esto devolvía null. Ordenar por `transferSize` no sirve
+  // cuando el navegador lo reporta en cero, así que ahora se ordena por lo que
+  // siempre existe: cuánto tardó. Y se lleva el conteo de entradas para poder
+  // distinguir "no lo encontré" de "el buffer se desbordó".
+  const scripts = performance
     .getEntriesByType("resource")
-    .filter((x) => /_next\/static\/chunks\/.*\.js$/.test(x.name))
-    .sort((a, b) => ((b as PerformanceResourceTiming).transferSize ?? 0) - ((a as PerformanceResourceTiming).transferSize ?? 0))[0] as
-    | PerformanceResourceTiming
-    | undefined;
+    .filter((x) => /\/_next\/static\/chunks\/.*\.js/.test(x.name)) as PerformanceResourceTiming[];
+  const chunkMapa = [...scripts].sort(
+    (a, b) => (b.responseEnd - b.startTime) - (a.responseEnd - a.startTime)
+  )[0];
 
   return {
     version: 1,
@@ -168,6 +184,12 @@ export function informe(): Medicion {
       domContentLoaded: n ? Math.round(n.domContentLoadedEventEnd) : null,
       load: n ? Math.round(n.loadEventEnd) : null,
       primerPintado: pintado("first-contentful-paint") ? Math.round(pintado("first-contentful-paint")!) : null,
+    },
+    diagnostico: {
+      recursosVistos: performance.getEntriesByType("resource").length,
+      chunksJS: scripts.length,
+      // Si esto llega al tope, faltan entradas y las cifras de recursos mienten.
+      topeDelBuffer: 250,
     },
     mapa: {
       chunkPide: chunkMapa ? Math.round(chunkMapa.startTime) : null,
