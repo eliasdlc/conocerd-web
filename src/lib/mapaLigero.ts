@@ -175,8 +175,13 @@ function aExpresión(f: unknown): unknown {
  * descarta por geometría, así que no hay que enumerar países ni depender de que
  * cada capa traiga `iso_a2`.
  *
- * Los nombres de mares y océanos NO entran aquí: viven en otra capa de origen
- * (`water_name`), no son países, y "Caribbean Sea" sí sitúa al visitante.
+ * Los nombres de mares y océanos no entran en este filtro porque viven en otra
+ * capa de origen (`water_name`) y no son países. Eso NO significa que se vean:
+ * el globo del hero y el del cierre van sin un solo texto encima, y de eso se
+ * encarga el corte por zoom de `applyBrandPaint`, que sube el mínimo de toda
+ * capa de símbolo a z5. Aquí se dijo un tiempo que "Caribbean Sea" situaba al
+ * visitante; se decidió que no, y el corte por zoom se lo lleva por delante
+ * junto con lo demás.
  *
  * Devuelve cuántas capas quedaron acotadas.
  */
