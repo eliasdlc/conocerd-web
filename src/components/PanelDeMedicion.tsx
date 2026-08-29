@@ -41,7 +41,7 @@ export default function PanelDeMedicion() {
     ["red", `${datos.red.tipo ?? "?"} · ${datos.red.bajadaMbps ?? "?"} Mbps · rtt ${datos.red.rttMs ?? "?"} ms`],
     ["pantalla", `${datos.dispositivo.viewport} @${datos.dispositivo.dpr}x · ${datos.dispositivo.nucleos ?? "?"} nucleos`],
     ["primer pintado", fmt(datos.pagina.primerPintado)],
-    ["chunk mapa", `${fmt(datos.mapa.chunkPide)} pide, ${fmt(datos.mapa.chunkLlega)} llega, ${datos.mapa.chunkKB ?? "?"} KB`],
+    ["chunk mapa", `${fmt(datos.mapa.chunkPide)} pide, ${fmt(datos.mapa.chunkLlega)} llega`],
     ["constructor", fmt(datos.mapa.contextoWebGL)],
     ["primer dibujo", fmt(datos.mapa.primerDibujo)],
     ["mapa cargado", fmt(datos.mapa.load)],

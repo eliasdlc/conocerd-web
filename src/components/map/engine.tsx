@@ -14,6 +14,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, use
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapContext } from "@/components/map/context";
 import { MAP_STYLES } from "@/lib/basemap";
+import { engancharMapa } from "@/lib/medicion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -152,6 +153,11 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
       fail(err);
       return;
     }
+
+    // La sonda se engancha aquí y no en `load`: entre la construcción y ese
+    // evento ya se cargan teselas, y contarlas desde `load` las perdía. Sin
+    // `?medir=1` esta llamada no hace nada.
+    engancharMapa(map);
 
     // Fallo del estilo (CDN caído): llega como evento `error` antes de que el
     // estilo cargue y `load` no va a disparar nunca. Los errores de tiles

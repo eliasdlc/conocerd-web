@@ -11,7 +11,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
-import { calentadorTermino, engancharMapa } from "@/lib/medicion";
+import { calentadorTermino, marcaChunkMapa } from "@/lib/medicion";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -31,7 +31,13 @@ import CTASection from "@/sections/CTASection";
 // consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
 // de valor desde el grafo inicial devolvería el motor al HTML de arranque y
 // este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
-const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
+const Map = dynamic(() => {
+  marcaChunkMapa("pide");
+  return import("@/components/map/engine").then((mod) => {
+    marcaChunkMapa("llega");
+    return mod.Map;
+  });
+}, {
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
@@ -227,7 +233,6 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
-      engancharMapa(map);
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());

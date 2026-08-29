@@ -50,6 +50,7 @@ const hitos: Record<string, number> = {};
 let cargadas = 0;
 let cargadasAlLlegarIdle: number | null = null;
 let calentador = { teselas: 0, ms: null as number | null, corrio: false, motivo: "no llego a arrancar" };
+let saltado = false;
 
 const marca = (k: string) => {
   if (hitos[k] === undefined) hitos[k] = Math.round(performance.now());
@@ -86,10 +87,22 @@ export function engancharLienzo() {
   } as any;
 }
 
+/** El propio import dinámico del motor marca cuándo empieza y cuándo acaba. */
+export function marcaChunkMapa(cual: "pide" | "llega") {
+  if (!activa()) return;
+  marca(cual === "pide" ? "chunkPide" : "chunkLlega");
+}
+
 /** El calentador de teselas informa de lo que trajo. */
 export function calentadorTermino(teselas: number, ms: number) {
   if (!activa()) return;
-  calentador = { teselas, ms: Math.round(ms), corrio: teselas > 0, motivo: teselas > 0 ? "ok" : "0 teselas" };
+  // Si ya se marcó un salto, no se pisa: `calentarRecorrido` devuelve 0 tanto
+  // cuando se salta como cuando corre y no trae nada, y quien llama no puede
+  // distinguirlos. En tres mediciones de un teléfono real esto reporto
+  // "0 teselas" donde la verdad era "ahorro de datos activado", que era el
+  // dato que decidia todo el analisis.
+  if (saltado) return;
+  calentador = { teselas, ms: Math.round(ms), corrio: teselas > 0, motivo: teselas > 0 ? "ok" : "corrio y no trajo nada" };
 }
 
 /**
@@ -100,6 +113,7 @@ export function calentadorTermino(teselas: number, ms: number) {
  */
 export function calentadorSaltado(motivo: string) {
   if (!activa()) return;
+  saltado = true;
   calentador = { teselas: 0, ms: 0, corrio: false, motivo };
 }
 
@@ -161,7 +175,7 @@ export function informe(): Medicion {
   const scripts = performance
     .getEntriesByType("resource")
     .filter((x) => /\/_next\/static\/chunks\/.*\.js/.test(x.name)) as PerformanceResourceTiming[];
-  const chunkMapa = [...scripts].sort(
+  const chunkMasLento = [...scripts].sort(
     (a, b) => (b.responseEnd - b.startTime) - (a.responseEnd - a.startTime)
   )[0];
 
@@ -192,9 +206,13 @@ export function informe(): Medicion {
       topeDelBuffer: 250,
     },
     mapa: {
-      chunkPide: chunkMapa ? Math.round(chunkMapa.startTime) : null,
-      chunkLlega: chunkMapa ? Math.round(chunkMapa.responseEnd) : null,
-      chunkKB: chunkMapa?.transferSize ? Math.round(chunkMapa.transferSize / 1024) : null,
+      chunkPide: hitos.chunkPide ?? null,
+      chunkLlega: hitos.chunkLlega ?? null,
+      // NO es el peso del chunk del mapa: es el del chunk mas lento, que casi
+      // nunca es el mismo. Se deja como sintoma de "algo tarda" y por eso lleva
+      // ese nombre. El peso real del chunk del mapa no se puede saber desde
+      // aqui sin adivinar cual de los 20 es.
+      chunkMasLentoKB: chunkMasLento?.transferSize ? Math.round(chunkMasLento.transferSize / 1024) : null,
       contextoWebGL: hitos.contextoWebGL ?? null,
       primerDibujo: hitos.primerDibujo ?? null,
       load: hitos.mapaLoad ?? null,
