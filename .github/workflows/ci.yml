@@ -1,4 +1,13 @@
-# Gate de verificación del sitio público. Corre en cada PR hacia dev y main.
+# Gate de verificación del sitio público. Corre en CADA PR, sea cual sea su base.
+#
+# Antes filtraba a `dev` y `main`, y eso dejaba sin gate justo las PR apiladas:
+# una rama sacada de otra rama de trabajo, que es lo normal cuando dos cambios
+# tocan el mismo fichero y el primero todavía no ha entrado. La PR 47 salió de
+# la 46 y se quedó sin verificar hasta que se disparó a mano.
+#
+# `edited` está en los tipos porque cambiar la base de una PR no dispara
+# `synchronize`: sin él, reapuntar una PR apilada a `dev` la dejaba otra vez sin
+# gate, que es exactamente lo que pasó.
 #
 # Sin build de producción: Vercel ya construye un preview por PR y ese es el
 # sitio donde un fallo de build se ve, con su URL para mirarlo.
@@ -6,7 +15,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [dev, main]
+    types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
 concurrency:
