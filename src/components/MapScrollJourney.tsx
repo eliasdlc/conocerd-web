@@ -88,6 +88,10 @@ function applyBrandPaint(map: maplibregl.Map) {
   // arriba, así que z5 separa unas de otras sin tener que tocar el estilo cada
   // vez que cambia la escena. Sólo se sube el mínimo, nunca se baja: una capa
   // que ya aparecía más tarde se queda como estaba.
+  //
+  // Alcanza a TODA capa de símbolo, incluidos los nombres de mares, que viven
+  // en `water_name` y por tanto se escapan del filtro de topónimos de
+  // `lib/mapaLigero`. Es deliberado: sobre estos dos globos no va ni un texto.
   for (const capa of map.getStyle().layers) {
     if (capa.type !== "symbol") continue;
     map.setLayerZoomRange(capa.id, Math.max(capa.minzoom ?? 0, 5), capa.maxzoom ?? 24);
