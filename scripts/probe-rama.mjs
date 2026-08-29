@@ -48,6 +48,9 @@
 //    PROBE_OUT         raíz de artefactos         (.artifacts/ramas)
 //    PROBE_VIEWPORTS   "390x844,1440x900"
 //    PROBE_SWIFTSHADER "1" fuerza render por software (máquinas sin GPU)
+//    PROBE_GPU         "1" pide la GPU real en headless; sin esto Chromium cae
+//                      a SwiftShader y los ms dejan de medir la máquina
+//    PROBE_CHROME_ARGS banderas extra de chromium, separadas por coma
 //    PROBE_MOTION      "1" quita reduced-motion: mide el vuelo de cámara de
 //                      verdad en vez del salto seco. Sólo con GPU, y las
 //                      capturas dejan de servir para el diff de píxeles.
@@ -227,7 +230,11 @@ async function irAEscena(page, escena, movil) {
   // Con reduced-motion la cámara llega de un salto y 1,4 s sobran. Con el vuelo
   // real activo hace falta más, o la ventana de "reposo" cazaría el final del
   // vuelo y lo contaría como animación en reposo.
-  await espera(process.env.PROBE_MOTION === "1" ? 3_000 : 1_400);
+  // Con la CDN lenta 1,4 s no bastan y la captura sale con teselas a medio
+  // llegar, que en el diff parece un cambio de la rama. `PROBE_ESPERA_MS` sube
+  // ese margen; las dos corridas de una comparación tienen que usar el mismo.
+  const margen = Number(process.env.PROBE_ESPERA_MS ?? 1_400);
+  await espera(process.env.PROBE_MOTION === "1" ? 3_000 : margen);
 }
 
 const informe = { label, url, generado: null, viewports: {} };
@@ -237,6 +244,11 @@ for (const [ancho, alto] of viewports) {
   const clave = `${ancho}x${alto}`;
   const args = ["--no-sandbox"];
   if (process.env.PROBE_SWIFTSHADER === "1") args.push("--enable-unsafe-swiftshader", "--use-angle=swiftshader");
+  // Chromium sin cabeza cae a SwiftShader aunque la máquina tenga GPU, y
+  // entonces los milisegundos miden el render por software en vez del equipo.
+  // Con esto se pide la GPU de verdad.
+  if (process.env.PROBE_GPU === "1") args.push("--enable-gpu", "--use-angle=gl", "--ignore-gpu-blocklist");
+  if (process.env.PROBE_CHROME_ARGS) args.push(...process.env.PROBE_CHROME_ARGS.split(",").filter(Boolean));
 
   const browser = await puppeteer.launch({
     executablePath: process.env.CHROMIUM_PATH ?? "/usr/bin/chromium",
@@ -261,7 +273,9 @@ for (const [ancho, alto] of viewports) {
     await page.goto(url, { waitUntil: "networkidle2", timeout: 90_000 });
     await page.waitForSelector("h1", { timeout: 20_000 });
     await page.waitForSelector(".maplibregl-canvas", { timeout: 30_000 }).catch(() => {});
-    await espera(1_500);
+    // Mismo margen que entre escenas: con la CDN lenta, 1,5 s dejaban el hero
+    // sin una sola tesela y la captura salía en crema.
+    await espera(Number(process.env.PROBE_ESPERA_MS ?? 1_500));
     const msArranque = Date.now() - t0;
 
     const arranque = resume(red);
