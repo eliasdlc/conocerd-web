@@ -11,7 +11,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
-import { calentadorTermino, marcaChunkMapa } from "@/lib/medicion";
+import { calentadorTermino, escenaCambio, marcaChunkMapa } from "@/lib/medicion";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -201,6 +201,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       bearing: cam.bearing,
     };
   });
+
+  // Cada cambio de escena abre una medición y el `idle` del mapa la cierra: de
+  // ahí sale cuánto tarda cada salto en quedar listo, que es la queja que
+  // arrancó todo esto.
+  useEffect(() => { escenaCambio(activeScene); }, [activeScene]);
 
   const goToFooter = useCallback(() => {
     setUnlocked(true);

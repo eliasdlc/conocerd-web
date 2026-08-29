@@ -2,7 +2,7 @@
 
 import ReactDOM from "react-dom";
 import { CARTO_HOSTS, CARTO_TILEJSON, MAP_STYLES } from "@/lib/basemap";
-import { engancharLienzo } from "@/lib/medicion";
+import { arrancar as arrancarSonda } from "@/lib/medicion";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Pistas de red para que el mapa no arranque desde cero.
@@ -31,10 +31,10 @@ import { engancharLienzo } from "@/lib/medicion";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function PistasMapa() {
-  // La sonda de medición engancha el lienzo aquí porque este componente corre
-  // en la hidratación, antes de que el chunk de MapLibre siquiera llegue. Sin
-  // `?medir=1` esta llamada no hace absolutamente nada.
-  engancharLienzo();
+  // La sonda arranca aquí porque este componente corre en la hidratación, antes
+  // de que el chunk de MapLibre siquiera llegue: es el único sitio desde el que
+  // puede enganchar el lienzo a tiempo. Sin `?medir=1` no hace nada.
+  arrancarSonda();
 
   for (const host of CARTO_HOSTS) ReactDOM.preconnect(host, { crossOrigin: "anonymous" });
   // `as: "fetch"` y anónimo porque así los pide MapLibre: `fetch` sin
