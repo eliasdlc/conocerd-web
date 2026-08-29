@@ -11,16 +11,31 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
+import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
-import DestinosSection from "@/sections/DestinosSection";
-import MapaSection from "@/sections/MapaSection";
-import ViajerosNegociosSection from "@/sections/ViajerosNegociosSection";
-import EquipoSection from "@/sections/EquipoSection";
-import CTASection from "@/sections/CTASection";
+
+// Los paneles de las escenas van detrás del mismo `dynamic` que el motor del
+// mapa. Son ~4.000 líneas que el arranque no necesita: en el primer pixel sólo
+// se ve el hero, y ninguno de estos paneles existe hasta que la cámara llega a
+// su escena. Cargándolos con el motor y no antes, salen de los 921 KB de JS
+// que el teléfono tiene que bajar, parsear y evaluar ANTES de hidratar, que es
+// el 55 % del tiempo hasta ver el globo (auditoría de rendimiento, 28 ago).
+//
+// `ssr: false` como el motor, y por la misma razón: son hijos del <Map>, que
+// ya es cliente puro, así que nunca formaron parte del HTML del servidor.
+// Sin `loading`: son overlays invisibles fuera de su escena, y un placeholder
+// sólo añadiría un nodo que tapa el mapa.
+//
+// El hero NO entra aquí: es el LCP y se sirve renderizado desde el servidor.
+const DestinosSection = dynamic(() => import("@/sections/DestinosSection"), { ssr: false });
+const MapaSection = dynamic(() => import("@/sections/MapaSection"), { ssr: false });
+const ViajerosNegociosSection = dynamic(() => import("@/sections/ViajerosNegociosSection"), { ssr: false });
+const EquipoSection = dynamic(() => import("@/sections/EquipoSection"), { ssr: false });
+const CTASection = dynamic(() => import("@/sections/CTASection"), { ssr: false });
 
 // MapLibre es la firma del journey pero no un requisito para que el hero se
 // lea. El motor (1 MB con el CSS) llega en su propio chunk, después del primer
@@ -78,6 +93,12 @@ function applyBrandPaint(map: maplibregl.Map) {
   if (map.getLayer("water_shadow")) {
     map.setLayoutProperty("water_shadow", "visibility", "none");
   }
+
+  // Los otros dos recortes al basemap, con su porqué y sus cifras en
+  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
+  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  aligerarEstilo(map);
+  soloTopónimosDeRD(map);
 }
 
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
@@ -274,7 +295,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         <Map
           ref={mapRef}
           theme="light"
-          projection={{ type: "globe" }}
+          projection={PROYECCION_DEL_RECORRIDO}
           initialViewState={initialViewState}
           maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
           onLoad={handleLoad}
