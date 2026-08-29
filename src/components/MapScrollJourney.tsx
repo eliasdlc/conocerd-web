@@ -64,6 +64,20 @@ function applyBrandPaint(map: maplibregl.Map) {
     map.setPaintProperty("admin_country", "line-width", 2);
   }
 
+  // El globo del hero va sin etiquetas. Los nombres de continente y de país
+  // sobre la esfera no dicen nada que el hero necesite, y a este zoom compiten
+  // con el titular y con el pin, que es lo único que hay que mirar.
+  //
+  // El corte va por zoom y no por escena porque sale gratis: el hero está en
+  // 1.95 y el cierre en 2.2, y todas las demás escenas están en 6.1 o más
+  // arriba, así que z5 separa unas de otras sin tener que tocar el estilo cada
+  // vez que cambia la escena. Sólo se sube el mínimo, nunca se baja: una capa
+  // que ya aparecía más tarde se queda como estaba.
+  for (const capa of map.getStyle().layers) {
+    if (capa.type !== "symbol") continue;
+    map.setLayerZoomRange(capa.id, Math.max(capa.minzoom ?? 0, 5), capa.maxzoom ?? 24);
+  }
+
   // Mata el "ring": el globo de MapLibre dibuja una atmósfera (halo difuso más
   // grande que la esfera). `atmosphere-blend: 0` la apaga ⇒ el globo se recorta
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
