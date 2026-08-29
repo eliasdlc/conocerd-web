@@ -20,6 +20,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMotionValueEvent, useTransform, type MotionValue } from "motion/react";
 import { useScene } from "@/context/SceneContext";
+import { usePieALaVista } from "@/hooks/usePieALaVista";
 import { SCENE_BANDS } from "@/lib/journey";
 import { scrollToSection } from "@/lib/journeyNav";
 
@@ -106,6 +107,9 @@ export default function JourneyProgress() {
   const { progress } = useScene();
   const [activo, setActivo] = useState(0);
   const moviendo = useEnMovimiento(progress);
+  // El riel cuenta cuánto queda de recorrido: sobre el pie ya no queda nada, y
+  // ahí sólo era una pieza flotante encima de contenido ajeno.
+  const enElPie = usePieALaVista();
 
   const avance = useTransform(progress, avanceDeRiel);
   const rielRef = useEscala(avance, "Y");
@@ -124,7 +128,9 @@ export default function JourneyProgress() {
       <nav
         aria-label="Progreso del recorrido"
         data-moviendo={moviendo ? "true" : undefined}
-        className="group fixed right-[clamp(10px,1.4vw,24px)] top-1/2 z-[80] hidden w-9 -translate-y-1/2 desk:block"
+        className={`group fixed right-[clamp(10px,1.4vw,24px)] top-1/2 z-[80] hidden w-9 -translate-y-1/2 transition-opacity duration-300 desk:block ${
+          enElPie ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
       >
         <ol className="relative m-0 flex list-none flex-col p-0">
           {/* La pista y su relleno: el relleno es la única pieza animada y lo
@@ -174,7 +180,9 @@ export default function JourneyProgress() {
       {/* ── Móvil: barra fina en el borde superior ── */}
       <div
         aria-hidden="true"
-        className="fixed inset-x-0 top-0 z-[90] h-[3px] bg-line-strong desk:hidden"
+        className={`fixed inset-x-0 top-0 z-[90] h-[3px] bg-line-strong transition-opacity duration-300 desk:hidden ${
+          enElPie ? "opacity-0" : "opacity-100"
+        }`}
       >
         <span ref={barraRef} className="block h-full origin-left bg-selected" />
       </div>

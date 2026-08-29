@@ -311,6 +311,13 @@ body::after {
     overscroll-behavior: none;
   }
   .crd-journey-anchor { display: none; }
+
+  /* El pie sólo existe al final: mientras el recorrido está bloqueado no forma
+     parte del flujo, así que el documento mide exactamente una pantalla y no
+     hay nada que un gesto pueda sacar a la vista. Es la única defensa que
+     funciona en iOS, donde `overflow:hidden` sobre <html> no detiene el scroll
+     táctil y el pie asomaba en mitad de cualquier escena. */
+  html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 
 /* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
@@ -499,6 +506,13 @@ body::after {
    "próximamente" → una sola columna (audit 2.6). */
 @media (max-width: 379px) {
   .crd-footer-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Pantallas cortas (375x667 y parecidas): la pila de cartas sube por el panel
+   de pasos y su canto superior alcanzaba la segunda línea del titular. El
+   titular se aparta; el halo lo mantiene legible cuando asoma sobre el velo. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .crd-destinos-heading { bottom: calc(52% + 34px) !important; }
 }
 
 @media (max-width: 359px) and (max-height: 640px) {

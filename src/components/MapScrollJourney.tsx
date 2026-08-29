@@ -149,9 +149,15 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     const root = document.documentElement;
     root.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
+    // El pie se retira del flujo mientras dura el bloqueo (regla en
+    // globals.css). `overflow:hidden` no basta: Safari en iOS lo ignora para el
+    // gesto táctil, y el pie asomaba en cualquier escena del recorrido sin
+    // forma de quitarlo. Sin nada debajo de la pantalla no hay scroll posible.
+    root.dataset.recorrido = "bloqueado";
     return () => {
       root.style.overflow = "";
       document.body.style.overflow = "";
+      delete root.dataset.recorrido;
     };
   }, [viewportResolved, isMobile, unlocked]);
 
