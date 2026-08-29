@@ -48,7 +48,10 @@ const HEADING =
 
 export default function Footer() {
   return (
-    <footer className="bg-[linear-gradient(135deg,var(--color-ink),var(--color-ink-2))] text-white">
+    // .crd-footer (globals.css): pantalla completa, columnas centradas en el
+    // alto y legal al borde inferior; y fuera del flujo mientras el recorrido
+    // móvil está bloqueado.
+    <footer className="crd-footer bg-[linear-gradient(135deg,var(--color-ink),var(--color-ink-2))] text-white">
       {/* La columna de marca sólo lleva el wordmark: el formulario de la lista
           vive en CTASection, justo encima, y aquí se duplicaba entero (mismo
           kicker "Descubre lo nuestro" incluido). Contacto pide algo más de
