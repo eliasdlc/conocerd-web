@@ -18,7 +18,7 @@
 //    Timing llegan con los tamaños en cero.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { contexto, titular, type Contexto } from "@/lib/medicion/contexto";
+import { contexto, midiendoGpu, titular, type Contexto } from "@/lib/medicion/contexto";
 
 export type Escena = {
   escena: string;
@@ -44,7 +44,7 @@ export type Informe = {
   interacciones: { total: number; inpMs: number | null; peores: Array<{ tipo: string; ms: number; en: string }> };
   teselas: { cargadas: number; enElArranque: number; enElRecorrido: number; ultimaCargada: number | null };
   calentador: { corrio: boolean; motivo: string; teselas: number; ms: number | null };
-  bloqueo: { tareasLargas: number; msTotal: number; peorMs: number };
+  bloqueo: { tareasLargas: number; msTotal: number; peorMs: number; medible: boolean };
   diagnostico: Record<string, number | string>;
 };
 
@@ -139,13 +139,17 @@ export function arrancar() {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obs("event", (e: any) => {
+    // Sólo cuentan las entradas con `interactionId`: son toque, clic y teclado.
+    // Sin este filtro un `pointerleave` del ratón daba un INP de 240 ms que no
+    // corresponde a nada que nadie haya sentido.
+    if (!e.interactionId) return;
     interacciones++;
     const ms = Math.round(e.duration);
     if (inp === null || ms > inp) inp = ms;
     peores.push({ tipo: e.name, ms, en: abierta?.escena ?? "arranque" });
     peores.sort((a, b) => b.ms - a.ms);
     peores.length = Math.min(peores.length, 5);
-  }, { durationThreshold: 40 });
+  }, { durationThreshold: 16 });
 
   engancharLienzo();
 }
@@ -156,7 +160,7 @@ function engancharLienzo() {
   HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, tipo: string, ...resto: unknown[]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const c = (getContext as any).call(this, tipo, ...resto);
-    if (c && typeof tipo === "string" && tipo.startsWith("webgl")) {
+    if (c && typeof tipo === "string" && tipo.startsWith("webgl") && !midiendoGpu) {
       marca("contextoWebGL");
       const proto = Object.getPrototypeOf(c);
       for (const fn of ["drawElements", "drawArrays"]) {
@@ -236,6 +240,9 @@ function cerrarEscena() {
 
 // ─── Informe ─────────────────────────────────────────────────────────────────
 
+/** Firefox y Safari no implementan longtask: ahí el bloqueo no es cero, es ciego. */
+const soportaLongtask = () => Boolean(PerformanceObserver.supportedEntryTypes?.includes("longtask"));
+
 const nav = () => (performance.getEntriesByType("navigation")[0] ?? null) as PerformanceNavigationTiming | null;
 const pintado = (n: string) => performance.getEntriesByName(n)[0]?.startTime ?? null;
 
@@ -285,7 +292,9 @@ export function informe(): Informe {
       ultimaCargada,
     },
     calentador,
-    bloqueo: { tareasLargas, msTotal: Math.round(msBloqueadoTotal), peorMs: Math.round(peorTareaMs) },
+    bloqueo: soportaLongtask()
+      ? { tareasLargas, msTotal: Math.round(msBloqueadoTotal), peorMs: Math.round(peorTareaMs), medible: true }
+      : { tareasLargas: 0, msTotal: 0, peorMs: 0, medible: false },
     diagnostico: {
       recursosVistos: performance.getEntriesByType("resource").length,
       escenasCerradas: escenas.length,

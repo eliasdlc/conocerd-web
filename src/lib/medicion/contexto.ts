@@ -27,8 +27,19 @@ type UAData = {
   getHighEntropyValues?: (h: string[]) => Promise<Record<string, unknown>>;
 };
 
-/** El renderer real, no el fabricante. Es lo que distingue un móvil de gama alta de uno de gama baja. */
+/**
+ * El renderer real, no el fabricante. Es lo que distingue un móvil de gama alta
+ * de uno de gama baja.
+ *
+ * Avisa mientras lo hace: esta función crea su propio canvas WebGL, y el
+ * enganche que busca el constructor del mapa lo contaba como si fuera el mapa.
+ * En Chrome eso daba una "construcción" ANTERIOR a pedir el chunk, que es
+ * imposible.
+ */
+export let midiendoGpu = false;
+
 function gpu(): string {
+  midiendoGpu = true;
   try {
     const c = document.createElement("canvas");
     const gl = (c.getContext("webgl2") ?? c.getContext("webgl")) as WebGLRenderingContext | null;
@@ -38,6 +49,8 @@ function gpu(): string {
     return String(r);
   } catch {
     return "desconocida";
+  } finally {
+    midiendoGpu = false;
   }
 }
 

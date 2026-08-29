@@ -68,7 +68,7 @@ export default function PanelDeMedicion() {
       ? `${datos.calentador.teselas} teselas en ${ms(datos.calentador.ms)}`
       : `NO CORRIO: ${datos.calentador.motivo}`],
     ["respuesta al toque", `INP ${ms(datos.interacciones.inpMs)} · ${datos.interacciones.total} interacciones`],
-    ["hilo bloqueado", `${datos.bloqueo.tareasLargas} tareas largas · ${datos.bloqueo.msTotal} ms · peor ${datos.bloqueo.peorMs} ms`],
+    ["hilo bloqueado", datos.bloqueo.medible ? `${datos.bloqueo.tareasLargas} tareas largas · ${datos.bloqueo.msTotal} ms · peor ${datos.bloqueo.peorMs} ms` : "este navegador no lo puede medir"],
     ["saltos de layout", String(datos.pagina.clsPorMil ?? "-") + " /1000"],
   ];
 
