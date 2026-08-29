@@ -134,14 +134,20 @@ export function useJourneyScroll({
   //
   // `restDelta` por defecto es 0.01 — sobre un rango 0..1 eso es un 1% de TODO
   // el journey (≈13vh de scroll): el muelle se daba por asentado antes de
-  // llegar al keyframe y la cámara quedaba sistemáticamente corta. Con 1e-5
-  // aterriza en el keyframe exacto.
+  // llegar al keyframe y la cámara quedaba sistemáticamente corta.
+  //
+  // El criterio de parada se mide en píxeles de pantalla, no en cifras
+  // significativas del progreso. La pista mide 12.322 px, así que 1e-4 de
+  // progreso son 1,2 px de scroll y 0,004 niveles de zoom: cien veces más fino
+  // que el 1e-2 por defecto que causó el bug, y por debajo de lo que un notch
+  // de rueda mueve. Con 1e-5 el muelle seguía escribiendo cámara hasta 3,7 s
+  // después del último notch, y los últimos frames movían exactamente 0,0 px.
   const smooth = useSpring(chase, {
     stiffness: 110,
     damping: 32,
     mass: 0.4,
-    restDelta: 0.00001,
-    restSpeed: 0.0001,
+    restDelta: 0.0001,
+    restSpeed: 0.001,
   });
   const reduceMotion = useReducedMotion();
 
