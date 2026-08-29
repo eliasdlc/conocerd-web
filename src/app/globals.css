@@ -533,6 +533,13 @@ body::after {
   .crd-footer-grid { grid-template-columns: 1fr !important; }
 }
 
+/* Pantallas cortas (375x667 y parecidas): la pila de cartas sube por el panel
+   de pasos y su canto superior alcanzaba la segunda línea del titular. El
+   titular se aparta; el halo lo mantiene legible cuando asoma sobre el velo. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .crd-destinos-heading { bottom: calc(52% + 34px) !important; }
+}
+
 @media (max-width: 359px) and (max-height: 640px) {
   .crd-hero-content { max-width: 280px !important; }
   .crd-hero-logo { width: min(64vw, 240px) !important; }
