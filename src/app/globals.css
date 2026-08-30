@@ -135,17 +135,30 @@ html {
 :root {
   --crd-sb-thumb: color-mix(in srgb, var(--color-ink) 32%, transparent);
   --crd-sb-thumb-hover: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  /* La pista se ve. Con pista transparente el pulgar quedaba flotando sobre el
+     crema y no se leía como un riel: lo que dice "esto se desliza y vas por
+     aquí" es el par pista + pulgar, no el pulgar solo. Al 7 % es el hairline
+     del sistema, no una barra gris de navegador. */
+  --crd-sb-track: color-mix(in srgb, var(--color-ink) 7%, transparent);
 }
 .crd-cta-card {
   --crd-sb-thumb: rgba(255, 255, 255, 0.28);
   --crd-sb-thumb-hover: rgba(255, 255, 255, 0.45);
+  --crd-sb-track: rgba(255, 255, 255, 0.10);
 }
 
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background-color: var(--crd-sb-track);
+  border-radius: 999px;
+  /* El mismo aire de 3px que el pulgar, para que la pista quede como una línea
+     centrada en el canal y no como una columna pintada de canto a canto. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
@@ -173,7 +186,7 @@ html {
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--crd-sb-thumb) transparent;
+    scrollbar-color: var(--crd-sb-thumb) var(--crd-sb-track);
   }
 }
 body {
