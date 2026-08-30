@@ -599,7 +599,11 @@ function CategoryFilter({
     <div
       role="group"
       aria-label="Filtrar destinos por categoría"
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[clamp(14px,3%,30px)] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
+      // En escritorio el filtro se apoya sobre la franja del panel de pasos, que
+      // vive centrado abajo: es el filtro el que sube, no el panel el que se
+      // aparta. En móvil el filtro cuelga de la píldora, arriba, y la franja de
+      // abajo la ocupa el sheet del itinerario.
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[calc(var(--crd-stepper-h)+clamp(10px,1.6%,20px))] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];

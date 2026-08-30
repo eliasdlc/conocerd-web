@@ -336,7 +336,9 @@ function RoadmapCard({ visible }: { visible: boolean }) {
       style={visible ? { animationDelay: "0.55s" } : undefined}
     >
       {/* La estampa ConoceRD, pegada a la card */}
-      <div aria-hidden="true" className="absolute -top-9 right-1 desk:-right-7">
+      {/* En ventanas bajas la tarjeta sube y el voladizo del sello alcanzaba la
+          última línea del manifiesto: allí se apoya más dentro (globals.css). */}
+      <div aria-hidden="true" className="crd-eq-sello absolute -top-9 right-1 desk:-top-6 desk:-right-7">
         <StampCRD size={106} rotate={8} line1="SANTIAGO, RD" line2="· EST. 2026 ·" />
       </div>
 

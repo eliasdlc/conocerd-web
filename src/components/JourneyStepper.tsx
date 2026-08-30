@@ -71,7 +71,12 @@ export default function JourneyStepper({
     <div
       role="group"
       aria-label="Navegación del recorrido"
-      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 desk:bottom-3 desk:left-4 desk:w-[318px] desk:translate-x-0 ${
+      // Centrado abajo en los dos viewports, y en el mismo sitio en las 13
+      // escenas (decisión del dueño, ago 2026, que revisa la de mandarlo a la
+      // esquina): es el control principal de la página y una esquina no se lee
+      // como tal. Lo que se aparta es el contenido que caía ahí —el filtro del
+      // mapa— vía la franja `--crd-stepper-h`, no el panel.
+      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 desk:bottom-4 desk:w-[380px] ${
         visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
