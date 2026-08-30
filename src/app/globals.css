@@ -288,7 +288,7 @@ body::after {
    bottom-sheets y de la sección de Equipo. */
 .crd-journey {
   position: relative;
-  height: 100dvh;
+  height: 100svh;
   overscroll-behavior: none;
 }
 
@@ -312,6 +312,38 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     radial-gradient(55% 45% at 84% 24%, rgba(255,141,22,.10), transparent 70%),
     radial-gradient(60% 50% at 50% 98%, rgba(224,85,47,.08), transparent 70%),
     var(--color-cream);
+}
+
+/* Único scroll "de página" del recorrido: el manifiesto del equipo no cabe en
+   una pantalla corta, ni en el teléfono ni en un portátil de 600. Scrollea por
+   dentro y NO cambia de escena.
+
+   `safe center`: mientras el contenido quepa va centrado, y en cuanto no quepa
+   se comporta como `flex-start`. Con `center` a secas el desbordamiento sale
+   por ARRIBA y la primera línea del manifiesto queda inalcanzable, porque no
+   hay scroll hacia atrás desde el centro. */
+.crd-ol-equipo {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  justify-content: safe center;
+}
+
+/* Mismo desvanecido que el sheet: mientras se scrollea, lo que pasa por detrás
+   del cristal del panel de pasos se apaga en vez de aparecer cortado a media
+   línea. El velo radial de la escena ya llega transparente a los bordes, así que
+   la máscara no le abre ninguna costura.
+
+   Sólo en móvil: arriba de 900 el panel es un objeto de esquina y un
+   desvanecido a todo lo ancho no describiría nada. */
+@media (max-width: 899px) {
+  .crd-ol-equipo {
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - var(--crd-stepper-h)),
+      transparent calc(100% - 16px)
+    );
+  }
 }
 
 /* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
@@ -343,6 +375,21 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    flota por encima y no debe tapar nada interactivo en reposo. */
 :root { --crd-nav-clear: 84px; }
 
+/* La franja que una escena tiene de verdad: la pantalla menos las dos piezas
+   de cromo flotante. Es el único tope contra el que deben medirse los paneles,
+   las cartas y el hero — con porcentajes de pantalla el mismo layout cabía en
+   un 14 Pro Max y se salía en un SE.
+
+   `svh` y no `dvh`: el recorrido bloquea el scroll, así que iOS no retrae la
+   barra de Safari y lo visible es siempre el viewport pequeño. `dvh` prometía
+   hasta 190px que la pantalla no tenía. */
+:root { --crd-franja: calc(100svh - var(--crd-nav-clear) - var(--crd-stepper-h)); }
+
+/* Cuánto se eleva la pila de polaroids sobre el panel de pasos: 10 de aire más
+   los 42 del desparrame de la carta más alta (`--pile-bottom` en
+   DestinosSection). Es lo que el titular tiene que saltar para no montarse. */
+:root { --crd-pila-alza: 52px; }
+
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
 .crd-mobile-scrim { display: none; }
@@ -372,7 +419,35 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    aportan la sombra y el mapa, no una rotación que deforme el contenido. */
 .crd-phone-device {
   /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto. */
-  width: min(264px, 18vw, calc((100dvh - 120px) * 0.480));
+  width: min(264px, 18vw, calc((100svh - 120px) * 0.480));
+}
+
+/* Huella del panel de pasos en escritorio: esquina inferior izquierda, 12 del
+   borde más 44 de alto. `--crd-stepper-h` vale 0 aquí a propósito, porque el
+   panel salió de la columna del contenido centrado; pero lo que SÍ baja hasta
+   esa esquina tiene que esquivarlo, y la pila de Destinos se apoya justo ahí:
+   en la ventana de revisión (1131x686) el cristal del panel se montaba sobre el
+   canto inferior izquierdo de la polaroid del frente. */
+@media (min-width: 900px) {
+  .crd-destinos-card {
+    bottom: calc(66px + var(--pile-bottom, 0px)) !important;
+  }
+}
+
+@media (min-width: 900px) {
+  /* La carta del CTA vive centrada entre la píldora y el borde inferior. En una
+     ventana de 1280x720 despejaba todo y parecía sana; en la ventana real de
+     revisión (1131x686) y en un portátil de 1280x600 el "¿Tienes un negocio?"
+     se salía de la carta. Es el mismo defecto que en un iPhone corto, un
+     viewport más arriba, así que se resuelve con el mismo tope.
+
+     Los 56 son el `desk:pb` del envoltorio (CTASection): el tope tiene que
+     descontar lo mismo que el envoltorio reserva, o la carta desborda su caja
+     y, al ir centrada, se sale por los dos lados. */
+  .crd-cta-card {
+    max-height: calc(var(--crd-franja) - 56px);
+    overflow-y: auto;
+  }
 }
 
 @media (min-width: 900px) and (max-height: 480px) {
@@ -391,29 +466,74 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     max-width: 100% !important;
     transform: none !important;
     border-radius: var(--radius-surface) var(--radius-surface) 0 0 !important;
-    max-height: min(62dvh, 520px);
+    /* 58svh, que es exactamente el `padBottom: 0.58` con el que la cámara
+       encuadra estas escenas: el sheet y el mapa dejan de discutirse la
+       pantalla y la isla conserva su franja. Antes era `min(62dvh, 520px)`, un
+       4% más alto que lo que la cámara creía y medido en `dvh`, que en iOS
+       promete alto que la pantalla no tiene.
+
+       El contenido de estas dos escenas (474px) no cabe en ninguna franja de un
+       teléfono: hay scroll interno, y por eso el botón vive pegado abajo
+       (.crd-panel-cta) en vez de al final de la lista. */
+    max-height: min(58svh, calc(100svh - var(--crd-nav-clear) - 10px));
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 24px), transparent 100%);
+    /* Sólo se desvanece el canto de arriba, donde la lista entra bajo el asa.
+       Abajo no hace falta: lo que scrollea pasa por DETRÁS del pie fijo del
+       sheet (.crd-panel-cta), que es opaco y llega hasta el borde. */
+    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black 100%);
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
        reponerlo como padding para que el contenido no quede pegado al borde.
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
-    padding: 24px 16px calc(20px + var(--crd-stepper-h)) !important;
+    padding: 20px 16px calc(16px + var(--crd-stepper-h)) !important;
     /* Sombra hacia ARRIBA (-8px): el sheet sube desde el borde inferior, así
        que no entra en la escala de elevación, que proyecta hacia abajo. */
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
   .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: var(--color-line-strong); margin: -10px auto 14px; }
+
+  /* La acción de la escena se queda pegada al fondo del sheet mientras la lista
+     scrollea por detrás. `bottom: 0` se ancla al borde de la caja de contenido,
+     que el padding inferior ya subió por encima del panel de pasos: el botón
+     nunca queda debajo del cristal ni dentro del desvanecido.
+
+     Es la razón por la que se puede convertir sin descubrir que había que
+     deslizar: antes el botón era la última fila de una lista de 474px dentro de
+     una franja de 312 y sólo se veía su mitad de arriba. */
+  .crd-panel-cta {
+    position: sticky;
+    /* Se ancla en el borde de la caja de PADDING, no en el de contenido: así su
+       propio relleno inferior tapa la franja que el sheet le reserva al panel de
+       pasos, y nada de la lista asoma por debajo del botón. El botón queda a la
+       misma altura que si estuviera al final de la lista. */
+    bottom: calc(-16px - var(--crd-stepper-h));
+    padding-bottom: calc(16px + var(--crd-stepper-h));
+    /* Sangra hasta los cantos del sheet: con el padding lateral del panel, la
+       lista se veía correr por los lados del pie. */
+    margin-inline: -16px;
+    padding-inline: 16px;
+    margin-top: 8px !important;
+    z-index: 1;
+    background: var(--color-paper);
+  }
+  /* Un dedo de papel por encima del pie: la fila que se va metiendo debajo se
+     disuelve en vez de quedar cortada contra la línea de puntos. */
+  .crd-panel-cta::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 18px;
+    background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
+    pointer-events: none;
+  }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
-    /* Único scroll "de página" permitido en móvil: el contenido de Equipo no
-       cabe en una pantalla. Scrollea por dentro y NO cambia de escena. */
-    padding: var(--crd-nav-clear) 16px calc(16px + var(--crd-stepper-h)) !important;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    justify-content: flex-start !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     gap: 20px;
   }
   /* Footer: 4 columnas → filas en móvil, con Marca a lo ancho. Explora es
@@ -442,8 +562,12 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
        ambas franjas. El cálculo descuenta el pb-3.5 (14px) del wrapper, el
        margin-bottom (stepper) y la holgura del nav — si falta cualquiera, la
        card sube por detrás de la píldora y tapa el titular en la conversión. */
-    max-height: calc(100dvh - var(--crd-stepper-h) - 14px - var(--crd-nav-clear));
-    min-height: min(68dvh, 640px);
+    max-height: calc(var(--crd-franja) - 14px);
+    /* El min-height entra en el tercer argumento del min(): en CSS `min-height`
+       le gana a `max-height`, así que un mínimo mayor que la franja rompía el
+       tope en vez de respetarlo — en un SE (553 de alto) pedía 376 cuando sólo
+       caben 371, y la carta se salía por arriba. */
+    min-height: min(68svh, 640px, calc(var(--crd-franja) - 14px));
     margin-bottom: var(--crd-stepper-h);
     overflow-y: auto;
     /* 20px vertical (no 28): en 360x800 el contenido rebasaba el max-height por
@@ -461,13 +585,21 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     content: "";
     flex: 1 0 0;
   }
-  /* 46%: la carta creció ~30px (la descripción vive ahora en el papel), así
-     que el titular sube en proporción — la franja muerta que motivó el 43%
-     original (audit 2.4) la ocupa hoy la propia pila. */
-  /* +26px: acompaña la subida de la pila por el panel de pasos — la carta más
-     alta (bottom 12%, con su rotación) rozaba el titular en pantallas ~800px
-     de alto. */
-  .crd-destinos-heading { left: 16px !important; bottom: calc(46% + 26px) !important; }
+  /* Alto de la carta del frente, MEDIDO (foto 150 + papel + pie + descripción).
+     El titular se cuelga de la pila y la pila se apoya en el panel de pasos, así
+     que este número es lo único que hace falta para que los dos se aparten sin
+     tocarse a ningún alto de pantalla. Si cambia la foto o el pie de la carta,
+     cambia aquí. */
+  :root { --crd-pila-h: 282px; }
+
+  /* El titular se apoya sobre la carta más alta de la pila, no sobre un % de
+     pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
+     y se montaba sobre la pila en un SE, porque el cromo flotante (píldora +
+     panel de pasos) mide igual en las dos y el 46% no. */
+  .crd-destinos-heading {
+    left: 16px !important;
+    bottom: calc(var(--crd-stepper-h) + var(--crd-pila-alza) + var(--crd-pila-h) + 10px) !important;
+  }
   /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
      cristal del tema y ahí la sombra únicamente emborrona el canto de las
      letras; aquí no hay panel (lo que separa del mapa es el velo crema de la
@@ -479,11 +611,13 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   .crd-destinos-card {
     width: min(196px, calc(100vw - 116px)) !important;
     padding: 9px 9px 0 !important;
-    /* Sube la pila lo justo para que el texto de la carta libre el panel de
-       pasos. En pantallas altas el hueco bajo la carta ya casi alcanza (raise
-       chico); en cortas el panel come proporcionalmente más (raise grande),
-       pero sin llegar a chocar con el titular. */
-    margin-bottom: clamp(10px, calc(94px - 9dvh), 44px);
+    /* La pila se apoya en el panel de pasos. `--pile-bottom` es el desparrame
+       vertical de cada carta (0 a 42) y lo trae el componente, igual que
+       `--pile-left`: en escritorio el desparrame sigue siendo el % del inline
+       style, aquí manda el píxel porque el cromo que hay debajo también mide
+       píxeles. */
+    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
+    margin-bottom: 0 !important;
   }
   .crd-destinos-card-media { height: 150px !important; }
 }
@@ -505,29 +639,116 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   .crd-footer-grid { grid-template-columns: 1fr !important; }
 }
 
-/* Pantallas cortas (375x667 y parecidas): la pila de cartas sube por el panel
-   de pasos y su canto superior alcanzaba la segunda línea del titular. El
-   titular se aparta; el halo lo mantiene legible cuando asoma sobre el velo. */
-@media (max-width: 899px) and (max-height: 700px) {
-  .crd-destinos-heading { bottom: calc(52% + 34px) !important; }
+/* ── Pantallas bajas: el contenido cede, el cromo no ──────────────────────────
+   El cromo flotante (píldora 84 + panel de pasos 84) se lleva 168px fijos, en
+   teléfono y en escritorio. Lo que sobra es la franja donde una escena existe,
+   y en un iPhone real (664) o en un portátil con la barra abierta (600) esa
+   franja se queda corta para el sheet y para la carta del CTA.
+
+   Sin un tramo por alto, el sheet nacía scrolleado y el botón de la escena
+   —"Registrar mi negocio", "Unirme a la lista"— salía cortado por detrás del
+   cristal del panel; y la carta del CTA se comía el "¿Tienes un negocio?".
+   Aquí ceden márgenes, interlineados y un par de cuerpos: no se oculta nada,
+   porque un control que desaparece en pantalla chica es una función que el
+   visitante no sabe que existe.
+
+   El tramo vale para los dos viewports a propósito: el panel de pasos dejó de
+   ser cosa del teléfono, así que el defecto tampoco lo es. */
+@media (max-height: 700px) {
+  .crd-ol-panel { padding-top: 14px !important; }
+  .crd-ol-panel h2 { font-size: 20px !important; }
+  .crd-ol-panel ol { gap: 2px !important; }
+  .crd-ol-panel ol > li > * { padding-top: 5px !important; padding-bottom: 5px !important; }
+  .crd-panel-lede { font-size: 11.5px !important; margin-top: 4px !important; margin-bottom: 8px !important; }
+  .crd-panel-vivo { margin-bottom: 8px !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+  .crd-panel-cta { margin-top: 8px !important; padding-top: 8px !important; }
+
+  .crd-cta-card { padding: 14px 16px !important; }
+  .crd-cta-title { font-size: 26px !important; margin-bottom: 6px !important; }
+  .crd-cta-lede { font-size: 13px !important; line-height: 1.4 !important; margin-bottom: 8px !important; }
+  .crd-cta-card .crd-sub-wrap { margin-bottom: 8px !important; }
+  .crd-cta-stores { margin-bottom: 6px !important; }
+  .crd-cta-stores > :first-child { margin-bottom: 4px !important; }
 }
 
-@media (max-width: 359px) and (max-height: 640px) {
-  .crd-hero-content { max-width: 280px !important; }
-  .crd-hero-logo { width: min(64vw, 240px) !important; }
-  .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
-  /* +36px: en estas pantallas la pila sube ~43px por el panel de pasos y a 54%
-     el titular quedaba debajo de la carta. El halo de arriba lo mantiene
-     legible aunque asome por encima del velo crema. */
-  .crd-destinos-heading { bottom: calc(54% + 36px) !important; }
+/* Segundo escalón, para lo que Safari deja de un SE (553) y para un portátil
+   con la barra abierta: la franja baja de 577 a 385 y el primer escalón ya no
+   alcanza. */
+@media (max-height: 600px) {
+  .crd-ol-panel { padding-top: 12px !important; }
+  .crd-ol-panel h2 { font-size: 19px !important; }
+  .crd-ol-panel ol > li > * { padding-top: 4px !important; padding-bottom: 4px !important; }
+  .crd-panel-lede { margin-bottom: 6px !important; }
+  .crd-panel-vivo { margin-bottom: 6px !important; }
+
+  .crd-cta-card { padding: 12px 14px !important; }
+  .crd-cta-title { font-size: 23px !important; margin-bottom: 4px !important; }
+  .crd-cta-lede { font-size: 12.5px !important; line-height: 1.4 !important; margin-bottom: 8px !important; }
+  .crd-cta-card .crd-sub-wrap { margin-bottom: 6px !important; }
+  .crd-cta-stores { margin-bottom: 4px !important; }
+}
+
+/* El hero de escritorio no tenía tramo corto: el logo mide hasta 480 y en una
+   ventana de 600 el bloque entero no cabía entre las dos franjas. */
+/* Equipo cabía a 1131x686 —la ventana de revisión— por 14px, y el scroll
+   interno que ahora la hace alcanzable en ventanas cortas le sacaba una barra
+   justo ahí. El aire entre bloques cede de 22 a 16: son 24px que devuelven la
+   escena a "cabe", sin tocar ni un cuerpo de texto. Por debajo de 640 ya no hay
+   ajuste que la salve y el scroll es la respuesta correcta. */
+@media (min-width: 900px) and (max-height: 720px) {
+  .crd-ol-equipo { gap: 12px !important; padding-bottom: 8px !important; }
+  .crd-eq-manifiesto { font-size: clamp(22px, 2.6vw, 32px) !important; }
+}
+
+@media (min-width: 900px) and (max-height: 700px) {
+  /* La foto de la polaroid cede 56: la pila ya subió para esquivar el panel de
+     pasos de la esquina, y con los 196 originales su canto superior alcanzaba
+     el titular de la sección. */
+  .crd-destinos-card-media { height: 140px !important; }
+
+  .crd-hero-logo { width: min(34vw, 360px) !important; }
+  .crd-hero-title { font-size: 34px !important; line-height: 1.06 !important; margin-top: 10px !important; }
+  .crd-hero-copy { margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 16px !important; }
+}
+
+/* ── Teléfonos cortos: la compresión manda por ALTO, no por ancho ─────────────
+   Los dos tramos de abajo se disparaban con `max-width: 359px`, un ancho que
+   ningún iPhone en uso tiene. El alto sí: Safari se queda con ~190px de la
+   pantalla en su barra, así que un 15 Pro entrega 664 y no 844, y un SE 553 y
+   no 667. En esa franja el hero no cabía y el wordmark salía cortado por
+   arriba, con la píldora encima.
+
+   El bloque del hero es la lista completa de lo que cede: logo, titular,
+   párrafo, botones y el cue. Nada se oculta — un control que desaparece en una
+   pantalla chica es una función que el visitante no sabe que existe. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .crd-hero-logo { width: min(66vw, 340px) !important; }
+  .crd-hero-title { font-size: 27px !important; line-height: 30px !important; margin-top: 10px !important; }
+  .crd-hero-copy { font-size: 15px !important; line-height: 1.38 !important; margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 14px !important; gap: 10px !important; }
+  .crd-hero-cue { margin-top: 6px !important; }
+}
+
+@media (max-width: 899px) and (max-height: 600px) {
+  .crd-hero-content { max-width: 300px !important; }
+  .crd-hero-logo { width: min(52vw, 240px) !important; }
+  .crd-hero-title { font-size: 22px !important; line-height: 25px !important; margin-top: 8px !important; }
+  .crd-hero-copy { font-size: 14px !important; margin-top: 6px !important; }
+  .crd-hero-actions { margin-top: 10px !important; gap: 8px !important; }
+  .crd-hero-cue { margin-top: 2px !important; }
+  /* Adorno, no control: a este alto el globo y el titular ocupan la misma
+     franja y el pin se posaba sobre "República Dominicana". */
+  .crd-hero-pin { display: none; }
+
+  /* La pila baja de 282 a 238: la foto encoge y la descripción del papel sale,
+     que es lo que la hacía ~30px más alta. El titular la sigue solo porque
+     `--crd-pila-h` es la misma variable que usa su `bottom`. */
+  :root { --crd-pila-h: 238px; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
   .crd-destinos-card { width: 176px !important; }
   .crd-destinos-card-media { height: 124px !important; }
-  /* La descripción en el papel hace la carta ~30px más alta y a este alto
-     invade el titular; en pantallas así de chicas se omite. */
   .crd-destinos-desc { display: none; }
-  .crd-ol-panel { max-height: 55dvh; }
 }
 
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
