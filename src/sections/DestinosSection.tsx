@@ -21,14 +21,21 @@ const POLAROIDS = FEATURED_DESTINATIONS;
 // siguen las calles del país, no cuerdas rectas entre pines.
 const ROUTE_COORDS: LngLat[] = (featuredRoute.legs as [number, number][][]).flat();
 
-// Final rotation for each card in the pile = original rotate + extra scatter
+// Desparrame de cada carta de la pila: posición y rotación extra sobre la del
+// destino. `bottom` es el desparrame de escritorio, en % de la capa; `bottomPx`
+// el de móvil, donde la pila se apoya sobre el panel de pasos y por eso el
+// desparrame tiene que medir lo mismo en toda pantalla. Los dos entran por
+// `--pile-bottom` / inline style y los lee globals.css.
+//
+// El mayor de los `bottomPx` (42) está codificado en `--crd-pila-alza`: es lo
+// que el titular de la sección salta para no montarse sobre la pila.
 const PILE_OFFSETS = [
-  { left: "4%", bottom: "8%", extraRotate: 0 },
-  { left: "7%", bottom: "6%", extraRotate: -1 },
-  { left: "5%", bottom: "10%", extraRotate: 1.5 },
-  { left: "9%", bottom: "7%", extraRotate: -2 },
-  { left: "3%", bottom: "12%", extraRotate: 0.5 },
-  { left: "8%", bottom: "9%", extraRotate: -1 },
+  { left: "4%", bottom: "8%", bottomPx: "14px", extraRotate: 0 },
+  { left: "7%", bottom: "6%", bottomPx: "0px", extraRotate: -1 },
+  { left: "5%", bottom: "10%", bottomPx: "28px", extraRotate: 1.5 },
+  { left: "9%", bottom: "7%", bottomPx: "7px", extraRotate: -2 },
+  { left: "3%", bottom: "12%", bottomPx: "42px", extraRotate: 0.5 },
+  { left: "8%", bottom: "9%", bottomPx: "21px", extraRotate: -1 },
 ];
 
 const SCENE_TO_COUNT: Record<string, number> = {
@@ -208,6 +215,7 @@ export default function DestinosOverlay() {
               }`}
               style={{
                 "--pile-left": offset.left,
+                "--pile-bottom": offset.bottomPx,
                 bottom: offset.bottom,
               } as React.CSSProperties}
               initial={false}

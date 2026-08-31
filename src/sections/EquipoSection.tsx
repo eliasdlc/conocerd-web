@@ -336,7 +336,9 @@ function RoadmapCard({ visible }: { visible: boolean }) {
       style={visible ? { animationDelay: "0.55s" } : undefined}
     >
       {/* La estampa ConoceRD, pegada a la card */}
-      <div aria-hidden="true" className="absolute -top-9 right-1 desk:-right-7">
+      {/* En ventanas bajas la tarjeta sube y el voladizo del sello alcanzaba la
+          última línea del manifiesto: allí se apoya más dentro (globals.css). */}
+      <div aria-hidden="true" className="crd-eq-sello absolute -top-9 right-1 desk:-top-6 desk:-right-7">
         <StampCRD size={106} rotate={8} line1="SANTIAGO, RD" line2="· EST. 2026 ·" />
       </div>
 
@@ -423,7 +425,10 @@ export default function EquipoSection() {
 
       {/* Sin pin ni etiqueta en el mapa: la escena vive en el overlay. */}
       <div
-        className={`crd-ol-equipo absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(18px,3.2vh,30px)] px-6 pb-8 pt-[88px] transition-opacity duration-500 ease-in-out ${
+        // Las dos franjas del cromo flotante, en los dos viewports: el panel de
+        // pasos ya no es sólo del teléfono. Con `pb-8` la última línea del
+        // manifiesto pasaba por detrás del cristal del panel hasta en 1440x900.
+        className={`crd-ol-equipo absolute inset-0 z-10 flex flex-col items-center justify-center gap-[clamp(18px,3.2vh,30px)] px-6 pb-[calc(16px+var(--crd-stepper-h))] pt-[var(--crd-nav-clear)] transition-opacity duration-500 ease-in-out ${
           isVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!isVisible}
@@ -441,7 +446,7 @@ export default function EquipoSection() {
 
         {/* La frase manifiesto (v5), con entrada suave línea a línea */}
         <div className="relative max-w-[780px] text-center">
-          <h2 className="m-0 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.14] tracking-[-.014em] text-ink-2">
+          <h2 className="crd-eq-manifiesto m-0 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.14] tracking-[-.014em] text-ink-2">
             {LINES.map((line, i) => (
               <span
                 key={i}

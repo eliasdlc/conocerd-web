@@ -1,28 +1,26 @@
 "use client";
 
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
-import {
-  animate,
-  useMotionValueEvent,
-  type AnimationPlaybackControls,
-  type MotionValue,
-} from "motion/react";
+import { animate, type AnimationPlaybackControls, type MotionValue } from "motion/react";
 import type maplibregl from "maplibre-gl";
 import { SCENE_BANDS, SCENE_COUNT, nearestSceneIndex, sceneAtProgress } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Motor de PASOS — MÓVIL.
+//  Motor de PASOS — el único motor del recorrido, en teléfono y en escritorio.
 //
-//  Decisión del dueño (ago 2026): en el teléfono el scroll libre corría
-//  demasiado — nadie sabe medir cuán lento deslizar para ver el vuelo de la
-//  cámara. El journey avanza de keyframe en keyframe desde el panel inferior
-//  (JourneyStepper): cada paso empieza y termina exactamente donde el encuadre
-//  está diseñado, y la animación cinemática completa ocurre entre medias.
+//  El teléfono lo usa desde agosto de 2026: el scroll libre corría demasiado y
+//  nadie sabe medir cuán lento deslizar para ver el vuelo de la cámara. El
+//  escritorio lo adoptó después, y por un motivo distinto: una cámara que es
+//  función directa de la rueda o del trackpad hereda cada arranque y cada
+//  frenazo del gesto, que es humano y por tanto irregular. El recorrido salía a
+//  tirones aunque la página fuera a 60 fps.
 //
-//  El progreso se anima LINEALMENTE entre `center`s porque el easing ya vive en
-//  la cámara (easeInOut por tramo en lib/journey). Encadenar los dos daría un
-//  arranque y un frenado dobles.
+//  Aquí cada paso empieza y termina exactamente donde el encuadre está
+//  diseñado, y la animación cinemática completa ocurre entre medias, siempre
+//  igual. El progreso se anima LINEALMENTE entre `center`s porque el easing ya
+//  vive en la cámara (easeInOut por tramo en lib/journey): encadenar los dos
+//  daría un arranque y un frenado dobles.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STEP_BASE_MS = 1150; // un paso
@@ -30,7 +28,11 @@ const STEP_EXTRA_MS = 300; // por cada paso adicional en un salto
 const STEP_MAX_MS = 2600;
 
 export interface UseJourneyStepsOptions {
-  /** Gated: sólo conduce en móvil y con el viewport ya resuelto. */
+  /**
+   * Gated hasta que `matchMedia` resuelve: el primer encuadre depende del
+   * tamaño real de la ventana, y asentar la cámara antes de saberlo la deja en
+   * el sitio equivocado.
+   */
   enabled: boolean;
   mapRef: RefObject<maplibregl.Map | null>;
   progress: MotionValue<number>;
@@ -77,18 +79,6 @@ export function useJourneySteps({
     [progress, mapRef, onSceneChange]
   );
 
-  // Mientras este motor no conduce (desktop), el paso activo es una proyección
-  // del progreso de scroll: al cruzar el breakpoint el panel ya está en la
-  // escena correcta sin resincronizar nada.
-  useMotionValueEvent(progress, "change", (p) => {
-    if (animatingRef.current) return;
-    const i = nearestSceneIndex(p);
-    if (i !== indexRef.current) {
-      indexRef.current = i;
-      setIndex(i);
-    }
-  });
-
   const goTo = useCallback(
     (target: number) => {
       if (!enabled) return;
@@ -128,15 +118,16 @@ export function useJourneySteps({
   const next = useCallback(() => goTo(indexRef.current + 1), [goTo]);
   const prev = useCallback(() => goTo(indexRef.current - 1), [goTo]);
 
-  // Al activarse (montaje en móvil o resize que cruza el breakpoint) el motor
-  // asienta la cámara en el keyframe más cercano al progreso actual, así el
-  // cambio de modo no teletransporta el journey a otra parte.
+  // Al activarse, el motor asienta la cámara en el keyframe del paso actual.
+  // Sin esto el mapa se quedaría en el encuadre con el que se construyó hasta
+  // la primera pulsación.
   useEffect(() => {
     if (!enabled) return;
     measureViewport();
     apply(SCENE_BANDS[indexRef.current].center);
-    // La pista de scroll no existe en móvil: cualquier scroll residual del modo
-    // desktop dejaría el journey desplazado bajo el nav.
+    // No hay pista de scroll: cualquier desplazamiento residual (una recarga
+    // que restaura la posición, una vuelta desde el pie) dejaría el recorrido
+    // corrido por debajo del nav.
     window.scrollTo(0, 0);
 
     const onResize = () => {

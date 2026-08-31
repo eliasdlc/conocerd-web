@@ -25,8 +25,12 @@ export default function CTAOverlay() {
       inert={!isVisible}
       // El journey cierra volviendo al globo: en móvil la card baja para que el
       // planeta se vea completo encima, igual que en el hero.
+      //
+      // Reserva las dos franjas del cromo flotante en los dos viewports: la
+      // píldora arriba y el panel de pasos abajo, que vive centrado y por tanto
+      // pasa justo por debajo de la carta.
       className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[var(--crd-nav-clear)] transition-opacity duration-700 ease-in-out
-        desk:items-center desk:px-6 desk:pb-9
+        desk:items-center desk:px-6 desk:pb-[calc(20px+var(--crd-stepper-h))]
         ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
       <div
@@ -45,18 +49,18 @@ export default function CTAOverlay() {
             logo del hero: aquí era la tercera repetición del mismo lema. */}
 
         {/* Main heading */}
-        <h2 className="m-0 mb-2.5 font-display text-[clamp(28px,5vw,34px)] font-extrabold leading-[1.04] tracking-[-.03em] text-white desk:mb-3.5">
+        <h2 className="crd-cta-title m-0 mb-2.5 font-display text-[clamp(28px,5vw,34px)] font-extrabold leading-[1.04] tracking-[-.03em] text-white desk:mb-3.5">
           Tu próxima aventura<br />empieza <em className="crd-accent-on-ink">aquí</em>
         </h2>
 
         {/* Subtext */}
-        <p className="mx-auto mb-4 max-w-[460px] text-body leading-[1.55] text-white/70 desk:mb-5">
+        <p className="crd-cta-lede mx-auto mb-4 max-w-[460px] text-body leading-[1.55] text-white/70 desk:mb-5">
           ConoceRD está en camino. Déjanos tu correo y entra a la lista de fundadores: serás
           de los primeros en explorar la República Dominicana que no aparece en las guías.
         </p>
 
         {/* Lista de espera — la acción real de la página */}
-        <div className="mx-auto mb-3.5 max-w-[460px] desk:mb-[18px]">
+        <div className="crd-sub-wrap mx-auto mb-3.5 max-w-[460px] desk:mb-[18px]">
           <SubscribeForm tone="dark" defaultAudience={audience} source="cta" />
         </div>
 
@@ -65,7 +69,7 @@ export default function CTAOverlay() {
             En móvil la card no debe scrollear: los dos badges van en UNA fila,
             con el "próximamente" compartido encima — con la leyenda por badge
             miden ~150px cada uno y no caben lado a lado ni en 360px. */}
-        <div className="mb-3 desk:mb-3.5">
+        <div className="crd-cta-stores mb-3 desk:mb-3.5">
           <div className="mb-1.5 font-label text-micro font-extrabold uppercase tracking-[.08em] text-white/70 desk:hidden">
             Próximamente en
           </div>

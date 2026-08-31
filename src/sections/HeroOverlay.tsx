@@ -19,7 +19,7 @@ const RD_COORDS: [number, number] = [-70.1627, 18.7357];
 function HeroPin() {
   return (
     <span className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]">
-      <BrandPin size={34} color="var(--color-mango)" />
+      <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
     </span>
   );
 }
@@ -27,7 +27,7 @@ function HeroPin() {
 // ─── Hero overlay — escena 0 del journey ──────────────────────────────────────
 // Ya NO tiene su propio mapa: el globo es el <Map> compartido del journey, detrás.
 // El globo se encuadra a la derecha (desktop) / arriba (móvil) vía el padding de
-// cámara en useJourneyScroll; este overlay coloca el contenido en el hueco libre.
+// cámara en lib/journeyCamera; este overlay coloca el contenido en el hueco libre.
 //
 // El reparto móvil/desktop ya no pasa por useIsMobile: son variantes `desk:`, así
 // que el layout correcto se pinta en el primer frame, sin esperar a matchMedia.
@@ -44,7 +44,11 @@ export function HeroPinMarker() {
     <MapMarker longitude={RD_COORDS[0]} latitude={RD_COORDS[1]} anchor="bottom">
       <MarkerContent>
         <div
-          className={`pointer-events-none transition-opacity duration-500 ease-in-out ${
+          // .crd-hero-pin: en pantallas de menos de 600 el globo y el bloque de
+          // contenido comparten toda la franja libre, y el pin —que es adorno,
+          // no un control— caía justo encima del titular. Se retira allí desde
+          // globals.css.
+          className={`crd-hero-pin pointer-events-none transition-opacity duration-500 ease-in-out ${
             isVisible ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -158,10 +162,14 @@ export default function HeroOverlay() {
         inert={!isVisible}
         // Móvil: contenido abajo (el globo queda arriba). Desktop: a la izquierda,
         // centrado vertical.
-        // El pb móvil reserva la franja del panel de pasos: sin él, el cue
-        // "Toca para explorar" quedaba enterrado debajo del panel.
-        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-[calc(var(--crd-stepper-h)+10px)] text-center transition-opacity duration-500 ease-in-out
-          desk:items-start desk:justify-center desk:px-[6vw] desk:pb-0 desk:text-left
+        // Las dos franjas de cromo flotante se reservan aquí: el panel de pasos
+        // abajo (sin él, el cue "Toca para explorar" quedaba enterrado) y la
+        // píldora del nav arriba (sin ella, en un iPhone real —664 y no 844 de
+        // alto— la píldora caía justo encima del wordmark). La compresión que
+        // hace que el bloque quepa en esa franja vive en globals.css, por
+        // tramos de alto de pantalla.
+        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-[calc(var(--crd-stepper-h)+10px)] pt-[var(--crd-nav-clear)] text-center transition-opacity duration-500 ease-in-out
+          desk:items-start desk:justify-center desk:px-[6vw] desk:pb-[var(--crd-stepper-h)] desk:text-left
           ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
         {/* Velo crema: en móvil el texto cae sobre el globo y las etiquetas del
@@ -196,7 +204,7 @@ export default function HeroOverlay() {
               palabra acentuada, y en coralInk: el coral vivo como texto da
               2.76:1. */}
           <h1
-            className="m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
+            className="crd-hero-title m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
             style={{ fontVariationSettings: '"opsz" 96' }}
           >
             <span className="sr-only">ConoceRD, descubre lo nuestro. </span>
@@ -222,13 +230,15 @@ export default function HeroOverlay() {
               Absoluto al fondo chocaba con los botones en pantallas de 667px.
               Sin él, la primera pantalla del teléfono se lee como una página
               completa y el recorrido entero queda invisible. */}
-          <div className="mt-4 desk:hidden">
+          <div className="crd-hero-cue mt-4 desk:hidden">
             <ScrollCue compacto />
           </div>
         </div>
 
-        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca. */}
-        <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 desk:block">
+        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca,
+            pero por encima de la franja del panel de pasos — que ahora vive
+            centrado abajo y le caía justo encima. */}
+        <div className="absolute bottom-[calc(var(--crd-stepper-h)+12px)] left-1/2 hidden -translate-x-1/2 desk:block">
           <ScrollCue />
         </div>
       </div>
