@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useRef } from "react";
 import Button from "./Button";
 import BrandPin from "./BrandPin";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
@@ -30,7 +29,6 @@ const LINKS = [
 // El botón va relleno de `selected` y no de coral: mide 40 de alto y a ese
 // tamaño el blanco sobre coral da 3.81:1, que sólo pasa como texto grande.
 export default function Nav() {
-  const pillRef = useRef<HTMLDivElement>(null);
   // El enlace activo se marca con peso y tinta, nunca con el acento: el coral
   // de la web es para acciones. Se compara por capítulo, no por escena: los
   // seis polaroids son un solo "Destinos" y el enlace tiene que quedarse
@@ -39,28 +37,12 @@ export default function Nav() {
   const capituloActivo = chapterOfScene(activeScene);
   const enElPie = usePieALaVista();
 
-  // Mantiene la lógica de fondo al hacer scroll: la píldora se vuelve más
-  // sólida (y con más sombra) una vez te alejas del tope. Sólo conmuta un
+  // Estado sólido de la píldora (más fondo, más sombra, y el pin de volver al
+  // inicio visible). El disparador es la escena activa, no window.scrollY: el
+  // motor de pasos bloquea el scroll y scrollY vale 0 durante todo el
+  // recorrido, así que un umbral de píxeles no encendía nunca. Sólo conmuta un
   // data-attribute; el aspecto de los dos estados vive en las clases de abajo.
-  useEffect(() => {
-    const pill = pillRef.current;
-    if (!pill) return;
-    // Sólo se escribe cuando el estado cambia de verdad. Escribirlo en cada
-    // evento ensuciaba el atributo 344 veces por recorrido, y como sus hijos
-    // seleccionan por `group-data-[solid=…]`, cada escritura se cobraba en el
-    // siguiente recálculo de estilo: 62 a 70 ms por gesto, el 86 % de todo el
-    // tiempo de listeners de scroll de la página.
-    let solido: boolean | null = null;
-    const onScroll = () => {
-      const ahora = window.scrollY > 36;
-      if (ahora === solido) return;
-      solido = ahora;
-      pill.dataset.solid = String(ahora);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const solido = activeScene !== "hero";
 
   return (
     <nav
@@ -69,7 +51,7 @@ export default function Nav() {
       }`}
     >
       <div
-        ref={pillRef}
+        data-solid={String(solido)}
         className="crd-nav-pill group flex h-14 items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-[var(--crd-glass-line)] pl-[clamp(10px,1.6vw,18px)] pr-[6px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(4px,1vw,10px)] [scrollbar-width:none]"
       >
         {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
