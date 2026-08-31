@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { notFound } from "next/navigation";
 import type maplibregl from "maplibre-gl";
 import { SceneProvider, useScene } from "@/context/SceneContext";
 import { SCENE_BANDS, cameraForBand, paddingAtProgress, type JourneyViewport } from "@/lib/journey";
@@ -211,6 +212,10 @@ function LienzoInner() {
 }
 
 export default function LienzoPage() {
+  // Ruta propia y alcanzable sin pasar por la herramienta: la guarda va aquí
+  // también, no sólo en /dev/camara.
+  if (process.env.NODE_ENV === "production") notFound();
+
   return (
     <SceneProvider>
       <LienzoInner />
