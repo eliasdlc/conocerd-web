@@ -490,48 +490,120 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   },
   // Los closeups en móvil bajan ~1.5 niveles: a z11.5 en un teléfono solo se ve
   // territorio sin rasgos (ni costa ni contorno) y el vuelo pierde referencia.
+  // Los tramos móviles vienen de /dev/camara (afinados a mano por tamaño,
+  // ago 2026) y sustituyen al override `mobile` clásico; el centro deja de ser
+  // la coordenada del destino porque el encuadre corre la isla hacia la franja
+  // libre de cada pantalla.
   "polaroid-0": {
     center: featuredCenter(0), zoom: 11.5, pitch: 42, bearing: -14,
-    mobile: { zoom: 10.0, pitch: 30 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-71.6847, 17.7537], zoom: 9.15, pitch: 30, bearing: -14 },
+        { w: 393, h: 664, center: [-71.6793, 17.7548], zoom: 9.58, pitch: 30, bearing: -14 },
+        { w: 430, h: 748, center: [-71.6872, 17.7773], zoom: 9.92, pitch: 30, bearing: -14 },
+      ],
+    },
   },
   "polaroid-1": {
     center: featuredCenter(1), zoom: 10.5, pitch: 46, bearing: -8,
-    mobile: { zoom: 9.4, pitch: 32 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.9844, 18.9198], zoom: 8.55, pitch: 32, bearing: -8 },
+        { w: 393, h: 664, center: [-70.9897, 18.9603], zoom: 8.98, pitch: 32, bearing: -8 },
+        { w: 430, h: 748, center: [-70.9933, 18.975], zoom: 9.32, pitch: 32, bearing: -8 },
+      ],
+    },
   },
   "polaroid-2": {
     center: featuredCenter(2), zoom: 11.0, pitch: 40, bearing: -2,
-    mobile: { zoom: 9.8, pitch: 28 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-69.4419, 19.1977], zoom: 8.95, pitch: 28, bearing: -0.1 },
+        { w: 393, h: 664, center: [-69.4419, 19.2292], zoom: 9.38, pitch: 28, bearing: -0.1 },
+      ],
+    },
   },
   "polaroid-3": {
     center: featuredCenter(3), zoom: 11.5, pitch: 38, bearing: 4,
-    mobile: { zoom: 10.0, pitch: 26 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.8229, 19.6567], zoom: 9.15, pitch: 26, bearing: 0 },
+        { w: 393, h: 664, center: [-70.8202, 19.696], zoom: 9.58, pitch: 26, bearing: 0 },
+        { w: 430, h: 748, center: [-70.8176, 19.7073], zoom: 9.92, pitch: 26, bearing: 0.2 },
+      ],
+    },
   },
   "polaroid-4": {
     center: featuredCenter(4), zoom: 11.5, pitch: 44, bearing: 10,
-    mobile: { zoom: 9.6, pitch: 30 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.7065, 18.7553], zoom: 8.75, pitch: 30, bearing: 10 },
+        { w: 393, h: 664, center: [-70.7077, 18.7888], zoom: 9.18, pitch: 30, bearing: 10 },
+        { w: 430, h: 748, center: [-70.6942, 18.8382], zoom: 9.52, pitch: 30, bearing: 10 },
+      ],
+    },
   },
   "polaroid-5": {
     center: featuredCenter(5), zoom: 11.0, pitch: 34, bearing: 6,
-    mobile: { zoom: 9.7, pitch: 24 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-69.6118, 18.9058], zoom: 8.85, pitch: 24, bearing: 0.4 },
+        { w: 393, h: 664, center: [-69.6063, 18.9529], zoom: 9.28, pitch: 24, bearing: 0.1 },
+        { w: 430, h: 748, center: [-69.6037, 18.9736], zoom: 9.62, pitch: 24, bearing: 0.5 },
+      ],
+    },
   },
-  // Pan-out del recorrido: en móvil se centra en el centroide de la ruta
-  // (Águilas ↔ Los Haitises), no en el centro geográfico de la isla.
+  // Pan-out del recorrido: centrado hacia el centroide de la ruta
+  // (Águilas ↔ Los Haitises), no el centro geográfico de la isla.
   "destinos-finale": {
     center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
-    mobile: { center: [-70.62, 18.85], zoom: 6.2 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.6375, 18.2657], zoom: 5.32, pitch: 0, bearing: 0 },
+        { w: 393, h: 664, center: [-70.5451, 18.4023], zoom: 5.5, pitch: 0, bearing: 0 },
+        { w: 430, h: 748, center: [-70.6503, 18.6296], zoom: 6.12, pitch: 0, bearing: 0 },
+      ],
+      desktop: [
+        { w: 1131, h: 686, center: [-70.8282, 18.9133], zoom: 7.2, pitch: 0, bearing: 0 },
+        { w: 1280, h: 600, center: [-70.8043, 18.8998], zoom: 7.2, pitch: 0, bearing: 0 },
+        { w: 1440, h: 900, center: [-70.7533, 18.9226], zoom: 7.65, pitch: 0, bearing: 0 },
+      ],
+    },
   },
   // Escena interactiva: los pines se tocan con el dedo, así que en móvil se
   // acerca lo máximo que permite la isla completa para separarlos.
   mapa: {
     center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
-    mobile: { center: [-70.45, 18.87], zoom: 6.1 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.0831, 18.6409], zoom: 4.96, pitch: 0, bearing: 0 },
+        { w: 393, h: 664, center: [-70.1341, 18.8127], zoom: 5.88, pitch: 0, bearing: 0 },
+        { w: 430, h: 748, center: [-70.196, 18.8127], zoom: 6.24, pitch: 0, bearing: 0 },
+      ],
+      desktop: [
+        { w: 1131, h: 686, center: [-70.3074, 18.8719], zoom: 7, pitch: 0, bearing: 0 },
+        { w: 1280, h: 600, center: [-70.1768, 18.8421], zoom: 7.06, pitch: 0, bearing: 0 },
+        { w: 1440, h: 900, center: [-70.073, 18.8392], zoom: 7.3, pitch: 0, bearing: 0 },
+      ],
+    },
   },
   // Rework ago 2026: el viaje completo cabía en 108×96 px en móvil (3% de la
   // pantalla) y el avatar avanzaba 9,5 px/s — imperceptible. Se acerca la
   // cámara para que el recorrido ocupe pantalla de verdad.
   viajeros: {
     center: [-70.35, 18.85], zoom: 6.8, pitch: 0, bearing: 0,
-    mobile: { zoom: 5.9 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.6626, 18.7258], zoom: 5.2, pitch: 0, bearing: 0 },
+        { w: 393, h: 664, center: [-70.6481, 18.714], zoom: 5.66, pitch: 0, bearing: 0 },
+        { w: 430, h: 748, center: [-70.4119, 18.697], zoom: 5.88, pitch: 0, bearing: 0 },
+      ],
+      desktop: [
+        { w: 1131, h: 686, center: [-70.8107, 18.8597], zoom: 6.8, pitch: 0, bearing: 0 },
+        { w: 1280, h: 600, center: [-70.8169, 18.8321], zoom: 6.8, pitch: 0, bearing: 0 },
+        { w: 1440, h: 900, center: [-70.657, 18.8958], zoom: 6.8, pitch: 0, bearing: 0 },
+      ],
+    },
   },
   // El protagonista de la escena es el negocio (Santiago), así que la cámara se
   // centra EN él: con un centro genérico quedaba arriba a la izquierda, debajo
@@ -541,7 +613,18 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
   // de longitud y a 8.5 la ventana solo enseñaba 2.8°.
   negocios: {
     center: [-70.6901, 19.4517], zoom: 7.6, pitch: 12, bearing: 0,
-    mobile: { zoom: 6.1, pitch: 8 },
+    tramos: {
+      mobile: [
+        { w: 375, h: 553, center: [-70.7485, 19.0849], zoom: 5.18, pitch: 8, bearing: 0 },
+        { w: 393, h: 664, center: [-70.7463, 18.9736], zoom: 5.65, pitch: 8, bearing: 0 },
+        { w: 430, h: 748, center: [-70.6574, 18.9063], zoom: 6.01, pitch: 8, bearing: 0 },
+      ],
+      desktop: [
+        { w: 1131, h: 686, center: [-70.7736, 18.9573], zoom: 7.23, pitch: 12, bearing: 0 },
+        { w: 1280, h: 600, center: [-70.7587, 18.8986], zoom: 7.28, pitch: 12, bearing: 0 },
+        { w: 1440, h: 900, center: [-70.6784, 18.8625], zoom: 7.6, pitch: 12, bearing: 0 },
+      ],
+    },
   },
   // Santiago de los Caballeros: la ciudad desde donde se construye ConoceRD.
   equipo: {
