@@ -21,16 +21,33 @@ type Guardado = Camara & { w: number; h: number };
 /** escena → "WxH" → encuadre guardado. */
 type Borradores = Record<string, Record<string, Guardado>>;
 
-const TRAMOS = [
-  { id: "375x553", w: 375, h: 553, grupo: "Teléfono", nombre: "chico" },
-  { id: "393x664", w: 393, h: 664, grupo: "Teléfono", nombre: "mediano" },
-  { id: "430x748", w: 430, h: 748, grupo: "Teléfono", nombre: "grande" },
-  { id: "1131x686", w: 1131, h: 686, grupo: "Escritorio", nombre: "ventana real" },
-  { id: "1280x600", w: 1280, h: 600, grupo: "Escritorio", nombre: "portátil bajo" },
-  { id: "1440x900", w: 1440, h: 900, grupo: "Escritorio", nombre: "referencia" },
-] as const;
+type Tramo = { id: string; w: number; h: number; grupo: string; nombre: string };
+
+// Viewports CSS nominales de dispositivos reales (decisión del dueño, ago
+// 2026: anclar a pantallas específicas, no a medidas sueltas). Ojo: son la
+// pantalla completa; un navegador con barra entrega menos alto (Safari en un
+// 430x932 da 430x748) y la corrección de franja del motor absorbe esa
+// diferencia. Cualquier medida que falte se agrega desde el campo de tramo
+// personalizado, sin tocar código.
+const PRESETS: Tramo[] = [
+  { id: "393x852", w: 393, h: 852, grupo: "iPhone", nombre: "15 · 16" },
+  { id: "402x874", w: 402, h: 874, grupo: "iPhone", nombre: "17 · 16 Pro" },
+  { id: "430x932", w: 430, h: 932, grupo: "iPhone", nombre: "15 Pro Max" },
+  { id: "440x956", w: 440, h: 956, grupo: "iPhone", nombre: "17 Pro Max" },
+  { id: "360x780", w: 360, h: 780, grupo: "Samsung", nombre: "Galaxy S" },
+  { id: "384x824", w: 384, h: 824, grupo: "Samsung", nombre: "Galaxy Ultra" },
+  { id: "412x915", w: 412, h: 915, grupo: "Samsung", nombre: "Galaxy A" },
+  { id: "1280x832", w: 1280, h: 832, grupo: "MacBook", nombre: "Air 13" },
+  { id: "1440x932", w: 1440, h: 932, grupo: "MacBook", nombre: "Air 15" },
+  { id: "1512x982", w: 1512, h: 982, grupo: "MacBook", nombre: "Pro 14" },
+  { id: "1728x1117", w: 1728, h: 1117, grupo: "MacBook", nombre: "Pro 16" },
+  { id: "1366x768", w: 1366, h: 768, grupo: "Windows", nombre: "básica" },
+  { id: "1536x864", w: 1536, h: 864, grupo: "Windows", nombre: "1080p·125%" },
+  { id: "1920x1080", w: 1920, h: 1080, grupo: "Windows", nombre: "1080p" },
+];
 
 const CLAVE = "crd-camara-borradores";
+const CLAVE_TRAMOS = "crd-camara-tramos-extra";
 const RAIL = 340; // ancho de la columna de controles
 
 // Redondeos del bloque generado: los mismos órdenes de magnitud que ya usan
@@ -66,7 +83,19 @@ function bloqueCompleto(borradores: Borradores): string {
 export default function Herramienta() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [escena, setEscena] = useState("hero");
-  const [tramoId, setTramoId] = useState<string>("1131x686");
+  const [tramoId, setTramoId] = useState<string>("393x852");
+  // Tramos personalizados (medidas de navegador real, tamaños futuros…),
+  // persistidos aparte de los borradores para sobrevivir recargas.
+  const [extras, setExtras] = useState<Tramo[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(localStorage.getItem(CLAVE_TRAMOS) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [nuevoW, setNuevoW] = useState("");
+  const [nuevoH, setNuevoH] = useState("");
   const [camara, setCamara] = useState<Camara | null>(null);
   // Perezoso y con guardia de servidor, como `pasoInicial` en Viajeros.
   const [borradores, setBorradores] = useState<Borradores>(() => {
@@ -84,18 +113,24 @@ export default function Herramienta() {
   );
   const [copiado, setCopiado] = useState<"escena" | "todo" | null>(null);
 
-  const tramo = TRAMOS.find((t) => t.id === tramoId) ?? TRAMOS[3];
+  const tramos = [...PRESETS, ...extras];
+  const tramo = tramos.find((t) => t.id === tramoId) ?? PRESETS[0];
 
   const alLienzo = useCallback((msg: unknown) => {
     iframeRef.current?.contentWindow?.postMessage(msg, location.origin);
   }, []);
 
-  // Los borradores se persisten en cada cambio.
+  // Los borradores y los tramos personalizados se persisten en cada cambio.
   useEffect(() => {
     try {
       localStorage.setItem(CLAVE, JSON.stringify(borradores));
     } catch {}
   }, [borradores]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(CLAVE_TRAMOS, JSON.stringify(extras));
+    } catch {}
+  }, [extras]);
 
   // Mensajes del lienzo.
   useEffect(() => {
@@ -153,6 +188,26 @@ export default function Herramienta() {
     } catch {}
   };
 
+  const agregarTramo = () => {
+    const w = Math.round(Number(nuevoW));
+    const h = Math.round(Number(nuevoH));
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 200 || h < 200) return;
+    const id = `${w}x${h}`;
+    if (!tramos.some((t) => t.id === id)) {
+      setExtras((prev) => [...prev, { id, w, h, grupo: "Personalizado", nombre: id }]);
+    }
+    setTramoId(id);
+    setNuevoW("");
+    setNuevoH("");
+  };
+
+  // Quitar un tramo personalizado no toca los encuadres ya guardados con él:
+  // siguen en los borradores y salen en «Copiar todo».
+  const quitarTramo = (id: string) => {
+    setExtras((prev) => prev.filter((t) => t.id !== id));
+    if (tramoId === id) setTramoId(PRESETS[0].id);
+  };
+
   const boton =
     "h-9 rounded-full px-4 text-[13px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-35";
 
@@ -187,35 +242,88 @@ export default function Herramienta() {
           </select>
         </label>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-white/50">Tramo</span>
-          {(["Teléfono", "Escritorio"] as const).map((grupo) => (
-            <div key={grupo} className="flex gap-1.5">
-              {TRAMOS.filter((t) => t.grupo === grupo).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTramoId(t.id)}
-                  className={`relative flex-1 rounded-xl border px-1 py-2 text-left transition-colors ${
-                    t.id === tramoId
-                      ? "border-white bg-white text-black"
-                      : "border-white/15 bg-white/5 text-white hover:border-white/40"
-                  }`}
-                >
-                  <span className="block px-2 text-[12px] font-bold">{t.nombre}</span>
-                  <span className={`block px-2 text-[11px] ${t.id === tramoId ? "text-black/60" : "text-white/50"}`}>
-                    {t.w}×{t.h}
-                  </span>
-                  {borradores[escena]?.[t.id] && (
-                    <span
-                      title="Este tramo tiene encuadre guardado para la escena"
-                      className="absolute right-1.5 top-1.5 block size-2 rounded-full bg-emerald-400"
-                    />
-                  )}
-                </button>
-              ))}
+          {[...new Set(tramos.map((t) => t.grupo))].map((grupo) => (
+            <div key={grupo} className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-white/35">{grupo}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {tramos.filter((t) => t.grupo === grupo).map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTramoId(t.id)}
+                    className={`relative min-w-[30%] flex-1 rounded-xl border px-2.5 py-1.5 text-left transition-colors ${
+                      t.id === tramoId
+                        ? "border-white bg-white text-black"
+                        : "border-white/15 bg-white/5 text-white hover:border-white/40"
+                    }`}
+                  >
+                    {t.nombre !== t.id && <span className="block text-[11px] font-bold leading-[1.3]">{t.nombre}</span>}
+                    <span className={`block text-[11px] leading-[1.3] ${t.id === tramoId ? "text-black/60" : "text-white/50"}`}>
+                      {t.w}×{t.h}
+                    </span>
+                    {borradores[escena]?.[t.id] && (
+                      <span
+                        title="Este tramo tiene encuadre guardado para la escena"
+                        className="absolute right-1.5 top-1.5 block size-2 rounded-full bg-emerald-400"
+                      />
+                    )}
+                    {t.grupo === "Personalizado" && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="Quitar este tramo (sus encuadres guardados no se borran)"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          quitarTramo(t.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.stopPropagation();
+                            quitarTramo(t.id);
+                          }
+                        }}
+                        className={`absolute bottom-1 right-1.5 text-[11px] font-bold ${
+                          t.id === tramoId ? "text-black/50 hover:text-black" : "text-white/40 hover:text-white"
+                        }`}
+                      >
+                        ×
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
+          {/* Cualquier medida que falte (un viewport real de Safari, una
+              pantalla nueva) se agrega aquí y queda persistida. */}
+          <div className="flex items-center gap-1.5">
+            <input
+              value={nuevoW}
+              onChange={(e) => setNuevoW(e.target.value)}
+              inputMode="numeric"
+              placeholder="ancho"
+              className="h-8 w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-2 text-[12px] text-white outline-none placeholder:text-white/30 focus:border-white/40"
+            />
+            <span className="text-[11px] text-white/40">×</span>
+            <input
+              value={nuevoH}
+              onChange={(e) => setNuevoH(e.target.value)}
+              inputMode="numeric"
+              placeholder="alto"
+              onKeyDown={(e) => e.key === "Enter" && agregarTramo()}
+              className="h-8 w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-2 text-[12px] text-white outline-none placeholder:text-white/30 focus:border-white/40"
+            />
+            <button
+              type="button"
+              onClick={agregarTramo}
+              disabled={!(Number(nuevoW) >= 200 && Number(nuevoH) >= 200)}
+              className="h-8 rounded-full border border-white/25 px-3 text-[12px] font-bold text-white transition-colors hover:border-white/60 disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Añadir tramo
+            </button>
+          </div>
         </div>
 
         <div className="rounded-xl border border-white/15 bg-white/5 p-3 font-mono text-[12px] leading-[1.7]">
@@ -292,7 +400,8 @@ export default function Herramienta() {
       {/* ── Lienzo ────────────────────────────────────────────────────── */}
       <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 overflow-hidden">
         <div className="text-[12px] text-white/50">
-          {tramo.w}×{tramo.h} · {tramo.grupo.toLowerCase()} {tramo.nombre}
+          {tramo.w}×{tramo.h}
+          {tramo.nombre !== tramo.id && ` · ${tramo.grupo} ${tramo.nombre}`}
           {escala < 1 && ` · vista al ${Math.round(escala * 100)}%`}
         </div>
         <div
