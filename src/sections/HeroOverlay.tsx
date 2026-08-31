@@ -19,7 +19,7 @@ const RD_COORDS: [number, number] = [-70.1627, 18.7357];
 function HeroPin() {
   return (
     <span className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]">
-      <BrandPin size={34} color="var(--color-mango)" />
+      <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
     </span>
   );
 }
