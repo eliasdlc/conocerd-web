@@ -360,7 +360,8 @@ export type CameraTramo = Partial<Viewport> & { w: number; h: number };
  * sustituyen a su base. Entre tramos vecinos se interpola (lineal contra log2
  * del ancho, que es el espacio donde el zoom es lineal) y fuera del rango el
  * corrimiento log2 mantiene constante la fracción de pantalla que ocupa la
- * escena. Sin tramos, la resolución clásica de siempre.
+ * escena. Un mismo ancho admite varios altos; el alto real elige el más
+ * cercano antes de interpolar. Sin tramos, la resolución clásica de siempre.
  * Resolución: `resolveCamera()` (lo usa `lib/journey.ts`).
  */
 export type SceneCamera = Viewport & {
@@ -395,7 +396,12 @@ const tramoAViewport = (t: CameraTramo, base: Viewport): Viewport => ({
   bearing: t.bearing ?? base.bearing,
 });
 
-export function resolveCamera(c: SceneCamera, mobile: boolean, width = MOBILE_CAMERA_REF_WIDTH): ResolvedCamera {
+export function resolveCamera(
+  c: SceneCamera,
+  mobile: boolean,
+  width = MOBILE_CAMERA_REF_WIDTH,
+  height?: number
+): ResolvedCamera {
   const base: Viewport = mobile && c.mobile
     ? {
         center: c.mobile.center ?? c.center,
@@ -417,7 +423,18 @@ export function resolveCamera(c: SceneCamera, mobile: boolean, width = MOBILE_CA
     return { vp: { ...base, zoom: base.zoom + zoomShift }, refHeight: MOBILE_CAMERA_REF_HEIGHT };
   }
 
-  const orden = [...tramos].sort((a, b) => a.w - b.w);
+  // Un mismo ancho puede traer varios altos (la pantalla completa del
+  // dispositivo y el viewport real que deja la barra del navegador, p. ej.
+  // 430x932 y 430x748): dentro de cada ancho manda el alto más cercano al
+  // real, y la interpolación entre anchos corre sobre los elegidos. Así el
+  // alto de pantalla también tiene voz en qué ancla se usa.
+  const alto = height ?? (mobile ? MOBILE_CAMERA_REF_HEIGHT : 900);
+  const porAncho = new Map<number, CameraTramo>();
+  for (const t of tramos) {
+    const previo = porAncho.get(t.w);
+    if (!previo || Math.abs(t.h - alto) < Math.abs(previo.h - alto)) porAncho.set(t.w, t);
+  }
+  const orden = [...porAncho.values()].sort((a, b) => a.w - b.w);
   const menor = orden[0];
   const mayor = orden[orden.length - 1];
   if (width <= menor.w || width >= mayor.w) {
@@ -559,14 +576,26 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
     tramos: {
       mobile: [
+        { w: 360, h: 780, center: [-70.492, 18.4915], zoom: 5.85, pitch: 0, bearing: 0 },
         { w: 375, h: 553, center: [-70.6375, 18.2657], zoom: 5.32, pitch: 0, bearing: 0 },
+        { w: 384, h: 824, center: [-70.5278, 18.659], zoom: 6.16, pitch: 0, bearing: 0 },
         { w: 393, h: 664, center: [-70.5451, 18.4023], zoom: 5.5, pitch: 0, bearing: 0 },
+        { w: 393, h: 852, center: [-70.5602, 18.724], zoom: 6.23, pitch: 0, bearing: 0 },
+        { w: 402, h: 874, center: [-70.5877, 18.6869], zoom: 6.38, pitch: 0, bearing: 0 },
+        { w: 412, h: 915, center: [-70.6003, 18.5216], zoom: 5.83, pitch: 0, bearing: 0 },
         { w: 430, h: 748, center: [-70.6503, 18.6296], zoom: 6.12, pitch: 0, bearing: 0 },
+        { w: 430, h: 932, center: [-70.6156, 18.7079], zoom: 6.5, pitch: 0, bearing: 0 },
+        { w: 440, h: 956, center: [-70.6104, 18.7099], zoom: 6.44, pitch: 0, bearing: 0 },
       ],
       desktop: [
         { w: 1131, h: 686, center: [-70.8282, 18.9133], zoom: 7.2, pitch: 0, bearing: 0 },
         { w: 1280, h: 600, center: [-70.8043, 18.8998], zoom: 7.2, pitch: 0, bearing: 0 },
+        { w: 1280, h: 832, center: [-70.8353, 18.7569], zoom: 7.44, pitch: 0, bearing: 0 },
+        { w: 1366, h: 768, center: [-70.8283, 18.8345], zoom: 7.57, pitch: 0, bearing: 0 },
         { w: 1440, h: 900, center: [-70.7533, 18.9226], zoom: 7.65, pitch: 0, bearing: 0 },
+        { w: 1440, h: 932, center: [-70.7254, 18.8405], zoom: 7.64, pitch: 0, bearing: 0 },
+        { w: 1536, h: 864, center: [-70.799, 18.8647], zoom: 7.87, pitch: 0, bearing: 0 },
+        { w: 1920, h: 1080, center: [-70.7589, 18.8466], zoom: 8.24, pitch: 0, bearing: 0 },
       ],
     },
   },
@@ -576,9 +605,16 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.35, 18.85], zoom: 7.2, pitch: 0, bearing: 0,
     tramos: {
       mobile: [
+        { w: 360, h: 780, center: [-70.1914, 18.4854], zoom: 6.05, pitch: 0, bearing: 0 },
         { w: 375, h: 553, center: [-70.0831, 18.6409], zoom: 4.96, pitch: 0, bearing: 0 },
+        { w: 384, h: 824, center: [-70.0878, 18.3948], zoom: 6.22, pitch: 0, bearing: 0 },
         { w: 393, h: 664, center: [-70.1341, 18.8127], zoom: 5.88, pitch: 0, bearing: 0 },
+        { w: 393, h: 852, center: [-70.1681, 18.6222], zoom: 6.18, pitch: 0, bearing: 0 },
+        { w: 402, h: 874, center: [-70.144, 18.6595], zoom: 6.27, pitch: 0, bearing: 0 },
+        { w: 412, h: 915, center: [-70.0837, 18.2498], zoom: 6.3, pitch: 0, bearing: 0 },
         { w: 430, h: 748, center: [-70.196, 18.8127], zoom: 6.24, pitch: 0, bearing: 0 },
+        { w: 430, h: 932, center: [-70.1629, 18.7912], zoom: 6.35, pitch: 0, bearing: 0 },
+        { w: 440, h: 956, center: [-70.1129, 18.7619], zoom: 6.42, pitch: 0, bearing: 0 },
       ],
       desktop: [
         { w: 1131, h: 686, center: [-70.3074, 18.8719], zoom: 7, pitch: 0, bearing: 0 },
@@ -594,14 +630,27 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.35, 18.85], zoom: 6.8, pitch: 0, bearing: 0,
     tramos: {
       mobile: [
+        { w: 360, h: 780, center: [-70.1498, 18.6856], zoom: 6.12, pitch: 0, bearing: 0 },
         { w: 375, h: 553, center: [-70.6626, 18.7258], zoom: 5.2, pitch: 0, bearing: 0 },
+        { w: 384, h: 824, center: [-70.1854, 18.6872], zoom: 6.19, pitch: 0, bearing: 0 },
         { w: 393, h: 664, center: [-70.6481, 18.714], zoom: 5.66, pitch: 0, bearing: 0 },
+        { w: 393, h: 852, center: [-70.2049, 18.6834], zoom: 6.22, pitch: 0, bearing: 0 },
+        { w: 402, h: 874, center: [-70.1919, 18.6909], zoom: 6.33, pitch: 0, bearing: 0 },
+        { w: 412, h: 915, center: [-70.2455, 18.7151], zoom: 6.33, pitch: 0, bearing: 0 },
         { w: 430, h: 748, center: [-70.4119, 18.697], zoom: 5.88, pitch: 0, bearing: 0 },
+        { w: 430, h: 932, center: [-70.2008, 18.7886], zoom: 6.46, pitch: 0, bearing: 0 },
+        { w: 440, h: 956, center: [-70.2146, 18.7749], zoom: 6.33, pitch: 0, bearing: 0 },
       ],
       desktop: [
         { w: 1131, h: 686, center: [-70.8107, 18.8597], zoom: 6.8, pitch: 0, bearing: 0 },
         { w: 1280, h: 600, center: [-70.8169, 18.8321], zoom: 6.8, pitch: 0, bearing: 0 },
+        { w: 1366, h: 768, center: [-70.6014, 18.7652], zoom: 6.84, pitch: 0, bearing: 0 },
         { w: 1440, h: 900, center: [-70.657, 18.8958], zoom: 6.8, pitch: 0, bearing: 0 },
+        { w: 1440, h: 932, center: [-70.5016, 18.7668], zoom: 6.96, pitch: 0, bearing: 0 },
+        { w: 1512, h: 982, center: [-70.5027, 18.7432], zoom: 7.03, pitch: 0, bearing: 0 },
+        { w: 1536, h: 864, center: [-70.5566, 18.7249], zoom: 7.21, pitch: 0, bearing: 0 },
+        { w: 1728, h: 1117, center: [-70.3488, 18.775], zoom: 7.5, pitch: 0, bearing: 0 },
+        { w: 1920, h: 1080, center: [-70.3852, 18.6549], zoom: 7.78, pitch: 0, bearing: 0 },
       ],
     },
   },
@@ -615,14 +664,23 @@ export const SCENE_CAMERAS: Record<string, SceneCamera> = {
     center: [-70.6901, 19.4517], zoom: 7.6, pitch: 12, bearing: 0,
     tramos: {
       mobile: [
+        { w: 360, h: 780, center: [-70.3525, 18.928], zoom: 5.94, pitch: 8, bearing: 0 },
         { w: 375, h: 553, center: [-70.7485, 19.0849], zoom: 5.18, pitch: 8, bearing: 0 },
+        { w: 384, h: 824, center: [-70.2582, 18.795], zoom: 6.06, pitch: 8, bearing: 0 },
         { w: 393, h: 664, center: [-70.7463, 18.9736], zoom: 5.65, pitch: 8, bearing: 0 },
+        { w: 393, h: 852, center: [-70.1812, 18.8272], zoom: 6.14, pitch: 8, bearing: 0 },
+        { w: 402, h: 874, center: [-70.2545, 18.8477], zoom: 6.12, pitch: 8, bearing: 0 },
+        { w: 412, h: 915, center: [-70.2863, 18.8434], zoom: 6.16, pitch: 8, bearing: 0 },
         { w: 430, h: 748, center: [-70.6574, 18.9063], zoom: 6.01, pitch: 8, bearing: 0 },
+        { w: 430, h: 932, center: [-70.2161, 18.8513], zoom: 6.32, pitch: 8, bearing: 0 },
+        { w: 440, h: 956, center: [-70.2669, 18.849], zoom: 6.28, pitch: 8, bearing: 0 },
       ],
       desktop: [
         { w: 1131, h: 686, center: [-70.7736, 18.9573], zoom: 7.23, pitch: 12, bearing: 0 },
         { w: 1280, h: 600, center: [-70.7587, 18.8986], zoom: 7.28, pitch: 12, bearing: 0 },
+        { w: 1280, h: 832, center: [-70.7522, 18.5983], zoom: 7.08, pitch: 12, bearing: 0 },
         { w: 1440, h: 900, center: [-70.6784, 18.8625], zoom: 7.6, pitch: 12, bearing: 0 },
+        { w: 1440, h: 932, center: [-70.5563, 18.7941], zoom: 7.49, pitch: 12, bearing: 0 },
       ],
     },
   },

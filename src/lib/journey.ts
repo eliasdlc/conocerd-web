@@ -194,7 +194,7 @@ function freeBandHeight(def: SceneDef, height: number): number {
  * por los lados en pantallas altas y angostas.
  */
 export function cameraForBand(band: SceneBand, v: JourneyViewport): Viewport {
-  const { vp: cam, refHeight } = resolveCamera(band.camera, v.mobile, v.width);
+  const { vp: cam, refHeight } = resolveCamera(band.camera, v.mobile, v.width, v.height);
   if (!v.mobile) return cam;
   const ratio = freeBandHeight(band.def, v.height) / freeBandHeight(band.def, refHeight);
   if (ratio >= 1) return cam;
