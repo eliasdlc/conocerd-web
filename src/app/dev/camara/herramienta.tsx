@@ -37,7 +37,9 @@ const RAIL = 340; // ancho de la columna de controles
 // las entradas escritas a mano de SCENE_CAMERAS.
 const n = (v: number, d: number) => Number(v.toFixed(d));
 
-function bloqueDeCodigo(borradores: Record<string, Guardado> | undefined): string {
+// El bloque siempre nombra su escena: se pega dentro de la entrada correcta
+// de SCENE_CAMERAS y sin la referencia no se sabe cuál es.
+function bloqueDeCodigo(escena: string, borradores: Record<string, Guardado> | undefined): string {
   if (!borradores || Object.keys(borradores).length === 0) return "";
   const porModo = { mobile: [] as Guardado[], desktop: [] as Guardado[] };
   for (const g of Object.values(borradores)) porModo[g.w < 900 ? "mobile" : "desktop"].push(g);
@@ -51,7 +53,14 @@ function bloqueDeCodigo(borradores: Record<string, Guardado> | undefined): strin
       return `  ${m}: [\n${lineas}\n  ],`;
     })
     .join("\n");
-  return `tramos: {\n${modos}\n},`;
+  return `// escena: ${escena}\ntramos: {\n${modos}\n},`;
+}
+
+/** Todas las escenas con encuadres guardados, en el orden del recorrido. */
+function bloqueCompleto(borradores: Borradores): string {
+  return SCENES.map((s) => bloqueDeCodigo(s.name, borradores[s.name]))
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export default function Herramienta() {
@@ -73,7 +82,7 @@ export default function Herramienta() {
       ? { w: 1280, h: 800 }
       : { w: window.innerWidth, h: window.innerHeight }
   );
-  const [copiado, setCopiado] = useState(false);
+  const [copiado, setCopiado] = useState<"escena" | "todo" | null>(null);
 
   const tramo = TRAMOS.find((t) => t.id === tramoId) ?? TRAMOS[3];
 
@@ -115,7 +124,9 @@ export default function Herramienta() {
   const escala = Math.min(1, (ventana.w - RAIL - 64) / tramo.w, (ventana.h - 96) / tramo.h);
 
   const guardadoActual = borradores[escena]?.[tramoId];
-  const codigo = bloqueDeCodigo(borradores[escena]);
+  const codigo = bloqueDeCodigo(escena, borradores[escena]);
+  const codigoTodo = bloqueCompleto(borradores);
+  const escenasGuardadas = SCENES.filter((s) => Object.keys(borradores[s.name] ?? {}).length > 0).length;
 
   const guardar = () => {
     if (!camara) return;
@@ -133,12 +144,12 @@ export default function Herramienta() {
     });
   };
 
-  const copiar = async () => {
-    if (!codigo) return;
+  const copiar = async (texto: string, alcance: "escena" | "todo") => {
+    if (!texto) return;
     try {
-      await navigator.clipboard.writeText(codigo);
-      setCopiado(true);
-      window.setTimeout(() => setCopiado(false), 1600);
+      await navigator.clipboard.writeText(texto);
+      setCopiado(alcance);
+      window.setTimeout(() => setCopiado(null), 1600);
     } catch {}
   };
 
@@ -248,18 +259,29 @@ export default function Herramienta() {
         </div>
 
         <div className="flex min-h-0 flex-col gap-1.5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <span className="text-[11px] font-bold uppercase tracking-[0.06em] text-white/50">
               Bloque para {escena}
             </span>
-            <button
-              type="button"
-              onClick={copiar}
-              disabled={!codigo}
-              className="rounded-full border border-white/25 px-3 py-1 text-[12px] font-bold text-white transition-colors hover:border-white/60 disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              {copiado ? "Copiado ✓" : "Copiar"}
-            </button>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => copiar(codigo, "escena")}
+                disabled={!codigo}
+                className="rounded-full border border-white/25 px-3 py-1 text-[12px] font-bold text-white transition-colors hover:border-white/60 disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                {copiado === "escena" ? "Copiado ✓" : "Copiar"}
+              </button>
+              <button
+                type="button"
+                onClick={() => copiar(codigoTodo, "todo")}
+                disabled={!codigoTodo}
+                title="Todas las escenas con encuadres guardados, cada bloque con su referencia de escena"
+                className="rounded-full border border-white/25 px-3 py-1 text-[12px] font-bold text-white transition-colors hover:border-white/60 disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                {copiado === "todo" ? "Copiado ✓" : `Copiar todo (${escenasGuardadas})`}
+              </button>
+            </div>
           </div>
           <pre className="overflow-auto rounded-xl border border-white/15 bg-white/5 p-3 font-mono text-[11px] leading-[1.6] text-white/85">
             {codigo || "Sin encuadres guardados para esta escena.\nAjusta el mapa y pulsa «Guardar encuadre»."}
