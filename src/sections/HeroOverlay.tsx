@@ -19,7 +19,7 @@ const RD_COORDS: [number, number] = [-70.1627, 18.7357];
 function HeroPin() {
   return (
     <span className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]">
-      <BrandPin size={34} color="var(--color-mango)" />
+      <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
     </span>
   );
 }
@@ -235,8 +235,10 @@ export default function HeroOverlay() {
           </div>
         </div>
 
-        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca. */}
-        <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 desk:block">
+        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca,
+            pero por encima de la franja del panel de pasos — que ahora vive
+            centrado abajo y le caía justo encima. */}
+        <div className="absolute bottom-[calc(var(--crd-stepper-h)+12px)] left-1/2 hidden -translate-x-1/2 desk:block">
           <ScrollCue />
         </div>
       </div>

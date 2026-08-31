@@ -38,12 +38,20 @@ const FLOWER_MIN_SIZE = 28;
 export default function BrandPin({
   size = 22,
   color = "#FF8D16",
+  fondoVentana,
   className = "",
 }: {
   /** Ancho en px. El alto es 1.25 veces esto, y decide el nivel de detalle. */
   size?: number;
   /** Tinta de la silueta y de la flor. La ventana no se pinta: es un hueco. */
   color?: string;
+  /**
+   * Disco pintado detrás de la flor, del radio de la ventana activa. Sin él la
+   * ventana es un hueco de verdad y deja ver lo que haya debajo, que es lo que
+   * quieren la píldora y el 404; sobre el globo del hero el mapa se colaba por
+   * la ventana y la flor flotaba, así que ahí se pinta.
+   */
+  fondoVentana?: string;
   className?: string;
 }) {
   const withFlower = size >= FLOWER_MIN_SIZE;
@@ -55,6 +63,14 @@ export default function BrandPin({
       className={className}
       aria-hidden="true"
     >
+      {fondoVentana && (
+        <circle
+          cx={PIN_WINDOW.cx}
+          cy={PIN_WINDOW.cy}
+          r={withFlower ? PIN_WINDOW.r : 58}
+          fill={fondoVentana}
+        />
+      )}
       <path
         fillRule="evenodd"
         clipRule="evenodd"

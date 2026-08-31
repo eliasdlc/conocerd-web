@@ -135,17 +135,30 @@ html {
 :root {
   --crd-sb-thumb: color-mix(in srgb, var(--color-ink) 32%, transparent);
   --crd-sb-thumb-hover: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  /* La pista se ve. Con pista transparente el pulgar quedaba flotando sobre el
+     crema y no se leía como un riel: lo que dice "esto se desliza y vas por
+     aquí" es el par pista + pulgar, no el pulgar solo. Al 7 % es el hairline
+     del sistema, no una barra gris de navegador. */
+  --crd-sb-track: color-mix(in srgb, var(--color-ink) 7%, transparent);
 }
 .crd-cta-card {
   --crd-sb-thumb: rgba(255, 255, 255, 0.28);
   --crd-sb-thumb-hover: rgba(255, 255, 255, 0.45);
+  --crd-sb-track: rgba(255, 255, 255, 0.10);
 }
 
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background-color: var(--crd-sb-track);
+  border-radius: 999px;
+  /* El mismo aire de 3px que el pulgar, para que la pista quede como una línea
+     centrada en el canal y no como una columna pintada de canto a canto. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
@@ -173,7 +186,7 @@ html {
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--crd-sb-thumb) transparent;
+    scrollbar-color: var(--crd-sb-thumb) var(--crd-sb-track);
   }
 }
 body {
@@ -366,7 +379,13 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    En escritorio vale 0: ahí el panel va compacto y en la esquina, fuera de la
    columna donde vive el contenido, así que no hay franja que reservar y la
    escena conserva la pantalla entera. */
-:root { --crd-stepper-h: 0px; }
+/* Alto reservado del panel de pasos (JourneyStepper), que flota centrado abajo
+   en los dos viewports. Todo lo que pueda tocar el borde inferior reserva esta
+   franja: es la única pieza que aparta contenido, y el panel nunca se mueve.
+
+   Escritorio: 16 del borde + 44 de alto + 8 de aire.
+   Móvil:      21 del borde + 64 de alto + sobra para el gesto del pulgar. */
+:root { --crd-stepper-h: 68px; }
 @media (max-width: 899px) { :root { --crd-stepper-h: 84px; } }
 
 /* Holgura bajo la píldora del nav: top 16px + botón 40px + padding 16px +
@@ -422,32 +441,43 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   width: min(264px, 18vw, calc((100svh - 120px) * 0.480));
 }
 
-/* Huella del panel de pasos en escritorio: esquina inferior izquierda, 12 del
-   borde más 44 de alto. `--crd-stepper-h` vale 0 aquí a propósito, porque el
-   panel salió de la columna del contenido centrado; pero lo que SÍ baja hasta
-   esa esquina tiene que esquivarlo, y la pila de Destinos se apoya justo ahí:
-   en la ventana de revisión (1131x686) el cristal del panel se montaba sobre el
-   canto inferior izquierdo de la polaroid del frente. */
+/* El panel de pasos vive centrado abajo también aquí, así que la franja es la
+   misma que en el teléfono y se lee del mismo token. Lo que cambia por viewport
+   es qué contenido baja hasta ella. */
 @media (min-width: 900px) {
+  /* La pila de Destinos se apoya en la franja, igual que en móvil. */
   .crd-destinos-card {
-    bottom: calc(66px + var(--pile-bottom, 0px)) !important;
+    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
+  }
+
+  /* El panel lateral va centrado en vertical, así que no necesita padding
+     (dejaría un hueco muerto dentro de la tarjeta): le basta con no poder
+     crecer hasta la franja, y el tope se descuenta por arriba y por abajo
+     porque el centrado reparte. El sello vive FUERA de esta caja (hermano en
+     .crd-ol-wrap): overflow-y: auto arrastra overflow-x a auto, y dentro el
+     canto lo recortaba. */
+  .crd-ol-panel {
+    max-height: calc(100svh - 2 * (var(--crd-stepper-h) + 20px));
+    overflow-y: auto;
+  }
+
+  /* La carta del CTA vive centrada entre la píldora y la franja. Los 20 son el
+     aire del `desk:pb` del envoltorio (CTASection): el tope tiene que descontar
+     lo mismo que el envoltorio reserva, o la carta desborda su caja y, al ir
+     centrada, se sale por los dos lados. */
+  .crd-cta-card {
+    max-height: calc(var(--crd-franja) - 20px);
+    overflow-y: auto;
   }
 }
 
-@media (min-width: 900px) {
-  /* La carta del CTA vive centrada entre la píldora y el borde inferior. En una
-     ventana de 1280x720 despejaba todo y parecía sana; en la ventana real de
-     revisión (1131x686) y en un portátil de 1280x600 el "¿Tienes un negocio?"
-     se salía de la carta. Es el mismo defecto que en un iPhone corto, un
-     viewport más arriba, así que se resuelve con el mismo tope.
-
-     Los 56 son el `desk:pb` del envoltorio (CTASection): el tope tiene que
-     descontar lo mismo que el envoltorio reserva, o la carta desborda su caja
-     y, al ir centrada, se sale por los dos lados. */
-  .crd-cta-card {
-    max-height: calc(var(--crd-franja) - 56px);
-    overflow-y: auto;
-  }
+/* Ventanas bajas de escritorio: la carta del CTA cede relleno VERTICAL y nada
+   más. Los tramos de compresión de teléfono no llegan aquí a propósito — allí
+   el límite es el ancho y hay que bajar cuerpos; aquí sobra ancho, y aplicar
+   la misma receta dejaba la carta ancha y baja, con el texto pegado a los
+   cantos: exactamente el "aplastado" que no queremos. */
+@media (min-width: 900px) and (max-height: 760px) {
+  .crd-cta-card { padding-block: 32px; }
 }
 
 @media (min-width: 900px) and (max-height: 480px) {
@@ -457,7 +487,8 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 
 @media (max-width: 899px) {
-  .crd-ol-panel {
+  /* El envoltorio posiciona (el reset del sheet vive aquí); la card recorta. */
+  .crd-ol-wrap {
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
@@ -465,6 +496,8 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
+  }
+  .crd-ol-panel {
     border-radius: var(--radius-surface) var(--radius-surface) 0 0 !important;
     /* 58svh, que es exactamente el `padBottom: 0.58` con el que la cámara
        encuadra estas escenas: el sheet y el mapa dejan de discutirse la
@@ -654,7 +687,7 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 
    El tramo vale para los dos viewports a propósito: el panel de pasos dejó de
    ser cosa del teléfono, así que el defecto tampoco lo es. */
-@media (max-height: 700px) {
+@media (max-width: 899px) and (max-height: 700px) {
   .crd-ol-panel { padding-top: 14px !important; }
   .crd-ol-panel h2 { font-size: 20px !important; }
   .crd-ol-panel ol { gap: 2px !important; }
@@ -674,7 +707,7 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 /* Segundo escalón, para lo que Safari deja de un SE (553) y para un portátil
    con la barra abierta: la franja baja de 577 a 385 y el primer escalón ya no
    alcanza. */
-@media (max-height: 600px) {
+@media (max-width: 899px) and (max-height: 600px) {
   .crd-ol-panel { padding-top: 12px !important; }
   .crd-ol-panel h2 { font-size: 19px !important; }
   .crd-ol-panel ol > li > * { padding-top: 4px !important; padding-bottom: 4px !important; }
@@ -696,8 +729,17 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    escena a "cabe", sin tocar ni un cuerpo de texto. Por debajo de 640 ya no hay
    ajuste que la salve y el scroll es la respuesta correcta. */
 @media (min-width: 900px) and (max-height: 720px) {
-  .crd-ol-equipo { gap: 12px !important; padding-bottom: 8px !important; }
-  .crd-eq-manifiesto { font-size: clamp(22px, 2.6vw, 32px) !important; }
+  /* El relleno inferior baja al ras de la franja: 4 de aire más el panel, en vez
+     de 16. Sigue despejándolo con holgura —el panel arranca a 60 del borde y la
+     reserva son 72— y son los 12px que devuelven la escena a "cabe" en la
+     ventana de revisión, sin barra. Lo demás que cede es aire entre bloques y un
+     cuerpo del manifiesto. */
+  .crd-ol-equipo {
+    gap: 10px !important;
+    padding-bottom: calc(4px + var(--crd-stepper-h)) !important;
+  }
+  .crd-eq-manifiesto { font-size: clamp(21px, 2.4vw, 30px) !important; }
+  .crd-eq-sello { top: -4px !important; transform: scale(.86); transform-origin: top right; }
 }
 
 @media (min-width: 900px) and (max-height: 700px) {

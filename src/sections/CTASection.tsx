@@ -26,12 +26,11 @@ export default function CTAOverlay() {
       // El journey cierra volviendo al globo: en móvil la card baja para que el
       // planeta se vea completo encima, igual que en el hero.
       //
-      // Los 56 de abajo en escritorio son la esquina del panel de pasos: la
-      // card mide 640 de ancho y en una ventana estrecha su borde inferior
-      // izquierdo llegaba justo hasta el panel. Es la única escena con algo
-      // centrado que baja tanto, así que la holgura vive aquí y no en un token.
+      // Reserva las dos franjas del cromo flotante en los dos viewports: la
+      // píldora arriba y el panel de pasos abajo, que vive centrado y por tanto
+      // pasa justo por debajo de la carta.
       className={`absolute inset-0 z-10 flex items-end justify-center px-[18px] pb-3.5 pt-[var(--crd-nav-clear)] transition-opacity duration-700 ease-in-out
-        desk:items-center desk:px-6 desk:pb-[calc(56px+var(--crd-stepper-h))]
+        desk:items-center desk:px-6 desk:pb-[calc(20px+var(--crd-stepper-h))]
         ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
       <div

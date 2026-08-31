@@ -753,21 +753,19 @@ function ViajerosFinal() {
         }`}
       >
         {/* La gran card de viaje (v3), sin contador ni línea de fundadores.
+            El envoltorio posiciona y la card (.crd-ol-panel) recorta: así el
+            sello puede volar fuera de la tarjeta sin que el overflow del panel
+            lo recorte (overflow-y: auto arrastra overflow-x a auto).
             El centrado vertical va con prefijo min-[900px]: el reset móvil de
-            .crd-ol-panel anula `transform`, pero Tailwind v4 traduce
+            .crd-ol-wrap anula `transform`, pero Tailwind v4 traduce
             -translate-y-1/2 a la propiedad `translate`, que sobreviviría y
             dejaría el sheet flotando a media pantalla. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-surface min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-e1 ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
-          {/* La estampa ConoceRD, pegada en la esquina (solo desktop: en el
-              sheet móvil el overflow la recortaría). */}
-          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
-          </div>
-
+        <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
           <Kicker icon="hiking" tone="mint" className="mb-2">
             Para viajeros
           </Kicker>
@@ -806,6 +804,14 @@ function ViajerosFinal() {
               Unirme a la lista
             </Button>
           </div>
+        </div>
+
+        {/* La estampa ConoceRD, hermana del panel y no hija: vuela fuera de la
+            tarjeta por diseño y dentro el overflow la recortaría. Solo desktop:
+            en el sheet móvil no existe. */}
+        <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
+          <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
+        </div>
         </div>
 
         <Telefono visible={visible}>
@@ -1056,17 +1062,14 @@ function NegociosFinal() {
           visible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* La gran card del negocio — misma anatomía que la de viajeros
-            (mismo prefijo min-[900px] para no flotar en móvil). */}
+        {/* La gran card del negocio — misma anatomía que la de viajeros:
+            envoltorio que posiciona, panel que recorta, sello hermano. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-surface min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-e1 ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
-          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
-          </div>
-
+        <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
           <Kicker icon="storefront" tone="coral" className="mb-2">
             Para negocios
           </Kicker>
@@ -1105,6 +1108,11 @@ function NegociosFinal() {
               Registrar mi negocio
             </Button>
           </div>
+        </div>
+
+        <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
+          <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
+        </div>
         </div>
 
         <Telefono visible={visible}>

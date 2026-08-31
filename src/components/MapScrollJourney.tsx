@@ -68,8 +68,9 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
 // la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
 const CACHE_NIVELES_DE_ZOOM = 20;
 
-// Applied once on map load — aligns water/border colors with brand palette
-function applyBrandPaint(map: maplibregl.Map) {
+// Applied once on map load — aligns water/border colors with brand palette.
+// Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
+export function applyBrandPaint(map: maplibregl.Map) {
   // El estilo Carto no siempre expone estas capas → guardar con getLayer para
   // no ensuciar la consola con "Cannot style non-existing layer".
   if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
