@@ -450,14 +450,16 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
   }
 
-  /* El panel lateral va centrado en vertical, así que no necesita padding
-     (dejaría un hueco muerto dentro de la tarjeta): le basta con no poder
-     crecer hasta la franja, y el tope se descuenta por arriba y por abajo
-     porque el centrado reparte. */
-  .crd-ol-panel {
-    max-height: calc(100svh - 2 * (var(--crd-stepper-h) + 20px));
-    overflow-y: auto;
-  }
+  /* El panel lateral NO recorta ni scrollea en escritorio, a propósito. En CSS
+     no existe `overflow-y: auto` con `overflow-x: visible`: pedir uno convierte
+     el otro en `auto`, y entonces el sello de la escena —que vuela fuera de la
+     tarjeta por diseño, y es la firma de la marca en esa escena— quedaba
+     recortado por dentro del canto, con una barra horizontal de 45px debajo del
+     panel. Entre "el sello se ve" y "el panel se acota", manda el sello.
+
+     El tope de alto vuelve el día que el sello viva fuera de la caja que
+     scrollea. Mientras tanto, en ventanas por debajo de ~620 de alto el panel
+     puede rebasar la franja del panel de pasos. */
 
   /* La carta del CTA vive centrada entre la píldora y la franja. Los 20 son el
      aire del `desk:pb` del envoltorio (CTASection): el tope tiene que descontar
