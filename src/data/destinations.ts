@@ -342,30 +342,105 @@ export type Viewport = {
 };
 
 /**
+ * Encuadre afinado a un tamaño de pantalla concreto. Los genera la herramienta
+ * interna `/dev/camara`: se mueve el mapa con el ratón sobre un lienzo del
+ * tamaño exacto y se guarda lo que quedó. `w`/`h` son ese tamaño; los campos
+ * de cámara que falten caen a la base de su modo.
+ */
+export type CameraTramo = Partial<Viewport> & { w: number; h: number };
+
+/**
  * Keyframe de escena. Los valores base están **autorizados para desktop**
  * (referencia 1440×900); `mobile` sobreescribe solo lo que cambia en pantallas
  * angostas. No es una derivación automática a propósito: un teléfono no es un
  * desktop encogido — a igual zoom, un viewport de 390px muestra menos de la
  * mitad de la isla, así que cada escena tiene su encuadre pensado.
+ *
+ * `tramos` refina eso por tamaños: cuando un modo declara tramos, estos
+ * sustituyen a su base. Entre tramos vecinos se interpola (lineal contra log2
+ * del ancho, que es el espacio donde el zoom es lineal) y fuera del rango el
+ * corrimiento log2 mantiene constante la fracción de pantalla que ocupa la
+ * escena. Sin tramos, la resolución clásica de siempre.
  * Resolución: `resolveCamera()` (lo usa `lib/journey.ts`).
  */
-export type SceneCamera = Viewport & { mobile?: Partial<Viewport> };
+export type SceneCamera = Viewport & {
+  mobile?: Partial<Viewport>;
+  tramos?: { desktop?: CameraTramo[]; mobile?: CameraTramo[] };
+};
 
 /** Ancho de pantalla para el que están afinados los overrides `mobile`. */
 export const MOBILE_CAMERA_REF_WIDTH = 390;
+/** Alto de pantalla para el que están afinados los zooms `mobile` clásicos. */
+export const MOBILE_CAMERA_REF_HEIGHT = 844;
 
-export function resolveCamera(c: SceneCamera, mobile: boolean, width = MOBILE_CAMERA_REF_WIDTH): Viewport {
-  if (!mobile || !c.mobile) return c;
-  // "Mobile" cubre 320–899px pero cada zoom está pensado en 390: a igual zoom,
-  // una tablet de 834px muestra la isla diminuta rodeada de océano vacío
-  // (audit 2.4). El corrimiento log2 mantiene constante la fracción de
-  // pantalla que ocupa la escena en todo el rango del breakpoint.
-  const zoomShift = Math.log2(width / MOBILE_CAMERA_REF_WIDTH);
+export type ResolvedCamera = {
+  vp: Viewport;
+  /**
+   * Alto de pantalla al que quedó afinado el encuadre devuelto. La corrección
+   * por franja libre (`cameraForBand`, lib/journey) compara el alto real
+   * contra este, no contra una referencia fija: un tramo afinado a 430×748 ya
+   * sabe que su pantalla mide 748.
+   */
+  refHeight: number;
+};
+
+const lerpNum = (a: number, b: number, t: number) => a + (b - a) * t;
+// Por el camino corto, como la interpolación de bearing del motor.
+const lerpDeg = (a: number, b: number, t: number) => a + (((b - a + 540) % 360) - 180) * t;
+
+const tramoAViewport = (t: CameraTramo, base: Viewport): Viewport => ({
+  center: t.center ?? base.center,
+  zoom: t.zoom ?? base.zoom,
+  pitch: t.pitch ?? base.pitch,
+  bearing: t.bearing ?? base.bearing,
+});
+
+export function resolveCamera(c: SceneCamera, mobile: boolean, width = MOBILE_CAMERA_REF_WIDTH): ResolvedCamera {
+  const base: Viewport = mobile && c.mobile
+    ? {
+        center: c.mobile.center ?? c.center,
+        zoom: c.mobile.zoom ?? c.zoom,
+        pitch: c.mobile.pitch ?? c.pitch,
+        bearing: c.mobile.bearing ?? c.bearing,
+      }
+    : { center: c.center, zoom: c.zoom, pitch: c.pitch, bearing: c.bearing };
+
+  const tramos = (mobile ? c.tramos?.mobile : c.tramos?.desktop) ?? [];
+  if (tramos.length === 0) {
+    // Resolución clásica. En móvil, cada zoom está pensado en 390 aunque el
+    // breakpoint cubra 320–899: a igual zoom, una tablet de 834px muestra la
+    // isla diminuta rodeada de océano vacío (audit 2.4). El corrimiento log2
+    // mantiene constante la fracción de pantalla que ocupa la escena. En
+    // desktop la base va tal cual, como siempre.
+    if (!mobile) return { vp: base, refHeight: 900 };
+    const zoomShift = Math.log2(width / MOBILE_CAMERA_REF_WIDTH);
+    return { vp: { ...base, zoom: base.zoom + zoomShift }, refHeight: MOBILE_CAMERA_REF_HEIGHT };
+  }
+
+  const orden = [...tramos].sort((a, b) => a.w - b.w);
+  const menor = orden[0];
+  const mayor = orden[orden.length - 1];
+  if (width <= menor.w || width >= mayor.w) {
+    const t = width <= menor.w ? menor : mayor;
+    const vp = tramoAViewport(t, base);
+    return { vp: { ...vp, zoom: vp.zoom + Math.log2(width / t.w) }, refHeight: t.h };
+  }
+
+  let i = 0;
+  while (orden[i + 1].w < width) i++;
+  const a = tramoAViewport(orden[i], base);
+  const b = tramoAViewport(orden[i + 1], base);
+  const t =
+    (Math.log2(width) - Math.log2(orden[i].w)) /
+    (Math.log2(orden[i + 1].w) - Math.log2(orden[i].w));
   return {
-    center: c.mobile.center ?? c.center,
-    zoom: (c.mobile.zoom ?? c.zoom) + zoomShift,
-    pitch: c.mobile.pitch ?? c.pitch,
-    bearing: c.mobile.bearing ?? c.bearing,
+    vp: {
+      center: [lerpNum(a.center[0], b.center[0], t), lerpNum(a.center[1], b.center[1], t)],
+      zoom: lerpNum(a.zoom, b.zoom, t),
+      pitch: lerpNum(a.pitch, b.pitch, t),
+      bearing: lerpDeg(a.bearing, b.bearing, t),
+    },
+    refHeight: Math.round(lerpNum(orden[i].h, orden[i + 1].h, t)),
   };
 }
 

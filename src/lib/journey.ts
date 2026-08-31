@@ -146,9 +146,6 @@ export type JourneyViewport = { width: number; height: number; mobile: boolean }
 
 export const REFERENCE_VIEWPORT: JourneyViewport = { width: 1440, height: 900, mobile: false };
 
-/** Alto de pantalla para el que están afinados los zooms `mobile` (390×844). */
-const MOBILE_REF_HEIGHT = 844;
-
 /** Franja mínima de mapa que una escena deja a la vista, pase lo que pase. */
 const MIN_FREE_BAND = 120;
 
@@ -190,14 +187,16 @@ function freeBandHeight(def: SceneDef, height: number): number {
  * el alto: entre la fila de chips y el sheet del itinerario quedan 207px en un
  * iPhone SE contra 384 en la referencia, y con el mismo zoom la isla se salía
  * por arriba — los pines de la costa norte terminaban detrás de los chips.
+ * La referencia de alto viene con la cámara resuelta: 844 para los `mobile`
+ * clásicos, el `h` del tramo cuando la escena declara tramos.
  *
  * Solo encoge, nunca agranda: crecer con el alto haría que la isla se saliera
  * por los lados en pantallas altas y angostas.
  */
 export function cameraForBand(band: SceneBand, v: JourneyViewport): Viewport {
-  const cam = resolveCamera(band.camera, v.mobile, v.width);
+  const { vp: cam, refHeight } = resolveCamera(band.camera, v.mobile, v.width);
   if (!v.mobile) return cam;
-  const ratio = freeBandHeight(band.def, v.height) / freeBandHeight(band.def, MOBILE_REF_HEIGHT);
+  const ratio = freeBandHeight(band.def, v.height) / freeBandHeight(band.def, refHeight);
   if (ratio >= 1) return cam;
   return { ...cam, zoom: cam.zoom + Math.log2(ratio) };
 }
