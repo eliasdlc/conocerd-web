@@ -20,7 +20,8 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 
 import Icon from "@/components/Icon";
-import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "@/lib/waitlist/constants";
+import type { Audience } from "@/lib/waitlist/constants";
+import { businessTypeLabel } from "@/lib/waitlist/business-types";
 import type { Subscriber } from "@/lib/waitlist/store";
 import type { Bucket, WaitlistStats } from "@/lib/waitlist/stats";
 import { logout } from "./actions";
@@ -352,7 +353,10 @@ export default function AdminDashboard({
                       {r.businessName ?? DASH}
                       {r.businessType && (
                         <div className="text-tiny text-muted">
-                          {BUSINESS_TYPE_LABELS[r.businessType as BusinessType] ?? r.businessType}
+                          {businessTypeLabel(r.businessType)}
+                          {/* Lo que escribió cuando el catálogo no lo tenía: es
+                              el dato que dice qué tipo nos falta. */}
+                          {r.businessTypeOther && ` · ${r.businessTypeOther}`}
                         </div>
                       )}
                     </td>
