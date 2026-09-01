@@ -8,7 +8,8 @@
 //  agregados a la base — no antes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { BUSINESS_TYPE_LABELS, type Audience, type BusinessType } from "./constants";
+import type { Audience } from "./constants";
+import { businessTypeLabel } from "./business-types";
 import type { Subscriber } from "./store";
 
 /**
@@ -26,6 +27,9 @@ export function rdDayKey(iso: string): string {
 }
 
 export type Bucket = { key: string; label: string; count: number };
+
+/** Cubo de los negocios guardados antes de que el tipo fuera obligatorio. */
+const NO_TYPE = "sin_tipo";
 
 export type WaitlistStats = {
   total: number;
@@ -59,10 +63,12 @@ function dayLabel(key: string): string {
 export function computeStats(rows: Subscriber[], now = Date.now()): WaitlistStats {
   const businesses = rows.filter((r) => r.audience === "negocio");
 
-  const byBusinessType = [...tally(businesses.map((r) => r.businessType ?? "otro"))]
+  // Sin tipo tiene su propio cubo y no cae en "otro": son cosas distintas y
+  // mezclarlas es justo lo que hacía el selector preseleccionado.
+  const byBusinessType = [...tally(businesses.map((r) => r.businessType ?? NO_TYPE))]
     .map(([key, count]) => ({
       key,
-      label: BUSINESS_TYPE_LABELS[key as BusinessType] ?? key,
+      label: key === NO_TYPE ? "Sin especificar" : businessTypeLabel(key),
       count,
     }))
     .sort((a, b) => b.count - a.count);
@@ -108,6 +114,7 @@ const CSV_COLUMNS = [
   ["name", "Nombre"],
   ["businessName", "Negocio"],
   ["businessType", "Tipo"],
+  ["businessTypeOther", "Tipo escrito"],
   ["whatsapp", "WhatsApp"],
   ["instagram", "Instagram"],
   ["ref", "Origen"],

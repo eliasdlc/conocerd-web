@@ -92,6 +92,7 @@ export async function POST(request: Request) {
       name: data.name,
       businessName: data.businessName,
       businessType: data.businessType,
+      businessTypeOther: data.businessTypeOther,
       whatsapp: data.whatsapp,
       instagram: data.instagram,
       ref: data.ref,
