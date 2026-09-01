@@ -91,6 +91,8 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m6 13.2 6 6 6-6" />
     </>
   ),
+  /** Galón del picker: es `arrow_downward` sin el asta. */
+  expand_more: <path d="m6.8 9.6 5.2 5.2 5.2-5.2" />,
   close: <path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8" />,
   check: <path d="m5.2 12.4 4.6 4.6L18.8 7.4" />,
   check_circle: (

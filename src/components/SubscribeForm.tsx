@@ -19,10 +19,9 @@ import {
   trackWaitlistSuccess,
   trackWaitlistView,
 } from "@/lib/analytics";
+import BusinessTypeField from "@/components/BusinessTypeField";
 import {
   AUDIENCES,
-  BUSINESS_TYPES,
-  BUSINESS_TYPE_LABELS,
   HONEYPOT_FIELD,
   type Audience,
   type SubscribeResult,
@@ -316,7 +315,10 @@ export default function SubscribeForm({
         audience,
         email: String(fd.get("email") ?? ""),
         businessName: isBusiness ? String(fd.get("businessName") ?? "") : undefined,
-        businessType: isBusiness ? String(fd.get("businessType") ?? "") : undefined,
+        businessType: isBusiness ? String(fd.get("businessType") ?? "") || undefined : undefined,
+        businessTypeOther: isBusiness
+          ? String(fd.get("businessTypeOther") ?? "") || undefined
+          : undefined,
         whatsapp: isBusiness ? String(fd.get("whatsapp") ?? "") : undefined,
         instagram: isBusiness ? String(fd.get("instagram") ?? "") : undefined,
         consent: fd.get("consent") === "on",
@@ -418,18 +420,15 @@ export default function SubscribeForm({
             )}
           </div>
           <div className="crd-sub-row grid grid-cols-2 gap-2.5">
-            <select
-              name="businessType"
-              defaultValue="restaurante"
-              aria-label="Tipo de negocio"
-              className={`${field} cursor-pointer`}
-            >
-              {BUSINESS_TYPES.map((b) => (
-                <option key={b} value={b} style={{ color: "#0F1A2E" }}>
-                  {BUSINESS_TYPE_LABELS[b]}
-                </option>
-              ))}
-            </select>
+            {/* El tipo ya no viene preseleccionado: el `<select>` respondía
+                "restaurante" por quien no lo miraba y esa métrica mezclaba a
+                los restaurantes con los distraídos. */}
+            <BusinessTypeField
+              fieldClassName={field}
+              mutedClassName={t.prefix}
+              errorClassName={t.error}
+              error={fieldErrors.businessType}
+            />
             <input
               name="whatsapp"
               type="tel"

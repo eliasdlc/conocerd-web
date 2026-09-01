@@ -9,7 +9,8 @@
 
 import type { NeonQueryFunction } from "@neondatabase/serverless";
 
-import type { Audience, BusinessType } from "./constants";
+import type { Audience } from "./constants";
+import type { BusinessType } from "./business-types";
 
 export type SubscriberInput = {
   email: string;
@@ -17,6 +18,8 @@ export type SubscriberInput = {
   name?: string;
   businessName?: string;
   businessType?: BusinessType;
+  /** Texto libre que acompaña a `otro`: el tipo que el catálogo no tiene. */
+  businessTypeOther?: string;
   whatsapp?: string;
   instagram?: string;
   ref?: string;
@@ -33,6 +36,7 @@ export type Subscriber = {
   name: string | null;
   businessName: string | null;
   businessType: BusinessType | null;
+  businessTypeOther: string | null;
   whatsapp: string | null;
   instagram: string | null;
   ref: string | null;
@@ -58,6 +62,7 @@ const CREATE_TABLE = `
     name          text,
     business_name text,
     business_type text,
+    business_type_other text,
     whatsapp      text,
     ref           text,
     consent_at    timestamptz not null,
@@ -71,6 +76,7 @@ const CREATE_TABLE = `
 // así que cada columna añadida después necesita su propio `alter`.
 const MIGRATIONS = [
   `alter table waitlist_subscribers add column if not exists instagram text`,
+  `alter table waitlist_subscribers add column if not exists business_type_other text`,
 ];
 
 function createNeonStore(databaseUrl: string): WaitlistStore {
@@ -100,10 +106,12 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
       // viajero y luego registra su negocio conserva lo anterior.
       const rows = await q`
         insert into waitlist_subscribers
-          (email, audience, name, business_name, business_type, whatsapp, instagram, ref, consent_at)
+          (email, audience, name, business_name, business_type, business_type_other,
+           whatsapp, instagram, ref, consent_at)
         values (
           ${input.email}, ${input.audience}, ${input.name ?? null},
           ${input.businessName ?? null}, ${input.businessType ?? null},
+          ${input.businessTypeOther ?? null},
           ${input.whatsapp ?? null}, ${input.instagram ?? null},
           ${input.ref ?? null}, ${input.consentAt.toISOString()}
         )
@@ -112,6 +120,7 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
           name          = coalesce(excluded.name, waitlist_subscribers.name),
           business_name = coalesce(excluded.business_name, waitlist_subscribers.business_name),
           business_type = coalesce(excluded.business_type, waitlist_subscribers.business_type),
+          business_type_other = coalesce(excluded.business_type_other, waitlist_subscribers.business_type_other),
           whatsapp      = coalesce(excluded.whatsapp, waitlist_subscribers.whatsapp),
           instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
           ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
@@ -124,8 +133,9 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
     async list() {
       const q = await sql();
       const rows = await q`
-        select email, audience, name, business_name, business_type, whatsapp,
-               instagram, ref, consent_at, created_at, updated_at
+        select email, audience, name, business_name, business_type,
+               business_type_other, whatsapp, instagram, ref, consent_at,
+               created_at, updated_at
         from waitlist_subscribers
         order by created_at desc
       `;
@@ -136,6 +146,7 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
           name: (r.name as string) ?? null,
           businessName: (r.business_name as string) ?? null,
           businessType: (r.business_type as BusinessType) ?? null,
+          businessTypeOther: (r.business_type_other as string) ?? null,
           whatsapp: (r.whatsapp as string) ?? null,
           instagram: (r.instagram as string) ?? null,
           ref: (r.ref as string) ?? null,
@@ -219,6 +230,7 @@ function createLocalStore(): WaitlistStore {
             name: r.name ?? null,
             businessName: r.businessName ?? null,
             businessType: r.businessType ?? null,
+            businessTypeOther: r.businessTypeOther ?? null,
             whatsapp: r.whatsapp ?? null,
             instagram: r.instagram ?? null,
             ref: r.ref ?? null,
