@@ -1,0 +1,447 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Portada de revista — estructura, pliegue y cambio de portada.
+
+   Lo que vive aquí y no en utilidades de Tailwind es lo que Tailwind no
+   expresa bien: el reparto en dos superficies con un pliegue encima de la
+   costura, el apilado de fotos que se cruzan, y el chip que enseña su etiqueta
+   sólo cuando está activo en móvil.
+
+   El acento de la edición viaja por dos custom properties REGISTRADAS: al
+   declararlas con @property el navegador sabe que son colores y las interpola,
+   así que el degradado del papel, el pliegue y el chip cambian de tono a la vez
+   y de forma continua. Sin el registro, el cambio sería un salto seco.
+   Prefijo `--crd-rev-*` para no chocar con las otras propuestas del taller.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@property --crd-rev-acento {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #25ccb8;
+}
+@property --crd-rev-tinta {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #0c6a60;
+}
+
+.hoja {
+  --split: 44%;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--split) 1fr;
+  min-height: 100dvh;
+  background: var(--color-cream);
+  transition: --crd-rev-acento 0.55s ease, --crd-rev-tinta 0.55s ease;
+}
+
+/* ── Columna editorial ──────────────────────────────────────────────────── */
+
+.columna {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vh, 20px);
+  padding: clamp(26px, 4vh, 48px) clamp(26px, 3.2vw, 54px) clamp(20px, 3vh, 40px);
+  min-width: 0;
+}
+
+/* Papel teñido por la edición: la mancha nace en la esquina de la cabecera y
+   se apaga antes de llegar al texto. Es el eco del color de la foto dentro de
+   la columna crema, sin poner en riesgo el contraste del cuerpo. */
+.columna::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 62% at -8% -10%,
+      color-mix(in srgb, var(--crd-rev-acento) 26%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      70% 44% at 108% 106%,
+      color-mix(in srgb, var(--crd-rev-acento) 14%, transparent),
+      transparent 70%
+    );
+}
+
+.columna > * {
+  position: relative;
+}
+
+/* Bloque central de la portada. En desktop se centra entre la cabecera y el
+   pie —una portada llena la página, no se apelmaza arriba—; en móvil se
+   disuelve con `display: contents` para que sus hijos sean hijos directos de
+   la columna y los chips puedan subir a montarse sobre la foto. */
+.medio {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(10px, 1.6vh, 20px);
+  min-height: 0;
+}
+
+/* ── Pliegue: la costura entre las dos superficies ──────────────────────── */
+/* No es un borde: es el lomo de la revista. Un filo de sombra hacia la foto,
+   una hairline, y cinco muescas que hacen de índice — la de la portada visible
+   crece y se entinta. Decorativo (aria-hidden): la información ya la da el
+   chip activo. */
+
+.pliegue {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  width: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.pliegue::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -1px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(38, 70, 83, 0.26) 7%,
+    rgba(38, 70, 83, 0.26) 93%,
+    transparent
+  );
+}
+.pliegue::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 22px;
+  background: linear-gradient(to right, rgba(38, 70, 83, 0.16), transparent);
+}
+
+.muesca {
+  position: absolute;
+  left: -7px;
+  width: 14px;
+  height: 1px;
+  background: rgba(38, 70, 83, 0.3);
+  border-radius: 2px;
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.45s cubic-bezier(0.16, 1, 0.3, 1), left 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 0.45s ease;
+}
+.muescaActiva {
+  left: -13px;
+  width: 26px;
+  height: 3px;
+  background: var(--crd-rev-acento);
+}
+
+/* ── Panel de foto a sangre ─────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background: var(--color-ink-2);
+}
+
+.capa {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.045);
+  transition: opacity 0.62s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.capaVisible {
+  opacity: 1;
+  transform: scale(1);
+}
+.capa img {
+  object-fit: cover;
+}
+
+/* Velos: uno abajo para la ficha del pie de foto, uno junto al pliegue para
+   que la costura no se pierda sobre un cielo claro. */
+.veloPie {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 54%;
+  background: linear-gradient(
+    to top,
+    rgba(16, 34, 41, 0.82),
+    rgba(16, 34, 41, 0.34) 46%,
+    transparent
+  );
+}
+.veloLomo {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 12%;
+  background: linear-gradient(to right, rgba(16, 34, 41, 0.34), transparent);
+}
+
+.veloAlto {
+  display: none;
+}
+
+/* Crédito de foto: sube por el canto derecho de la imagen, como en una revista
+   impresa. Es minúsculo a propósito —no compite con nada— pero está siempre que
+   la licencia lo exige. */
+.credito {
+  position: absolute;
+  right: 9px;
+  bottom: clamp(18px, 4vh, 34px);
+  max-height: 62%;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  /* Sin salto de línea: en vertical, envolver abre una SEGUNDA columna a la
+     izquierda y el crédito se lee partido en dos. */
+  white-space: nowrap;
+  letter-spacing: 0.14em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* Pie de foto: la ficha del destino real que se está viendo. Papel opaco sobre
+   la imagen (PANEL_SOLID es la regla del sitio cuando hay texto largo encima de
+   una superficie viva). */
+/* El pie sube por encima de la franja inferior: ahí flota el conmutador de
+   propuestas y, en la home real, viviría la barra de navegación. */
+.ficha {
+  position: absolute;
+  left: clamp(16px, 2.2vw, 32px);
+  bottom: clamp(64px, 10vh, 104px);
+  max-width: min(342px, 74%);
+}
+
+/* ── Chips de categoría ─────────────────────────────────────────────────── */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease,
+    background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.chip:hover {
+  border-color: color-mix(in srgb, var(--chip) 55%, var(--color-line));
+  transform: translateY(-2px);
+}
+.chip:active {
+  transform: translateY(1px);
+}
+.chip[data-activa="true"] {
+  border-color: var(--chip);
+  background: color-mix(in srgb, var(--chip) 15%, #fff);
+  color: var(--chip-ink);
+  font-weight: 700;
+  box-shadow: var(--shadow-sticker);
+}
+.chip[data-activa="true"]:hover {
+  box-shadow: 0 5px 0 rgba(38, 70, 83, 0.18);
+}
+
+/* ── Entradas y cambio de portada ───────────────────────────────────────── */
+/* Todo el movimiento nace de un disparador —la carga o el clic— y termina.
+   Nada se anima en reposo. */
+
+@keyframes crdRevistaEntra {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entra {
+  animation: crdRevistaEntra 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes crdRevistaCambia {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.cambia {
+  animation: crdRevistaCambia 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* La barrita del sumario dinámico también cambia de tono con la edición. */
+.linea {
+  border-left: 3px solid var(--crd-rev-acento);
+}
+
+/* ── Móvil: la foto pasa a ser banda superior ───────────────────────────── */
+
+@media (max-width: 899px) {
+  .hoja {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .panel {
+    order: -1;
+    height: 36dvh;
+    min-height: 196px;
+    max-height: 320px;
+  }
+  .pliegue {
+    display: none;
+  }
+  .columna {
+    gap: clamp(6px, 0.9vh, 12px);
+    /* La franja de abajo es del conmutador de propuestas (y, en la home real,
+       de la píldora del nav): nada del recorrido puede caer ahí. */
+    padding: 0 18px calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  .medio {
+    display: contents;
+  }
+  /* Los chips montan sobre el borde inferior de la foto: son la bisagra entre
+     las dos superficies, igual que en una portada el sumario pisa la imagen. */
+  .chips {
+    order: -1;
+    margin: -20px 0 4px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+  .chip {
+    height: 38px;
+    padding: 0 10px;
+    box-shadow: 0 6px 18px rgba(38, 70, 83, 0.16);
+  }
+  /* Sólo la portada elegida enseña su nombre: cinco etiquetas completas no
+     caben en 390px sin encogerse a un cuerpo ilegible. El nombre sigue en el
+     `aria-label` del botón, así que el lector de pantalla nunca lo pierde. */
+  .chip[data-activa="false"] .chipTexto {
+    display: none;
+  }
+  .chip[data-activa="true"] {
+    padding: 0 14px;
+  }
+  /* En la banda móvil no hay alto para un crédito vertical (los más largos
+     miden 240px y la foto 270): vuelve a la horizontal, alineado a la derecha
+     sobre el velo inferior y por encima de los chips. */
+  .credito {
+    writing-mode: horizontal-tb;
+    transform: none;
+    white-space: normal;
+    text-align: right;
+    right: 12px;
+    bottom: 34px;
+    max-width: 68vw;
+    max-height: none;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+  }
+  /* La banda se lee de arriba abajo: la ficha sube al techo de la foto (abajo
+     mandan los chips) y el velo la acompaña. */
+  .ficha {
+    top: 12px;
+    bottom: auto;
+    left: 14px;
+    max-width: 70%;
+  }
+  .fichaDesc {
+    display: none;
+  }
+  .veloAlto {
+    display: block;
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 46%;
+    background: linear-gradient(
+      to bottom,
+      rgba(16, 34, 41, 0.5),
+      rgba(16, 34, 41, 0.16) 55%,
+      transparent
+    );
+  }
+  .veloPie {
+    height: 34%;
+  }
+  .veloLomo {
+    display: none;
+  }
+}
+
+/* Pantallas muy bajas (móvil apaisado, portátiles cortos): la foto cede alto
+   antes que el texto, y el sumario impreso desaparece. */
+@media (max-height: 620px) {
+  .panel {
+    max-height: 240px;
+  }
+}
+
+/* ── Teléfonos cortos (360×640 y compañía) ──────────────────────────────────
+   A 640px de alto la portada completa no cabe, y esta pantalla no se scrollea.
+   Se recorta por prioridad: la banda de foto cede primero, luego el aire, luego
+   la línea de tiendas. El titular, los chips, la línea de la edición y los dos
+   CTA se quedan siempre: son la propuesta. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .panel {
+    height: 27dvh;
+    min-height: 140px;
+  }
+  .columna {
+    gap: 5px;
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+  .titular {
+    font-size: 27px;
+  }
+  .bajada,
+  .linea {
+    font-size: 13.5px;
+  }
+  .marca {
+    width: 104px;
+    margin-top: 8px;
+  }
+  .acciones button {
+    height: 44px;
+  }
+  .gratis {
+    display: none;
+  }
+  .credito {
+    bottom: 30px;
+    font-size: 9px;
+  }
+  .ficha {
+    padding: 10px 12px;
+  }
+  .chip {
+    height: 34px;
+  }
+  .chips {
+    margin-top: -18px;
+  }
+}

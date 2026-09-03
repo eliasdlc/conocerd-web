@@ -1,0 +1,737 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Constelación de destinos — primera pantalla.
+
+   Todo lo que reacciona al descenso lo hace leyendo `--descenso` (0..1), la
+   custom property que GloboHero publica en su contenedor sticky. Nada de esto
+   pasa por React: el scroll ya escribe la variable una vez por frame y el
+   navegador resuelve las opacidades y los desplazamientos sin re-render.
+
+   Nada se mueve en reposo: cada transición nace de hover, foco, toque o del
+   propio descenso.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Fondo de la escena: el mismo crema con halos de marca del recorrido real —el
+   globo, ya sin atmósfera, tiene que recortarse contra algo cálido, no contra
+   un blanco plano. */
+.escena {
+  background:
+    radial-gradient(58% 48% at 16% 14%, rgba(37, 204, 184, 0.11), transparent 70%),
+    radial-gradient(52% 44% at 86% 22%, rgba(255, 141, 22, 0.1), transparent 70%),
+    radial-gradient(60% 50% at 52% 100%, rgba(247, 108, 77, 0.09), transparent 74%),
+    var(--color-cream);
+}
+
+.raiz {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  /* Centro del globo en X = padLeft + (1 - padLeft) / 2, con padLeft = 0.26. */
+  --cx: 63%;
+  --ficha-w: 216px;
+}
+
+/* ── Velo crema (solo móvil) ────────────────────────────────────────────────
+   El bloque de texto cae sobre el limbo inferior del globo; sin velo, la
+   toponimia del mapa se cruza con el copy. */
+.velo {
+  display: none;
+}
+
+/* ── Columna editorial ──────────────────────────────────────────────────── */
+
+.rail {
+  position: absolute;
+  left: clamp(24px, 4vw, 58px);
+  top: 50%;
+  width: min(32vw, 344px);
+  transform: translateY(-50%);
+  pointer-events: auto;
+  opacity: calc((0.62 - var(--descenso, 0)) * 3);
+}
+
+/* Al primer scroll el hero deja de ser el contenido activo: sus controles no
+   deben poder pulsarse por detrás del descenso. */
+:global([data-fase]:not([data-fase="hero"])) .rail {
+  pointer-events: none;
+}
+
+.kicker {
+  margin-bottom: 12px;
+}
+
+.marca {
+  display: block;
+  width: 210px;
+  height: auto;
+}
+
+.titulo {
+  margin: 16px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 3vw, 41px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--color-ink-2);
+}
+
+.copy {
+  margin: 12px 0 0;
+  max-width: 32ch;
+  font-size: var(--text-lead);
+  line-height: 1.45;
+  color: var(--color-ink);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  line-height: 1.2;
+  color: var(--color-muted);
+}
+
+.notaLinea {
+  display: block;
+  width: 26px;
+  height: 1px;
+  flex: none;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ── Invitación a bajar ─────────────────────────────────────────────────── */
+
+.bajar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  color: var(--color-ink);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.bajar:hover {
+  transform: translateY(-2px);
+  border-color: #d9d2c1;
+  box-shadow: var(--shadow-card);
+}
+
+.bajarIcono {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-coral-soft);
+  color: var(--color-coral-ink);
+  font-size: 17px;
+}
+
+.bajarTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+}
+
+.bajarKicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.bajarDestino {
+  font-size: var(--text-copy);
+  font-weight: 700;
+  color: var(--color-ink-2);
+}
+
+/* ── Fichas ─────────────────────────────────────────────────────────────── */
+
+.fichas {
+  position: absolute;
+  inset: 0;
+}
+
+.ficha {
+  position: absolute;
+  left: calc(var(--cx) + var(--nx) * var(--esc, 1));
+  top: calc(50% + var(--ny) * var(--esc, 1));
+  width: var(--ficha-w);
+  pointer-events: auto;
+  /* Ancla (el nodo del hilo cae sobre `left`/`top`) + retirada durante el
+     descenso: cada ficha sale hacia su lado y se apaga en su propio umbral. */
+  transform: translate(var(--ancla), -50%)
+    translate(calc(var(--fx) * var(--descenso, 0)), calc(var(--fy) * var(--descenso, 0)));
+  opacity: calc((var(--sal) - var(--descenso, 0)) * 3);
+}
+
+.fichaBoton {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 9px;
+  border: 1px solid rgba(235, 230, 217, 0.96);
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.fichaBoton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Cuando hay una ficha destacada, las demás bajan de peso. La atenuación NO
+   toca el panel: bajar la opacidad de la tarjeta entera dejaba leer la
+   toponimia del mapa a través del texto (la regla de PANEL_SOLID) y hundía el
+   contraste por debajo de AA. Se apaga la foto, se aplana la elevación y el
+   nombre pasa a `muted` —que sigue cumpliendo AA sobre blanco—. */
+.fichas[data-activo] .fichaBoton {
+  box-shadow: none;
+  border-color: rgba(235, 230, 217, 0.7);
+}
+
+.fichas[data-activo] .fichaFoto {
+  opacity: 0.32;
+}
+
+.fichas[data-activo] .fichaNombre {
+  color: var(--color-muted);
+}
+
+.fichas[data-activo] .chip {
+  opacity: 0.45;
+}
+
+.fichas[data-activo] .fichaProvincia {
+  color: var(--color-muted-2);
+  opacity: 0.7;
+}
+
+.fichas[data-activo] .ficha[data-on="1"] .fichaBoton {
+  border-color: var(--tono);
+  box-shadow: var(--shadow-panel);
+  /* El levantamiento vale también para el foco de teclado, no solo el hover. */
+  transform: translateY(-2px);
+}
+
+.fichas[data-activo] .ficha[data-on="1"] .fichaFoto,
+.fichas[data-activo] .ficha[data-on="1"] .chip {
+  opacity: 1;
+}
+
+.fichas[data-activo] .ficha[data-on="1"] .fichaNombre {
+  color: var(--color-ink-2);
+}
+
+.fichas[data-activo] .ficha[data-on="1"] .fichaProvincia {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+.fichaFoto {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-tile);
+  background: var(--color-cream-2);
+  transition: opacity 0.2s ease;
+}
+
+.fichaFoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fichaCuerpo {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fichaNombre {
+  display: block;
+  font-size: var(--text-copy);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-ink-2);
+}
+
+.fichaProvincia {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: var(--tono-suave);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--tono-ink);
+}
+
+.chipPunto {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--tono);
+}
+
+/* Nodo del hilo: el punto por el que la ficha se engancha a su pin. */
+.nodo {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--color-ink);
+  border-radius: 999px;
+  background: var(--color-cream);
+  transform: translate(-50%, -50%);
+  opacity: calc((0.5 - var(--descenso, 0)) * 4);
+}
+
+.ficha[data-lado="der"] .nodo {
+  left: 100%;
+}
+
+.ficha[data-lado="izq"] .nodo {
+  left: 0;
+}
+
+.fichas[data-activo] .nodo {
+  border-color: var(--color-muted);
+}
+
+.fichas[data-activo] .ficha[data-on="1"] .nodo {
+  border-color: var(--color-coral-ink);
+  background: var(--color-coral-ink);
+}
+
+/* ── Capa del mapa: hilos y pines ───────────────────────────────────────── */
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.hilo,
+.pelo {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-linecap: round;
+}
+
+.hilo {
+  stroke-width: 1.1;
+  opacity: calc((0.5 - var(--descenso, 0)) * 4);
+}
+
+.pelo {
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+  opacity: calc((0.72 - var(--descenso, 0)) * 3);
+}
+
+.ancla {
+  fill: var(--color-ink);
+  opacity: calc((0.72 - var(--descenso, 0)) * 2.4);
+}
+
+.capa[data-activo] .hilo {
+  opacity: calc((0.5 - var(--descenso, 0)) * 0.9);
+}
+
+.capa[data-activo] .hilo[data-on="1"] {
+  stroke: var(--color-coral-ink);
+  stroke-width: 1.7;
+  opacity: calc((0.5 - var(--descenso, 0)) * 4);
+}
+
+.anillo {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  border: 1.5px solid rgba(38, 70, 83, 0.4);
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(253, 248, 240, 0.5);
+  opacity: calc((0.72 - var(--descenso, 0)) * 3);
+}
+
+.anilloEtiqueta {
+  position: absolute;
+  top: 60%;
+  left: calc(100% - 4px);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(253, 248, 240, 0.92);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* El pin: tres capas para no pisarse. La externa lleva el desplazamiento que
+   escribe la geometría en cada frame; la media, la opacidad del descenso (sin
+   transición, o iría a rastras del scroll); la interna, el destaque. */
+.pinDescenso {
+  opacity: calc((0.9 - var(--descenso, 0)) * 5);
+  /* Al plegarse, los seis pines caben en 40 px y se pisan: encogen un poco
+     mientras se juntan para que el grupo siga leyéndose. */
+  transform: scale(calc(1 - var(--descenso, 0) * 0.3));
+}
+
+/* El primer destino es donde aterriza la cámara: su pin no se apaga nunca ni
+   encoge — es el que queda en pie sobre el aterrizaje. */
+.pinDescenso[data-final="1"] {
+  opacity: 1;
+  transform: none;
+}
+
+.pinDestaque {
+  position: relative;
+  display: block;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1), opacity 0.22s ease;
+}
+
+.pinDescenso[data-hay-activo="1"] .pinDestaque {
+  opacity: 0.4;
+}
+
+.pinDescenso[data-hay-activo="1"] .pinDestaque[data-on="1"] {
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.punto {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: var(--tono);
+  box-shadow: 0 0 0 2.5px #fff, 0 3px 9px rgba(38, 70, 83, 0.38);
+  pointer-events: auto;
+}
+
+.punto[data-menor="1"] {
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(38, 70, 83, 0.32);
+  pointer-events: none;
+}
+
+/* Etiqueta del pin: aparece al destacar una ficha y, al final del descenso,
+   se queda encendida sobre el destino donde aterriza la cámara. */
+.etiqueta {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  display: block;
+  padding: 4px 9px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--color-ink-2);
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.pinDestaque[data-on="1"] .etiqueta {
+  opacity: 1;
+}
+
+.etiqueta[data-final="1"] {
+  opacity: calc((var(--descenso, 0) - 0.88) * 7);
+}
+
+.pinDestaque[data-on="1"] .etiqueta[data-final="1"] {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Desktop estrecho: entre 900 y 1240 px la columna editorial y las dos fichas
+   de la izquierda se disputan el mismo carril. Se retiran esas dos —sus pines
+   siguen en la constelación— antes que dejar tarjetas pisando el titular.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (min-width: 900px) and (max-width: 1239px) {
+  .raiz {
+    --ficha-w: 196px;
+  }
+
+  .ficha[data-solo-ancho="1"] {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Móvil: el globo manda arriba y todo el contenido se apila abajo. Las fichas
+   pasan a fila compacta de tres y los hilos solo se dibujan cuando una está
+   activa (en 390 px un hilo permanente cruzaría media pantalla).
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 899px) {
+  .raiz {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 16px calc(58px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+  }
+
+  .velo {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62%;
+    background: linear-gradient(
+      to top,
+      #fdf8f0 34%,
+      rgba(253, 248, 240, 0.9) 62%,
+      rgba(253, 248, 240, 0) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* El velo es el único hermano posicionado del bloque: sin z-index propio,
+     pintaría por encima del contenido en flujo y lo dejaría fantasma. */
+  .fichas,
+  .rail {
+    position: relative;
+    z-index: 1;
+  }
+
+  .fichas {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin-bottom: 14px;
+  }
+
+  .ficha[data-solo-desk="1"] {
+    display: none;
+  }
+
+  .ficha {
+    position: static;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    transform: translateY(calc(var(--descenso, 0) * 30px));
+  }
+
+  .fichaBoton {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .fichaBoton:hover {
+    transform: none;
+  }
+
+  .fichaFoto {
+    width: 100%;
+    height: 54px;
+    border-radius: 0;
+  }
+
+  .fichaCuerpo {
+    padding: 6px 8px 8px;
+    text-align: left;
+  }
+
+  /* Alto fijo de dos líneas: con nombres de largo dispar ("27 Charcos" contra
+     "Bahía de las Águilas") las tres tarjetas quedaban a alturas distintas y la
+     fila se leía rota. */
+  .fichaNombre {
+    font-size: var(--text-mini);
+    line-height: 1.16;
+    min-height: 2.32em;
+  }
+
+  .fichaProvincia {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chip {
+    margin-top: 5px;
+    padding: 1px 6px 1px 5px;
+    font-size: 9px;
+  }
+
+  .chipPunto {
+    width: 5px;
+    height: 5px;
+  }
+
+  .nodo {
+    top: 0;
+    left: 50% !important;
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+  }
+
+  .fichas[data-activo] .ficha[data-on="1"] .nodo {
+    opacity: 1;
+  }
+
+  /* Hilo solo bajo demanda: el que corresponde a la ficha activa. En 390 px,
+     tres hilos permanentes cruzarían media pantalla.
+     El selector con [data-activo] hay que repetirlo: la media query no aporta
+     especificidad y la regla de atenuación de desktop, más específica, le
+     ganaba a un `.hilo { opacity: 0 }` a secas. */
+  .hilo,
+  .capa[data-activo] .hilo {
+    opacity: 0;
+  }
+
+  .capa[data-activo] .hilo[data-on="1"] {
+    opacity: 1;
+  }
+
+  .rail {
+    /* `position: relative` lo pone por encima del velo, pero hay que anular el
+       top/left del carril de desktop o el bloque se va fuera de pantalla. */
+    top: auto;
+    left: auto;
+    width: auto;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* El dato de cobertura es un lujo de desktop: en 844 px de alto compite con
+     el copy, que es lo que hay que leer. */
+  .kicker {
+    display: none;
+  }
+
+  /* La marca es imagen: en móvil el <h1> queda para lectores de pantalla y el
+     espacio se lo lleva el copy, que es lo que hay que leer. */
+  .titulo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .marca {
+    width: min(54vw, 182px);
+  }
+
+  .copy {
+    margin-top: 9px;
+    max-width: 34ch;
+    font-size: var(--text-copy);
+    line-height: 1.42;
+  }
+
+  .acciones {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .nota {
+    justify-content: center;
+    margin-top: 12px;
+    font-size: 15px;
+  }
+
+  .notaLinea {
+    width: 18px;
+  }
+
+  .bajar {
+    margin-top: 11px;
+    padding: 5px 12px 5px 5px;
+  }
+
+  .bajarIcono {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 359px) {
+  .marca {
+    width: 168px;
+  }
+
+  .fichas {
+    gap: 6px;
+  }
+
+  .fichaFoto {
+    height: 52px;
+  }
+}

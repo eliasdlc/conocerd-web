@@ -1,0 +1,643 @@
+/* ── Mosaico vivo ────────────────────────────────────────────────────────────
+   Bento asimétrico a sangre: las fotos SON el fondo y el contenido a la vez, y
+   el bloque de copy ocupa una celda más de la rejilla en vez de flotar encima.
+   Todo el reparto móvil/desktop va por media query (el breakpoint del proyecto,
+   900px), nunca por matchMedia: el primer frame ya sale bien.
+
+   El movimiento se reparte en dos capas por una razón concreta: la entrada en
+   cascada vive en `.pieza` (animación con fill `both`) y el hover en `.marco`.
+   Una animación rellenada gana en la cascada a cualquier declaración normal,
+   así que si ambas tocaran el mismo elemento el `transform` del hover no se
+   vería nunca. */
+
+.escena {
+  position: relative;
+  min-height: 100dvh;
+  /* La pantalla se resuelve entera: el tope + `overflow` impiden que un
+     viewport corto convierta la primera pantalla en una página con scroll.
+     Los bloques por altura de abajo evitan que ese tope llegue a recortar. */
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  background: var(--color-cream);
+  /* Abajo se reserva la franja del conmutador de propuestas (barra flotante
+     del layout de /heroes) más el notch. */
+  padding: 8px 8px calc(60px + env(safe-area-inset-bottom));
+}
+
+.rejilla {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* En desktop las piezas son hijas directas de la rejilla; el carril sólo existe
+   como contenedor de scroll en móvil. */
+.carril {
+  display: contents;
+}
+
+/* ── Celdas ────────────────────────────────────────────────────────────────── */
+
+.copy       { grid-column: 3 / 9;  grid-row: 4 / 9; }
+.pieza:nth-child(1) { grid-column: 3 / 9;   grid-row: 1 / 4; }
+.pieza:nth-child(2) { grid-column: 1 / 3;   grid-row: 1 / 6; }
+.pieza:nth-child(3) { grid-column: 1 / 3;   grid-row: 6 / 9; }
+.pieza:nth-child(4) { grid-column: 9 / 13;  grid-row: 1 / 5; }
+.pieza:nth-child(5) { grid-column: 9 / 11;  grid-row: 5 / 9; }
+.pieza:nth-child(6) { grid-column: 11 / 13; grid-row: 5 / 7; }
+.cue        { grid-column: 11 / 13; grid-row: 7 / 9; }
+
+/* ── Pieza ─────────────────────────────────────────────────────────────────── */
+
+.pieza {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.marco {
+  position: relative;
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-cream-2);
+  box-shadow: 0 1px 0 rgba(38, 70, 83, 0.12), 0 8px 20px rgba(38, 70, 83, 0.1);
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.foto {
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+}
+
+/* Velo: protege la etiqueta sin apagar la foto entera. */
+.velo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(21, 40, 48, 0.72) 0%,
+    rgba(21, 40, 48, 0.34) 26%,
+    rgba(21, 40, 48, 0) 52%
+  );
+  transition: opacity 0.3s ease;
+}
+
+/* Chip, no barra: se ajusta al texto y deja ver la foto a su alrededor. */
+.etiqueta {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 8px 11px 9px;
+  border-radius: var(--radius-tile);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(20, 39, 47, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* El hue de marca vive en el icono (relleno), nunca en el texto. */
+.categoriaIcono {
+  color: var(--cat);
+  font-size: 13px;
+}
+
+.nombre {
+  display: block;
+  font-size: var(--text-copy);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.provincia {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* ── Reactividad: crece la señalada, se atenúan las demás ──────────────────── */
+
+.rejilla:has(.pieza:hover) .pieza:not(:hover) > .marco,
+.rejilla:has(.pieza:focus-visible) .pieza:not(:focus-visible) > .marco {
+  opacity: 0.7;
+}
+.rejilla:has(.pieza:hover) .pieza:not(:hover) .foto,
+.rejilla:has(.pieza:focus-visible) .pieza:not(:focus-visible) .foto {
+  filter: saturate(0.5) brightness(0.97);
+}
+
+.pieza:hover,
+.pieza:focus-visible {
+  z-index: 3;
+}
+/* El marco crece 2%: el anillo de foco se separa para no quedar por dentro. */
+.pieza:focus-visible {
+  outline-offset: 4px;
+}
+.pieza:hover > .marco,
+.pieza:focus-visible > .marco {
+  transform: scale(1.022);
+  box-shadow: 0 2px 0 rgba(38, 70, 83, 0.14), 0 18px 38px rgba(38, 70, 83, 0.22);
+}
+.pieza:hover .foto,
+.pieza:focus-visible .foto {
+  transform: scale(1.05);
+}
+.pieza:hover .velo,
+.pieza:focus-visible .velo {
+  opacity: 0.85;
+}
+.pieza:active > .marco {
+  transform: scale(1.004);
+}
+
+/* Seleccionada: filete del color de su categoría por dentro del recorte. Es un
+   pseudo-elemento y no un box-shadow interior ni un outline porque la foto es
+   un hijo posicionado del marco y en Chromium acaba pintándose por encima de
+   ambos; el ::after, al ser el último hijo, siempre queda arriba. Es la señal
+   de que el toque hizo algo en móvil, donde no hay hover. */
+.pieza[aria-pressed="true"] > .marco {
+  box-shadow:
+    0 2px 0 rgba(38, 70, 83, 0.14),
+    0 14px 30px rgba(38, 70, 83, 0.18);
+}
+.pieza[aria-pressed="true"] > .marco::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--cat);
+  /* Hairline blanco por dentro del filete: separa el color de la foto y lo
+     convierte en el borde de una calcomanía, no en un resaltado de navegador. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ── Bloque de copy ────────────────────────────────────────────────────────── */
+
+.copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(20px, 3.2vh, 34px) clamp(22px, 2.4vw, 38px);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  background: #fffdf8;
+  box-shadow: 0 1px 0 rgba(38, 70, 83, 0.1), 0 10px 26px rgba(38, 70, 83, 0.09);
+}
+
+/* Luz de menta entrando por la esquina superior derecha: rompe el rectángulo
+   blanco sin dibujar una forma. Antes era un disco de 132px recortado por el
+   `overflow`, y el arco duro se leía como una mancha, no como una decisión. */
+.copy::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 58%;
+  height: 62%;
+  background: radial-gradient(
+    120% 120% at 100% 0%,
+    rgba(37, 204, 184, 0.13),
+    rgba(37, 204, 184, 0) 68%
+  );
+  pointer-events: none;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.kickerPunto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-mint);
+}
+
+/* El logotipo es la marca, pero el titular es el mensaje: a 244px competían por
+   el mismo sitio. Más pequeño y con más aire debajo, el ojo cae en el h1. */
+.logo {
+  display: block;
+  height: auto;
+  width: clamp(172px, 14.4vw, 208px);
+  margin-top: clamp(8px, 1.4vh, 16px);
+}
+
+.titulo {
+  margin: clamp(16px, 2.4vh, 26px) 0 0;
+  max-width: 15ch;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 3.1vw, 44px);
+  line-height: 1.04;
+  letter-spacing: -0.014em;
+  color: var(--color-ink-2);
+}
+
+.entrada {
+  margin: clamp(10px, 1.4vh, 14px) 0 0;
+  max-width: 46ch;
+  font-size: var(--text-lead);
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(14px, 2.2vh, 24px);
+}
+
+/* Ficha de la pieza señalada: es lo que convierte el hover en información. */
+.ficha {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: auto 0 0;
+  padding-top: clamp(12px, 1.8vh, 18px);
+  border-top: 1px dashed var(--color-line);
+}
+.fichaRotulo {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted-2);
+}
+.fichaNombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--color-ink-2);
+}
+.fichaPunto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cat);
+}
+.fichaDesc {
+  font-size: var(--text-copy);
+  color: var(--color-muted);
+}
+.fichaRating {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-mini);
+  font-weight: 700;
+  color: var(--color-mango-ink);
+  white-space: nowrap;
+}
+
+/* ── Pista de continuación ─────────────────────────────────────────────────── */
+
+.cue {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-ink-2);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  box-shadow: 0 1px 0 rgba(38, 70, 83, 0.14), 0 8px 20px rgba(38, 70, 83, 0.14);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+.cue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 rgba(38, 70, 83, 0.16), 0 14px 28px rgba(38, 70, 83, 0.2);
+}
+.cue:active {
+  transform: translateY(1px);
+}
+/* Eco en miniatura de la propia rejilla: dice "el mosaico sigue" sin escribirlo.
+   Las baldosas van en los colores de las categorías, no en grises: cinco barras
+   neutras del mismo tono sobre un tile oscuro se leían como un esqueleto de
+   carga, que es justo lo contrario de "aquí hay más país". */
+.cueMini {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-rows: 15px 15px;
+  gap: 4px;
+  width: 92px;
+  max-width: 100%;
+  margin-bottom: auto;
+}
+.cueMini i {
+  display: block;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.cueMini i:nth-child(1) {
+  grid-area: 1 / 1 / 3 / 2;
+  background: rgba(37, 204, 184, 0.62);
+}
+.cueMini i:nth-child(2) {
+  grid-area: 1 / 2 / 2 / 4;
+  background: rgba(255, 255, 255, 0.22);
+}
+.cueMini i:nth-child(3) {
+  grid-area: 2 / 2 / 3 / 3;
+  background: rgba(255, 141, 22, 0.62);
+}
+.cueMini i:nth-child(4) {
+  grid-area: 2 / 3 / 3 / 4;
+  background: rgba(247, 108, 77, 0.55);
+}
+
+.cueRotulo {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+.cueTexto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--text-copy);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.cueFlecha {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-mango);
+  color: #fff;
+  font-size: 15px;
+  transition: transform 0.25s ease;
+}
+.cue:hover .cueFlecha {
+  transform: translateY(3px);
+}
+
+/* ── Entrada en cascada ────────────────────────────────────────────────────── */
+
+@keyframes mosaicoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pieza,
+.copy,
+.cue {
+  animation: mosaicoEntra 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Portátiles cortos (1280×720 y similares): la celda de copy mide 5/8 del alto
+   disponible y a 720px el contenido a tamaño completo la rebasaba ~35px, lo que
+   arrastraba a la página entera a hacer scroll. Se aprieta la tipografía en vez
+   de recortar contenido. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .copy {
+    padding: 18px clamp(20px, 2.2vw, 30px);
+  }
+  .logo {
+    width: clamp(160px, 14vw, 202px);
+    margin-top: 8px;
+  }
+  .titulo {
+    margin-top: 10px;
+    font-size: clamp(26px, 2.7vw, 36px);
+  }
+  .entrada {
+    margin-top: 8px;
+    font-size: var(--text-body);
+  }
+  .acciones {
+    margin-top: 14px;
+  }
+  .ficha {
+    padding-top: 12px;
+  }
+}
+
+/* ── Móvil: carrusel alto con snap bajo un titular compacto ────────────────── */
+
+@media (max-width: 899px) {
+  .escena {
+    padding: calc(20px + env(safe-area-inset-top)) 0 calc(68px + env(safe-area-inset-bottom));
+    /* Sin scroll vertical: la primera pantalla se resuelve entera. El único
+       desplazamiento es el horizontal del carril. */
+    overflow: hidden;
+  }
+
+  .rejilla {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* El bloque de copy se deshace en sus partes para que el carrusel pueda
+     colarse entre el titular y los botones sin duplicar markup. */
+  .copy {
+    display: contents;
+  }
+  /* Con `display: contents` el pseudo sobrevive y se convierte en un hijo más
+     de la columna: el disco de menta acababa suelto arriba a la derecha, medio
+     recortado por la pantalla, con toda la pinta de fallo de render. */
+  .copy::after {
+    display: none;
+  }
+
+  .cabecera {
+    order: 1;
+    padding: 0 18px;
+  }
+  .carril {
+    order: 2;
+    /* Absorbe el alto sobrante: las tarjetas miden lo que deje el texto, así
+       que la pantalla se resuelve sin cuentas de píxeles por dispositivo. */
+    flex: 1 1 auto;
+    min-height: 190px;
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 4px 18px 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 18px;
+    scrollbar-width: none;
+    /* La pieza que asoma se desvanece contra el borde. Sin esto, el chip de la
+       siguiente tarjeta quedaba cortado a mitad de palabra ("Zona Colonia",
+       "Santo Domingo"), que se lee como un desborde y no como un carrusel. */
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 64px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 64px), transparent 100%);
+  }
+  .carril::-webkit-scrollbar {
+    display: none;
+  }
+  .ficha {
+    order: 3;
+    margin: 12px 0 0;
+    padding: 12px 18px 0;
+  }
+  .acciones {
+    order: 4;
+    margin: 14px 0 0;
+    padding: 0 18px;
+    /* 8px: con 10 los dos botones se pasaban por 1px en pantallas de 360. */
+    gap: 8px;
+  }
+  .cue {
+    order: 5;
+    margin: 12px 18px 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px 10px 14px;
+  }
+  .cueMini {
+    display: none;
+  }
+  .cueTexto {
+    flex: 1;
+  }
+
+  .pieza {
+    /* 66vw deja la siguiente pieza asomando por el borde: el carrusel se lee
+       como deslizable sin necesidad de flechas ni puntos. */
+    flex: 0 0 66vw;
+    scroll-snap-align: start;
+  }
+  .logo {
+    width: 138px;
+    margin-top: 0;
+  }
+  .titulo {
+    margin-top: 8px;
+    max-width: 100%;
+    font-size: clamp(25px, 7.4vw, 31px);
+  }
+  .entrada {
+    margin-top: 7px;
+    max-width: 40ch;
+    font-size: 14.5px;
+    line-height: 1.42;
+  }
+  .kicker {
+    margin-bottom: 8px;
+    letter-spacing: 0.13em;
+  }
+  .ficha {
+    gap: 2px 8px;
+  }
+  .fichaRating {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 899px) and (max-height: 700px) {
+  /* Pantallas cortas (iPhone SE): la ficha es lo primero que sobra, porque su
+     dato ya vive en la etiqueta de cada pieza. */
+  .ficha {
+    display: none;
+  }
+  .logo {
+    width: 118px;
+  }
+  .escena {
+    padding-bottom: calc(58px + env(safe-area-inset-bottom));
+  }
+  .carril {
+    min-height: 140px;
+    margin-top: 10px;
+  }
+  .titulo {
+    font-size: clamp(23px, 6.6vw, 28px);
+  }
+  .entrada {
+    font-size: 13.5px;
+  }
+  .acciones {
+    margin-top: 12px;
+  }
+  .cue {
+    margin-top: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* El global ya reduce las duraciones; aquí se retira además el cambio de
+     escala, que sin transición se leería como un salto. */
+  .pieza:hover > .marco,
+  .pieza:focus-visible > .marco,
+  .pieza:hover .foto,
+  .pieza:focus-visible .foto,
+  .cue:hover,
+  .cue:hover .cueFlecha {
+    transform: none;
+  }
+}
