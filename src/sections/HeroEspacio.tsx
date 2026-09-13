@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import Image from "next/image";
 import Button from "@/components/Button";
 import BrandPin from "@/components/BrandPin";
@@ -121,6 +121,25 @@ function CueDescenso() {
   );
 }
 
+// La frase del hero, partida para poder escalonarla. El logo ya dio el nombre
+// y el lema: esta línea es lo único que promete algo, así que entra palabra
+// por palabra y termina marcando la que carga la frase. Antes describía el
+// producto ("la guía de República Dominicana hecha por gente de aquí") y no
+// prometía nada; ahora nombra el país que el visitante no va a encontrar en
+// una guía, que es la misma promesa que hace el CTA de la lista.
+const FRASE = ["La", "República", "Dominicana", "que", "no", "sale", "en", "las"];
+const FRASE_CLAVE = "guías";
+
+/** La primera palabra entra donde antes entraba la línea entera; cada
+ *  siguiente, 75 ms después. */
+const RETRASO_FRASE = 380;
+const PASO_PALABRA = 75;
+const retrasoDe = (i: number) => RETRASO_FRASE + i * PASO_PALABRA;
+
+/** El subrayado no llega con la palabra: arranca cuando ya casi se posó, o se
+ *  lee como parte del texto en vez de como un trazo encima. */
+const RETRASO_RAYA = retrasoDe(FRASE.length) + 260;
+
 /**
  * El contenido del hero se monta como hermano del mapa, no como hijo: <Map>
  * se carga con `ssr: false` y todo lo que cuelgue de él sale del HTML
@@ -128,7 +147,7 @@ function CueDescenso() {
  *
  * El logo ya dice el nombre y el lema, así que no hay titular: el h1 es la
  * marca (texto sólo para lectores de pantalla) y debajo va una sola línea que
- * dice qué es la app, y las dos acciones.
+ * promete lo que trae la app, y las dos acciones.
  */
 export default function HeroEspacio() {
   const { activeScene } = useScene();
@@ -155,8 +174,20 @@ export default function HeroEspacio() {
           />
         </h1>
 
-        <p className={`${e.entra} ${s.linea} font-medium text-white/85`} style={{ animationDelay: "380ms" }}>
-          La guía de República Dominicana hecha por gente de aquí.
+        <p className={`${s.linea} font-medium text-white/85`}>
+          {FRASE.map((palabra, i) => (
+            <Fragment key={`${palabra}-${i}`}>
+              <span className={s.palabra} style={{ animationDelay: `${retrasoDe(i)}ms` }}>
+                {palabra}
+              </span>{" "}
+            </Fragment>
+          ))}
+          <span className={s.palabra} style={{ animationDelay: `${retrasoDe(FRASE.length)}ms` }}>
+            <em className={s.clave} style={{ "--raya-retraso": `${RETRASO_RAYA}ms` } as React.CSSProperties}>
+              {FRASE_CLAVE}
+            </em>
+            .
+          </span>
         </p>
 
         <div className={`${e.entra} ${s.acciones}`} style={{ animationDelay: "520ms" }}>

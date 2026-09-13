@@ -37,6 +37,76 @@
   text-wrap: balance;
 }
 
+/* ── La entrada de la frase ───────────────────────────────────────────────────
+   La línea no entra con el mismo fundido que el logo y los botones: llega
+   palabra por palabra, y cuando la última se posa, el subrayado se dibuja. El
+   retraso de cada palabra lo escribe el componente (depende de cuántas hay);
+   aquí sólo viven la forma y la duración. */
+.palabra {
+  display: inline-block;
+  opacity: 0;
+  animation: palabraEntra 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* La palabra que carga la frase. El trazo va en mango, que es el acento sobre
+   tinta, y se dibuja de izquierda a derecha: aparecer de golpe lo convierte en
+   un subrayado de enlace. Va en <em>, sin la cursiva del navegador, como el
+   resto de los acentos del sitio. */
+.clave {
+  position: relative;
+  font-style: normal;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.clave::after {
+  content: "";
+  position: absolute;
+  left: -0.04em;
+  right: -0.04em;
+  bottom: -0.2em;
+  height: 0.15em;
+  border-radius: 0.08em;
+  background: var(--color-mango);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: rayaEntra 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--raya-retraso, 1.24s) both;
+}
+
+@keyframes palabraEntra {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+    filter: blur(0.12em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes rayaEntra {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Sin movimiento, la frase entera llega junta y ya subrayada. El bloque global
+   de globals.css sólo acorta la duración: el retraso sigue vivo, y sin esto la
+   frase aparecería a trozos durante un segundo. El !important es para ganarle
+   al `animation-delay` que el componente escribe en línea. */
+@media (prefers-reduced-motion: reduce) {
+  .palabra,
+  .clave::after {
+    animation-delay: 0ms !important;
+  }
+}
+
 .acciones {
   display: flex;
   flex-direction: column;
