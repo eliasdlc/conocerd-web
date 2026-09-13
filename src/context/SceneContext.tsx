@@ -6,7 +6,7 @@ import { useMotionValue, type MotionValue } from "motion/react";
 type SceneContextValue = {
   activeScene: string;
   setActiveScene: (scene: string) => void;
-  /** Progreso global 0..1 del recorrido (lo escribe useJourneySteps). */
+  /** Progreso global 0..1 del recorrido (lo escriben los motores: useJourneyScroll en escritorio, useJourneySteps en móvil). */
   progress: MotionValue<number>;
 };
 
