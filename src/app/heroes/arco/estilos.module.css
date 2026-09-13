@@ -1,0 +1,251 @@
+/* ── Propuesta «Arco» ─────────────────────────────────────────────────────────
+   El titular escrito sobre la curvatura del planeta. El globo asoma por el
+   borde inferior como en Horizonte; el titular no vive en el cielo sino
+   coronando el limbo, siguiendo el arco igual que los textos del cuño de
+   equipaje siguen el suyo. Al bajar, el aro de texto sube con el planeta y se
+   va por arriba.
+
+   La geometría del arco es la de Horizonte, deducida del keyframe `hero` del
+   journey: `--globo-r` es el radio de la silueta que dibuja MapLibre, medido
+   contra capturas reales; si el keyframe cambiara, es el número a rehacer.
+   El canvas nunca cambia de tamaño: se desplaza en vertical y vuelve a cero a
+   mitad de pista, así que el aterrizaje es idéntico al de producción. */
+
+.escena {
+  --globo-r: 42.8vw;
+  --arco: max(60dvh, 320px);
+  /* Radio del aro de texto: el limbo más el aire que separa la línea base de
+     la corteza. */
+  --aro: calc(var(--globo-r) + 22px);
+  --globo-baja: calc(var(--arco) + var(--globo-r) - 50dvh);
+
+  --t: var(--descenso, 0);
+  --u: min(1, calc(var(--t) / 0.62));
+  --alza: calc(1 - var(--u) * var(--u) * (3 - 2 * var(--u)));
+  --sube: translate3d(0, calc(var(--globo-baja) * var(--alza)), 0);
+  --cielo-op: calc(1 - var(--t) * 1.6);
+}
+
+@media (min-width: 900px) {
+  .escena {
+    --globo-r: calc(286px + 9.4dvh);
+    --arco: max(50dvh, 400px);
+    --aro: calc(var(--globo-r) + 30px);
+  }
+}
+
+.escena :global(.maplibregl-map),
+.escena > [aria-hidden="true"]:not(.capa),
+.atmosfera,
+.titular {
+  transform: var(--sube);
+}
+
+/* ═══ Cielo ═══════════════════════════════════════════════════════════════ */
+
+.cielo {
+  position: absolute;
+  inset: 0;
+  opacity: var(--cielo-op);
+  background:
+    radial-gradient(78% 30% at 50% var(--arco), rgba(255, 141, 22, 0.2), transparent 72%),
+    linear-gradient(180deg, #fdf8f0 0%, #fdf5ea 26%, #fff0dd 50%, #ffe6c8 74%, #ffe1d3 100%);
+}
+
+.atmosfera {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--globo-r) * 2);
+  height: calc(var(--globo-r) * 2);
+  margin: calc(var(--globo-r) * -1) 0 0 calc(var(--globo-r) * -1);
+  border-radius: 50%;
+  opacity: var(--cielo-op);
+  box-shadow:
+    0 0 0 1px rgba(255, 141, 22, 0.34),
+    0 0 26px 2px rgba(255, 141, 22, 0.3),
+    0 0 96px 14px rgba(224, 85, 47, 0.13);
+}
+
+/* ═══ Overlay ═════════════════════════════════════════════════════════════ */
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.columna {
+  position: absolute;
+  inset: 0 22px auto;
+  padding-top: max(36px, 8dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translate3d(0, calc(var(--t) * -24dvh), 0);
+  opacity: calc(1 - var(--t) * 3);
+}
+
+/* El logo es la primera línea del hero y va a cuerpo de portada: aquí no hay
+   titular encima de él con quien repartirse el cielo. */
+.logo {
+  display: block;
+  width: min(58vw, 236px);
+  height: auto;
+}
+
+.copy {
+  margin: 16px 0 0;
+  max-width: 34ch;
+  font-size: clamp(16px, 1.6vw, 19px);
+  line-height: 1.45;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+@media (min-width: 900px) {
+  .columna {
+    padding-top: clamp(40px, 7vh, 72px);
+  }
+  .logo {
+    width: clamp(220px, 19vw, 280px);
+  }
+  .copy {
+    margin-top: 18px;
+  }
+  .acciones {
+    flex-direction: row;
+    gap: 14px;
+    margin-top: 26px;
+  }
+}
+
+/* ═══ El titular en el arco ═══════════════════════════════════════════════ */
+
+.titular {
+  position: absolute;
+  left: 50%;
+  top: 50dvh;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: calc(1 - var(--t) * 3);
+}
+
+.aro {
+  position: absolute;
+  left: calc(var(--aro) * -1);
+  top: calc(var(--aro) * -1);
+  width: calc(var(--aro) * 2);
+  height: calc(var(--aro) * 2);
+  overflow: visible;
+  animation: arcoEntra 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 80ms;
+}
+
+/* 70 unidades del viewBox de 1000: con el SVG midiendo 2·aro en pantalla,
+   son ~56px en escritorio (900 de alto) y ~26px en un teléfono de 390. */
+.aroTexto {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 70px;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.02em;
+  fill: var(--color-ink);
+}
+
+.aroAcento {
+  fill: var(--color-coral-ink);
+}
+
+/* ═══ Cue ═════════════════════════════════════════════════════════════════
+   Bajo el titular, sobre la corteza: en el sistema del globo para viajar
+   con él. */
+.cue {
+  position: absolute;
+  left: 50%;
+  top: calc(50dvh - var(--globo-r) + 26px);
+  width: max-content;
+  transform: var(--sube) translateX(-50%);
+  opacity: calc(1 - var(--t) * 4);
+}
+
+.cueBoton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-cream) 94%, transparent);
+  backdrop-filter: blur(12px);
+  padding: 7px 8px 7px 16px;
+  white-space: nowrap;
+  color: var(--color-ink);
+  box-shadow: var(--shadow-e1);
+  transition: transform 0.2s ease;
+}
+
+.cueBoton:hover {
+  transform: translateY(2px);
+}
+
+.cueFlecha {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  color: var(--color-paper);
+  flex: none;
+}
+
+/* ═══ Marcadores ══════════════════════════════════════════════════════════ */
+
+.pinRd {
+  opacity: calc(1 - (var(--t) - 0.5) * 3.5);
+}
+
+.etiquetaRd {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+
+@media (min-width: 900px) {
+  .etiquetaRd {
+    left: calc(100% + 8px);
+    top: 13px;
+    transform: translateY(-50%);
+  }
+}
+
+.pinDestino {
+  opacity: calc((var(--t) - 0.62) * 5);
+}
+
+/* ═══ Entradas ════════════════════════════════════════════════════════════
+   Una sola pasada al cargar; nada se mueve en reposo. */
+@keyframes arcoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.entra {
+  animation: arcoEntra 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

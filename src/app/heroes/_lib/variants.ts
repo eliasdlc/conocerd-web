@@ -124,6 +124,14 @@ export const HERO_VARIANTS: HeroVariant[] = [
     grupo: "globo",
   },
   {
+    slug: "arco",
+    nombre: "Arco",
+    concepto:
+      "El titular escrito sobre la curvatura del planeta, como los textos del cuño; arriba sólo el logo, una línea y los CTA.",
+    acento: "#B23410",
+    grupo: "globo",
+  },
+  {
     slug: "constelacion",
     nombre: "Constelación de destinos",
     concepto:
