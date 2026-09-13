@@ -4,8 +4,9 @@ import { CHAPTERS, chapterIndexOfScene, SCENE_COUNT } from "@/lib/journey";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Panel de comando del recorrido en MÓVIL — pegado al borde inferior. En
-//  escritorio no existe: ahí el recorrido se scrollea y el riel lateral
-//  (JourneyProgress) es la referencia de capítulos.
+//  escritorio no existe: ahí el paso lo piden la rueda y el teclado
+//  (useJourneyGestos) y el riel lateral (JourneyProgress) es la referencia de
+//  capítulos.
 //
 //  Reemplaza al scroll: cada toque avanza a un keyframe completo, así nadie
 //  queda "entre escenas" ni se pierde el vuelo de la cámara por deslizar
