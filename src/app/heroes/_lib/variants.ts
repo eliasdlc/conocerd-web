@@ -108,6 +108,14 @@ export const HERO_VARIANTS: HeroVariant[] = [
     grupo: "globo",
   },
   {
+    slug: "amanecer",
+    nombre: "Amanecer",
+    concepto:
+      "El planeta de noche, visto desde el espacio: cielo de tinta, el limbo encendido y un solo punto de luz en el país. Al bajar amanece.",
+    acento: "#0F1A2E",
+    grupo: "globo",
+  },
+  {
     slug: "constelacion",
     nombre: "Constelación de destinos",
     concepto:

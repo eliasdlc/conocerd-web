@@ -1,0 +1,238 @@
+/* ── Propuesta «Amanecer» ─────────────────────────────────────────────────────
+   El planeta de noche, visto desde el espacio. Sólo asoma el casquete, con el
+   limbo encendido; arriba, cielo de tinta y el titular en blanco. Al bajar
+   amanece: la tinta se disuelve en el crema del sitio, el planeta sube y la
+   cámara aterriza en el primer destino.
+
+   La geometría del arco es la de Horizonte, deducida del keyframe `hero` del
+   journey: `--globo-r` es el radio de la silueta que dibuja MapLibre, medido
+   contra capturas reales; si el keyframe cambiara, es el número a rehacer.
+   El canvas nunca cambia de tamaño: se desplaza en vertical y vuelve a cero a
+   mitad de pista, así que el aterrizaje es idéntico al de producción. */
+
+.escena {
+  --globo-r: 42.8vw;
+  --arco: max(62dvh, 300px);
+  --globo-baja: calc(var(--arco) + var(--globo-r) - 50dvh);
+
+  --t: var(--descenso, 0);
+  --u: min(1, calc(var(--t) / 0.62));
+  --alza: calc(1 - var(--u) * var(--u) * (3 - 2 * var(--u)));
+  --sube: translate3d(0, calc(var(--globo-baja) * var(--alza)), 0);
+
+  /* La noche se va en el primer tercio largo del descenso; para cuando el
+     planeta llena la pantalla ya es de día. */
+  --noche-op: calc(1 - var(--t) * 2.2);
+}
+
+@media (min-width: 900px) {
+  .escena {
+    --globo-r: calc(286px + 9.4dvh);
+    --arco: max(48dvh, 380px);
+  }
+}
+
+.escena :global(.maplibregl-map),
+.escena > [aria-hidden="true"]:not(.capa),
+.atmosferaEntra {
+  transform: var(--sube);
+}
+
+/* ═══ Cielo ═══════════════════════════════════════════════════════════════ */
+
+/* La tinta. Es el mismo degradado de la card de descarga del sitio, así que la
+   única superficie oscura de la home habla el mismo idioma. */
+.noche {
+  position: absolute;
+  inset: 0;
+  opacity: var(--noche-op);
+  background: linear-gradient(180deg, #090f1b 0%, #0f1a2e 58%, #1a2540 100%);
+}
+
+/* El día: el cielo cálido de la web, que va cubriendo la noche conforme se
+   baja. Es una capa opaca que sube de opacidad, no la tinta apagándose sobre
+   crema: la mezcla de tinta y crema a medias daba gris, y un amanecer pasa por
+   el naranja. Se retira antes del final, cuando el planeta ya llena la
+   pantalla, para que la cámara aterrice sobre el crema limpio. */
+.dia {
+  position: absolute;
+  inset: 0;
+  opacity: min(calc(var(--t) * 2.6), max(0, calc((0.78 - var(--t)) * 3.3)));
+  background:
+    radial-gradient(78% 30% at 50% var(--arco), rgba(255, 141, 22, 0.28), transparent 72%),
+    linear-gradient(180deg, #fdf8f0 0%, #fdf5ea 26%, #fff0dd 50%, #ffe6c8 74%, #ffe1d3 100%);
+}
+
+/* La claridad del alba: nace en el horizonte y sube con el primer tramo del
+   descenso (crece hasta t = 0.3), luego se va con la noche. */
+.alba {
+  position: absolute;
+  inset: 0;
+  opacity: calc(min(1, 0.55 + var(--t) * 1.5) * max(0, var(--noche-op)));
+  background:
+    radial-gradient(70% 34% at 50% var(--arco), rgba(255, 141, 22, 0.42), transparent 70%),
+    radial-gradient(120% 48% at 50% calc(var(--arco) + 4vh), rgba(224, 85, 47, 0.28), transparent 70%);
+}
+
+.atmosferaEntra {
+  position: absolute;
+  inset: 0;
+  animation: amanecerEnciende 1.4s ease-out both;
+  animation-delay: 200ms;
+  pointer-events: none;
+}
+
+/* El limbo: un filo de luz y dos halos, todos por fuera de la silueta. */
+.atmosfera {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--globo-r) * 2);
+  height: calc(var(--globo-r) * 2);
+  margin: calc(var(--globo-r) * -1) 0 0 calc(var(--globo-r) * -1);
+  border-radius: 50%;
+  opacity: var(--noche-op);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 141, 22, 0.85),
+    0 0 28px 5px rgba(255, 141, 22, 0.5),
+    0 0 130px 34px rgba(224, 85, 47, 0.26);
+}
+
+/* ═══ Overlay ═════════════════════════════════════════════════════════════ */
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.cabecera {
+  opacity: calc(1 - var(--t) * 4.5);
+}
+
+.columna {
+  transform: translate3d(0, calc(var(--t) * -26dvh), 0);
+  opacity: calc(1 - var(--t) * 3);
+}
+
+/* Sobre tinta, el botón secundario dibuja su contorno y su etiqueta con los
+   mismos roles que usa siempre (`ink`, `line-strong`); aquí esos roles valen
+   blanco, igual que en la card de descarga. */
+.acciones {
+  --color-ink: #ffffff;
+  --color-line-strong: rgba(255, 255, 255, 0.34);
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .columna {
+    padding-top: 64px;
+  }
+  .titular {
+    font-size: clamp(34px, 4.2vw, 46px);
+  }
+}
+
+/* ═══ Cue ═════════════════════════════════════════════════════════════════ */
+
+.cue {
+  position: absolute;
+  left: 50%;
+  top: calc(50dvh - var(--globo-r) - 22px);
+  width: max-content;
+  transform: var(--sube) translateX(-50%);
+  opacity: calc(1 - var(--t) * 4);
+}
+
+.cueBoton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 26, 46, 0.62);
+  backdrop-filter: blur(14px);
+  padding: 7px 8px 7px 16px;
+  white-space: nowrap;
+  color: #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.cueBoton:hover {
+  transform: translateY(2px);
+}
+
+.cueFlecha {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  color: var(--color-paper);
+  flex: none;
+}
+
+/* ═══ Marcadores ══════════════════════════════════════════════════════════ */
+
+.punto {
+  opacity: calc(1 - (var(--t) - 0.5) * 3.5);
+}
+
+/* El halo del punto de luz: un disco de mango que se disuelve hacia fuera,
+   centrado en la cabeza del pin. */
+.halo {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 141, 22, 0.55) 0%, rgba(255, 141, 22, 0.18) 38%, transparent 68%);
+}
+
+.etiquetaRd {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+
+@media (min-width: 900px) {
+  .etiquetaRd {
+    left: calc(100% + 8px);
+    top: 13px;
+    transform: translateY(-50%);
+  }
+}
+
+.pinDestino {
+  opacity: calc((var(--t) - 0.62) * 5);
+}
+
+/* ═══ Entradas ════════════════════════════════════════════════════════════
+   Una sola pasada al cargar; nada se mueve en reposo. */
+@keyframes amanecerEntra {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes amanecerEnciende {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.entra {
+  animation: amanecerEntra 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
