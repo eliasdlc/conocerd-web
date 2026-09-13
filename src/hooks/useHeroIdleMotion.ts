@@ -8,7 +8,9 @@ import { heroFactorAtProgress } from "@/lib/journey";
 import { applyJourneyFrame, getIdleBearing, setIdleBearing } from "@/lib/journeyCamera";
 
 const DEG_PER_SECOND = 1.2;
-const MAX_IDLE_MS = 10_000;
+// Gira hasta que el recorrido arranca: el planeta desde el espacio es la
+// única cosa viva de la primera pantalla y a los diez segundos se congelaba.
+const MAX_IDLE_MS = Number.POSITIVE_INFINITY;
 const MAX_IDLE_PROGRESS = 0.004;
 
 // Cada cuántos frames se escribe la cámara. A 60 Hz el giro avanza 0,02 grados
@@ -23,8 +25,7 @@ const MAX_IDLE_PROGRESS = 0.004;
 // cambio; contando frames son 20 Hz exactos y pasos iguales.
 const FRAMES_POR_ESCRITURA = 3;
 
-// Excepción aprobada al "sin animaciones en reposo": el globo del hero gira
-// lento mientras nadie interactúa.
+// El globo del hero gira lento mientras nadie interactúa.
 //
 // No escribe la cámara por su cuenta — acumula un OFFSET de bearing que
 // `applyJourneyFrame` mezcla y desvanece con el factor hero. Antes hacía su

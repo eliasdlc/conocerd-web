@@ -42,7 +42,11 @@ export type SceneDef = {
 // scroll (100vh cada uno) y el tramo se hacía eterno; 82vh mantiene el ritmo
 // sin comerse el dwell de las escenas de lectura.
 export const SCENES: SceneDef[] = [
-  { name: "hero",             height: 100, chapter: "Inicio",   padLeft: 0.44, padBottom: 0.40 },
+  // Centrado y sin franja para el nav: el planeta va hundido por el borde
+  // inferior (la escena lo desplaza con un transform) y la píldora flota sobre
+  // el cielo, no sobre el globo. El reparto texto/globo de antes (44 % a la
+  // izquierda, 40 % abajo) ya no existe.
+  { name: "hero",             height: 100, chapter: "Inicio",   padLeft: 0, padBottom: 0, padTopPx: 0 },
   // Sin "destinos-intro": la isla vacía con titular era un frame muerto de
   // scroll (decisión del dueño, jul 2026). El primer polaroid absorbe algo de
   // pista extra porque ahora recibe el vuelo completo globo→closeup.

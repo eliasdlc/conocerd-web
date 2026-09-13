@@ -123,7 +123,8 @@ export default function Footer() {
       {/* Legal */}
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-white/10 px-[clamp(20px,5vw,56px)] py-4">
         <p className="m-0 w-full text-xs leading-[1.7] text-white/55">
-          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}.
+          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}. Imágenes de la Tierra
+          del hero: NASA GIBS (Blue Marble, Black Marble y nubes de Visible Earth).
         </p>
         <div className="text-xs text-white/55">
           © 2026 ConoceRD · Hecho con orgullo en RD

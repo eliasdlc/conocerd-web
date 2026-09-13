@@ -49,7 +49,7 @@ type Caja = { diametro: number; cx: number; cy: number };
  * MapLibre y el globo cambia de tamaño, esto deja de cuadrar en silencio: se
  * vuelve a medir con ese script.
  */
-function cajaDelGlobo(width: number, height: number): Caja {
+export function cajaDelGlobo(width: number, height: number): Caja {
   const mobile = width < MOBILE_BREAKPOINT;
   const v = { width, height, mobile };
   // La misma cámara que recibe MapLibre, no la del keyframe: en pantallas
