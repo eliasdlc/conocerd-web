@@ -361,6 +361,28 @@ body::after {
   }
 }
 
+/* ── El reloj de las animaciones de entrada ───────────────────────────────────
+   Una animación CSS arranca cuando el navegador resuelve el estilo, no cuando
+   pinta. En un teléfono real median segundos entre las dos cosas (1,28 s y
+   2,70 s medidos con la CPU a un cuarto y red 3G sobre el build de
+   producción), así que toda la entrada del hero se consumía antes del primer
+   pixel y el visitante veía el estado final, sin animación.
+
+   El script de `layout.tsx` pone `lista` al empezar a parsear el body y
+   `corre` en el primer frame pintado. Entre esos dos momentos, todo queda
+   congelado en el frame cero: `paused` con relleno `both` deja a la vista el
+   fotograma inicial de cada animación, que es justo lo que hay que ver antes
+   de que empiece.
+
+   Es el `*` más justificado del archivo: la alternativa es marcar a mano cada
+   pieza que anima al entrar, y la siguiente que alguien añada nacería otra vez
+   con el bug. Sólo vive durante ese hueco; en el primer frame desaparece. */
+html[data-entrada="lista"] *,
+html[data-entrada="lista"] *::before,
+html[data-entrada="lista"] *::after {
+  animation-play-state: paused !important;
+}
+
 /* ─────────────────────────── Journey ──────────────────────────────────── */
 
 /* El recorrido no se scrollea en ningún viewport: ocupa una pantalla exacta y
