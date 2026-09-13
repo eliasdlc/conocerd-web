@@ -41,6 +41,7 @@ for (const [width, height] of viewports) {
     await page.waitForSelector("h1", { timeout: 15_000 });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    const isMobileViewport = width < 900;
     const initial = await page.evaluate(() => ({
       active: document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null,
       hero: document.querySelector("h1")?.textContent ?? null,
@@ -49,31 +50,48 @@ for (const [width, height] of viewports) {
       bodyOverflow: getComputedStyle(document.body).overflow,
       stepper: Boolean(document.querySelector('button[aria-label="Siguiente escena"]')),
     }));
-    // Contrato único desde que escritorio adoptó el motor de pasos: el
-    // recorrido bloquea el scroll de página y se navega con el panel.
+    // Contrato: el recorrido bloquea el scroll de página en los dos modos. En
+    // móvil se navega con el panel de pasos; en escritorio con la rueda.
     const scrollLockOk =
-      initial.rootOverflow === "hidden" && initial.bodyOverflow === "hidden" && initial.stepper;
+      initial.rootOverflow === "hidden" && initial.bodyOverflow === "hidden" &&
+      (isMobileViewport ? initial.stepper : true);
     if (!initial.hero?.includes("ConoceRD") || initial.active !== "hero" || initial.xOverflow || !scrollLockOk) {
       throw new Error(`Invalid cold load at ${width}x${height}: ${JSON.stringify(initial)}`);
     }
 
     for (const scene of scenes) {
-      // No hay pista de scroll en ningún viewport: se avanza pulsando
-      // "Siguiente escena". Las escenas van en orden, así que basta pulsar
-      // hasta llegar. Se relee el estado antes de cada pulsación en vez de
-      // contar pulsaciones: con los paneles diferidos el atributo puede tardar
-      // un frame en actualizarse y contar de más pasaría de largo la escena.
-      for (let guard = 0; guard < 8; guard++) {
-        const active = await page.evaluate(
-          () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
-        );
-        if (active === scene) break;
-        const boton = await page.$('button[aria-label="Siguiente escena"]');
-        if (!boton) break;
-        await boton.click();
-        await new Promise((resolve) => setTimeout(resolve, 250));
+      if (isMobileViewport) {
+        // Sin pista de scroll en móvil: se avanza pulsando "Siguiente escena".
+        // Las escenas van en orden, así que basta pulsar hasta llegar. Se relee
+        // el estado antes de cada pulsación en vez de contar pulsaciones: con
+        // los paneles diferidos el atributo puede tardar un frame en
+        // actualizarse y contar de más pasaría de largo la escena.
+        for (let guard = 0; guard < 8; guard++) {
+          const active = await page.evaluate(
+            () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
+          );
+          if (active === scene) break;
+          const boton = await page.$('button[aria-label="Siguiente escena"]');
+          if (!boton) break;
+          await boton.click();
+          await new Promise((resolve) => setTimeout(resolve, 250));
+        }
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      } else {
+        // Escritorio: un notch de rueda es un paso. Se relee el estado antes
+        // de cada notch por la misma razón que en móvil, y se deja un silencio
+        // entre notches para que cada uno cuente como gesto nuevo.
+        await page.mouse.move(width / 2, height / 2);
+        for (let guard = 0; guard < 8; guard++) {
+          const active = await page.evaluate(
+            () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
+          );
+          if (active === scene) break;
+          await page.mouse.wheel({ deltaY: 100 });
+          await new Promise((resolve) => setTimeout(resolve, 400));
+        }
+        await new Promise((resolve) => setTimeout(resolve, 600));
       }
-      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const state = await page.evaluate(() => {
         const active = document.querySelector(".crd-journey")?.getAttribute("data-active-scene");

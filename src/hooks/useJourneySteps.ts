@@ -9,18 +9,18 @@ import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 // ─────────────────────────────────────────────────────────────────────────────
 //  Motor de PASOS — el único motor del recorrido, en teléfono y en escritorio.
 //
-//  El teléfono lo usa desde agosto de 2026: el scroll libre corría demasiado y
-//  nadie sabe medir cuán lento deslizar para ver el vuelo de la cámara. El
-//  escritorio lo adoptó después, y por un motivo distinto: una cámara que es
-//  función directa de la rueda o del trackpad hereda cada arranque y cada
-//  frenazo del gesto, que es humano y por tanto irregular. El recorrido salía a
-//  tirones aunque la página fuera a 60 fps.
+//  El scroll libre corría demasiado y nadie sabe medir cuán lento deslizar
+//  para ver el vuelo de la cámara; y una cámara que es función directa del
+//  gesto hereda cada arranque y cada frenazo de la mano. Aquí el recorrido
+//  avanza de keyframe en keyframe: cada paso empieza y termina exactamente
+//  donde el encuadre está diseñado, y la animación cinemática completa ocurre
+//  entre medias, siempre igual. Quién pide el paso es otra capa: el panel
+//  inferior en el teléfono (JourneyStepper), la rueda y el teclado en
+//  escritorio (useJourneyGestos).
 //
-//  Aquí cada paso empieza y termina exactamente donde el encuadre está
-//  diseñado, y la animación cinemática completa ocurre entre medias, siempre
-//  igual. El progreso se anima LINEALMENTE entre `center`s porque el easing ya
-//  vive en la cámara (easeInOut por tramo en lib/journey): encadenar los dos
-//  daría un arranque y un frenado dobles.
+//  El progreso se anima LINEALMENTE entre `center`s porque el easing ya vive
+//  en la cámara (easeInOut por tramo en lib/journey): encadenar los dos daría
+//  un arranque y un frenado dobles.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STEP_BASE_MS = 1150; // un paso
@@ -45,6 +45,8 @@ export interface JourneySteps {
   goTo: (index: number) => void;
   next: () => void;
   prev: () => void;
+  /** `true` mientras un paso está animando. */
+  enVuelo: () => boolean;
 }
 
 function prefersReducedMotion() {
@@ -117,10 +119,11 @@ export function useJourneySteps({
 
   const next = useCallback(() => goTo(indexRef.current + 1), [goTo]);
   const prev = useCallback(() => goTo(indexRef.current - 1), [goTo]);
+  const enVuelo = useCallback(() => animatingRef.current, []);
 
   // Al activarse, el motor asienta la cámara en el keyframe del paso actual.
   // Sin esto el mapa se quedaría en el encuadre con el que se construyó hasta
-  // la primera pulsación.
+  // el primer paso.
   useEffect(() => {
     if (!enabled) return;
     measureViewport();
@@ -144,5 +147,5 @@ export function useJourneySteps({
     };
   }, [enabled, apply, progress]);
 
-  return { index, count: SCENE_COUNT, goTo, next, prev };
+  return { index, count: SCENE_COUNT, goTo, next, prev, enVuelo };
 }

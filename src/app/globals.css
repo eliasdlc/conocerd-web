@@ -295,10 +295,11 @@ body::after {
 /* ─────────────────────────── Journey ──────────────────────────────────── */
 
 /* El recorrido no se scrollea en ningún viewport: ocupa una pantalla exacta y
-   avanza por pasos desde el panel inferior (JourneyStepper). El bloqueo del
-   scroll lo hace `overflow:hidden` sobre <html>/<body> (MapScrollJourney) y no
-   `touch-action`, porque touch-action también anularía el scroll interno de los
-   bottom-sheets y de la sección de Equipo. */
+   avanza por pasos (el panel inferior en el teléfono, la rueda y el teclado en
+   escritorio). El bloqueo del scroll lo hace `overflow:hidden` sobre
+   <html>/<body> (MapScrollJourney) y no `touch-action`, porque touch-action
+   también anularía el scroll interno de los bottom-sheets y de la sección de
+   Equipo. */
 .crd-journey {
   position: relative;
   height: 100svh;
@@ -306,7 +307,7 @@ body::after {
 }
 
 /* Las anclas siguen en el DOM como destino de los `#trigger-<escena>` que
-   llegan de fuera, pero ya no reservan alto: no hay pista que recorrer. */
+   llegan de fuera, pero no reservan alto: no hay pista que recorrer. */
 .crd-journey-anchor { display: none; }
 
 /* El pie sólo existe al final: mientras el recorrido está bloqueado no forma
@@ -372,20 +373,11 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   .crd-globo-fantasma { transition: none; }
 }
 
-/* Alto reservado del panel de pasos (JourneyStepper), que flota sobre el
-   contenido en los dos viewports. Todo lo que pueda tocar el borde inferior
-   reserva esta franja.
-
-   En escritorio vale 0: ahí el panel va compacto y en la esquina, fuera de la
-   columna donde vive el contenido, así que no hay franja que reservar y la
-   escena conserva la pantalla entera. */
-/* Alto reservado del panel de pasos (JourneyStepper), que flota centrado abajo
-   en los dos viewports. Todo lo que pueda tocar el borde inferior reserva esta
-   franja: es la única pieza que aparta contenido, y el panel nunca se mueve.
-
-   Escritorio: 16 del borde + 44 de alto + 8 de aire.
-   Móvil:      21 del borde + 64 de alto + sobra para el gesto del pulgar. */
-:root { --crd-stepper-h: 68px; }
+/* Alto reservado del panel de pasos móvil (JourneyStepper), que flota centrado
+   abajo: 21 del borde + 64 de alto + sobra para el gesto del pulgar. Todo lo
+   que pueda tocar el borde inferior reserva esta franja. En escritorio no hay
+   panel y vale 0, para que los calc() que lo usan sigan siendo válidos. */
+:root { --crd-stepper-h: 0px; }
 @media (max-width: 899px) { :root { --crd-stepper-h: 84px; } }
 
 /* Holgura bajo la píldora del nav: top 16px + botón 40px + padding 16px +

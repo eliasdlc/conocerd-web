@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import type maplibregl from "maplibre-gl";
 import { useScene } from "@/context/SceneContext";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
+import { useJourneyGestos } from "@/hooks/useJourneyGestos";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
@@ -119,12 +120,17 @@ export function applyBrandPaint(map: maplibregl.Map) {
   soloTopónimosDeRD(map);
 }
 
+// Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
+// preview: un notch de rueda o medio swipe corto de trackpad vale un paso, y
+// 220 ms de silencio separan dos gestos.
+const GESTO = { umbral: 40, silencioMs: 220 };
+
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
 
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
   const { activeScene, setActiveScene, progress } = useScene();
   const outerRef = useRef<HTMLDivElement>(null);
-  const { resolved: viewportResolved } = useViewportMode();
+  const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
   // El recorrido bloquea el scroll de la página; solo se libera al final para
   // dejar bajar al footer (y se vuelve a bloquear al regresar arriba).
@@ -132,15 +138,36 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   const [stepperVisible, setStepperVisible] = useState(true);
   const leftJourney = useRef(false);
 
-  // Un solo motor en los dos viewports: pasos discretos desde el panel
-  // inferior. El porqué de cada uno está en useJourneySteps. Gated hasta que
-  // matchMedia resuelve, porque el primer encuadre depende del tamaño real de
-  // la ventana.
-  const { goTo, next, prev, index } = useJourneySteps({
+  // Un solo motor en los dos viewports: pasos discretos. Quién pide el paso
+  // cambia por viewport: el panel inferior en el teléfono, la rueda y el
+  // teclado en escritorio. Gated hasta que matchMedia resuelve, porque el
+  // primer encuadre depende del tamaño real de la ventana.
+  const { goTo, next, prev, index, count, enVuelo } = useJourneySteps({
     enabled: viewportResolved,
     mapRef,
     progress,
     onSceneChange: setActiveScene,
+  });
+
+  // Salir al pie es desbloquear y, sólo cuando el pie ya está en el flujo
+  // (la regla de globals.css lo retira mientras dura el bloqueo), scrollear
+  // hasta él. Un rAF no bastaba: desde la rueda el estado se aplica después
+  // del frame y el pie seguía sin existir cuando se le pedía la posición.
+  const goToFooter = useCallback(() => setUnlocked(true), []);
+  useEffect(() => {
+    if (unlocked) scrollToFooter();
+  }, [unlocked]);
+
+  useJourneyGestos({
+    enabled: viewportResolved && !isMobile && !unlocked,
+    params: GESTO,
+    enVuelo,
+    index,
+    count,
+    next,
+    prev,
+    goTo,
+    onEnd: goToFooter,
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
@@ -162,7 +189,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   // mueven la página, pero los bottom-sheets y la sección de equipo siguen
   // scrolleando POR DENTRO (a diferencia de `touch-action`, que los habría
   // anulado también). Ese scroll interno no cambia de escena: la escena solo
-  // avanza desde el panel de pasos.
+  // avanza por pasos.
   useEffect(() => {
     if (!viewportResolved || unlocked) return;
     // Sobre <html> y no solo <body>: globals.css le pone `overflow-x: clip` al
@@ -224,11 +251,6 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       bearing: cam.bearing,
     };
   });
-
-  const goToFooter = useCallback(() => {
-    setUnlocked(true);
-    requestAnimationFrame(() => scrollToFooter());
-  }, []);
 
   // Enlaces que llegan de fuera con hash (`…/#trigger-mapa`, el CTA de los
   // correos). El salto nativo del navegador aterriza en el BORDE de la banda
@@ -345,10 +367,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         visible={stepperVisible}
       />
 
-      {/* Anclas sin alto y ocultas: ya no hay pista de scroll que recorrer, el
-          panel anima el progreso. Siguen en el DOM porque son el destino de los
-          `#trigger-<escena>` que llegan de fuera (el CTA de los correos) y el
-          fallback por id de `journeyNav` cuando el saltador no está montado. */}
+      {/* Anclas sin alto y ocultas: no hay pista de scroll que recorrer, el
+          motor de pasos anima el progreso. Siguen en el DOM porque son el
+          destino de los `#trigger-<escena>` que llegan de fuera (el CTA de los
+          correos) y el fallback por id de `journeyNav` cuando el saltador no
+          está montado. */}
       {SCENES.map((scene) => (
         <div
           key={scene.name}
