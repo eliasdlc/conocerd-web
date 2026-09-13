@@ -23,7 +23,7 @@ import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 //  un arranque y un frenado dobles.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const STEP_BASE_MS = 1150; // un paso
+const STEP_BASE_MS = 1150; // un paso
 const STEP_EXTRA_MS = 300; // por cada paso adicional en un salto
 const STEP_MAX_MS = 2600;
 
@@ -34,8 +34,6 @@ export interface UseJourneyStepsOptions {
    * el sitio equivocado.
    */
   enabled: boolean;
-  /** Duración de un paso simple. Por defecto STEP_BASE_MS. */
-  pasoMs?: number;
   mapRef: RefObject<maplibregl.Map | null>;
   progress: MotionValue<number>;
   onSceneChange: (name: string) => void;
@@ -60,7 +58,6 @@ function prefersReducedMotion() {
 
 export function useJourneySteps({
   enabled,
-  pasoMs = STEP_BASE_MS,
   mapRef,
   progress,
   onSceneChange,
@@ -105,7 +102,7 @@ export function useJourneySteps({
       const jump = Math.max(1, Math.abs(clamped - nearestSceneIndex(from)));
       const ms = prefersReducedMotion()
         ? 1
-        : Math.min(STEP_MAX_MS, pasoMs + (jump - 1) * STEP_EXTRA_MS);
+        : Math.min(STEP_MAX_MS, STEP_BASE_MS + (jump - 1) * STEP_EXTRA_MS);
 
       animatingRef.current = true;
       animRef.current = animate(from, to, {
@@ -117,7 +114,7 @@ export function useJourneySteps({
         },
       });
     },
-    [apply, enabled, pasoMs, progress]
+    [apply, enabled, progress]
   );
 
   const next = useCallback(() => goTo(indexRef.current + 1), [goTo]);

@@ -9,7 +9,6 @@ import { useJourneyGestos } from "@/hooks/useJourneyGestos";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
-import { variantePorQuery } from "@/lib/variantesDeGesto";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
@@ -121,6 +120,11 @@ export function applyBrandPaint(map: maplibregl.Map) {
   soloTopónimosDeRD(map);
 }
 
+// Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
+// preview: un notch de rueda o medio swipe corto de trackpad vale un paso, y
+// 220 ms de silencio separan dos gestos.
+const GESTO = { umbral: 40, silencioMs: 220 };
+
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
 
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
@@ -134,17 +138,12 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   const [stepperVisible, setStepperVisible] = useState(true);
   const leftJourney = useRef(false);
 
-  // Variante de feel del slideshow, elegida por query string mientras dura la
-  // comparación. Se lee una vez: cambiarla es recargar.
-  const [variante] = useState(() => variantePorQuery());
-
   // Un solo motor en los dos viewports: pasos discretos. Quién pide el paso
   // cambia por viewport: el panel inferior en el teléfono, la rueda y el
   // teclado en escritorio. Gated hasta que matchMedia resuelve, porque el
   // primer encuadre depende del tamaño real de la ventana.
   const { goTo, next, prev, index, count, enVuelo } = useJourneySteps({
     enabled: viewportResolved,
-    pasoMs: variante.pasoMs,
     mapRef,
     progress,
     onSceneChange: setActiveScene,
@@ -161,7 +160,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   useJourneyGestos({
     enabled: viewportResolved && !isMobile && !unlocked,
-    params: variante.gesto,
+    params: GESTO,
     enVuelo,
     index,
     count,
