@@ -11,6 +11,8 @@
 //  bundle inicial de la home.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { RasterDEMSourceSpecification } from "maplibre-gl";
+
 export const MAP_STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -39,3 +41,33 @@ export const CARTO_HOSTS = [
   "https://basemaps.cartocdn.com",
   "https://tiles.basemaps.cartocdn.com",
 ] as const;
+
+// ─── Relieve ─────────────────────────────────────────────────────────────────
+//
+// El DEM de AWS Terrain Tiles (Mapzen, hoy en el registro de datos abiertos de
+// AWS), en formato terrarium: gratis, sin clave, con CORS abierto. Cada tesela
+// pesa entre 70 y 115 KB sobre la isla (medido el 13 sep 2026 a z9), así que:
+//
+//   · `maxzoom: 9`. A los closeups de los destinos (z9 a z11.5) MapLibre
+//     sobreescala la tesela de z9. El relieve sale más suave que a z11, pero a
+//     z11 el mismo encuadre pediría 16 veces más teselas: unos 2,5 MB por
+//     destino en vez de unos 300 KB.
+//   · `bounds` acotado a la isla: el mar alrededor no tiene relieve que pedir.
+//
+// Sólo la spec, sin maplibre: este módulo entra en el bundle inicial. El tipo
+// es un `import type`, que el compilador borra.
+export const RELIEVE_DEM = {
+  type: "raster-dem",
+  tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+  encoding: "terrarium",
+  tileSize: 256,
+  minzoom: 4,
+  maxzoom: 9,
+  bounds: [-72.1, 17.35, -68.25, 20.1],
+  attribution:
+    'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, NASA SRTM, USGS, GEBCO)',
+} satisfies RasterDEMSourceSpecification;
+
+/** La misma atribución en texto plano, para el pie del sitio. */
+export const RELIEVE_CREDITO = "Relieve: Terrain Tiles (Mapzen, NASA SRTM, USGS, GEBCO)";
+export const MAPA_CREDITO = "Mapa: © CARTO, © OpenStreetMap contributors";

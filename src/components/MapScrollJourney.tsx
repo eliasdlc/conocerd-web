@@ -12,6 +12,7 @@ import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -118,6 +119,11 @@ export function applyBrandPaint(map: maplibregl.Map) {
   // carretera de debajo, y fuera todo topónimo que no sea de RD.
   aligerarEstilo(map);
   soloTopónimosDeRD(map);
+
+  // El terreno real de la isla bajo los destinos (lib/relieve): sombra sobre
+  // el suelo y bajo el agua, las carreteras y los nombres. Arranca en z6, así
+  // que el globo del hero no pide ni una tesela del DEM.
+  ponerRelieve(map);
 }
 
 // Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
