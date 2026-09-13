@@ -116,6 +116,14 @@ export const HERO_VARIANTS: HeroVariant[] = [
     grupo: "globo",
   },
   {
+    slug: "sol",
+    nombre: "Sol",
+    concepto:
+      "El globo corrido a la derecha y el cuño de la marca amaneciendo detrás del limbo; el titular vive a la izquierda, sobre el cielo.",
+    acento: "#FF8D16",
+    grupo: "globo",
+  },
+  {
     slug: "constelacion",
     nombre: "Constelación de destinos",
     concepto:
