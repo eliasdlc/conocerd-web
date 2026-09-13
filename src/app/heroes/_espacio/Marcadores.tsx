@@ -3,7 +3,7 @@
 import BrandPin from "@/components/BrandPin";
 import { MapMarker, MarkerContent } from "@/components/map/context";
 import { FEATURED_DESTINATIONS } from "@/data/destinations";
-import s from "./espacio.module.css";
+import s from "@/sections/espacio/espacio.module.css";
 
 // Mismo punto que el keyframe `hero`: el centro del globo.
 const RD: [number, number] = [-70.1627, 18.7357];

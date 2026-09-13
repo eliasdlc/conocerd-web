@@ -1,9 +1,9 @@
 import GloboHero from "../_components/GloboHero";
 import CapaHero from "./CapaHero";
-import Cielo from "./Cielo";
+import Cielo from "@/sections/espacio/Cielo";
 import Espacio from "./Espacio";
 import Marcadores from "./Marcadores";
-import s from "./espacio.module.css";
+import s from "@/sections/espacio/espacio.module.css";
 
 /**
  * La escena común de todas las propuestas: el planeta visto desde el espacio,

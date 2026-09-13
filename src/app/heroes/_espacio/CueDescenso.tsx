@@ -1,7 +1,7 @@
 "use client";
 
 import Icon from "@/components/Icon";
-import s from "./espacio.module.css";
+import s from "@/sections/espacio/espacio.module.css";
 
 /**
  * Invitación a bajar, clavada en la cima del arco. Lleva al final de la pista,

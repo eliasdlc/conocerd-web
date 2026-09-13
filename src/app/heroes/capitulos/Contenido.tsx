@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Button from "@/components/Button";
 import CueDescenso from "../_espacio/CueDescenso";
-import e from "../_espacio/espacio.module.css";
+import e from "@/sections/espacio/espacio.module.css";
 import Capitulos from "./Capitulos";
 import s from "./estilos.module.css";
 

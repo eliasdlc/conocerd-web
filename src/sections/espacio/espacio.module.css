@@ -57,7 +57,10 @@
 
 @media (min-width: 900px) {
   .escena {
-    --globo-r: calc(286px + 9.4dvh);
+    /* Ajuste lineal del modelo de DiscoDelGlobo para el zoom 1.95 del hero
+       (r = 316.85 − 38768/alto): 260 a 686 de alto, 274 a 900, 278 a 1000. La
+       home escribe el valor exacto en línea desde ese mismo modelo. */
+    --globo-r: calc(221px + 5.67dvh);
     --arco: max(50dvh, 400px);
   }
 }
@@ -81,6 +84,12 @@
 
 .escena :global(.maplibregl-map) {
   animation: aparece 1.4s ease-out both;
+}
+
+/* Aterrizado, el mapa no lleva transform: en la home cuelgan de él paneles
+   posicionados respecto al viewport y un transform los dejaría atrapados. */
+.escena[data-fase="destino"] :global(.maplibregl-map) {
+  transform: none;
 }
 
 /* ═══ Cielo ═══════════════════════════════════════════════════════════════ */
@@ -253,20 +262,21 @@
   animation-delay: 2.2s;
 }
 
-/* Crédito de las imágenes: obligatorio para GIBS. En producción iría al pie
-   del sitio con el resto de créditos fotográficos. */
+/* Crédito de las imágenes en el banco de propuestas, que no tiene pie. En la
+   home el crédito de GIBS va al pie del sitio con los de las fotos. Sólo en
+   escritorio: en el teléfono no hay esquina libre que no pise algo. */
 .credito {
+  display: none;
   position: absolute;
   right: 16px;
-  top: 26px;
+  bottom: 12px;
   color: rgba(255, 255, 255, 0.55);
   opacity: calc(1 - var(--t) * 4);
 }
 
 @media (min-width: 900px) {
   .credito {
-    top: auto;
-    bottom: 12px;
+    display: block;
   }
 }
 
@@ -302,16 +312,19 @@
   animation: pulso 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
+/* En el teléfono la etiqueta va ENCIMA del pin: debajo caía bajo el panel de
+   pasos en las pantallas cortas. Con ancho, al costado. */
 .etiquetaRd {
   position: absolute;
   left: 50%;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 6px);
   transform: translateX(-50%);
 }
 
 @media (min-width: 900px) {
   .etiquetaRd {
     left: calc(100% + 8px);
+    bottom: auto;
     top: 13px;
     transform: translateY(-50%);
   }

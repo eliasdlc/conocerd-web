@@ -1,4 +1,4 @@
-import e from "../_espacio/espacio.module.css";
+import e from "@/sections/espacio/espacio.module.css";
 import s from "./estilos.module.css";
 
 const TEXTO = "Hecha por gente de aquí.";

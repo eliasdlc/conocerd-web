@@ -1,7 +1,7 @@
 "use client";
 
 import { useDescenso } from "../_components/GloboHero";
-import s from "./espacio.module.css";
+import s from "@/sections/espacio/espacio.module.css";
 
 /**
  * Envoltura del overlay. Sólo existe para una cosa: retirar el contenido del
