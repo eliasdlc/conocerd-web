@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { findVariant, variantesDe } from "../_lib/variants";
+import { HERO_VARIANTS } from "../_lib/variants";
 
 // Conmutador flotante: permite saltar entre propuestas sin volver al índice ni
 // tocar la URL. Vive en el layout de /heroes, así que ninguna variante tiene
@@ -19,13 +19,8 @@ export default function VariantSwitcher() {
   const [abierto, setAbierto] = useState(true);
 
   const slug = pathname?.split("/")[2] ?? "";
-  // Las flechas se mueven DENTRO de la tanda: comparar entre sí las cinco
-  // propuestas comparables es el gesto útil; saltar de una tanda a otra a
-  // ciegas, no. Para cambiar de tanda se pasa por el índice.
-  const variante = findVariant(slug);
-  const grupo = variante?.grupo;
-  const tanda = useMemo(() => (grupo ? variantesDe(grupo) : []), [grupo]);
-  const indice = variante ? tanda.findIndex((v) => v.slug === slug) : -1;
+  const tanda = HERO_VARIANTS;
+  const indice = tanda.findIndex((v) => v.slug === slug);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

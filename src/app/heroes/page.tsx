@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import Link from "next/link";
-import { GRUPOS, variantesDe, type HeroVariant } from "./_lib/variants";
+import { HERO_VARIANTS, type HeroVariant } from "./_lib/variants";
 
 // Índice de propuestas. Es una herramienta de revisión, no una página del
 // sitio: se renderiza en cada visita (`force-dynamic`) para que las miniaturas
@@ -98,28 +98,28 @@ export default function HeroesIndex() {
           Propuestas de primera <em className="crd-accent">pantalla</em>
         </h1>
         <p className="m-0 mt-3.5 max-w-[64ch] text-lead leading-[1.55] text-muted">
-          Cada propuesta es una home completa y autónoma. Entra, míralas en el teléfono y en el
-          monitor, y salta entre las de una misma tanda con las flechas del teclado (Esc vuelve
-          aquí).
+          Cada propuesta es una home completa. Entra, míralas en el teléfono y en el monitor, y
+          salta entre ellas con las flechas del teclado (Esc vuelve aquí).
         </p>
       </header>
 
-      {GRUPOS.map((g) => (
-        <section key={g.id} className="mx-auto mt-[clamp(32px,6vh,64px)] max-w-[1180px]">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line pb-3">
-            <h2 className="m-0 font-display text-feature font-bold text-ink">{g.titulo}</h2>
-            <p className="m-0 max-w-[58ch] text-copy leading-[1.5] text-muted">{g.nota}</p>
-          </div>
+      <section className="mx-auto mt-[clamp(32px,6vh,64px)] max-w-[1180px]">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line pb-3">
+          <h2 className="m-0 font-display text-feature font-bold text-ink">Amanecer y sus variantes</h2>
+          <p className="m-0 max-w-[58ch] text-copy leading-[1.5] text-muted">
+            La misma escena desde el espacio; cambia dónde viven la marca y el mensaje. Baja en cada
+            una para sentir el amanecer y el descenso.
+          </p>
+        </div>
 
-          <ul className="mt-[clamp(18px,3vh,28px)] grid list-none grid-cols-1 gap-[clamp(16px,2.4vw,26px)] p-0 md:grid-cols-2">
-            {variantesDe(g.id).map((v, i) => (
-              <li key={v.slug} className="contents">
-                <Ficha v={v} n={i + 1} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+        <ul className="mt-[clamp(18px,3vh,28px)] grid list-none grid-cols-1 gap-[clamp(16px,2.4vw,26px)] p-0 md:grid-cols-2">
+          {HERO_VARIANTS.map((v, i) => (
+            <li key={v.slug} className="contents">
+              <Ficha v={v} n={i + 1} />
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <footer className="mx-auto mt-[clamp(30px,6vh,60px)] max-w-[1180px] border-t border-line pt-5">
         <Link href="/" className="text-copy font-semibold text-muted no-underline hover:text-ink">
