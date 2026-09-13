@@ -411,7 +411,7 @@ function Telefono({ visible, children }: { visible: boolean; children: React.Rea
   return (
     <div
       aria-hidden="true"
-      className={`crd-phone-wrap absolute right-[clamp(20px,6%,96px)] top-1/2 -translate-y-1/2 transition-opacity duration-500 ease-in-out [transition-delay:0.1s] ${
+      className={`crd-phone-wrap absolute right-[clamp(20px,6%,96px)] -translate-y-1/2 transition-opacity duration-500 ease-in-out [transition-delay:0.1s] ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -753,18 +753,16 @@ function ViajerosFinal() {
         }`}
       >
         {/* La gran card de viaje (v3), sin contador ni línea de fundadores.
-            El envoltorio posiciona y la card (.crd-ol-panel) recorta: así el
-            sello puede volar fuera de la tarjeta sin que el overflow del panel
-            lo recorte (overflow-y: auto arrastra overflow-x a auto).
-            El centrado vertical va con prefijo min-[900px]: el reset móvil de
-            .crd-ol-wrap anula `transform`, pero Tailwind v4 traduce
-            -translate-y-1/2 a la propiedad `translate`, que sobreviviría y
-            dejaría el sheet flotando a media pantalla. */}
+            El envoltorio (.crd-ol-wrap) ocupa la banda segura bajo la píldora y
+            centra la caja (.crd-ol-caja: card + sello) dentro de ella; la card
+            (.crd-ol-panel) recorta y scrollea. Así el sello vuela fuera de la
+            tarjeta sin que el overflow lo recorte ni la píldora lo tape. */}
         <div
-          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] ${
             visible ? "animate-slide-up" : ""
           }`}
         >
+        <div className="crd-ol-caja">
         <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
           <Kicker icon="hiking" tone="mint" className="mb-2">
             Para viajeros
@@ -811,6 +809,7 @@ function ViajerosFinal() {
             en el sheet móvil no existe. */}
         <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
           <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
+        </div>
         </div>
         </div>
 
@@ -1062,13 +1061,15 @@ function NegociosFinal() {
           visible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* La gran card del negocio — misma anatomía que la de viajeros:
-            envoltorio que posiciona, panel que recorta, sello hermano. */}
+        {/* La gran card del negocio, misma anatomía que la de viajeros:
+            envoltorio en la banda segura, caja centrada, panel que recorta,
+            sello hermano. */}
         <div
-          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] ${
             visible ? "animate-slide-up" : ""
           }`}
         >
+        <div className="crd-ol-caja">
         <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
           <Kicker icon="storefront" tone="coral" className="mb-2">
             Para negocios
@@ -1112,6 +1113,7 @@ function NegociosFinal() {
 
         <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
           <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
+        </div>
         </div>
         </div>
 
