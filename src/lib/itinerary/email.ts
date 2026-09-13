@@ -88,7 +88,7 @@ function totalsStrip(stops: number, km: number, min: number): string {
     `<td align="center" width="33%" style="padding:16px 6px;${
       first ? "" : `border-left:1px solid ${C.line};`
     }">
-      <div style="font:700 22px/1.1 ${F.mono};color:${C.ink};">${value}</div>
+      <div style="font:700 22px/1.1 ${F.display};color:${C.ink};">${value}</div>
       <div style="margin-top:3px;font:700 11px/1.4 ${F.sans};letter-spacing:.07em;color:${C.muted};text-transform:uppercase;">${label}</div>
     </td>`;
 
@@ -128,10 +128,10 @@ function stopBlock(assets: EmailAssets, id: string, i: number): string {
           style="display:block;width:100%;max-width:${CARD_W}px;height:auto;border:0;${ALT_TYPE}" />
       </td></tr>
       <tr><td style="padding:16px 20px 20px 20px;">
-        <p style="margin:0;font:700 12px/1 ${F.mono};letter-spacing:.1em;color:${meta.ink};text-transform:uppercase;">
+        <p style="margin:0;font:700 12px/1 ${F.sans};letter-spacing:.1em;color:${meta.ink};text-transform:uppercase;">
           Parada ${i + 1} &nbsp;·&nbsp; ${esc(meta.label)}
         </p>
-        <h2 style="margin:7px 0 0 0;font:700 22px/1.2 ${F.serif};color:${C.ink};">
+        <h2 style="margin:7px 0 0 0;font:700 22px/1.2 ${F.display};color:${C.ink};">
           ${esc(d.name)}
         </h2>
         <p style="margin:4px 0 0 0;font:400 13px/1.4 ${F.sans};color:${C.muted};">
@@ -157,7 +157,7 @@ function stopBlock(assets: EmailAssets, id: string, i: number): string {
 function legBlock(a: string, b: string): string {
   return `
   <tr><td align="center" style="padding:4px 0 12px 0;">
-    <p style="margin:0;font:700 13px/1 ${F.mono};color:${C.muted};">
+    <p style="margin:0;font:700 13px/1 ${F.sans};color:${C.muted};">
       ↓ &nbsp;${Math.round(pairKm(a, b))} km &nbsp;·&nbsp; ${fmtDur(pairMin(a, b))} manejando
     </p>
   </td></tr>`;

@@ -53,3 +53,37 @@ export function GooglePlayGlyph({ size = 20, mono = false }: { size?: number; mo
     </svg>
   );
 }
+
+// ─── Insignia de tienda ───────────────────────────────────────────────────────
+//
+// Señal de credibilidad, no acción: mientras no haya app publicada la insignia
+// va atenuada y SIN enlace. Enlazarla llevaría a una ficha que no existe.
+//
+// Vive sobre tinta, así que sus dos textos se miden contra ella: el nombre al
+// 55 % da 6.00:1 y es el piso de lo atenuado en todo el pie y la card del CTA.
+// La baldosa es radio 12 (chip), hairline blanco al 14 % sobre blanco al 7 %.
+
+export function StoreBadge({
+  store,
+  glyph,
+  /** La leyenda va dentro de la insignia; en móvil se comparte fuera. */
+  legend = true,
+}: {
+  store: string;
+  glyph: React.ReactNode;
+  legend?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-chip border border-white/[0.14] bg-white/[0.07] px-2.5 py-1.5 text-white/55 desk:gap-2 desk:px-3.5 desk:py-2">
+      {glyph}
+      <span className="text-left leading-[1.2]">
+        {legend && (
+          <span className="hidden font-label text-micro font-extrabold uppercase tracking-[.08em] text-white/70 desk:block">
+            Próximamente en
+          </span>
+        )}
+        <span className="font-label text-[13px] font-bold">{store}</span>
+      </span>
+    </div>
+  );
+}

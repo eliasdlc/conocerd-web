@@ -91,6 +91,8 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m6 13.2 6 6 6-6" />
     </>
   ),
+  /** Galón del picker: es `arrow_downward` sin el asta. */
+  expand_more: <path d="m6.8 9.6 5.2 5.2 5.2-5.2" />,
   close: <path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8" />,
   check: <path d="m5.2 12.4 4.6 4.6L18.8 7.4" />,
   check_circle: (
@@ -250,9 +252,12 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
   /** Texto accesible. Sin él el icono es decorativo (aria-hidden), que es el
    *  caso de casi todos: el label va en el texto contiguo. */
   label?: string;
+  /** Estado activo: el MISMO glifo relleno al 22 % y a trazo 2, nunca un
+   *  segundo dibujo. Es la regla de iconografía del sistema. */
+  active?: boolean;
 }
 
-export default function Icon({ name, label, className, style, ...rest }: IconProps) {
+export default function Icon({ name, label, active, className, style, ...rest }: IconProps) {
   const path = PATHS[name];
   if (!path) return null;
 
@@ -261,9 +266,10 @@ export default function Icon({ name, label, className, style, ...rest }: IconPro
       viewBox="0 0 24 24"
       width="1em"
       height="1em"
-      fill="none"
+      fill={active ? "currentColor" : "none"}
+      fillOpacity={active ? 0.22 : undefined}
       stroke="currentColor"
-      strokeWidth={1.9}
+      strokeWidth={active ? 2 : 1.9}
       strokeLinecap="round"
       strokeLinejoin="round"
       focusable="false"

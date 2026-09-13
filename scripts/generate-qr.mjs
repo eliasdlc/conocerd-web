@@ -19,7 +19,7 @@ const outDir = path.join(process.cwd(), "public", "assets");
 const options = {
   errorCorrectionLevel: "H",
   margin: 2,
-  color: { dark: "#1D3A45ff", light: "#FDF8F0ff" },
+  color: { dark: "#0F1A2Eff", light: "#FDF8F0ff" },
 };
 
 await mkdir(outDir, { recursive: true });

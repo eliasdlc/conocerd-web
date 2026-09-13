@@ -5,36 +5,29 @@ import Image from "next/image";
 import Button from "@/components/Button";
 import { useScene } from "@/context/SceneContext";
 import { scrollToSection } from "@/lib/journeyNav";
-import { MapMarker, MarkerContent } from "@/components/map/Map";
+import { MapMarker, MarkerContent } from "@/components/map/context";
+import BrandPin from "@/components/BrandPin";
 
 // Centro aprox. de RD — mismo punto que el keyframe `hero` de la cámara.
 const RD_COORDS: [number, number] = [-70.1627, 18.7357];
 
-// Pin de ubicación (gota coral) que marca RD sobre el globo. Como es un
-// MapMarker, maplibre lo mantiene pegado a estas coords ⇒ viaja con el globo
-// mientras levita/gira.
+// Pin que marca RD sobre el globo: el pin de la marca, el mismo que llevan la
+// píldora del nav y el 404. Antes era una gota coral genérica de stock, que es
+// justo el pin que cualquier mapa dibuja por defecto. Como es un MapMarker,
+// maplibre lo mantiene pegado a estas coords ⇒ viaja con el globo mientras
+// levita/gira.
 function HeroPin() {
   return (
-    <svg
-      width={34}
-      height={46}
-      viewBox="0 0 34 46"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]"
-    >
-      <path
-        d="M17 1C8.7 1 2 7.7 2 16c0 10.5 13 27 14.1 28.3a1.2 1.2 0 0 0 1.8 0C19 43 32 26.5 32 16 32 7.7 25.3 1 17 1Z"
-        fill="#F76C4D" stroke="#fff" strokeWidth="2" />
-      <circle cx="17" cy="16" r="5.5" fill="#fff" />
-    </svg>
+    <span className="block [filter:drop-shadow(0_4px_6px_rgba(38,70,83,0.35))]">
+      <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
+    </span>
   );
 }
 
 // ─── Hero overlay — escena 0 del journey ──────────────────────────────────────
 // Ya NO tiene su propio mapa: el globo es el <Map> compartido del journey, detrás.
 // El globo se encuadra a la derecha (desktop) / arriba (móvil) vía el padding de
-// cámara en useJourneyScroll; este overlay coloca el contenido en el hueco libre.
+// cámara en lib/journeyCamera; este overlay coloca el contenido en el hueco libre.
 //
 // El reparto móvil/desktop ya no pasa por useIsMobile: son variantes `desk:`, así
 // que el layout correcto se pinta en el primer frame, sin esperar a matchMedia.
@@ -51,7 +44,11 @@ export function HeroPinMarker() {
     <MapMarker longitude={RD_COORDS[0]} latitude={RD_COORDS[1]} anchor="bottom">
       <MarkerContent>
         <div
-          className={`pointer-events-none transition-opacity duration-500 ease-in-out ${
+          // .crd-hero-pin: en pantallas de menos de 600 el globo y el bloque de
+          // contenido comparten toda la franja libre, y el pin —que es adorno,
+          // no un control— caía justo encima del titular. Se retira allí desde
+          // globals.css.
+          className={`crd-hero-pin pointer-events-none transition-opacity duration-500 ease-in-out ${
             isVisible ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -113,20 +110,22 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
     <button
       type="button"
       onClick={() => scrollToSection("trigger-polaroid-0")}
-      className={`crd-scroll-cue group flex cursor-pointer flex-col items-center gap-1 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
+      // min-h-12: el área táctil es 48 aunque la overline y el chevron sumen
+      // menos. Un cue que no se puede tocar en el pulgar es un adorno.
+      className={`crd-scroll-cue group flex min-h-12 cursor-pointer flex-col items-center justify-center gap-1 px-3 text-muted transition-colors duration-200 hover:text-ink focus-visible:outline-[3px] focus-visible:outline-offset-4 focus-visible:outline-ink-2 ${
         compacto ? "gap-0.5" : ""
       }`}
     >
       {/* Móvil ya no se desliza: el recorrido avanza tocando (este cue o el
           panel de pasos de abajo). */}
-      <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
+      <span className="font-label text-micro font-extrabold uppercase tracking-[.16em]">
         {compacto ? "Toca para explorar" : "Explora"}
       </span>
       <svg
         key={empujon}
         viewBox="0 0 24 24"
         aria-hidden="true"
-        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-[22px]"}`}
+        className={`crd-scroll-arrow ${compacto ? "size-[18px]" : "size-5"}`}
         // El contador, no un booleano: deja auditar desde el DOM que el empujón
         // se detiene (máximo 3, y menos si el visitante scrollea antes).
         data-empujon={empujon > 0 ? empujon : undefined}
@@ -134,8 +133,8 @@ function ScrollCue({ compacto }: { compacto?: boolean }) {
         <polyline
           points="5,8 12,16 19,8"
           fill="none"
-          stroke="#F76C4D"
-          strokeWidth="3"
+          stroke="var(--color-coral)"
+          strokeWidth="2.6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -163,41 +162,57 @@ export default function HeroOverlay() {
         inert={!isVisible}
         // Móvil: contenido abajo (el globo queda arriba). Desktop: a la izquierda,
         // centrado vertical.
-        // El pb móvil reserva la franja del panel de pasos: sin él, el cue
-        // "Toca para explorar" quedaba enterrado debajo del panel.
-        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-[calc(var(--crd-stepper-h)+10px)] text-center transition-opacity duration-500 ease-in-out
-          desk:items-start desk:justify-center desk:px-[6vw] desk:pb-0 desk:text-left
+        // Las dos franjas de cromo flotante se reservan aquí: el panel de pasos
+        // abajo (sin él, el cue "Toca para explorar" quedaba enterrado) y la
+        // píldora del nav arriba (sin ella, en un iPhone real —664 y no 844 de
+        // alto— la píldora caía justo encima del wordmark). La compresión que
+        // hace que el bloque quepa en esa franja vive en globals.css, por
+        // tramos de alto de pantalla.
+        className={`absolute inset-0 z-10 flex flex-col items-center justify-end px-[22px] pb-[calc(var(--crd-stepper-h)+10px)] pt-[var(--crd-nav-clear)] text-center transition-opacity duration-500 ease-in-out
+          desk:items-start desk:justify-center desk:px-[6vw] desk:pb-[var(--crd-stepper-h)] desk:text-left
           ${isVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
         {/* Velo crema: en móvil el texto cae sobre el globo y las etiquetas del
             mapa se cruzaban con el titular. */}
         <div className="crd-mobile-scrim h-[56%]" />
-        {/* Título real para lectores de pantalla / SEO (el logo es imagen). */}
-        <h1 className="sr-only">
-          ConoceRD — Descubre lo nuestro: la app de turismo auténtico en República Dominicana
-        </h1>
 
         {/* relative z-1: el velo es un elemento posicionado y pintaría encima de
             este bloque (que es un hijo estático del flex). */}
         <div className="crd-hero-content relative z-[1] flex max-w-[460px] flex-col items-center desk:max-w-[520px] desk:items-start">
           <Image
             id="crd-logo"
-            src="/assets/logo.png"
-            alt="ConoceRD — Descubre Lo Nuestro"
-            width={760}
-            height={363}
+            src="/assets/logo.svg"
+            alt="ConoceRD, descubre lo nuestro"
+            width={1296}
+            height={595}
             priority
-            // El logo es el elemento LCP de la home y se estaba sirviendo a
-            // 760w para pintarse a ~320 en móvil: 303 KiB tirados según la
-            // línea base de Lighthouse. Con `sizes` el navegador elige del
-            // srcset. La altura declarada ahora respeta la proporción real del
-            // archivo (4096×1958), que no cuadraba con la anterior.
-            sizes="(max-width: 899px) 82vw, min(42vw, 480px)"
+            // Vector. El logo es el elemento LCP de la home y el PNG pesaba
+            // 735 KB para pintarse a ~480 px: el SVG son 32 KB (10 KB en el
+            // cable) y no se degrada a ningún ancho, así que sobra el srcset.
+            // `unoptimized` porque el optimizador de Next rechaza SVG salvo
+            // con dangerouslyAllowSVG, y un vector no tiene nada que optimizar.
+            unoptimized
             className="crd-hero-logo block h-auto w-[min(82vw,460px)] desk:w-[min(42vw,480px)]"
           />
-          <p className="crd-hero-copy m-0 mt-3.5 max-w-[520px] text-[clamp(17px,2.2vw,21px)] font-medium leading-[1.5] text-ink">
+          {/* El titular y el subtítulo eran un solo párrafo, y el hero no tenía
+              jerarquía: la primera pantalla del sitio no llevaba titular.
+              El h1 sigue arrancando con la marca para lectores de pantalla y
+              para SEO (el logo es una imagen) pero lo que se ve es el titular.
+
+              `opsz 96` es la regla de portada: Bricolage tiene eje óptico y a
+              44 pide el corte de titular grande, no el de texto. Una sola
+              palabra acentuada, y en coralInk: el coral vivo como texto da
+              2.76:1. */}
+          <h1
+            className="crd-hero-title m-0 mt-4 max-w-[520px] font-display text-[34px] font-extrabold leading-[37px] tracking-[-0.03em] text-ink desk:text-[44px] desk:leading-[1.06]"
+            style={{ fontVariationSettings: '"opsz" 96' }}
+          >
+            <span className="sr-only">ConoceRD, descubre lo nuestro. </span>
             La app que te lleva a la República Dominicana{" "}
-            <em className="crd-accent">auténtica</em>: negocios locales y experiencias reales, en una sola ruta.
+            <em className="crd-accent">auténtica</em>
+          </h1>
+          <p className="crd-hero-copy m-0 mt-3 max-w-[520px] text-lead leading-[1.45] text-ink">
+            Negocios locales y experiencias reales, en una sola ruta.
           </p>
           <div className="crd-hero-actions mt-[26px] flex flex-wrap justify-center gap-3.5 desk:justify-start">
             <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>
@@ -206,7 +221,7 @@ export default function HeroOverlay() {
             {/* Ghost, no relleno: dos botones llenos del mismo peso —mango y
                 mint— se anulaban mutuamente y el hero no decía cuál es la
                 acción principal (audit §3). */}
-            <Button variant="outline" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
+            <Button variant="ghost" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
               Soy un negocio
             </Button>
           </div>
@@ -215,13 +230,15 @@ export default function HeroOverlay() {
               Absoluto al fondo chocaba con los botones en pantallas de 667px.
               Sin él, la primera pantalla del teléfono se lee como una página
               completa y el recorrido entero queda invisible. */}
-          <div className="mt-4 desk:hidden">
+          <div className="crd-hero-cue mt-4 desk:hidden">
             <ScrollCue compacto />
           </div>
         </div>
 
-        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca. */}
-        <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 desk:block">
+        {/* Desktop: el cue vive anclado al borde inferior, donde el ojo lo busca,
+            pero por encima de la franja del panel de pasos — que ahora vive
+            centrado abajo y le caía justo encima. */}
+        <div className="absolute bottom-[calc(var(--crd-stepper-h)+12px)] left-1/2 hidden -translate-x-1/2 desk:block">
           <ScrollCue />
         </div>
       </div>

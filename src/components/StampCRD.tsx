@@ -13,7 +13,7 @@ import { useId } from "react";
 //  wordmark.svg) en vez de redibujar el logo a mano.
 //
 //  Revisión ago 2026 — "más viva". El cuño era monocromo y su única jerarquía
-//  eran dos líneas de mono diminuto que nadie leía. Ahora:
+//  eran dos líneas de texto diminuto que nadie leía. Ahora:
 //   · habla los tres colores del logo (coral/mint de tinta, mango, mint),
 //   · un amanecer de rayos nace detrás del wordmark,
 //   · el pin de marca corona, flanqueado por la palma y la flor del logo,
@@ -23,7 +23,7 @@ import { useId } from "react";
 //  El reparto vertical es un compromiso medido: los dos textos en arco ocupan
 //  las bandas r45–51.5 (arriba) y r37–43.5 (abajo), así que TODO lo demás cabe
 //  en un disco de radio ~37 alrededor del centro. Mover cualquier pieza sin
-//  respetar ese disco hace que el arco de abajo se solape con la línea mono.
+//  respetar ese disco hace que el arco de abajo se solape con la línea de pie.
 //
 //  La "realidad" del cuño la siguen poniendo la tinta desplazada con
 //  feTurbulence (el trazo nunca es perfecto) y la rotación de tampón manual.
@@ -42,7 +42,7 @@ export interface StampCRDProps {
   accent2?: string;
   /** Texto de la cinta central, en negativo (p. ej. "RUTA GUARDADA"). */
   line1?: string;
-  /** Línea mono bajo la cinta (p. ej. "· EST. 2026 ·"). Corta: el hueco es poco. */
+  /** Línea de pie bajo la cinta (p. ej. "· EST. 2026 ·"). Corta: el hueco es poco. */
   line2?: string;
   className?: string;
   /** Texto accesible; por defecto decorativa (aria-hidden). */
@@ -52,7 +52,9 @@ export interface StampCRDProps {
 /** Papel del sticker. También es el color del texto en negativo de la cinta. */
 const PAPER = "#FFFDF6";
 
-const MONO = "var(--font-mono), ui-monospace, Menlo, Consolas, monospace";
+// El cuño es lettering de etiqueta: mayúsculas con tracking, nunca titular.
+// El mono con el que se dibujaba salió del sistema con el rediseño.
+const LABEL = "var(--font-jakarta), system-ui, sans-serif";
 
 /** Amanecer detrás del wordmark: 14 rayos = 14 huecos, sin costura visible. */
 const RAYS = Array.from({ length: 14 }, (_, i) => (i * 360) / 14);
@@ -150,13 +152,13 @@ export default function StampCRD({
         />
 
         {/* Arco superior: el país */}
-        <text fontFamily={MONO} fontSize="9" fontWeight="700" letterSpacing="1.5" fill="currentColor">
+        <text fontFamily={LABEL} fontSize="9" fontWeight="700" letterSpacing="1.5" fill="currentColor">
           <textPath href={`#${topArc}`} startOffset="50%" textAnchor="middle">
             REPÚBLICA DOMINICANA
           </textPath>
         </text>
         {/* Arco inferior: el lema */}
-        <text fontFamily={MONO} fontSize="6.4" fontWeight="700" letterSpacing="1.1" fill="currentColor" opacity="0.9">
+        <text fontFamily={LABEL} fontSize="6.4" fontWeight="700" letterSpacing="1.1" fill="currentColor" opacity="0.9">
           <textPath href={`#${bottomArc}`} startOffset="50%" textAnchor="middle">
             ✶ DESCUBRE LO NUESTRO ✶
           </textPath>
@@ -216,7 +218,7 @@ export default function StampCRD({
         x="70"
         y="84.4"
         textAnchor="middle"
-        fontFamily={MONO}
+        fontFamily={LABEL}
         fontSize="6.6"
         fontWeight="700"
         letterSpacing="0.8"
@@ -230,7 +232,7 @@ export default function StampCRD({
           x="70"
           y="95.5"
           textAnchor="middle"
-          fontFamily={MONO}
+          fontFamily={LABEL}
           fontSize="5"
           fontWeight="700"
           letterSpacing="0.7"

@@ -14,7 +14,7 @@ import { z } from "zod";
 
 import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
-import { HONEYPOT_FIELD } from "@/lib/waitlist/schema";
+import { HONEYPOT_FIELD } from "@/lib/waitlist/constants";
 import { getWaitlistStore } from "@/lib/waitlist/store";
 import { ROUTABLE_IDS, renderItineraryEmail, sendItineraryEmail } from "@/lib/itinerary/email";
 

@@ -1,8 +1,13 @@
 "use client";
 
+// Puerta del panel interno. Era la única superficie del repo fuera del sistema:
+// estilos en línea, Plus Jakarta escrita en literal y un botón de degradado
+// coral con halo. Ahora es la card del panel y nada más: un panel interno no
+// inventa su propio idioma.
+
 import { useActionState, useState } from "react";
 
-import Icon from "@/components/Icon";
+import Kicker from "@/components/Kicker";
 import { login, type LoginState } from "./actions";
 
 const INITIAL: LoginState = { error: null };
@@ -17,59 +22,19 @@ export default function AdminLogin({ configured }: { configured: boolean }) {
   const [password, setPassword] = useState("");
 
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        display: "grid",
-        placeItems: "center",
-        padding: 24,
-        background: "linear-gradient(180deg,#FDF8F0 0%,#F5EFE2 100%)",
-      }}
-    >
+    <main className="grid min-h-dvh place-items-center bg-[linear-gradient(180deg,var(--color-cream)_0%,var(--color-cream-2)_100%)] p-6">
       <form
         action={formAction}
-        style={{
-          width: "min(380px,100%)",
-          background: "#fff",
-          border: "1px solid #EBE6D9",
-          borderRadius: 22,
-          padding: "26px 24px 22px",
-          boxShadow: "0 18px 44px rgba(38,70,83,.10)",
-        }}
+        className="w-[min(380px,100%)] rounded-surface border border-line bg-paper px-6 pb-[22px] pt-[26px] shadow-e1"
       >
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            background: "#C6F3EB",
-            color: "#0C6A60",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 11,
-            letterSpacing: ".12em",
-            textTransform: "uppercase",
-            padding: "5px 12px",
-            borderRadius: 999,
-          }}
-        >
-          <Icon name="lock" style={{ fontSize: 14 }} />
+        <Kicker icon="lock" variant="pill" tone="mint">
           Interno
-        </span>
+        </Kicker>
 
-        <h1
-          style={{
-            margin: "14px 0 6px",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 24,
-            letterSpacing: "-.025em",
-            color: "#1D3A45",
-          }}
-        >
+        <h1 className="mb-1.5 mt-3.5 font-display text-2xl font-bold tracking-[-.025em] text-ink">
           Panel de la lista
         </h1>
-        <p style={{ margin: "0 0 18px", color: "#5B6B72", fontSize: 14, lineHeight: 1.5 }}>
+        <p className="mb-[18px] text-copy leading-[1.5] text-muted">
           {configured
             ? "Registros de viajeros y negocios de /lista."
             : "Falta configurar ADMIN_PASSWORD en las variables de entorno."}
@@ -87,43 +52,23 @@ export default function AdminLogin({ configured }: { configured: boolean }) {
           placeholder="Contraseña"
           aria-label="Contraseña del panel"
           aria-invalid={Boolean(state.error)}
-          style={{
-            width: "100%",
-            height: 48,
-            padding: "0 14px",
-            borderRadius: 14,
-            border: "1px solid #EBE6D9",
-            background: "#fff",
-            color: "#264653",
-            fontFamily: "var(--font-inter), 'Inter', system-ui, sans-serif",
-            fontSize: 15,
-            outline: "none",
-          }}
+          // Borde `muted-2` y no `line`: con `line` el campo daba 1.25:1 contra
+          // el papel y desaparecía.
+          className="h-12 w-full rounded-ctrl border border-muted-2 bg-paper px-3.5 font-sans text-body text-ink placeholder:text-muted disabled:opacity-60"
         />
 
+        {/* A 15 el coral no pasa (3.81:1 sólo vale desde 19 w700): el relleno
+            del sistema por debajo de ese cuerpo es `selected`, 17.39:1. El
+            degradado con halo del sistema viejo muere aquí. */}
         <button
           type="submit"
           disabled={pending || !configured}
-          style={{
-            width: "100%",
-            height: 48,
-            marginTop: 10,
-            borderRadius: 14,
-            border: "none",
-            background: "linear-gradient(135deg,#FF6B4A,#F76C4D)",
-            color: "#fff",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: pending || !configured ? "not-allowed" : "pointer",
-            opacity: pending || !configured ? 0.7 : 1,
-            boxShadow: "0 8px 22px rgba(247,108,77,.35)",
-          }}
+          className="mt-2.5 h-12 w-full cursor-pointer rounded-full border-none bg-selected font-label text-body font-bold text-on-selected disabled:cursor-not-allowed disabled:opacity-70"
         >
           {pending ? "Entrando…" : "Entrar"}
         </button>
 
-        <p role="alert" aria-live="assertive" style={{ margin: "10px 2px 0", color: "#B23410", fontSize: 13 }}>
+        <p role="alert" aria-live="assertive" className="mx-0.5 mb-0 mt-2.5 text-copy text-danger">
           {state.error}
         </p>
       </form>

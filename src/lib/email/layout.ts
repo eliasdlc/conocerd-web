@@ -55,17 +55,17 @@ export function row(html: string, pad = "0 0 18px 0"): string {
 
 /** Etiqueta mono en versalitas sobre el titular. Coral-ink: 6:1 sobre crema. */
 export function kicker(text: string, color: string = C.coralInk): string {
-  return `<p style="margin:0;font:700 12px/1.3 ${F.mono};letter-spacing:.14em;color:${color};text-transform:uppercase;">${esc(
+  return `<p style="margin:0;font:700 12px/1.3 ${F.sans};letter-spacing:.14em;color:${color};text-transform:uppercase;">${esc(
     text
   )}</p>`;
 }
 
 export function heading(text: string, size = 29): string {
-  return `<h1 style="margin:8px 0 0 0;font:700 ${size}px/1.15 ${F.serif};color:${C.ink};">${esc(text)}</h1>`;
+  return `<h1 style="margin:8px 0 0 0;font:700 ${size}px/1.15 ${F.display};color:${C.ink};">${esc(text)}</h1>`;
 }
 
 export function subheading(text: string): string {
-  return `<h2 style="margin:0 0 8px 0;font:700 19px/1.25 ${F.serif};color:${C.ink};">${esc(text)}</h2>`;
+  return `<h2 style="margin:0 0 8px 0;font:700 19px/1.25 ${F.display};color:${C.ink};">${esc(text)}</h2>`;
 }
 
 export function paragraph(html: string, color: string = C.muted, size = 15): string {
@@ -82,10 +82,13 @@ export function divider(): string {
  * Outlook ignora el fondo de un enlace en línea. El padding va en el <td> por
  * la misma razón.
  */
+/* El relleno por defecto es la tinta y no el mango: la etiqueta va a 15 w700 y
+ * blanco sobre mango da 2.31:1. Es el mismo par que el sitio quitó de todos sus
+ * botones. Por debajo de 19 w700 el relleno del sistema es la tinta, 17.4:1. */
 export function button(
   href: string,
   label: string,
-  bg: string = C.mango,
+  bg: string = C.ink,
   fg = "#FFFFFF",
   align: "left" | "center" = "center"
 ): string {
@@ -223,7 +226,7 @@ export function credential({
   const fact = (f: { label: string; value: string }, i: number) => `
     <td class="stack${i ? " stack-gap" : ""}" width="50%" valign="top"
       style="padding:0 ${i ? "0" : "10px"} 0 ${i ? "10px" : "0"};">
-      <p style="margin:0;font:700 10px/1.3 ${F.mono};letter-spacing:.14em;color:${
+      <p style="margin:0;font:700 10px/1.3 ${F.sans};letter-spacing:.14em;color:${
         C.onInkLabel
       };text-transform:uppercase;">${esc(f.label)}</p>
       <p style="margin:5px 0 0 0;font:700 14px/1.35 ${F.sans};color:${C.onInk};">${esc(f.value)}</p>
@@ -236,10 +239,10 @@ export function credential({
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td valign="top" style="padding:0 8px 0 0;">
-            <p style="margin:0;font:700 11px/1.3 ${F.mono};letter-spacing:.16em;color:${eyebrowColor};text-transform:uppercase;">${esc(
+            <p style="margin:0;font:700 11px/1.3 ${F.sans};letter-spacing:.16em;color:${eyebrowColor};text-transform:uppercase;">${esc(
               eyebrow
             )}</p>
-            <h1 style="margin:10px 0 0 0;font:700 30px/1.12 ${F.serif};color:${C.onInk};">${esc(
+            <h1 style="margin:10px 0 0 0;font:700 30px/1.12 ${F.display};color:${C.onInk};">${esc(
               headline
             )}</h1>
             <p style="margin:12px 0 0 0;font:400 15px/1.6 ${F.sans};color:${C.onInkSoft};">${esc(
@@ -305,7 +308,7 @@ function header(assets: EmailAssets, tag?: HeaderTag): string {
         <td valign="middle" style="padding:0;">${logo}</td>
         <td valign="middle" align="right" style="padding:0;">
           <span style="display:inline-block;padding:7px 13px;border-radius:999px;background:${tag.bg};
-            font:700 10px/1 ${F.mono};letter-spacing:.12em;color:${tag.fg};">${esc(tag.text)}</span>
+            font:700 10px/1 ${F.sans};letter-spacing:.12em;color:${tag.fg};">${esc(tag.text)}</span>
         </td>
       </tr>
     </table>

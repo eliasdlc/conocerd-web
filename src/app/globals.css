@@ -10,88 +10,113 @@
   --breakpoint-desk: 900px;
 
   /* Fuentes. Apuntan a las variables que genera next/font en layout.tsx; el
-     nombre literal ('Fraunces') NO resuelve, porque next/font sirve cada
-     familia bajo un nombre hasheado. */
-  /* `display` es el serif editorial y sólo se usa en titulares (≥20px) y en el
-     acento itálico; todo lo demás —cuerpo, botones, nav, etiquetas— es `sans`.
-     Mezclarlos era lo que hacía el sitio antes, y de ahí salía el look de
-     plantilla. Fraunces sólo tiene el peso 700 cargado: `font-extrabold` no
-     existe en esta paleta tipográfica. */
-  --font-sans:    var(--font-instrument), system-ui, sans-serif;
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-mono:    var(--font-jetbrains), ui-monospace, monospace;
-  --font-hand:    var(--font-caveat), cursive;
+     nombre literal ('Inter') NO resuelve, porque next/font sirve cada familia
+     bajo un nombre hasheado.
 
-  --color-ink:        #264653;
-  --color-ink-2:      #1D3A45;
-  --color-coral:      #F76C4D;
-  --color-coral-soft: #FFE7DF;
-  --color-mango:      #FF8D16;
-  --color-mango-soft: #FFE6C8;
-  --color-mint:       #25CCB8;
-  --color-mint-soft:  #C6F3EB;
-  --color-cream:      #FDF8F0;
-  --color-cream-2:    #F5EFE2;
-  --color-line:       #EBE6D9;
-  --color-muted:      #5B6B72;   /* darkened for WCAG AA on light bg (was #7A8A91, 3.4:1) */
-  --color-muted-2:    #66747B;   /* darkened for WCAG AA on light bg (was #97A2A8, 2.6:1) */
-  /* Accessible "ink" variants of brand hues — for COLORED TEXT on light surfaces only.
-     Keep the bright brand hues for fills, borders and dots. */
-  --color-coral-ink:  #B23410;   /* 5.2:1 on coral-soft, 6.2:1 on white */
-  --color-mint-ink:   #0C6A60;   /* 5.4:1 on mint-soft,  6.5:1 on white */
-  --color-mango-ink:  #985409;   /* 4.8:1 on mango-soft, 5.8:1 on white */
+     Tres roles y una excepción, los mismos que la app:
+       display  Bricolage Grotesque : titulares y cifras de carretera
+       label    Plus Jakarta Sans   : botones, chips, etiquetas, overlines
+       sans     Inter               : cuerpo y metadatos
 
-  /* ── Elevación ────────────────────────────────────────────────────────────
-     Había 18 sombras ad-hoc sobre el mismo ink para lo que en realidad son
-     tres niveles (audit 4.3). Cada token es el centro de su grupo, así que
-     migrar una sombra concreta mueve como mucho un par de píxeles de blur.
-     Se mantienen fuera de la escala, por ser efectos y no elevación: el
-     mockup del teléfono (tres capas) y el anillo de foco coral. */
-  --shadow-card:  0 6px 18px rgba(38,70,83,.14);
-  --shadow-panel: 0 12px 32px rgba(38,70,83,.18);
-  --shadow-modal: 0 26px 58px rgba(38,70,83,.20);
-  /* Sombra sticker de los CTA (audit §3, movimiento 3). Los botones llevaban
-     un halo del mismo color que el relleno —el cliché de plantilla 2019— y
-     sobre crema se leía como neón. Un offset duro y neutro los convierte en
-     calcomanías pegadas al papel, que es el lenguaje del resto del sitio
-     (polaroids, sellos). Sin blur a propósito: el blur es elevación y de eso
-     ya se encarga la escala de arriba. */
-  --shadow-sticker: 0 3px 0 rgba(38,70,83,.18);
-  /* Halo de color: sólo para pines sobre el mapa, donde el contraste contra la
-     cartografía sí necesita ayuda. Ningún botón lo usa ya. */
-  --shadow-glow-coral: 0 6px 20px rgba(247,108,77,.34);
+     No hay familia mono: las cifras que la llevaban van en `display` y los
+     metadatos en `sans`. Tampoco hay familia manuscrita: Caveat tenía un solo
+     consumidor (la firma del dorso de la polaroid del equipo) y ahora se
+     declara y se aplica allí mismo, como tinta de contenido y no como rol. */
+  --font-sans:    var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-bricolage), "Trebuchet MS", system-ui, sans-serif;
+  --font-label:   var(--font-jakarta), system-ui, sans-serif;
 
-  /* ── Radios ───────────────────────────────────────────────────────────────
-     13 radios arbitrarios convivían con la escala de Tailwind, y las baldosas
-     de icono usaban cuatro tratamientos distintos para el mismo elemento
-     (9px asimétrico / 7px / 11px / full — audit 4.6). Nombres propios para no
-     pisar `rounded-md|xl|2xl`, que el proyecto sí usa. */
-  --radius-chip:  10px;
-  --radius-tile:  11px;
-  --radius-card:  14px;
-  --radius-panel: 22px;
+  /* ── Color · los nueve roles ──────────────────────────────────────────────
+     Misma paleta que la app en modo día. El sistema anterior tenía su propia
+     tinta (#264653) y su propio coral (#F76C4D); ninguno de los dos sobrevive:
+     el coral vivo con texto blanco daba 2.91:1 y era el relleno del botón
+     primario de todo el sitio. El coral profundizado da 3.81:1, que pasa AA
+     como texto grande, y por eso el relleno coral exige etiqueta ≥19 w700. */
+  --color-ink:         #0F1A2E;  /* 16.45:1 sobre cream */
+  --color-ink-2:       #090F1B;  /* extremo del degradado de tinta */
+  --color-ink-3:       #3B5073;  /* 8.14:1 sobre paper, texto de segundo plano */
+  --color-coral:       #E0552F;  /* acción y selección; NUNCA decoración */
+  --color-coral-soft:  #FFE7DF;
+  --color-coral-ink:   #B23410;  /* 5.86:1 sobre cream, 5.23:1 sobre coral-soft */
+  --color-mango:       #FF8D16;  /* 7.51:1 sobre ink: el acento SOBRE tinta */
+  --color-mango-soft:  #FFE6C8;
+  --color-mango-ink:   #985409;  /* 4.83:1 sobre mango-soft, 5.82:1 sobre paper */
+  --color-mango-deep:  #D67611;  /* 3.25:1 con blanco: relleno que carga glifo blanco */
+  --color-mint:        #25CCB8;
+  --color-mint-soft:   #C6F3EB;
+  --color-mint-ink:    #0C6A60;  /* 5.37:1 sobre mint-soft, 6.47:1 sobre paper */
+  --color-paper:       #FFFFFF;
+  --color-cream:       #FDF8F0;
+  --color-cream-2:     #F5EFE2;
+  --color-line:        #EBE6D9;
+  --color-line-strong: #D9D2C1;
+  --color-muted:       #677080;  /* 4.72:1 sobre cream, 4.99:1 sobre paper */
+  --color-muted-2:     #7D8594;  /* borde de campo: con `line` daba 1.25:1 */
+  --color-danger:      #B42318;  /* 6.57:1 sobre blanco; separado del coral */
+  --color-danger-soft: #FEE4E2;
+
+  /* Relleno de TODO lo seleccionado, y de toda acción cuya etiqueta no llegue
+     a 19 w700. Es `ink`, y con blanco encima da 17.39:1 a cualquier tamaño:
+     por eso resuelve los botones donde el coral reprueba. Tiene nombre propio
+     porque el rol es distinto del de la tinta de texto. */
+  --color-selected:    #0F1A2E;
+  --color-on-selected: #FFFFFF;
+
+  /* ── Elevación · una sola sombra por nivel ────────────────────────────────
+     Las tres sombras teñidas (card / panel / modal) eran tres respuestas al
+     mismo problema y la calcomanía era una cuarta. Quedan dos niveles y un
+     resplandor:
+
+       e1  superficie apoyada. Una sola capa, siempre la misma.
+       e2  el resplandor del propio acento, y SÓLO bajo la acción primaria.
+           No es sombra ni sustituto de sombra: es lo que hace que una pieza
+           lea encendida en vez de levantada.
+
+     `glow-coral` sobrevive porque no es elevación: es el halo que los pines
+     necesitan contra la cartografía. */
+  --shadow-e1:      0 10px 30px rgba(38,70,83,.08);
+  --shadow-e2:      0 8px 22px -6px rgba(224,85,47,.35);
+  --shadow-e2-mint: 0 8px 22px -6px rgba(37,204,184,.35);
+  --shadow-glow-coral: 0 6px 20px rgba(224,85,47,.34);
+
+  /* ── Radios · el nombre dice el tamaño del elemento ───────────────────────
+     Un chip dentro de una card nunca se ve como una copia pequeña de la card.
+     Regla de anidado: el radio interior es el exterior menos su propio
+     padding, nunca mayor. Los 6/3 de la polaroid no están aquí a propósito:
+     son el artefacto, no la escala. */
+  --radius-chip:    12px;  /* baldosa, badge, miniatura */
+  --radius-ctrl:    16px;  /* input, segmento, celda de filtro */
+  --radius-block:   18px;  /* fila, banner, bloque seleccionable */
+  --radius-surface: 22px;  /* card, sheet, panel */
 
   /* ── Tipografía ───────────────────────────────────────────────────────────
-     17 tamaños arbitrarios con saltos de medio píxel (9.5→10→10.5→…), fruto
-     de ajustar cada caso a ojo (audit 4.4). Siete tokens cubren ~70 usos; el
-     mayor desplazamiento al migrar es de 0.5px. Los tamaños realmente únicos
-     (19, 26, 38, 42) siguen inline. Nombres propios para no pisar la escala
+     Siete tokens cubren ~70 usos. Los tamaños realmente únicos (19, 26, 34,
+     38, 42, 44, 52) siguen inline. Nombres propios para no pisar la escala
      `text-xs…text-3xl` de Tailwind, que el proyecto usa en 56 sitios. */
-  --text-micro:   10px;    /* absorbe 9.5 / 10 / 10.5 */
-  --text-mini:    11px;    /* absorbe 11 / 11.5 */
+  --text-micro:   10px;
+  --text-mini:    11px;
   --text-tiny:    12.5px;
-  --text-copy:    13.5px;  /* absorbe 13 / 13.5 */
-  --text-body:    15px;    /* absorbe 14.5 / 15 / 15.5 */
+  --text-copy:    13.5px;
+  --text-body:    15px;
   --text-lead:    17px;
   --text-feature: 22px;
 
-  /* Animaciones como utilidades: `animate-slide-up`, `animate-live-dot`.
-     Los @keyframes viven más abajo en este archivo.
-     slideUpIn se usaba con 0.4s / 0.45s / 0.5s en 8 sitios distintos; aquí se
-     unifica en un solo token. El stagger sigue siendo inline (animationDelay),
+  /* Animaciones como utilidades: `animate-slide-up`. Los @keyframes viven más
+     abajo en este archivo. El stagger sigue siendo inline (animationDelay),
      porque depende del índice. */
   --animate-slide-up: slideUpIn .45s cubic-bezier(.16,1,.3,1) both;
-  --animate-live-dot: crdLiveDot 1.4s ease-in-out infinite;
+}
+
+/* ── Cristal del tema ─────────────────────────────────────────────────────────
+   Una sola receta para todo lo que flota sobre el mapa. Había tres (92 % con
+   blur 16, 96 % con blur 18, 88 %) y ninguna era la de la app. Ésta sí: la
+   superficie a 84 %, blur 24 con saturación 1.8, y un hairline de cristal.
+   Se puede bajar del 92 al 84 sin perder nada porque el texto ink sobre este
+   cristal, con lo más oscuro del mapa debajo, sigue dando 14.89:1. */
+:root {
+  --crd-glass:      rgba(253, 248, 240, .84);
+  --crd-glass-line: rgba(38, 70, 83, .08);
+  --crd-glass-blur: blur(24px) saturate(1.8);
 }
 
 html {
@@ -110,17 +135,30 @@ html {
 :root {
   --crd-sb-thumb: color-mix(in srgb, var(--color-ink) 32%, transparent);
   --crd-sb-thumb-hover: color-mix(in srgb, var(--color-ink) 52%, transparent);
+  /* La pista se ve. Con pista transparente el pulgar quedaba flotando sobre el
+     crema y no se leía como un riel: lo que dice "esto se desliza y vas por
+     aquí" es el par pista + pulgar, no el pulgar solo. Al 7 % es el hairline
+     del sistema, no una barra gris de navegador. */
+  --crd-sb-track: color-mix(in srgb, var(--color-ink) 7%, transparent);
 }
 .crd-cta-card {
   --crd-sb-thumb: rgba(255, 255, 255, 0.28);
   --crd-sb-thumb-hover: rgba(255, 255, 255, 0.45);
+  --crd-sb-track: rgba(255, 255, 255, 0.10);
 }
 
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background-color: var(--crd-sb-track);
+  border-radius: 999px;
+  /* El mismo aire de 3px que el pulgar, para que la pista quede como una línea
+     centrada en el canal y no como una columna pintada de canto a canto. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
@@ -148,17 +186,17 @@ html {
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--crd-sb-thumb) transparent;
+    scrollbar-color: var(--crd-sb-thumb) var(--crd-sb-track);
   }
 }
 body {
   margin: 0;
   background: #FDF8F0;
-  color: #264653;
+  color: var(--color-ink);
   font-family: var(--font-sans);
   min-height: 100vh;
 }
-::selection { background: #FFE6C8; color: #264653; }
+::selection { background: var(--color-mango-soft); color: var(--color-ink); }
 
 /* ── Grano de papel (audit §3, movimiento 4) ──────────────────────────────────
    Los fondos crema eran gradientes radiales perfectamente lisos: "gradiente de
@@ -199,11 +237,6 @@ body::after {
   transition: transform .2s ease;
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
-
-@keyframes crdLiveDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .4; transform: scale(.7); }
-}
 
 /* Hero entrance */
 @keyframes crdLogoIn {
@@ -259,14 +292,30 @@ body::after {
   }
 }
 
-/* ───────────────────── Journey: pista y modo móvil ────────────────────── */
+/* ─────────────────────────── Journey ──────────────────────────────────── */
 
-/* Altura de la pista de scroll = 100vh (capa sticky) + suma de las escenas.
-   Va en CSS y no inline para que el media query de móvil pueda ganarle. */
+/* El recorrido no se scrollea en ningún viewport: ocupa una pantalla exacta y
+   avanza por pasos (el panel inferior en el teléfono, la rueda y el teclado en
+   escritorio). El bloqueo del scroll lo hace `overflow:hidden` sobre
+   <html>/<body> (MapScrollJourney) y no `touch-action`, porque touch-action
+   también anularía el scroll interno de los bottom-sheets y de la sección de
+   Equipo. */
 .crd-journey {
   position: relative;
-  height: calc((100 + var(--crd-track-vh, 1000)) * 1vh);
+  height: 100svh;
+  overscroll-behavior: none;
 }
+
+/* Las anclas siguen en el DOM como destino de los `#trigger-<escena>` que
+   llegan de fuera, pero no reservan alto: no hay pista que recorrer. */
+.crd-journey-anchor { display: none; }
+
+/* El pie sólo existe al final: mientras el recorrido está bloqueado no forma
+   parte del flujo, así que el documento mide exactamente una pantalla y no hay
+   nada que un gesto pueda sacar a la vista. Es la única defensa que funciona en
+   iOS, donde `overflow:hidden` sobre <html> no detiene el scroll táctil y el pie
+   asomaba en mitad de cualquier escena. */
+html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 
 /* Fondo crema con halos cálidos de marca detrás del canvas: el globo, ya sin
    atmósfera, flota sobre este crema en el hero. En las escenas con zoom el mapa
@@ -275,33 +324,82 @@ body::after {
   background:
     radial-gradient(60% 50% at 18% 16%, rgba(37,204,184,.10), transparent 70%),
     radial-gradient(55% 45% at 84% 24%, rgba(255,141,22,.10), transparent 70%),
-    radial-gradient(60% 50% at 50% 98%, rgba(247,108,77,.08), transparent 70%),
+    radial-gradient(60% 50% at 50% 98%, rgba(224,85,47,.08), transparent 70%),
     var(--color-cream);
 }
 
-@media (max-width: 899px) {
-  /* En móvil el journey no se scrollea (queja de usuarios ago 2026: nadie
-     sabe medir cuán lento deslizar): ocupa una pantalla exacta y avanza por
-     pasos desde el panel inferior (JourneyStepper). El bloqueo del scroll lo
-     hace `overflow:hidden` sobre <html>/<body> (MapScrollJourney), no
-     `touch-action`, porque touch-action también anularía el scroll interno de
-     los bottom-sheets y de la sección de Equipo. */
-  .crd-journey {
-    height: 100dvh;
-    overscroll-behavior: none;
-  }
-  .crd-journey-anchor { display: none; }
+/* Único scroll "de página" del recorrido: el manifiesto del equipo no cabe en
+   una pantalla corta, ni en el teléfono ni en un portátil de 600. Scrollea por
+   dentro y NO cambia de escena.
+
+   `safe center`: mientras el contenido quepa va centrado, y en cuanto no quepa
+   se comporta como `flex-start`. Con `center` a secas el desbordamiento sale
+   por ARRIBA y la primera línea del manifiesto queda inalcanzable, porque no
+   hay scroll hacia atrás desde el centro. */
+.crd-ol-equipo {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  justify-content: safe center;
 }
 
-/* Alto reservado del panel de pasos móvil (JourneyStepper). 0 en desktop para
-   que los calc() que lo usan sigan siendo válidos fuera del breakpoint. */
+/* Mismo desvanecido que el sheet: mientras se scrollea, lo que pasa por detrás
+   del cristal del panel de pasos se apaga en vez de aparecer cortado a media
+   línea. El velo radial de la escena ya llega transparente a los bordes, así que
+   la máscara no le abre ninguna costura.
+
+   Sólo en móvil: arriba de 900 el panel es un objeto de esquina y un
+   desvanecido a todo lo ancho no describiría nada. */
+@media (max-width: 899px) {
+  .crd-ol-equipo {
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - var(--crd-stepper-h)),
+      transparent calc(100% - 16px)
+    );
+  }
+}
+
+/* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
+   inline porque el fundido tiene que poder anularse con prefers-reduced-motion,
+   y porque el color es tono de superficie, no un valor suelto. */
+.crd-globo-fantasma {
+  background: var(--color-cream-2);
+  border: 1px solid var(--color-line);
+  transition: opacity 500ms cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crd-globo-fantasma { transition: none; }
+}
+
+/* Alto reservado del panel de pasos móvil (JourneyStepper), que flota centrado
+   abajo: 21 del borde + 64 de alto + sobra para el gesto del pulgar. Todo lo
+   que pueda tocar el borde inferior reserva esta franja. En escritorio no hay
+   panel y vale 0, para que los calc() que lo usan sigan siendo válidos. */
 :root { --crd-stepper-h: 0px; }
+@media (max-width: 899px) { :root { --crd-stepper-h: 84px; } }
 
 /* Holgura bajo la píldora del nav: top 16px + botón 40px + padding 16px +
    borde 2px = 74px de borde inferior, más 10px de aire. Todo contenido que
    pueda tocar el tope de la pantalla debe reservar esta franja — la píldora
    flota por encima y no debe tapar nada interactivo en reposo. */
 :root { --crd-nav-clear: 84px; }
+
+/* La franja que una escena tiene de verdad: la pantalla menos las dos piezas
+   de cromo flotante. Es el único tope contra el que deben medirse los paneles,
+   las cartas y el hero — con porcentajes de pantalla el mismo layout cabía en
+   un 14 Pro Max y se salía en un SE.
+
+   `svh` y no `dvh`: el recorrido bloquea el scroll, así que iOS no retrae la
+   barra de Safari y lo visible es siempre el viewport pequeño. `dvh` prometía
+   hasta 190px que la pantalla no tenía. */
+:root { --crd-franja: calc(100svh - var(--crd-nav-clear) - var(--crd-stepper-h)); }
+
+/* Cuánto se eleva la pila de polaroids sobre el panel de pasos: 10 de aire más
+   los 42 del desparrame de la carta más alta (`--pile-bottom` en
+   DestinosSection). Es lo que el titular tiene que saltar para no montarse. */
+:root { --crd-pila-alza: 52px; }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
@@ -332,7 +430,46 @@ body::after {
    aportan la sombra y el mapa, no una rotación que deforme el contenido. */
 .crd-phone-device {
   /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto. */
-  width: min(264px, 18vw, calc((100dvh - 120px) * 0.480));
+  width: min(264px, 18vw, calc((100svh - 120px) * 0.480));
+}
+
+/* El panel de pasos vive centrado abajo también aquí, así que la franja es la
+   misma que en el teléfono y se lee del mismo token. Lo que cambia por viewport
+   es qué contenido baja hasta ella. */
+@media (min-width: 900px) {
+  /* La pila de Destinos se apoya en la franja, igual que en móvil. */
+  .crd-destinos-card {
+    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
+  }
+
+  /* El panel lateral va centrado en vertical, así que no necesita padding
+     (dejaría un hueco muerto dentro de la tarjeta): le basta con no poder
+     crecer hasta la franja, y el tope se descuenta por arriba y por abajo
+     porque el centrado reparte. El sello vive FUERA de esta caja (hermano en
+     .crd-ol-wrap): overflow-y: auto arrastra overflow-x a auto, y dentro el
+     canto lo recortaba. */
+  .crd-ol-panel {
+    max-height: calc(100svh - 2 * (var(--crd-stepper-h) + 20px));
+    overflow-y: auto;
+  }
+
+  /* La carta del CTA vive centrada entre la píldora y la franja. Los 20 son el
+     aire del `desk:pb` del envoltorio (CTASection): el tope tiene que descontar
+     lo mismo que el envoltorio reserva, o la carta desborda su caja y, al ir
+     centrada, se sale por los dos lados. */
+  .crd-cta-card {
+    max-height: calc(var(--crd-franja) - 20px);
+    overflow-y: auto;
+  }
+}
+
+/* Ventanas bajas de escritorio: la carta del CTA cede relleno VERTICAL y nada
+   más. Los tramos de compresión de teléfono no llegan aquí a propósito — allí
+   el límite es el ancho y hay que bajar cuerpos; aquí sobra ancho, y aplicar
+   la misma receta dejaba la carta ancha y baja, con el texto pegado a los
+   cantos: exactamente el "aplastado" que no queremos. */
+@media (min-width: 900px) and (max-height: 760px) {
+  .crd-cta-card { padding-block: 32px; }
 }
 
 @media (min-width: 900px) and (max-height: 480px) {
@@ -342,10 +479,8 @@ body::after {
 }
 
 @media (max-width: 899px) {
-  /* Altura reservada para el panel de pasos, que flota sobre los sheets. */
-  :root { --crd-stepper-h: 84px; }
-
-  .crd-ol-panel {
+  /* El envoltorio posiciona (el reset del sheet vive aquí); la card recorta. */
+  .crd-ol-wrap {
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
@@ -353,30 +488,77 @@ body::after {
     width: 100% !important;
     max-width: 100% !important;
     transform: none !important;
-    border-radius: var(--radius-panel) var(--radius-panel) 0 0 !important;
-    max-height: min(62dvh, 520px);
+  }
+  .crd-ol-panel {
+    border-radius: var(--radius-surface) var(--radius-surface) 0 0 !important;
+    /* 58svh, que es exactamente el `padBottom: 0.58` con el que la cámara
+       encuadra estas escenas: el sheet y el mapa dejan de discutirse la
+       pantalla y la isla conserva su franja. Antes era `min(62dvh, 520px)`, un
+       4% más alto que lo que la cámara creía y medido en `dvh`, que en iOS
+       promete alto que la pantalla no tiene.
+
+       El contenido de estas dos escenas (474px) no cabe en ninguna franja de un
+       teléfono: hay scroll interno, y por eso el botón vive pegado abajo
+       (.crd-panel-cta) en vez de al final de la lista. */
+    max-height: min(58svh, calc(100svh - var(--crd-nav-clear) - 10px));
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black calc(100% - 24px), transparent 100%);
+    /* Sólo se desvanece el canto de arriba, donde la lista entra bajo el asa.
+       Abajo no hace falta: lo que scrollea pasa por DETRÁS del pie fijo del
+       sheet (.crd-panel-cta), que es opaco y llega hasta el borde. */
+    mask-image: linear-gradient(to bottom, transparent 0, black 14px, black 100%);
     /* El reflow quita el left:clamp() que daba el aire lateral en desktop →
        reponerlo como padding para que el contenido no quede pegado al borde.
        El padding inferior deja libre la franja del control de pasos, que flota
        encima del sheet. */
-    padding: 24px 16px calc(20px + var(--crd-stepper-h)) !important;
+    padding: 20px 16px calc(16px + var(--crd-stepper-h)) !important;
     /* Sombra hacia ARRIBA (-8px): el sheet sube desde el borde inferior, así
        que no entra en la escala de elevación, que proyecta hacia abajo. */
     box-shadow: 0 -8px 32px rgba(38,70,83,0.16);
   }
-  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: #B5C0BD; margin: -10px auto 14px; }
+  .crd-ol-panel::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 999px; background: var(--color-line-strong); margin: -10px auto 14px; }
+
+  /* La acción de la escena se queda pegada al fondo del sheet mientras la lista
+     scrollea por detrás. `bottom: 0` se ancla al borde de la caja de contenido,
+     que el padding inferior ya subió por encima del panel de pasos: el botón
+     nunca queda debajo del cristal ni dentro del desvanecido.
+
+     Es la razón por la que se puede convertir sin descubrir que había que
+     deslizar: antes el botón era la última fila de una lista de 474px dentro de
+     una franja de 312 y sólo se veía su mitad de arriba. */
+  .crd-panel-cta {
+    position: sticky;
+    /* Se ancla en el borde de la caja de PADDING, no en el de contenido: así su
+       propio relleno inferior tapa la franja que el sheet le reserva al panel de
+       pasos, y nada de la lista asoma por debajo del botón. El botón queda a la
+       misma altura que si estuviera al final de la lista. */
+    bottom: calc(-16px - var(--crd-stepper-h));
+    padding-bottom: calc(16px + var(--crd-stepper-h));
+    /* Sangra hasta los cantos del sheet: con el padding lateral del panel, la
+       lista se veía correr por los lados del pie. */
+    margin-inline: -16px;
+    padding-inline: 16px;
+    margin-top: 8px !important;
+    z-index: 1;
+    background: var(--color-paper);
+  }
+  /* Un dedo de papel por encima del pie: la fila que se va metiendo debajo se
+     disuelve en vez de quedar cortada contra la línea de puntos. */
+  .crd-panel-cta::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 18px;
+    background: linear-gradient(to top, var(--color-paper), rgba(255, 255, 255, 0));
+    pointer-events: none;
+  }
   .crd-ol-team { max-width: 100% !important; }
   .crd-ol-equipo {
-    /* Único scroll "de página" permitido en móvil: el contenido de Equipo no
-       cabe en una pantalla. Scrollea por dentro y NO cambia de escena. */
-    padding: var(--crd-nav-clear) 16px calc(16px + var(--crd-stepper-h)) !important;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    justify-content: flex-start !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
     gap: 20px;
   }
   /* Footer: 4 columnas → filas en móvil, con Marca a lo ancho. Explora es
@@ -392,7 +574,7 @@ body::after {
      botón como único contenido, el padding izquierdo iguala al derecho (8px)
      para que la píldora quede simétrica alrededor del botón. */
   .crd-navlink { display: none !important; }
-  .crd-nav-pill { padding-left: 8px !important; }
+  .crd-nav-pill { padding-left: 6px !important; }
   /* El bottom-sheet ya presenta la propuesta de valor. En móvil, un mockup
      pequeño tapa ese contenido y no permite leer su propia interfaz. */
   .crd-phone-wrap { display: none !important; }
@@ -405,8 +587,12 @@ body::after {
        ambas franjas. El cálculo descuenta el pb-3.5 (14px) del wrapper, el
        margin-bottom (stepper) y la holgura del nav — si falta cualquiera, la
        card sube por detrás de la píldora y tapa el titular en la conversión. */
-    max-height: calc(100dvh - var(--crd-stepper-h) - 14px - var(--crd-nav-clear));
-    min-height: min(68dvh, 640px);
+    max-height: calc(var(--crd-franja) - 14px);
+    /* El min-height entra en el tercer argumento del min(): en CSS `min-height`
+       le gana a `max-height`, así que un mínimo mayor que la franja rompía el
+       tope en vez de respetarlo — en un SE (553 de alto) pedía 376 cuando sólo
+       caben 371, y la carta se salía por arriba. */
+    min-height: min(68svh, 640px, calc(var(--crd-franja) - 14px));
     margin-bottom: var(--crd-stepper-h);
     overflow-y: auto;
     /* 20px vertical (no 28): en 360x800 el contenido rebasaba el max-height por
@@ -424,21 +610,39 @@ body::after {
     content: "";
     flex: 1 0 0;
   }
-  /* 46%: la carta creció ~30px (la descripción vive ahora en el papel), así
-     que el titular sube en proporción — la franja muerta que motivó el 43%
-     original (audit 2.4) la ocupa hoy la propia pila. */
-  /* +26px: acompaña la subida de la pila por el panel de pasos — la carta más
-     alta (bottom 12%, con su rotación) rozaba el titular en pantallas ~800px
-     de alto. */
-  .crd-destinos-heading { left: 16px !important; bottom: calc(46% + 26px) !important; }
+  /* Alto de la carta del frente, MEDIDO (foto 150 + papel + pie + descripción).
+     El titular se cuelga de la pila y la pila se apoya en el panel de pasos, así
+     que este número es lo único que hace falta para que los dos se aparten sin
+     tocarse a ningún alto de pantalla. Si cambia la foto o el pie de la carta,
+     cambia aquí. */
+  :root { --crd-pila-h: 282px; }
+
+  /* El titular se apoya sobre la carta más alta de la pila, no sobre un % de
+     pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
+     y se montaba sobre la pila en un SE, porque el cromo flotante (píldora +
+     panel de pasos) mide igual en las dos y el 46% no. */
+  .crd-destinos-heading {
+    left: 16px !important;
+    bottom: calc(var(--crd-stepper-h) + var(--crd-pila-alza) + var(--crd-pila-h) + 10px) !important;
+  }
+  /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
+     cristal del tema y ahí la sombra únicamente emborrona el canto de las
+     letras; aquí no hay panel (lo que separa del mapa es el velo crema de la
+     escena) y sin halo el titular se cruza con la toponimia cuando asoma por
+     encima del velo. */
+  .crd-destinos-heading h2 {
+    text-shadow: 0 1px 2px rgba(253, 248, 240, .95), 0 0 16px rgba(253, 248, 240, .6);
+  }
   .crd-destinos-card {
     width: min(196px, calc(100vw - 116px)) !important;
     padding: 9px 9px 0 !important;
-    /* Sube la pila lo justo para que el texto de la carta libre el panel de
-       pasos. En pantallas altas el hueco bajo la carta ya casi alcanza (raise
-       chico); en cortas el panel come proporcionalmente más (raise grande),
-       pero sin llegar a chocar con el titular. */
-    margin-bottom: clamp(10px, calc(94px - 9dvh), 44px);
+    /* La pila se apoya en el panel de pasos. `--pile-bottom` es el desparrame
+       vertical de cada carta (0 a 42) y lo trae el componente, igual que
+       `--pile-left`: en escritorio el desparrame sigue siendo el % del inline
+       style, aquí manda el píxel porque el cromo que hay debajo también mide
+       píxeles. */
+    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
+    margin-bottom: 0 !important;
   }
   .crd-destinos-card-media { height: 150px !important; }
 }
@@ -460,22 +664,125 @@ body::after {
   .crd-footer-grid { grid-template-columns: 1fr !important; }
 }
 
-@media (max-width: 359px) and (max-height: 640px) {
-  .crd-hero-content { max-width: 280px !important; }
-  .crd-hero-logo { width: min(64vw, 240px) !important; }
-  .crd-hero-copy { font-size: 14px !important; line-height: 1.38 !important; margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 14px !important; gap: 8px !important; }
-  /* +36px: en estas pantallas la pila sube ~43px por el panel de pasos y a 54%
-     el titular quedaba debajo de la carta. El halo del text-shadow lo mantiene
-     legible aunque asome por encima del velo crema. */
-  .crd-destinos-heading { bottom: calc(54% + 36px) !important; }
+/* ── Pantallas bajas: el contenido cede, el cromo no ──────────────────────────
+   El cromo flotante (píldora 84 + panel de pasos 84) se lleva 168px fijos, en
+   teléfono y en escritorio. Lo que sobra es la franja donde una escena existe,
+   y en un iPhone real (664) o en un portátil con la barra abierta (600) esa
+   franja se queda corta para el sheet y para la carta del CTA.
+
+   Sin un tramo por alto, el sheet nacía scrolleado y el botón de la escena
+   —"Registrar mi negocio", "Unirme a la lista"— salía cortado por detrás del
+   cristal del panel; y la carta del CTA se comía el "¿Tienes un negocio?".
+   Aquí ceden márgenes, interlineados y un par de cuerpos: no se oculta nada,
+   porque un control que desaparece en pantalla chica es una función que el
+   visitante no sabe que existe.
+
+   El tramo vale para los dos viewports a propósito: el panel de pasos dejó de
+   ser cosa del teléfono, así que el defecto tampoco lo es. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .crd-ol-panel { padding-top: 14px !important; }
+  .crd-ol-panel h2 { font-size: 20px !important; }
+  .crd-ol-panel ol { gap: 2px !important; }
+  .crd-ol-panel ol > li > * { padding-top: 5px !important; padding-bottom: 5px !important; }
+  .crd-panel-lede { font-size: 11.5px !important; margin-top: 4px !important; margin-bottom: 8px !important; }
+  .crd-panel-vivo { margin-bottom: 8px !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+  .crd-panel-cta { margin-top: 8px !important; padding-top: 8px !important; }
+
+  .crd-cta-card { padding: 14px 16px !important; }
+  .crd-cta-title { font-size: 26px !important; margin-bottom: 6px !important; }
+  .crd-cta-lede { font-size: 13px !important; line-height: 1.4 !important; margin-bottom: 8px !important; }
+  .crd-cta-card .crd-sub-wrap { margin-bottom: 8px !important; }
+  .crd-cta-stores { margin-bottom: 6px !important; }
+  .crd-cta-stores > :first-child { margin-bottom: 4px !important; }
+}
+
+/* Segundo escalón, para lo que Safari deja de un SE (553) y para un portátil
+   con la barra abierta: la franja baja de 577 a 385 y el primer escalón ya no
+   alcanza. */
+@media (max-width: 899px) and (max-height: 600px) {
+  .crd-ol-panel { padding-top: 12px !important; }
+  .crd-ol-panel h2 { font-size: 19px !important; }
+  .crd-ol-panel ol > li > * { padding-top: 4px !important; padding-bottom: 4px !important; }
+  .crd-panel-lede { margin-bottom: 6px !important; }
+  .crd-panel-vivo { margin-bottom: 6px !important; }
+
+  .crd-cta-card { padding: 12px 14px !important; }
+  .crd-cta-title { font-size: 23px !important; margin-bottom: 4px !important; }
+  .crd-cta-lede { font-size: 12.5px !important; line-height: 1.4 !important; margin-bottom: 8px !important; }
+  .crd-cta-card .crd-sub-wrap { margin-bottom: 6px !important; }
+  .crd-cta-stores { margin-bottom: 4px !important; }
+}
+
+/* El hero de escritorio no tenía tramo corto: el logo mide hasta 480 y en una
+   ventana de 600 el bloque entero no cabía entre las dos franjas. */
+/* Equipo cabía a 1131x686 —la ventana de revisión— por 14px, y el scroll
+   interno que ahora la hace alcanzable en ventanas cortas le sacaba una barra
+   justo ahí. El aire entre bloques cede de 22 a 16: son 24px que devuelven la
+   escena a "cabe", sin tocar ni un cuerpo de texto. Por debajo de 640 ya no hay
+   ajuste que la salve y el scroll es la respuesta correcta. */
+@media (min-width: 900px) and (max-height: 720px) {
+  /* El relleno inferior baja al ras de la franja: 4 de aire más el panel, en vez
+     de 16. Sigue despejándolo con holgura —el panel arranca a 60 del borde y la
+     reserva son 72— y son los 12px que devuelven la escena a "cabe" en la
+     ventana de revisión, sin barra. Lo demás que cede es aire entre bloques y un
+     cuerpo del manifiesto. */
+  .crd-ol-equipo {
+    gap: 10px !important;
+    padding-bottom: calc(4px + var(--crd-stepper-h)) !important;
+  }
+  .crd-eq-manifiesto { font-size: clamp(21px, 2.4vw, 30px) !important; }
+  .crd-eq-sello { top: -4px !important; transform: scale(.86); transform-origin: top right; }
+}
+
+@media (min-width: 900px) and (max-height: 700px) {
+  /* La foto de la polaroid cede 56: la pila ya subió para esquivar el panel de
+     pasos de la esquina, y con los 196 originales su canto superior alcanzaba
+     el titular de la sección. */
+  .crd-destinos-card-media { height: 140px !important; }
+
+  .crd-hero-logo { width: min(34vw, 360px) !important; }
+  .crd-hero-title { font-size: 34px !important; line-height: 1.06 !important; margin-top: 10px !important; }
+  .crd-hero-copy { margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 16px !important; }
+}
+
+/* ── Teléfonos cortos: la compresión manda por ALTO, no por ancho ─────────────
+   Los dos tramos de abajo se disparaban con `max-width: 359px`, un ancho que
+   ningún iPhone en uso tiene. El alto sí: Safari se queda con ~190px de la
+   pantalla en su barra, así que un 15 Pro entrega 664 y no 844, y un SE 553 y
+   no 667. En esa franja el hero no cabía y el wordmark salía cortado por
+   arriba, con la píldora encima.
+
+   El bloque del hero es la lista completa de lo que cede: logo, titular,
+   párrafo, botones y el cue. Nada se oculta — un control que desaparece en una
+   pantalla chica es una función que el visitante no sabe que existe. */
+@media (max-width: 899px) and (max-height: 700px) {
+  .crd-hero-logo { width: min(66vw, 340px) !important; }
+  .crd-hero-title { font-size: 27px !important; line-height: 30px !important; margin-top: 10px !important; }
+  .crd-hero-copy { font-size: 15px !important; line-height: 1.38 !important; margin-top: 8px !important; }
+  .crd-hero-actions { margin-top: 14px !important; gap: 10px !important; }
+  .crd-hero-cue { margin-top: 6px !important; }
+}
+
+@media (max-width: 899px) and (max-height: 600px) {
+  .crd-hero-content { max-width: 300px !important; }
+  .crd-hero-logo { width: min(52vw, 240px) !important; }
+  .crd-hero-title { font-size: 22px !important; line-height: 25px !important; margin-top: 8px !important; }
+  .crd-hero-copy { font-size: 14px !important; margin-top: 6px !important; }
+  .crd-hero-actions { margin-top: 10px !important; gap: 8px !important; }
+  .crd-hero-cue { margin-top: 2px !important; }
+  /* Adorno, no control: a este alto el globo y el titular ocupan la misma
+     franja y el pin se posaba sobre "República Dominicana". */
+  .crd-hero-pin { display: none; }
+
+  /* La pila baja de 282 a 238: la foto encoge y la descripción del papel sale,
+     que es lo que la hacía ~30px más alta. El titular la sigue solo porque
+     `--crd-pila-h` es la misma variable que usa su `bottom`. */
+  :root { --crd-pila-h: 238px; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
   .crd-destinos-card { width: 176px !important; }
   .crd-destinos-card-media { height: 124px !important; }
-  /* La descripción en el papel hace la carta ~30px más alta y a este alto
-     invade el titular; en pantallas así de chicas se omite. */
   .crd-destinos-desc { display: none; }
-  .crd-ol-panel { max-height: 55dvh; }
 }
 
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
@@ -507,65 +814,99 @@ body::after {
    nada ni pelearse con el `overflow-y: auto` que la card usa en móvil. */
 .crd-cta-card {
   background-image:
-    repeating-radial-gradient(circle at 84% 8%, rgba(255,255,255,.05) 0 1px, transparent 1px 27px),
+    repeating-radial-gradient(circle at 84% 8%, rgba(255,255,255,.04) 0 1px, transparent 1px 27px),
     repeating-radial-gradient(circle at 12% 94%, rgba(255,255,255,.04) 0 1px, transparent 1px 35px);
 }
 
 /* ── Acento editorial ─────────────────────────────────────────────────────────
-   La itálica de Fraunces sustituye al <strong> coral (audit §3): antes el
-   énfasis era negrita de color, que es lo que hace cualquier plantilla. En los
-   titulares ya hay serif y la clase sólo cambia estilo y color; en el cuerpo
-   —que va en Instrument— también trae la familia, y ahí es donde se nota que
-   el sitio tiene voz. Una sola frase por titular: dos ya es ruido. */
-.crd-accent {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  color: var(--color-coral-ink);
-}
-/* Sobre la card ink del CTA el coral accesible se apaga; ahí manda el vivo. */
+   El acento ya no cambia de familia ni se inclina: la itálica de Fraunces murió
+   con Fraunces. La palabra acentuada va en la misma tipografía que la frase que
+   la contiene y se distingue sólo por la tinta. Va en <em>, que es la etiqueta
+   semántica correcta, y por eso hay que apagarle la cursiva del navegador.
+   Una sola palabra acentuada por titular: dos ya es ruido. */
+.crd-accent,
 .crd-accent-on-ink {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 700;
-  color: var(--color-mango);
+  font-style: normal;
+  font-weight: inherit;
+}
+.crd-accent { color: var(--color-coral-ink); }        /* 5.86:1 sobre cream */
+/* Sobre tinta el coral accesible se apaga: ahí el acento es el mango, que da
+   7.51:1 contra los 4.56:1 del coral. */
+.crd-accent-on-ink { color: var(--color-mango); }
+
+/* ── Píldora del nav ──────────────────────────────────────────────────────────
+   Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
+   crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
+   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema, la
+   misma receta que todo lo que flota sobre el mapa, y ahí sí se apoya con e1.
+
+   El blur va en CSS y no en utilidades con variante `data-`: las dos
+   escribirían la misma custom property de Tailwind y el orden de capas
+   decidiría cuál gana, que es justo lo que no se quiere depurar. */
+.crd-nav-pill {
+  background: color-mix(in srgb, var(--color-cream) 60%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: none;
+}
+.crd-nav-pill[data-solid="true"] {
+  background: var(--crd-glass);
+  backdrop-filter: var(--crd-glass-blur);
+  box-shadow: var(--shadow-e1);
 }
 
+/* El enlace es UI, no titular: familia de etiqueta y su propia píldora
+   invisible de 40, para que el área táctil exista aunque no se vea. El
+   subrayado animado y el hover coral mueren: el acento de la web es para
+   acciones, y marcar el enlace activo con él lo convertía en decoración.
+
+   El activo sube de 600 a 700, y eso ensancha la palabra. En una píldora que
+   además scrollea en horizontal, ese ensanche mueve los cinco enlaces cada vez
+   que cambias de capítulo. El grid de una sola celda con un fantasma en 700
+   reserva siempre el ancho del peso mayor, así que la píldora no se mueve
+   nunca: es la misma caja en los tres estados. */
 .crd-navlink {
-  position: relative;
+  display: inline-grid;
+  place-items: center;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 999px;
   text-decoration: none;
-  color: #264653;
-  /* El nav es UI, no titular: sans 600. El serif se reserva a los titulares. */
-  font-family: var(--font-sans);
+  color: var(--color-ink-3);
+  font-family: var(--font-label);
   font-weight: 600;
-  font-size: var(--text-body);
-  padding: 4px 2px;
+  font-size: 13.5px;
   transition: color .2s;
 }
-.crd-navlink:hover { color: #F76C4D; }
+.crd-navlink > span,
 .crd-navlink::after {
-  content: '';
-  position: absolute;
-  left: 0; bottom: -3px;
-  height: 2px; width: 0;
-  background: #F76C4D;
-  transition: width .25s ease;
+  grid-area: 1 / 1;
 }
-.crd-navlink:hover::after { width: 100%; }
+.crd-navlink::after {
+  content: attr(data-label);
+  font-weight: 700;
+  visibility: hidden;
+  pointer-events: none;
+}
+.crd-navlink:hover,
+.crd-navlink[aria-current="location"] {
+  color: var(--color-ink);
+  font-weight: 700;
+}
 
-/* El `scale` del hover era la otra mitad del look de plantilla: un CTA que
-   crece bajo el cursor. Ahora el botón se despega del papel al pasar por
-   encima y se hunde al pulsar — el offset de la sombra hace el trabajo, no la
-   escala. Los estados viven aquí porque :active tiene que ganarle a :hover. */
+/* Nunca `scale`: un CTA que crece bajo el cursor es la mitad del look de
+   plantilla. El botón se despega del papel al pasar por encima y se hunde al
+   pulsar. Los estados viven aquí porque :active tiene que ganarle a :hover.
+
+   La calcomanía (sombra de offset duro) murió con el sistema anterior: la
+   acción primaria se enciende con el resplandor de su propio acento (e2), no
+   se pega al papel. Por eso el hover sólo mueve la pieza y el resplandor lo
+   pone la variante. */
 .crd-button:hover {
   transform: translateY(-2px);
 }
 .crd-button:active {
   transform: translateY(1px) !important;
 }
-.crd-sticker { box-shadow: var(--shadow-sticker); }
-.crd-button.crd-sticker:hover  { box-shadow: 0 5px 0 rgba(38,70,83,.18); }
-.crd-button.crd-sticker:active { box-shadow: 0 1px 0 rgba(38,70,83,.18) !important; }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */
 /* Va en @layer base a propósito: el CSS sin capa le gana a las utilidades de
@@ -574,7 +915,7 @@ body::after {
    `focus-visible:outline-*` puesto en un componente. */
 @layer base {
   :where(a, button, [role="button"], input, select, textarea):focus-visible {
-    outline: 2px solid #F76C4D;
+    outline: 2px solid var(--color-coral);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -607,7 +948,7 @@ body::after {
 .crd-lista-blooms {
   background:
     radial-gradient(620px 420px at 12% -6%, rgba(37,204,184,.20), transparent 70%),
-    radial-gradient(560px 400px at 96% 8%, rgba(247,108,77,.16), transparent 72%),
+    radial-gradient(560px 400px at 96% 8%, rgba(224,85,47,.16), transparent 72%),
     radial-gradient(700px 500px at 78% 104%, rgba(255,141,22,.13), transparent 74%);
 }
 
@@ -632,10 +973,9 @@ body::after {
 
 .crd-lista-main { margin-top: 32px; }
 
-.crd-lista-ig-card { transition: background .2s, border-color .2s, transform .2s; }
+.crd-lista-ig-card { transition: border-color .2s, transform .2s; }
 .crd-lista-ig-card:hover {
-  background: #fff;
-  border-color: #D9D2C1;
+  border-color: var(--color-line-strong);
   transform: translateY(-2px);
 }
 
@@ -664,10 +1004,6 @@ body::after {
   75%  { transform: scale(.96) rotate(-2deg); }
   100% { opacity: 1; transform: scale(1) rotate(0); }
 }
-@keyframes crdHalo {
-  0%   { opacity: .55; transform: scale(.5); }
-  100% { opacity: 0;   transform: scale(2.1); }
-}
 @keyframes crdCheckDraw {
   from { stroke-dashoffset: 34; }
   to   { stroke-dashoffset: 0; }
@@ -692,35 +1028,55 @@ body::after {
   animation: crdConfettiFly 1.5s cubic-bezier(.2,.6,.35,1) both;
 }
 
-/* El CTA de Instagram era el único elemento del sitio con el degradado oficial
-   de otra marca a todo color; en ink pesa igual sin competir (audit §3, mov. 9). */
-.crd-ig-cta { transition: transform .2s cubic-bezier(.2,.8,.3,1.3), box-shadow .2s; }
-.crd-ig-cta:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(38,70,83,.18); }
+/* Sello de pasaporte: el estado "conseguido" de cada cupón de /lista. Es la
+   receta del sello de llegada de la app a escala micro: borde de 2 más
+   un filete interior de 1 al 75% con 2 de aire, y la mordida de máscara radial
+   que hace que la tinta no cargue pareja en una esquina.
 
-/* Sello de pasaporte: el estado "conseguido" de cada cupón de /lista. Rotado y
-   con doble borde, como la tinta de un cuño — no una píldora de estado. */
+   El filete es un ::before de verdad y no un `outline`: el outline iba por
+   fuera del borde, así que el doble marco quedaba al revés que en el hermano
+   de la app, y no admite radio propio. La rotación va por custom property
+   porque la animación de abajo compone sobre ella.
+
+   La opacidad es .90 y no un número redondo: es el piso exacto donde la tinta
+   mango cruza AA sobre crema (4.53:1). A .88 se quedaba en 4.33 siendo texto
+   de 10px. Bajarla vuelve a romper el mango antes que ningún otro tinte. */
 .crd-sello {
-  transform: rotate(-9deg);
+  --crd-sello-rot: -8deg;
+  position: relative;
+  display: inline-block;
+  transform: rotate(var(--crd-sello-rot));
   border: 2px solid var(--color-mint-ink);
-  border-radius: 4px;
-  padding: 2px 10px;
-  font-family: var(--font-mono);
+  border-radius: 6px;
+  padding: 4px 11px;
+  font-family: var(--font-label);
   font-size: var(--text-micro);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--color-mint-ink);
-  opacity: .8;
-  outline: 1px solid var(--color-mint-ink);
-  outline-offset: 2px;
+  opacity: .90;
   pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle at 30% 20%, #000 90%, transparent 93%);
+  mask-image: radial-gradient(circle at 30% 20%, #000 90%, transparent 93%);
+}
+.crd-sello::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid currentColor;
+  border-radius: 3.5px;
+  opacity: .75;
 }
 
-/* Los beneficios se marcan como conseguidos cuando el registro entra. */
+/* Los beneficios se marcan como conseguidos cuando el registro entra. Va por la
+   propiedad `scale` y no por `transform`: con transform, el fotograma final
+   (`both` deja el 100% pegado) pisaba el `rotate` de .crd-sello y el cuño se
+   quedaba recto. */
 @keyframes crdPerkTick {
-  0%   { opacity: 0; transform: scale(.2); }
-  60%  { opacity: 1; transform: scale(1.25); }
-  100% { opacity: 1; transform: scale(1); }
+  0%   { opacity: 0; scale: .2; }
+  60%  { opacity: 1; scale: 1.25; }
+  100% { opacity: 1; scale: 1; }
 }
 
 /* La celebración es de una sola pasada, pero sigue siendo movimiento: con
@@ -728,29 +1084,34 @@ body::after {
    monta (lo decide el componente con matchMedia). */
 
 /* ───────────────────── Páginas legales ────────────────────── */
-/* Prosa larga: el resto del sitio usa estilos inline por componente, pero aquí
-   el contenido es markup semántico y se estila una vez desde el shell.
-   La regla tipográfica de Fase D vale también aquí: el serif sólo en el H1;
-   los H2 van a 17px, por debajo del umbral de 20, así que son sans 700. */
+/* Prosa larga: el resto del sitio usa clases por componente, pero aquí el
+   contenido es markup semántico y se estila una vez desde el shell. Es la
+   única superficie del sitio con estilos de prosa.
+
+   El umbral de 20px con el que convivían los H2 era una regla del serif
+   anterior, que sólo se usaba en titulares grandes. La familia de titular de
+   hoy no tiene ese límite: los subtítulos van en ella, a 20. */
 .crd-legal {
   color: var(--color-ink);
-  font-size: var(--text-body);
-  line-height: 1.7;
+  font-size: var(--text-lead);
+  line-height: 1.6;
 }
 .crd-legal h1 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -.012em;
-  font-size: clamp(28px, 5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  font-size: clamp(28px, 5vw, 34px);
   line-height: 1.1;
   margin: 0 0 6px;
-  color: #1D3A45;
+  color: var(--color-ink);
 }
 .crd-legal h2 {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--text-lead);
+  letter-spacing: -.02em;
+  font-size: 20px;
   margin: 30px 0 8px;
-  color: #1D3A45;
+  color: var(--color-ink);
 }
 .crd-legal p { margin: 0 0 14px; }
 /* `list-style: disc` explícito: el preflight de Tailwind lo quita de todos los
@@ -758,10 +1119,11 @@ body::after {
    párrafo partido. */
 .crd-legal ul { margin: 0 0 14px; padding-left: 20px; list-style: disc; }
 .crd-legal li { margin-bottom: 7px; }
-.crd-legal a { color: var(--color-coral-ink); }
+/* El único subrayado del sitio: en prosa larga el color solo no basta para
+   decir "esto es un enlace". */
+.crd-legal a { color: var(--color-coral-ink); text-decoration: underline; }
 .crd-legal-date {
-  font-family: var(--font-mono);
   font-size: var(--text-tiny);
-  color: #66747B;
+  color: var(--color-muted);
   margin-bottom: 26px !important;
 }

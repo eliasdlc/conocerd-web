@@ -1,40 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  Contrato de la lista de espera: un solo esquema compartido entre el
-//  formulario (cliente) y el Route Handler (servidor). Si cambia un campo,
-//  cambia aquí y ambos lados fallan a la vez — que es lo que queremos.
+//  Validación de la lista de espera. Corre SÓLO en el servidor: el Route
+//  Handler es el único que hace `safeParse`, así que zod nunca llega al
+//  navegador. El vocabulario que el formulario sí necesita vive sin zod en
+//  `constants.ts` (audiencias, honeypot) y en `business-types.ts` (el catálogo
+//  de tipos), y se importa desde allí en los dos lados.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { z } from "zod";
-
-export const AUDIENCES = ["viajero", "negocio"] as const;
-export type Audience = (typeof AUDIENCES)[number];
-
-/** Tipos de negocio que ofrecemos en el selector. `otro` es la salida de emergencia. */
-export const BUSINESS_TYPES = [
-  "restaurante",
-  "hospedaje",
-  "tour",
-  "transporte",
-  "tienda",
-  "otro",
-] as const;
-export type BusinessType = (typeof BUSINESS_TYPES)[number];
-
-export const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
-  restaurante: "Restaurante o bar",
-  hospedaje: "Hospedaje",
-  tour: "Tours y experiencias",
-  transporte: "Transporte",
-  tienda: "Tienda o artesanía",
-  otro: "Otro",
-};
-
-/**
- * Campo trampa para bots. Se renderiza oculto y con `autocomplete="off"`:
- * una persona nunca lo llena, un bot que rellena todo sí. Si viene con
- * contenido respondemos 200 sin guardar (no le decimos al bot que lo pillamos).
- */
-export const HONEYPOT_FIELD = "empresa_web";
+import { AUDIENCES, HONEYPOT_FIELD } from "@/lib/waitlist/constants";
+import { BUSINESS_TYPES, BUSINESS_TYPE_OTHER_MAX, OTHER_BUSINESS_TYPE } from "@/lib/waitlist/business-types";
 
 // Normaliza *antes* de validar: los teclados móviles capitalizan la primera
 // letra y pegan espacios al final, y " Elias@Ejemplo.COM " es un correo válido
@@ -92,7 +66,14 @@ export const subscribeSchema = z
     name: optionalText(120),
     /** Solo negocio: obligatorio. */
     businessName: optionalText(160),
+    /** Solo negocio: obligatorio. Vocabulario cerrado (`business-types.ts`). */
     businessType: z.enum(BUSINESS_TYPES).optional(),
+    /**
+     * Lo que la persona escribió cuando su tipo no está en el catálogo. Solo
+     * tiene sentido junto a `otro`; con cualquier otro tipo se descarta abajo.
+     * Es la única forma de enterarnos de qué tipos nos faltan.
+     */
+    businessTypeOther: optionalText(BUSINESS_TYPE_OTHER_MAX),
     /** Solo negocio: opcional, para contactar rápido tras el evento. */
     whatsapp: optionalText(40),
     /**
@@ -110,11 +91,18 @@ export const subscribeSchema = z
   .refine((v) => v.audience !== "negocio" || Boolean(v.businessName), {
     message: "Dinos el nombre de tu negocio",
     path: ["businessName"],
-  });
+  })
+  // El tipo es obligatorio para un negocio. Antes el `<select>` venía
+  // preseleccionado y respondía "restaurante" por quien no lo miraba, así que
+  // el campo nunca llegaba vacío y su métrica mezclaba las dos cosas.
+  .refine((v) => v.audience !== "negocio" || Boolean(v.businessType), {
+    message: "Dinos qué tipo de negocio o lugar es",
+    path: ["businessType"],
+  })
+  .transform((v) => ({
+    ...v,
+    businessTypeOther:
+      v.businessType === OTHER_BUSINESS_TYPE ? v.businessTypeOther : undefined,
+  }));
 
 export type SubscribeInput = z.infer<typeof subscribeSchema>;
-
-/** Respuesta del endpoint. El cliente sólo necesita distinguir estos casos. */
-export type SubscribeResult =
-  | { ok: true; status: "created" | "already_subscribed" }
-  | { ok: false; error: string; fields?: Record<string, string> };

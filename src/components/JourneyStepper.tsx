@@ -3,14 +3,21 @@
 import { CHAPTERS, chapterIndexOfScene, SCENE_COUNT } from "@/lib/journey";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Panel de comando del journey en MÓVIL — pegado al borde inferior.
+//  Panel de comando del recorrido en MÓVIL — pegado al borde inferior. En
+//  escritorio no existe: ahí el paso lo piden la rueda y el teclado
+//  (useJourneyGestos) y el riel lateral (JourneyProgress) es la referencia de
+//  capítulos.
 //
-//  Reemplaza al scroll (decisión del dueño, ago 2026): cada toque avanza a un
-//  keyframe completo, así el usuario nunca queda "entre escenas" ni se pierde
-//  el vuelo de la cámara por deslizar demasiado rápido. El indicador agrupa
-//  las 13 escenas en 7 capítulos —13 puntos no se leen en 390px— y el capítulo
-//  activo se ensancha en una barra que muestra el avance dentro de él (los 6
-//  destinos). Cada capítulo es tocable: salto directo.
+//  Reemplaza al scroll: cada toque avanza a un keyframe completo, así nadie
+//  queda "entre escenas" ni se pierde el vuelo de la cámara por deslizar
+//  demasiado rápido. El indicador agrupa las 13 escenas en 7 capítulos (13
+//  puntos no se leen en 390px) y el capítulo activo se ensancha en una barra
+//  que muestra el avance dentro de él (los 6 destinos). Cada capítulo es
+//  tocable: salto directo.
+//
+//  Es el dock de la app en versión de una pieza: barra de cristal de 64 de
+//  alto, flotando a 15 de los lados y 21 del borde. El avance va en `selected`,
+//  como todo estado del sistema; el acento se reserva a la acción.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface JourneyStepperProps {
@@ -55,18 +62,21 @@ export default function JourneyStepper({
     <div
       role="group"
       aria-label="Navegación del recorrido"
-      className={`fixed bottom-0 left-1/2 z-[95] w-[min(430px,calc(100vw-20px))] -translate-x-1/2 pb-[max(10px,env(safe-area-inset-bottom))] transition-all duration-300 desk:hidden ${
+      // Centrado abajo y en el mismo sitio en las 13 escenas: es el control
+      // principal de la página. Lo que se aparta es el contenido que caía ahí
+      // vía la franja `--crd-stepper-h`, no el panel.
+      className={`fixed bottom-[max(21px,env(safe-area-inset-bottom))] left-1/2 z-[95] w-[min(430px,calc(100vw-30px))] -translate-x-1/2 transition-all duration-300 desk:hidden ${
         visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex items-center gap-3 rounded-full bg-cream/95 py-2 pl-2 pr-2 shadow-panel backdrop-blur-[8px]">
+      <div className="flex h-16 items-center gap-3 rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-[5px] shadow-e1 backdrop-blur-[24px] backdrop-saturate-[1.8]">
         {/* Escena anterior */}
         <button
           type="button"
           onClick={onPrev}
           disabled={isFirst}
           aria-label="Escena anterior"
-          className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border-[1.5px] border-ink/12 bg-white text-ink transition-opacity duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+          className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border border-line bg-paper text-ink transition-opacity duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
             isFirst ? "cursor-default opacity-35" : ""
           }`}
         >
@@ -75,7 +85,7 @@ export default function JourneyStepper({
 
         {/* Capítulo activo + puntos de capítulo tocables */}
         <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-mono text-micro font-bold uppercase tracking-[.15em] text-muted">
+          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-label text-micro font-extrabold uppercase tracking-[.15em] text-muted">
             {CHAPTERS[activeChapter].label}
           </span>
           <div className="flex items-center gap-[5px]">
@@ -92,14 +102,14 @@ export default function JourneyStepper({
                   aria-current={isActive ? "step" : undefined}
                   className={`h-[7px] flex-none cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-[width,background-color] duration-300 ease-[cubic-bezier(.2,.8,.3,1)] ${
                     isActive
-                      ? `bg-coral/25 ${span > 1 ? "w-[30px]" : "w-4"}`
+                      ? `bg-line-strong ${span > 1 ? "w-[34px]" : "w-4"}`
                       : i < activeChapter
-                        ? "w-[7px] bg-coral/45"
-                        : "w-[7px] bg-ink/12"
+                        ? "w-[7px] bg-selected"
+                        : "w-[7px] bg-line-strong"
                   }`}
                 >
                   <span
-                    className="block h-full rounded-full bg-coral transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.3,1)]"
+                    className="block h-full rounded-full bg-selected transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.3,1)]"
                     style={{ width: `${Math.round(fill * 100)}%` }}
                   />
                 </button>
@@ -113,7 +123,7 @@ export default function JourneyStepper({
           type="button"
           onClick={isLast ? onEnd : onNext}
           aria-label={isLast ? "Ver el pie de página" : "Siguiente escena"}
-          className="flex size-12 flex-none cursor-pointer items-center justify-center rounded-full bg-coral text-white shadow-[0_6px_18px_rgba(247,108,77,0.38)] transition-transform duration-200 active:scale-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2"
+          className="flex size-[54px] flex-none cursor-pointer items-center justify-center rounded-full bg-selected text-on-selected transition-transform duration-200 active:scale-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2"
         >
           <Chevron dir="down" />
         </button>

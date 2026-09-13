@@ -3,46 +3,127 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type maplibregl from "maplibre-gl";
-import { SceneProvider, useScene } from "@/context/SceneContext";
-import { useJourneyScroll } from "@/hooks/useJourneyScroll";
+import { useScene } from "@/context/SceneContext";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
+import { useJourneyGestos } from "@/hooks/useJourneyGestos";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
-import { SCENES, SCENE_BANDS, TRIGGER_TOTAL_VH } from "@/lib/journey";
-import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
+import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
+import { calentarRecorrido } from "@/lib/calentarRecorrido";
+import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
 import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
-import DestinosSection from "@/sections/DestinosSection";
-import MapaSection from "@/sections/MapaSection";
-import ViajerosNegociosSection from "@/sections/ViajerosNegociosSection";
-import EquipoSection from "@/sections/EquipoSection";
-import CTASection from "@/sections/CTASection";
 
-// MapLibre is the journey's signature but not a prerequisite for readable Hero
-// HTML. Keep it in a separate client chunk so text and navigation can paint
-// before the WebGL runtime arrives.
-const Map = dynamic(() => import("@/components/map/Map").then((mod) => mod.Map), {
+// Los paneles de las escenas van detrás del mismo `dynamic` que el motor del
+// mapa. Son ~4.000 líneas que el arranque no necesita: en el primer pixel sólo
+// se ve el hero, y ninguno de estos paneles existe hasta que la cámara llega a
+// su escena. Cargándolos con el motor y no antes, salen de los 921 KB de JS
+// que el teléfono tiene que bajar, parsear y evaluar ANTES de hidratar, que es
+// el 55 % del tiempo hasta ver el globo (auditoría de rendimiento, 28 ago).
+//
+// `ssr: false` como el motor, y por la misma razón: son hijos del <Map>, que
+// ya es cliente puro, así que nunca formaron parte del HTML del servidor.
+// Sin `loading`: son overlays invisibles fuera de su escena, y un placeholder
+// sólo añadiría un nodo que tapa el mapa.
+//
+// El hero NO entra aquí: es el LCP y se sirve renderizado desde el servidor.
+const DestinosSection = dynamic(() => import("@/sections/DestinosSection"), { ssr: false });
+const MapaSection = dynamic(() => import("@/sections/MapaSection"), { ssr: false });
+const ViajerosNegociosSection = dynamic(() => import("@/sections/ViajerosNegociosSection"), { ssr: false });
+const EquipoSection = dynamic(() => import("@/sections/EquipoSection"), { ssr: false });
+const CTASection = dynamic(() => import("@/sections/CTASection"), { ssr: false });
+
+// MapLibre es la firma del journey pero no un requisito para que el hero se
+// lea. El motor (1 MB con el CSS) llega en su propio chunk, después del primer
+// pintado, y el resto de la página no lo espera.
+//
+// Que esto funcione depende de que nadie más importe `engine`: las secciones
+// consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
+// de valor desde el grafo inicial devolvería el motor al HTML de arranque y
+// este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
+const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
 
-// Applied once on map load — aligns water/border colors with brand palette
-function applyBrandPaint(map: maplibregl.Map) {
+// Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
+// niveles de zoom pese al nombre: es `tilesDelViewport × multiplicador`, o sea
+// 60 tiles en escritorio (1440×900) y 30 en móvil (393×852) con el default de
+// 5. El recorrido toca ~230 tiles distintos, así que con 60 ranuras la caché
+// vive llena: medida en 3 pasadas da 60 de 60, sin una unidad de varianza, y
+// cada regreso a la isla obliga a re-pedir, re-parsear y volver a subir a GPU
+// las mismas teselas.
+//
+// 20 y no más porque el conjunto de trabajo real son ~145 tiles: con 240
+// ranuras la ocupación se estabiliza en 142 y las descargas repetidas de RD
+// bajan de 123 a 80 por recorrido (medianas de 3 pasadas). Con 720 ranuras el
+// número es 78, idéntico dentro del ruido: pasar de 20 solo gasta memoria.
+//
+// Lo que este número NO arregla son las ~78 descargas repetidas que quedan.
+// Esas no son desalojo: con 720 ranuras y 226 tiles distintos siguen ahí. Son
+// tiles que se sueltan antes de tener datos porque `applyJourneyFrame` escribe
+// la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
+const CACHE_NIVELES_DE_ZOOM = 20;
+
+// Applied once on map load — aligns water/border colors with brand palette.
+// Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
+export function applyBrandPaint(map: maplibregl.Map) {
   // El estilo Carto no siempre expone estas capas → guardar con getLayer para
   // no ensuciar la consola con "Cannot style non-existing layer".
   if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
   if (map.getLayer("admin_country")) {
-    map.setPaintProperty("admin_country", "line-color", "#264653");
+    map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
     map.setPaintProperty("admin_country", "line-width", 2);
+  }
+
+  // El globo del hero va sin etiquetas. Los nombres de continente y de país
+  // sobre la esfera no dicen nada que el hero necesite, y a este zoom compiten
+  // con el titular y con el pin, que es lo único que hay que mirar.
+  //
+  // El corte va por zoom y no por escena porque sale gratis: el hero está en
+  // 1.95 y el cierre en 2.2, y todas las demás escenas están en 6.1 o más
+  // arriba, así que z5 separa unas de otras sin tener que tocar el estilo cada
+  // vez que cambia la escena. Sólo se sube el mínimo, nunca se baja: una capa
+  // que ya aparecía más tarde se queda como estaba.
+  //
+  // Alcanza a TODA capa de símbolo, incluidos los nombres de mares, que viven
+  // en `water_name` y por tanto se escapan del filtro de topónimos de
+  // `lib/mapaLigero`. Es deliberado: sobre estos dos globos no va ni un texto.
+  for (const capa of map.getStyle().layers) {
+    if (capa.type !== "symbol") continue;
+    map.setLayerZoomRange(capa.id, Math.max(capa.minzoom ?? 0, 5), capa.maxzoom ?? 24);
   }
 
   // Mata el "ring": el globo de MapLibre dibuja una atmósfera (halo difuso más
   // grande que la esfera). `atmosphere-blend: 0` la apaga ⇒ el globo se recorta
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
   map.setSky({ "atmosphere-blend": 0 });
+
+  // `water_shadow` de Positron dibuja el mismo polígono de agua que `water`,
+  // desplazado, para simular una sombra bajo la costa. Con nuestro color de
+  // agua queda tapada al 100 %: no aporta un solo píxel y sí manda toda la
+  // geometría del océano una segunda vez. En el hero son 425,9k índices y 20
+  // draw calls por frame para no cambiar nada (medido: 0 px de diferencia
+  // sobre 2.073.600 en tres encuadres).
+  if (map.getLayer("water_shadow")) {
+    map.setLayoutProperty("water_shadow", "visibility", "none");
+  }
+
+  // Los otros dos recortes al basemap, con su porqué y sus cifras en
+  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
+  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  aligerarEstilo(map);
+  soloTopónimosDeRD(map);
 }
+
+// Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
+// preview: un notch de rueda o medio swipe corto de trackpad vale un paso, y
+// 220 ms de silencio separan dos gestos.
+const GESTO = { umbral: 40, silencioMs: 220 };
 
 // ─── Inner component (consumes SceneContext) ──────────────────────────────────
 
@@ -51,59 +132,66 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   const outerRef = useRef<HTMLDivElement>(null);
   const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
-  // El journey móvil bloquea el scroll de la página; solo se libera al final
-  // para dejar bajar al footer (y se vuelve a bloquear al regresar arriba).
+  // El recorrido bloquea el scroll de la página; solo se libera al final para
+  // dejar bajar al footer (y se vuelve a bloquear al regresar arriba).
   const [unlocked, setUnlocked] = useState(false);
   const [stepperVisible, setStepperVisible] = useState(true);
   const leftJourney = useRef(false);
 
-  // Dos motores excluyentes escribiendo el mismo progreso: desktop = scroll
-  // continuo con tope de velocidad, móvil = pasos discretos desde el panel
-  // inferior (decisión del dueño, ago 2026: el scroll táctil corría demasiado).
-  // Ambos gated hasta que matchMedia resuelve, para que un frame desktop nunca
-  // adelante un teléfono hasta el CTA.
-  const { jumpToScene } = useJourneyScroll({
-    containerRef: outerRef,
+  // Un solo motor en los dos viewports: pasos discretos. Quién pide el paso
+  // cambia por viewport: el panel inferior en el teléfono, la rueda y el
+  // teclado en escritorio. Gated hasta que matchMedia resuelve, porque el
+  // primer encuadre depende del tamaño real de la ventana.
+  const { goTo, next, prev, index, count, enVuelo } = useJourneySteps({
+    enabled: viewportResolved,
     mapRef,
     progress,
     onSceneChange: setActiveScene,
-    enabled: viewportResolved && !isMobile,
   });
-  const { goTo, next, prev, index } = useJourneySteps({
-    enabled: viewportResolved && isMobile,
-    mapRef,
-    progress,
-    onSceneChange: setActiveScene,
+
+  // Salir al pie es desbloquear y, sólo cuando el pie ya está en el flujo
+  // (la regla de globals.css lo retira mientras dura el bloqueo), scrollear
+  // hasta él. Un rAF no bastaba: desde la rueda el estado se aplica después
+  // del frame y el pie seguía sin existir cuando se le pedía la posición.
+  const goToFooter = useCallback(() => setUnlocked(true), []);
+  useEffect(() => {
+    if (unlocked) scrollToFooter();
+  }, [unlocked]);
+
+  useJourneyGestos({
+    enabled: viewportResolved && !isMobile && !unlocked,
+    params: GESTO,
+    enVuelo,
+    index,
+    count,
+    next,
+    prev,
+    goTo,
+    onEnd: goToFooter,
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
 
-  // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena
-  // en ambos modos. En desktop la navegación es teletransporte + vuelo directo
-  // de cámara (jumpToScene): clicar "Equipo" no re-narra el recorrido.
+  // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena.
+  // Un link desde el pie llega con la página desbloqueada y abajo: volver
+  // arriba y dejar que el motor anime hasta la escena.
   useEffect(() => {
     return registerSceneJumper((scene) => {
       const i = SCENE_BANDS.findIndex((b) => b.name === scene);
       if (i < 0) return false;
-      if (isMobile) {
-        // Un link desde el footer llega con la página desbloqueada y abajo:
-        // volver arriba y dejar que el motor de pasos anime hasta la escena.
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        goTo(i);
-      } else {
-        jumpToScene(i);
-      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      goTo(i);
       return true;
     });
-  }, [isMobile, goTo, jumpToScene]);
+  }, [goTo]);
 
-  // Bloqueo del scroll de página en móvil. Con `overflow:hidden` un swipe
-  // vertical no mueve la página, pero los bottom-sheets y la sección de equipo
-  // siguen scrolleando POR DENTRO (a diferencia de `touch-action`, que los
-  // habría anulado también). Ese scroll interno no cambia de escena: la escena
-  // solo avanza desde el panel de pasos.
+  // Bloqueo del scroll de página. Con `overflow:hidden` ni un swipe ni la rueda
+  // mueven la página, pero los bottom-sheets y la sección de equipo siguen
+  // scrolleando POR DENTRO (a diferencia de `touch-action`, que los habría
+  // anulado también). Ese scroll interno no cambia de escena: la escena solo
+  // avanza por pasos.
   useEffect(() => {
-    if (!viewportResolved || !isMobile || unlocked) return;
+    if (!viewportResolved || unlocked) return;
     // Sobre <html> y no solo <body>: globals.css le pone `overflow-x: clip` al
     // root, y con el root en overflow no-visible el overflow del body deja de
     // propagarse al viewport (el bloqueo no llegaba a aplicarse).
@@ -113,16 +201,21 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     const root = document.documentElement;
     root.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
+    // El pie se retira del flujo mientras dura el bloqueo (regla en
+    // globals.css). `overflow:hidden` no basta: Safari en iOS lo ignora para el
+    // gesto táctil, y el pie asomaba en cualquier escena del recorrido sin
+    // forma de quitarlo. Sin nada debajo de la pantalla no hay scroll posible.
+    root.dataset.recorrido = "bloqueado";
     return () => {
       root.style.overflow = "";
       document.body.style.overflow = "";
+      delete root.dataset.recorrido;
     };
-  }, [viewportResolved, isMobile, unlocked]);
+  }, [viewportResolved, unlocked]);
 
   // El panel es fijo: se retira cuando el usuario sale del journey al footer,
   // y al volver arriba el journey recupera el bloqueo del gesto vertical.
   useEffect(() => {
-    if (!isMobile) return;
     const onScroll = () => {
       const y = window.scrollY;
       setStepperVisible(y < window.innerHeight * 0.3);
@@ -139,12 +232,25 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isMobile, unlocked]);
+  }, [unlocked]);
 
-  const goToFooter = useCallback(() => {
-    setUnlocked(true);
-    requestAnimationFrame(() => scrollToFooter());
-  }, []);
+  // El mapa se construye con el encuadre real del hero para ESTE viewport, no
+  // con uno fijo de escritorio. Antes se construía siempre en z2.5: en móvil
+  // eso pedía teselas de z2 que `handleLoad` tiraba acto seguido al mover la
+  // cámara a z1.15, y el arranque cargaba dos juegos de teselas en vez de uno.
+  // `measureViewport` ya devuelve la referencia 1440×900 cuando no hay window,
+  // así que esto es seguro en el servidor; y el inicializador de `useState`
+  // corre una sola vez, no en cada render.
+  const [initialViewState] = useState(() => {
+    const cam = cameraAtProgress(0, measureViewport());
+    return {
+      longitude: cam.center[0],
+      latitude: cam.center[1],
+      zoom: cam.zoom,
+      pitch: cam.pitch,
+      bearing: cam.bearing,
+    };
+  });
 
   // Enlaces que llegan de fuera con hash (`…/#trigger-mapa`, el CTA de los
   // correos). El salto nativo del navegador aterriza en el BORDE de la banda
@@ -160,11 +266,37 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   // On load: brand paint + posiciona la cámara según el progreso actual, así no
   // se queda en el view inicial hasta la primera interacción.
+  // El disco del hero se retira en cuanto el mapa existe y ha pintado. `load`
+  // es el evento correcto y no `idle`: `idle` espera a que TODAS las teselas
+  // del encuadre esten, que con perfil de telefono son 950 ms mas, y la
+  // decision fue que el mapa aparezca lo antes posible.
+  const [mapaPinto, setMapaPinto] = useState(false);
+
+  // Cancela el calentado de teselas si el componente se va antes de terminar.
+  const calentado = useRef<AbortController | null>(null);
+  useEffect(() => () => calentado.current?.abort(), []);
+
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
+      setMapaPinto(true);
+
+      // Las teselas del resto del recorrido, una vez el mapa terminó de pintar
+      // lo que la persona mira ahora. Antes de `idle` competiría por la
+      // conexión con el encuadre actual y el efecto neto sería peor.
+      map.once("idle", () => {
+        if (calentado.current) return;
+        const ctl = new AbortController();
+        calentado.current = ctl;
+        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
+        // hasta 16.4 y TypeScript lo da por presente siempre.
+        const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;
+        if (ocioso) ocioso(arrancar, { timeout: 2000 });
+        else window.setTimeout(arrancar, 500);
+      });
     },
     [progress]
   );
@@ -174,7 +306,6 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       ref={outerRef}
       className="crd-journey"
       data-active-scene={activeScene}
-      style={{ "--crd-track-vh": TRIGGER_TOTAL_VH } as React.CSSProperties}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
           Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
@@ -184,18 +315,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           globo se movía verticalmente al aparecer/desaparecer. El fondo son tres
           radial-gradients de marca; como utilidad arbitraria sería ilegible, así
           que vive en .crd-journey-sticky. */}
-      <div className="crd-journey-sticky sticky top-0 h-[100dvh] w-full overflow-hidden">
+      {/* svh y no dvh: el recorrido tiene el scroll bloqueado, así que iOS
+          nunca retrae la barra de Safari y lo que se ve es SIEMPRE el viewport
+          pequeño. Con dvh la capa medía hasta 190px más de lo visible y todo lo
+          anclado abajo —el botón del sheet, el pie de la carta del CTA— caía
+          detrás del panel de pasos o fuera de pantalla. */}
+      <div className="crd-journey-sticky sticky top-0 h-[100svh] w-full overflow-hidden">
         <Map
           ref={mapRef}
           theme="light"
-          projection={{ type: "globe" }}
-          initialViewState={{
-            longitude: -70.1627,
-            latitude: 18.7357,
-            zoom: 2.5,
-            pitch: 0,
-            bearing: -20,
-          }}
+          projection={PROYECCION_DEL_RECORRIDO}
+          initialViewState={initialViewState}
+          maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
@@ -211,6 +342,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           <EquipoSection />
           <CTASection />
         </Map>
+
+        {/* Ocupa el sitio del globo mientras el mapa no existe. Va aquí, entre
+            el canvas y el overlay, para que el mapa aparezca por debajo cuando
+            el disco se desvanece. */}
+        <DiscoDelGlobo visible={!mapaPinto} />
 
         {/* Fuera del <Map>: el mapa se carga con `ssr: false` y todo lo que
             cuelgue de él desaparece del HTML inicial. El hero es lo primero
@@ -231,16 +367,17 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         visible={stepperVisible}
       />
 
-      {/* Anchor divs — pista nativa de scroll, solo desktop (en móvil no hay
-          pista: el panel de pasos anima el progreso y el CSS los oculta). */}
+      {/* Anclas sin alto y ocultas: no hay pista de scroll que recorrer, el
+          motor de pasos anima el progreso. Siguen en el DOM porque son el
+          destino de los `#trigger-<escena>` que llegan de fuera (el CTA de los
+          correos) y el fallback por id de `journeyNav` cuando el saltador no
+          está montado. */}
       {SCENES.map((scene) => (
         <div
           key={scene.name}
           id={`trigger-${scene.name}`}
           className="crd-journey-anchor pointer-events-none"
           data-scene={scene.name}
-          // Altura por escena: es dato, no estilo, así que sigue inline.
-          style={{ height: `${scene.height}vh` }}
         />
       ))}
 
@@ -250,12 +387,10 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
 // ─── Public export ────────────────────────────────────────────────────────────
 
+// El <SceneProvider> no vive aquí sino en JourneyHome: el nav también lee la
+// escena activa para marcar su enlace, y es hermano del journey, no hijo.
 export default function MapScrollJourney() {
   const mapRef = useRef<maplibregl.Map | null>(null);
 
-  return (
-    <SceneProvider>
-      <MapScrollInner mapRef={mapRef} />
-    </SceneProvider>
-  );
+  return <MapScrollInner mapRef={mapRef} />;
 }

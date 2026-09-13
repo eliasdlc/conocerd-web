@@ -36,14 +36,16 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import Icon, { type IconName } from "@/components/Icon";
 import Button from "@/components/Button";
 import PhoneMockup from "@/sections/PhoneMockup";
-import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/Map";
-import { CategoryPin, GoalFlag, SelfPin, PIN_CHROME } from "@/components/map/pins";
+import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
+import { CategoryPin, GoalPin, SelfPin, PIN_CHROME } from "@/components/map/pins";
 import { PANEL_SOLID } from "@/lib/surfaces";
+import Kicker from "@/components/Kicker";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { DESTINATIONS, type Destination } from "@/data/destinations";
 import type { LngLat } from "@/lib/geo";
 import StampCRD from "@/components/StampCRD";
 import pairs from "@/data/routes/pairs.json";
+import featuredLegs from "@/data/routes/legs-featured.json";
 import featured from "@/data/routes/featured-route.json";
 
 // ─── Utilidades geográficas ──────────────────────────────────────────────────
@@ -68,12 +70,14 @@ function bearing(a: [number, number], b: [number, number]): number {
 
 const idxDe = (id: string) => pairs.ids.indexOf(id);
 
-/** Tramo por carretera A→B de pairs.json (invierte la clave si hace falta). */
+// Tramo por carretera A→B (invierte la clave si hace falta). Sale del
+// subconjunto de `legs-featured.json`: los 12 tramos hacia Santiago que esta
+// sección dibuja, no la matriz completa, que vive fuera del bundle.
 function tramo(a: string, b: string): [number, number][] {
   const ia = idxDe(a);
   const ib = idxDe(b);
   const key = ia < ib ? `${a}|${b}` : `${b}|${a}`;
-  const leg = (pairs.legs as Record<string, number[][]>)[key] ?? [];
+  const leg = (featuredLegs.legs as Record<string, number[][]>)[key] ?? [];
   const pts = leg.map((c) => [c[0], c[1]] as [number, number]);
   return ia < ib ? pts : [...pts].reverse();
 }
@@ -139,28 +143,22 @@ type Paso = {
   titulo: string;
   desc: string;
   icon?: IconName;
-  color?: string;
-  meta?: boolean; // true = bandera de meta
+  meta?: boolean; // true = pin de meta en vez de baldosa de icono
 };
 
 const PASOS_VIAJERO: Paso[] = [
-  { icon: "explore", color: "#F76C4D", titulo: "Descubre lugares reales", desc: "Destinos poco conocidos, recomendados por gente que ya fue. No el mismo top 10 de siempre." },
-  { icon: "route", color: "#FF8D16", titulo: "Arma tu ruta", desc: "Paradas, distancias y tiempos por carreteras reales. El plan completo, en tu bolsillo." },
+  { icon: "explore", titulo: "Descubre lugares reales", desc: "Destinos poco conocidos, recomendados por gente que ya fue. No el mismo top 10 de siempre." },
+  { icon: "route", titulo: "Arma tu ruta", desc: "Paradas, distancias y tiempos por carreteras reales. El plan completo, en tu bolsillo." },
   { meta: true, titulo: "Vive y guarda el recuerdo", desc: "Fotos, sellos por destino y tu diario de viaje para presumir después." },
 ];
 
 // El rail de negocios no describe la app: la abre por donde toca. Cada paso es
 // un tramo del recorrido grabado del panel (ver TRAMOS_NEGOCIO).
 const PASOS_NEGOCIO: Paso[] = [
-  { icon: "groups", color: "#25CCB8", titulo: "Ves quién viene en camino", desc: "8 personas en los próximos 45 min, con nombre, de dónde salen y a qué hora llegan." },
-  { icon: "verified", color: "#FF8D16", titulo: "Escaneas y aplicas el beneficio", desc: "El QR del cliente, el visitante verificado y su descuento aplicado al instante." },
+  { icon: "groups", titulo: "Ves quién viene en camino", desc: "8 personas en los próximos 45 min, con nombre, de dónde salen y a qué hora llegan." },
+  { icon: "verified", titulo: "Escaneas y aplicas el beneficio", desc: "El QR del cliente, el visitante verificado y su descuento aplicado al instante." },
   { meta: true, titulo: "Sabes qué funciona", desc: "De dónde vienen, tu calificación y las horas pico de tu semana." },
 ];
-
-// Línea punteada de la ruta — la firma de la card (v3), compartida por ambas.
-const PUNTEADA = {
-  backgroundImage: "repeating-linear-gradient(to bottom, #25CCB8 0 4px, transparent 4px 9px)",
-};
 
 /** `&v6paso=1..3` en la URL fija la parada activa inicial (demo/capturas). */
 function pasoInicial(): number {
@@ -219,15 +217,27 @@ function PinDeParada({ paso, activo }: { paso: Paso; activo: boolean }) {
   return (
     <span className="relative block size-9 shrink-0">
       {paso.meta ? (
-        <span className={`absolute -left-0.5 -top-1 transition-transform duration-200 ${activo ? "scale-110" : ""}`}>
-          <GoalFlag size={44} />
+        // La meta lleva el pin de la marca con el damero: la silueta se
+        // invierte sobre la fila seleccionada, igual que la baldosa de al lado.
+        <span
+          className={`absolute inset-0 flex items-center justify-center transition-transform duration-200 ${
+            activo ? "scale-110" : ""
+          }`}
+        >
+          <GoalPin size={32} color={activo ? "#FFFFFF" : "var(--color-ink)"} />
         </span>
       ) : (
+        // Este círculo vive DENTRO de la card, no sobre el mapa: no lleva la
+        // sombra de contacto de los pines ni el color de la parada como
+        // relleno (glifo blanco sobre marca vuelve a reprobar 3:1). Es la
+        // baldosa de icono del sistema, y sobre la fila seleccionada se
+        // invierte.
         <span
-          className={`flex size-9 items-center justify-center rounded-full ${PIN_CHROME} transition-transform duration-200 ${activo ? "scale-110" : ""}`}
-          style={{ background: paso.color }}
+          className={`flex size-9 items-center justify-center rounded-full transition-[transform,background-color,color] duration-200 ${
+            activo ? "scale-110 bg-white/[0.14] text-on-selected" : "bg-cream-2 text-ink-3"
+          }`}
         >
-          <Icon name={paso.icon as IconName} className="text-lg text-white" />
+          <Icon name={paso.icon as IconName} active={activo} className="text-lg" />
         </span>
       )}
     </span>
@@ -248,7 +258,7 @@ function PistaDeInteraccion({ texto, visible }: { texto: string; visible: boolea
       }`}
     >
       <div className="overflow-hidden">
-        <span className="mb-2 flex w-fit items-center gap-1.5 rounded-full bg-mango-soft px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-[.06em] text-mango-ink">
+        <span className="mb-2 flex w-fit items-center gap-1.5 rounded-full bg-mango-soft px-2.5 py-1 font-label text-micro font-extrabold uppercase tracking-[.06em] text-mango-ink">
           {/* Cursor: la única forma inequívoca de decir "pasa el mouse". */}
           <svg viewBox="0 0 24 24" className="size-3 shrink-0" aria-hidden="true">
             <path
@@ -281,12 +291,6 @@ function RailDePasos({
 }) {
   return (
     <ol aria-label={label} className="relative m-0 flex list-none flex-col gap-1 p-0">
-      {/* la línea punteada que une las paradas — el alma de la card */}
-      <span
-        aria-hidden="true"
-        className="absolute bottom-[30px] left-[25.5px] top-[30px] w-px opacity-70"
-        style={PUNTEADA}
-      />
       {pasos.map((p, i) => (
         <li
           key={p.titulo}
@@ -299,18 +303,28 @@ function RailDePasos({
             onMouseEnter={() => onActivo(i)}
             onFocus={() => onActivo(i)}
             aria-current={activo === i ? "step" : undefined}
-            className={`group relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-card border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+            className={`group relative flex w-full min-h-[44px] cursor-pointer items-start gap-3 rounded-block border p-2 pr-2.5 text-left transition-colors duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
               activo === i
-                ? "border-line bg-cream"
+                ? "border-selected bg-selected"
                 : "border-transparent bg-transparent hover:bg-cream/60"
             }`}
           >
             <PinDeParada paso={p} activo={activo === i} />
             <span className="min-w-0 flex-1">
-              <span className={`block text-copy font-bold leading-[1.25] ${activo === i ? "text-ink-2" : "text-ink"}`}>
+              <span
+                className={`block font-label text-copy font-bold leading-[1.25] ${
+                  activo === i ? "text-on-selected" : "text-ink"
+                }`}
+              >
                 {p.titulo}
               </span>
-              <span className="mt-0.5 block text-xs leading-[1.4] text-muted">{p.desc}</span>
+              <span
+                className={`mt-0.5 block text-tiny leading-[1.4] ${
+                  activo === i ? "text-white/70" : "text-muted"
+                }`}
+              >
+                {p.desc}
+              </span>
             </span>
 
             {/* Flecha hacia el teléfono: el paso activo la lleva encendida, los
@@ -319,19 +333,33 @@ function RailDePasos({
             <span
               aria-hidden="true"
               className={`hidden self-center transition-opacity duration-200 desk:block ${
-                activo === i ? "text-mango opacity-100" : "text-muted-2 opacity-0 group-hover:opacity-70"
+                activo === i ? "text-on-selected opacity-100" : "text-muted-2 opacity-0 group-hover:opacity-70"
               }`}
             >
               <Icon name="arrow_forward" className="text-sm" />
             </span>
 
             {/* Tiempo del paso mientras la demo corre sola: se lee como "esto
-                avanza" y desaparece en cuanto el usuario toma el control. */}
+                avanza" y desaparece en cuanto el usuario toma el control.
+
+                No es una barrita pegada al fondo de la fila: es la fila
+                llenándose. Un velo que la recorre de izquierda a derecha y un
+                canto mango —el acento SOBRE tinta— que avanza con él, los dos
+                recortados por el radio de la fila. Nace y muere con la demo,
+                así que no hay repintado en reposo. */}
             {auto && activo === i && (
-              <span aria-hidden="true" className="absolute inset-x-2 bottom-[3px] h-[2px] overflow-hidden rounded-full bg-mango/15">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-hidden rounded-block"
+              >
                 <span
-                  key={i}
-                  className="crd-paso-auto block size-full rounded-full bg-mango/60"
+                  key={`velo-${i}`}
+                  className="crd-paso-auto absolute inset-0 bg-white/[0.07]"
+                  style={{ animationDuration: `${PASO_AUTO_MS}ms` }}
+                />
+                <span
+                  key={`canto-${i}`}
+                  className="crd-paso-auto absolute inset-x-0 bottom-0 h-[3px] bg-mango"
                   style={{ animationDuration: `${PASO_AUTO_MS}ms` }}
                 />
               </span>
@@ -365,12 +393,15 @@ function PilaDePantallas({ pantallas, activo }: { pantallas: React.ReactNode[]; 
 /** Chip EN VIVO del bottom-sheet móvil: espeja lo que pasa en el mapa. */
 function ChipEnVivo({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 hidden items-center gap-2 rounded-card border border-line bg-cream px-3 py-2 max-desk:flex">
+    <div className="crd-panel-vivo mb-3 hidden items-center gap-2 rounded-block border border-line bg-cream px-3 py-2 max-desk:flex">
+      {/* El punto no pulsa. Una animación continua en reposo peguntea la GPU
+          sin decir nada; lo que da vida a este chip es el contador que cambia.
+          El anillo estático sigue leyéndose como "en vivo". */}
       <span className="flex shrink-0 items-center gap-1 rounded-full bg-mint-soft px-2 py-[3px]">
-        <span className="block size-[6px] animate-live-dot rounded-full bg-mint" />
-        <span className="text-micro font-bold text-mint-ink">EN VIVO</span>
+        <span className="block size-[6px] rounded-full bg-mint-ink ring-2 ring-mint/40" />
+        <span className="font-label text-micro font-bold text-mint-ink">EN VIVO</span>
       </span>
-      <span className="min-w-0 flex-1 truncate font-mono text-micro font-bold text-ink">{children}</span>
+      <span className="min-w-0 flex-1 truncate font-label text-micro font-bold text-ink">{children}</span>
     </div>
   );
 }
@@ -670,12 +701,12 @@ function ViajerosFinal() {
           <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#FFFFFF" width={6.5} opacity={0.9} />
           <MapRoute id="vn6-ruta" coordinates={F_ROUTE.pts} color="#FF8D16" width={3.2} opacity={0.95} />
           {traveled && (
-            <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#264653" width={3.2} opacity={0.32} />
+            <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#0F1A2E" width={3.2} opacity={0.32} />
           )}
         </>
       )}
 
-      {/* Paradas: pin de la app; visitada = done; la meta lleva bandera. */}
+      {/* Paradas: pin de la app; visitada = done; la meta lleva el damero. */}
       {visible &&
         F_STOPS.map((d, i) => {
           const esMeta = i === F_STOPS.length - 1;
@@ -689,7 +720,7 @@ function ViajerosFinal() {
                     <span key={`ping-${i}-${Math.floor(t / GPS_LOOP)}`} className="vn6-ping absolute inset-[-6px] rounded-full border-2 border-mango" />
                   )}
                   {esMeta ? (
-                    <GoalFlag size={40} />
+                    <GoalPin size={30} className="[filter:drop-shadow(0_3px_7px_rgba(0,0,0,.30))]" />
                   ) : (
                     <CategoryPin category={d.category} state={visitada ? "done" : "default"} size={28} />
                   )}
@@ -722,25 +753,26 @@ function ViajerosFinal() {
         }`}
       >
         {/* La gran card de viaje (v3), sin contador ni línea de fundadores.
+            El envoltorio posiciona y la card (.crd-ol-panel) recorta: así el
+            sello puede volar fuera de la tarjeta sin que el overflow del panel
+            lo recorte (overflow-y: auto arrastra overflow-x a auto).
             El centrado vertical va con prefijo min-[900px]: el reset móvil de
-            .crd-ol-panel anula `transform`, pero Tailwind v4 traduce
+            .crd-ol-wrap anula `transform`, pero Tailwind v4 traduce
             -translate-y-1/2 a la propiedad `translate`, que sobreviviría y
             dejaría el sheet flotando a media pantalla. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
-          {/* La estampa ConoceRD, pegada en la esquina (solo desktop: en el
-              sheet móvil el overflow la recortaría). */}
-          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
-          </div>
-
-          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
+        <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
+          <Kicker icon="hiking" tone="mint" className="mb-2">
+            Para viajeros
+          </Kicker>
+          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,24px)] font-extrabold leading-[1.06] tracking-[-.02em] text-ink min-[900px]:pr-20">
             Tu próximo viaje, <em className="crd-accent">en tres paradas</em>
           </h2>
-          <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
+          <p className="crd-panel-lede mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
             Así funciona ConoceRD de principio a fin. Cada parada enseña la app de verdad.
           </p>
 
@@ -762,9 +794,9 @@ function ViajerosFinal() {
             label="Cómo funciona ConoceRD para viajeros, en 3 pasos"
           />
 
-          <div className="mt-3 border-t border-dashed border-line pt-3">
+          <div className="crd-panel-cta mt-3 border-t border-dashed border-line pt-3">
             <Button
-              variant="primary"
+              variant="selected"
               icon="notifications_active"
               className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
               onClick={() => requestSubscribe("viajero")}
@@ -772,6 +804,14 @@ function ViajerosFinal() {
               Unirme a la lista
             </Button>
           </div>
+        </div>
+
+        {/* La estampa ConoceRD, hermana del panel y no hija: vuela fuera de la
+            tarjeta por diseño y dentro el overflow la recortaría. Solo desktop:
+            en el sheet móvil no existe. */}
+        <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
+          <StampCRD size={124} rotate={10} line1="MODO VIAJERO" line2="· EST. 2026 ·" />
+        </div>
         </div>
 
         <Telefono visible={visible}>
@@ -818,7 +858,7 @@ const NEGOCIO: LngLat = [-70.6901, 19.4517]; // Santiago
 type ClienteDef = { id: string; nombre: string; origen: string; color: string };
 
 const ROSTER: ClienteDef[] = [
-  { id: "aguilas", nombre: "Yeni", origen: "Pedernales", color: "#F76C4D" },
+  { id: "aguilas", nombre: "Yeni", origen: "Pedernales", color: "#E0552F" },
   { id: "jarabacoa", nombre: "Carmen", origen: "Jarabacoa", color: "#25CCB8" },
   { id: "puerto-plata", nombre: "María", origen: "Puerto Plata", color: "#FF8D16" },
   { id: "zona-colonial", nombre: "Joel", origen: "Sto. Domingo", color: "#2D9CDB" },
@@ -829,7 +869,7 @@ const ROSTER: ClienteDef[] = [
   { id: "la-romana", nombre: "Ana", origen: "La Romana", color: "#B23410" },
   { id: "charcos", nombre: "Diego", origen: "Imbert", color: "#25CCB8" },
   { id: "lago-enriquillo", nombre: "Wanda", origen: "Independencia", color: "#2D9CDB" },
-  { id: "limon", nombre: "Samuel", origen: "El Limón", color: "#F76C4D" },
+  { id: "limon", nombre: "Samuel", origen: "El Limón", color: "#E0552F" },
 ];
 
 const LLEGADA_CADA = 2600; // ms entre llegadas (cadencia del negocio)
@@ -964,7 +1004,7 @@ function NegociosFinal() {
           return (
             <MapMarker key={`orig-${c.id}`} longitude={lng} latitude={lat}>
               <MarkerContent>
-                <span className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white/95 px-2 py-[3px] font-mono text-micro font-bold text-ink shadow-card">
+                <span className="vn6-in flex items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-white/95 px-2 py-[3px] font-label text-micro font-bold text-ink shadow-e1">
                   <span className="inline-block size-[6px] rounded-full" style={{ background: c.color }} />
                   {c.origen}
                 </span>
@@ -982,7 +1022,7 @@ function NegociosFinal() {
             <MapMarker key={`cli-${c.id}`} longitude={pos[0]} latitude={pos[1]}>
               <MarkerContent>
                 <span
-                  className={`vn6-in flex size-[22px] items-center justify-center rounded-full font-mono text-[10px] font-bold text-white ${PIN_CHROME}`}
+                  className={`vn6-in flex size-[22px] items-center justify-center rounded-full font-label text-[10px] font-bold text-white ${PIN_CHROME}`}
                   style={{ background: c.color }}
                 >
                   {c.nombre[0]}
@@ -997,31 +1037,20 @@ function NegociosFinal() {
         <MapMarker longitude={NEGOCIO[0]} latitude={NEGOCIO[1]} anchor="bottom">
           <MarkerContent>
             <div className="flex flex-col items-center gap-1">
-              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-card">
+              <div className="whitespace-nowrap rounded-full bg-ink/92 px-[9px] py-[3px] text-micro font-bold text-white shadow-e1">
                 Tu negocio
               </div>
               <div className="relative">
                 {llegadaReciente && !reduced && (
                   <span key={ultima.key} className="vn6-ping absolute inset-[-5px] rounded-full border-2 border-mango" />
                 )}
-                <div className={`flex size-10 items-center justify-center rounded-full bg-mango ${PIN_CHROME}`}>
-                  <Icon name="storefront" className="text-feature text-white" />
+                <div
+                  className={`flex size-10 items-center justify-center rounded-full bg-mango-deep text-white ring-[2.5px] ring-inset ring-mango-ink ${PIN_CHROME}`}
+                >
+                  <Icon name="storefront" className="text-feature" />
                 </div>
               </div>
             </div>
-            {ultima && (
-              // En móvil el toast a la derecha se salía del viewport (hasta
-              // 31 px cortados): ahí va debajo del pin, centrado.
-              <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 max-[899px]:left-1/2 max-[899px]:top-[calc(100%+6px)] max-[899px]:-translate-x-1/2 max-[899px]:translate-y-0">
-                <div
-                  key={ultima.key}
-                  className="vn6-in whitespace-nowrap rounded-full border border-line bg-white/95 px-2.5 py-1 text-micro font-bold text-ink shadow-card"
-                >
-                  <span className="mr-1.5 inline-block size-[6px] rounded-full align-middle" style={{ background: ultima.color }} />
-                  {ultima.nombre} llegó desde {ultima.origen}
-                </div>
-              </div>
-            )}
           </MarkerContent>
         </MapMarker>
       )}
@@ -1033,23 +1062,23 @@ function NegociosFinal() {
           visible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* La gran card del negocio — misma anatomía que la de viajeros
-            (mismo prefijo min-[900px] para no flotar en móvil). */}
+        {/* La gran card del negocio — misma anatomía que la de viajeros:
+            envoltorio que posiciona, panel que recorta, sello hermano. */}
         <div
-          className={`crd-ol-panel absolute left-[clamp(16px,3%,40px)] box-border w-[clamp(300px,33vw,440px)] rounded-panel min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${PANEL_SOLID} p-[18px] shadow-modal ${
+          className={`crd-ol-wrap absolute left-[clamp(16px,3%,40px)] w-[clamp(300px,33vw,440px)] min-[900px]:top-1/2 min-[900px]:-translate-y-1/2 ${
             visible ? "animate-slide-up" : ""
           }`}
         >
-          <div aria-hidden="true" className="absolute -right-9 -top-10 max-[899px]:hidden">
-            <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
-          </div>
-
-          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,27px)] font-bold leading-[1.06] tracking-[-.012em] text-ink-2 min-[900px]:pr-20">
+        <div className={`crd-ol-panel box-border rounded-surface ${PANEL_SOLID} p-[18px] shadow-e1`}>
+          <Kicker icon="storefront" tone="coral" className="mb-2">
+            Para negocios
+          </Kicker>
+          <h2 className="m-0 font-display text-[clamp(20px,2.2vw,24px)] font-extrabold leading-[1.06] tracking-[-.02em] text-ink min-[900px]:pr-20">
             Tres pasos para <em className="crd-accent">estar en la ruta</em>
           </h2>
           {/* En móvil el teléfono está oculto: prometer que "el teléfono salta"
               era una instrucción para un elemento que ahí no existe. */}
-          <p className="mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
+          <p className="crd-panel-lede mb-3 mt-1.5 text-xs leading-[1.45] text-muted">
             Cada paso es un momento real de tu panel, grabado de la app.
           </p>
 
@@ -1069,9 +1098,9 @@ function NegociosFinal() {
             label="Cómo funciona ConoceRD para tu negocio, en 3 pasos"
           />
 
-          <div className="mt-3 border-t border-dashed border-line pt-3">
+          <div className="crd-panel-cta mt-3 border-t border-dashed border-line pt-3">
             <Button
-              variant="mint"
+              variant="selected"
               icon="add_business"
               className="max-[899px]:h-12 max-[899px]:w-full max-[899px]:text-[15px]"
               onClick={() => requestSubscribe("negocio")}
@@ -1079,6 +1108,11 @@ function NegociosFinal() {
               Registrar mi negocio
             </Button>
           </div>
+        </div>
+
+        <div aria-hidden="true" className="pointer-events-none absolute -right-9 -top-10 max-[899px]:hidden">
+          <StampCRD size={124} rotate={-9} color="#0C6A60" line1="NEGOCIO LOCAL" line2="· EST. 2026 ·" />
+        </div>
         </div>
 
         <Telefono visible={visible}>
