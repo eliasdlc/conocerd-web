@@ -266,7 +266,10 @@ export default function GloboHero({
           touchZoomRotate={interactivo}
           attributionControl={false}
         >
-          {capasDelMapa}
+          {/* Las capas del mapa también leen el descenso: una propuesta puede
+              fundir una capa raster o un marcador con el scroll sin que
+              GloboHero sepa de ella. */}
+          <DescensoContext.Provider value={estado}>{capasDelMapa}</DescensoContext.Provider>
         </Map>
 
         {/* Sin WebGL (o con el CDN del estilo caído) el canvas queda en blanco:

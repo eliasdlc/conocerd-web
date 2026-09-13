@@ -3,6 +3,7 @@ import GloboHero from "../_components/GloboHero";
 import CapaHero from "./CapaHero";
 import Cielo from "./Cielo";
 import Contenido from "./Contenido";
+import Espacio from "./Espacio";
 import Marcadores from "./Marcadores";
 import s from "./estilos.module.css";
 
@@ -15,11 +16,13 @@ export const metadata: Metadata = {
  * «Amanecer»: el planeta de noche, visto desde el espacio.
  *
  * Misma geometría que Horizonte (el canvas baja para que sólo asome el
- * casquete y vuelve a su sitio al descender), pero el cielo es de tinta y el
- * limbo está encendido: lo único que se ve del país es un punto de luz. Al
- * bajar amanece: la tinta se disuelve en el crema del sitio mientras el
- * planeta sube y la cámara aterriza. El hero es la única superficie oscura de
- * la home y el descenso es la transición de tema, una sola vez y con motivo.
+ * casquete y vuelve a su sitio al descender), pero el planeta está en el
+ * espacio: estrellas, la Tierra de noche con sus luces de ciudad, nubes y la
+ * atmósfera del globo (Espacio.tsx). Lo único que se ve del país es un punto
+ * de luz. Al bajar amanece: el cielo pasa a crema, las luces ceden a la Tierra
+ * de día y ésta al mapa de marca justo antes de aterrizar. El hero es la única
+ * superficie oscura de la home y el descenso es la transición, una sola vez y
+ * con motivo.
  */
 export default function AmanecerPage() {
   return (
@@ -29,7 +32,12 @@ export default function AmanecerPage() {
         alturaVh={300}
         className={s.escena}
         fondo={<Cielo />}
-        capasDelMapa={<Marcadores />}
+        capasDelMapa={
+          <>
+            <Espacio />
+            <Marcadores />
+          </>
+        }
       >
         <CapaHero>
           <Contenido />

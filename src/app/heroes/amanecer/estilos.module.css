@@ -46,7 +46,11 @@
   position: absolute;
   inset: 0;
   opacity: var(--noche-op);
-  background: linear-gradient(180deg, #090f1b 0%, #0f1a2e 58%, #1a2540 100%);
+  /* Estrellas estáticas sobre la tinta. La imagen se generó una vez
+     (public/assets/estrellas.png) y no se anima: el cielo no parpadea. */
+  background:
+    url("/assets/estrellas.png") center / cover no-repeat,
+    linear-gradient(180deg, #070c17 0%, #0f1a2e 62%, #1a2540 100%);
 }
 
 /* El día: el cielo cálido de la web, que va cubriendo la noche conforme se
@@ -82,7 +86,9 @@
   pointer-events: none;
 }
 
-/* El limbo: un filo de luz y dos halos, todos por fuera de la silueta. */
+/* El filo del amanecer sobre el limbo. La atmósfera de verdad (el halo azul
+   del globo) la dibuja MapLibre; esto es sólo la luz cálida que entra con el
+   día, por fuera de la silueta. */
 .atmosfera {
   position: absolute;
   left: 50%;
@@ -91,11 +97,11 @@
   height: calc(var(--globo-r) * 2);
   margin: calc(var(--globo-r) * -1) 0 0 calc(var(--globo-r) * -1);
   border-radius: 50%;
-  opacity: var(--noche-op);
+  opacity: calc(min(1, 0.35 + var(--t) * 2.2) * max(0, var(--noche-op)));
   box-shadow:
-    0 0 0 1.5px rgba(255, 141, 22, 0.85),
-    0 0 28px 5px rgba(255, 141, 22, 0.5),
-    0 0 130px 34px rgba(224, 85, 47, 0.26);
+    0 0 0 1px rgba(255, 141, 22, 0.55),
+    0 0 30px 6px rgba(255, 141, 22, 0.32),
+    0 0 130px 34px rgba(224, 85, 47, 0.2);
 }
 
 /* ═══ Overlay ═════════════════════════════════════════════════════════════ */
@@ -171,6 +177,23 @@
   background: var(--color-coral);
   color: var(--color-paper);
   flex: none;
+}
+
+/* Crédito de las imágenes: obligatorio para GIBS. En producción iría al pie
+   del sitio con el resto de créditos fotográficos. */
+.credito {
+  position: absolute;
+  right: 16px;
+  top: 26px;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: calc(1 - var(--t) * 4);
+}
+
+@media (min-width: 900px) {
+  .credito {
+    top: auto;
+    bottom: 12px;
+  }
 }
 
 /* ═══ Marcadores ══════════════════════════════════════════════════════════ */

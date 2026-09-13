@@ -57,6 +57,10 @@ export default function Contenido() {
       </div>
 
       <CueDescenso />
+
+      <p className={`${s.credito} m-0 font-label text-micro font-semibold`}>
+        Imágenes de la Tierra: NASA GIBS
+      </p>
     </>
   );
 }
