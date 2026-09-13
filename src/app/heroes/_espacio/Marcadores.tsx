@@ -3,7 +3,7 @@
 import BrandPin from "@/components/BrandPin";
 import { MapMarker, MarkerContent } from "@/components/map/context";
 import { FEATURED_DESTINATIONS } from "@/data/destinations";
-import s from "./estilos.module.css";
+import s from "./espacio.module.css";
 
 // Mismo punto que el keyframe `hero`: el centro del globo.
 const RD: [number, number] = [-70.1627, 18.7357];
@@ -12,8 +12,8 @@ const RD: [number, number] = [-70.1627, 18.7357];
  * Capas pegadas al mapa. Heredan `--descenso` del contenedor sticky y se
  * encienden solas desde el CSS.
  *
- *  · El punto de luz: el pin de marca con un halo, lo único encendido del
- *    país mientras la noche manda. Es el "punto" del titular.
+ *  · El punto de luz: el pin de marca con un halo y un pulso que se expande
+ *    desde él, lo único que llama la atención sobre el planeta.
  *  · La etiqueta del destino aparece cuando ya se ve dónde aterriza la cámara.
  */
 export default function Marcadores() {
@@ -25,6 +25,7 @@ export default function Marcadores() {
         <MarkerContent>
           <div className={`${s.punto} pointer-events-none relative`}>
             <span aria-hidden="true" className={s.halo} />
+            <span aria-hidden="true" className={s.pulso} />
             <span className="relative block">
               <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
             </span>

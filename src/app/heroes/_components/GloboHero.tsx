@@ -93,6 +93,8 @@ export type GloboHeroProps = {
   alturaVh?: number;
   /** Deja arrastrar/girar el globo con el dedo o el ratón (apaga la rotación en reposo). */
   interactivo?: boolean;
+  /** Cuánto dura el giro en reposo, en ms. `Infinity` = hasta el primer scroll. */
+  giroMs?: number;
   /** Clases extra del viewport sticky (por ejemplo, un fondo distinto del crema). */
   className?: string;
   /** Se pinta DEBAJO del globo: útil para un cielo, una textura o un degradado. */
@@ -121,6 +123,7 @@ export default function GloboHero({
   encuadre = ENCUADRE_ACTUAL,
   alturaVh = 320,
   interactivo = false,
+  giroMs = 10_000,
   className = "",
   fondo,
   capasDelMapa,
@@ -205,9 +208,9 @@ export default function GloboHero({
     };
   }, [listo]);
 
-  // Rotación en reposo del globo: la única excepción aprobada al "sin
-  // animación en standby" (es el globo del hero en producción). Se apaga sola
-  // a los 10 s, al primer scroll, y con prefers-reduced-motion.
+  // Rotación en reposo del globo (es el globo del hero en producción). Se
+  // apaga sola pasado `giroMs` (10 s por defecto), al primer scroll, y con
+  // prefers-reduced-motion.
   useEffect(() => {
     if (!listo || interactivo) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -216,7 +219,7 @@ export default function GloboHero({
     let ultimo = 0;
     const inicio = performance.now();
     const tick = (ahora: number) => {
-      if (ahora - inicio > 10_000 || window.scrollY > 8) return;
+      if (ahora - inicio > giroMs || window.scrollY > 8) return;
       const dt = ultimo ? Math.min(0.05, (ahora - ultimo) / 1000) : 0;
       ultimo = ahora;
       if (!document.hidden) {
@@ -227,7 +230,7 @@ export default function GloboHero({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [listo, interactivo]);
+  }, [listo, interactivo, giroMs]);
 
   return (
     <div

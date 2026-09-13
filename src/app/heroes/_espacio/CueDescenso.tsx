@@ -1,12 +1,12 @@
 "use client";
 
 import Icon from "@/components/Icon";
-import s from "./estilos.module.css";
+import s from "./espacio.module.css";
 
 /**
  * Invitación a bajar, clavada en la cima del arco. Lleva al final de la pista,
- * donde la cámara termina de aterrizar en el primer destino: el "todo" del
- * titular es eso, y el botón es la forma de ir a verlo.
+ * donde la cámara termina de aterrizar en el primer destino. La flecha da
+ * tres empujones tras la entrada y se queda quieta.
  */
 export default function CueDescenso() {
   const bajar = () => {
@@ -25,7 +25,7 @@ export default function CueDescenso() {
           Baja a verlo
         </span>
         <span aria-hidden="true" className={s.cueFlecha}>
-          <Icon name="arrow_downward" className="text-base" />
+          <Icon name="arrow_downward" className={`${s.cueEmpujon} text-base`} />
         </span>
         <span className="sr-only">Descender sobre el globo hasta el primer destino</span>
       </button>
