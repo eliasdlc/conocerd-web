@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 import { CATEGORY_META, DESTINATIONS } from "@/data/destinations";
@@ -40,14 +41,17 @@ export default function Contenido() {
           asimétrico, y es lo que evita que la pantalla se lea como un póster
           centrado. ── */}
       <div className={`${s.cabecera} absolute inset-x-0 top-0 flex items-start justify-between px-[22px] pt-6 desk:px-[clamp(28px,4vw,64px)] desk:pt-8`}>
-        {/* El wordmark es la marca: SVG plano, sin pasar por el optimizador. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/assets/wordmark.svg"
-          alt="ConoceRD"
-          width={668}
-          height={211}
-          className={`${s.entra} block h-auto w-[122px] desk:w-[152px]`}
+        {/* El logo principal, el mismo del hero en producción. Vector plano:
+            `unoptimized` porque el optimizador rechaza SVG y no hay nada que
+            optimizar; `priority` porque es lo primero que se pinta. */}
+        <Image
+          src="/assets/logo.svg"
+          alt="ConoceRD, descubre lo nuestro"
+          width={1296}
+          height={595}
+          priority
+          unoptimized
+          className={`${s.entra} block h-auto w-[132px] desk:w-[164px]`}
         />
       </div>
 
