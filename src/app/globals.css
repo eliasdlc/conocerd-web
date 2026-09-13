@@ -119,6 +119,99 @@
   --crd-glass-blur: blur(24px) saturate(1.8);
 }
 
+/* ── Cristal líquido · el panel de pasos ──────────────────────────────────────
+   El cristal del tema es un panel: crema al 84 % que tapa lo que hay debajo.
+   Sobre la noche del hero eso es una pastilla encendida pegada encima del
+   planeta, no una pieza de la escena. Este material es lo contrario: el fondo
+   se ve, y el cuerpo lo pone la óptica, no la opacidad.
+
+   Tres capas, ninguna de relleno plano:
+     1. `backdrop-filter`, que es quien trabaja. Blur largo (32) para que lo de
+        debajo se deshaga en color, saturación alta, y un realce de brillo que
+        aclara justo lo oscuro que pasaría por detrás del texto: eso es lo que
+        deja bajar la crema del 84 al 40 % sin perder contraste.
+     2. Un degradado de lente, más claro arriba que abajo. Sin él el panel es
+        una calcomanía de un solo tono.
+     3. Dos hairlines internos y el canto blanco del borde. El canto es lo que
+        le da grosor; sin él no hay cristal, hay transparencia.
+
+   Dos materiales, no uno, porque el recorrido tiene dos fondos. De día la
+   crema; sobre la noche del hero (`data-noche`, el mismo criterio que la
+   píldora del nav) el cristal se hace de tinta translúcida y lo de dentro se
+   invierte. Un solo material claro sobre los dos fondos es justamente lo que
+   se veía mal.
+
+   Sin `backdrop-filter` la transparencia mentiría, así que ahí cae al cristal
+   opaco del tema. */
+.crd-cristal-liquido {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 48%, transparent),
+      color-mix(in srgb, var(--color-cream) 36%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 46%, transparent)
+    );
+  border-color: rgba(255, 255, 255, .55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .8),
+    inset 0 -1px 0 rgba(255, 255, 255, .28),
+    0 10px 30px rgba(38, 70, 83, .16);
+  transition: background .5s ease, border-color .5s ease, box-shadow .5s ease;
+}
+
+.crd-cristal-liquido[data-noche="true"] {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .16),
+      rgba(255, 255, 255, .07) 52%,
+      rgba(15, 26, 46, .22)
+    );
+  border-color: rgba(255, 255, 255, .24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -1px 0 rgba(255, 255, 255, .1),
+    0 14px 36px rgba(0, 0, 0, .45);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .crd-cristal-liquido {
+    -webkit-backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
+    backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
+  }
+  /* De noche el realce se invierte: lo que sobra es luz, no falta. */
+  .crd-cristal-liquido[data-noche="true"] {
+    -webkit-backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
+    backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crd-cristal-liquido {
+    background: var(--crd-glass);
+    border-color: var(--crd-glass-line);
+  }
+  .crd-cristal-liquido[data-noche="true"] {
+    background: rgba(15, 26, 46, .78);
+    border-color: rgba(255, 255, 255, .24);
+  }
+}
+
+/* El hueco del control secundario dentro del panel: no es otra superficie, es
+   el mismo cristal con un velo encima y su propio canto. Con `bg-paper` opaco
+   el círculo se leía pegado sobre el cristal en vez de excavado en él. */
+.crd-cristal-hueco {
+  background: rgba(255, 255, 255, .42);
+  border-color: rgba(255, 255, 255, .62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: background .5s ease, border-color .5s ease;
+}
+.crd-cristal-hueco[data-noche="true"] {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: clip; /* clip horizontal overflow at html level without affecting scroll container */

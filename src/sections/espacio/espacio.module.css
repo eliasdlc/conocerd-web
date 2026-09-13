@@ -216,13 +216,25 @@
 
 /* ═══ Cue ═════════════════════════════════════════════════════════════════ */
 
+/* Sólo en escritorio. En el teléfono el panel de pasos vive fijo al borde
+   inferior con su chevron de avanzar a 54: el cue decía lo mismo, más pequeño
+   y más arriba, y encima de la noche era una segunda píldora compitiendo con
+   la del nav. En escritorio no hay panel, así que el cue es la única
+   invitación a bajar y se queda. */
 .cue {
+  display: none;
   position: absolute;
   left: 50%;
   top: calc(50dvh - var(--globo-r) + var(--cue-baja));
   width: max-content;
   transform: var(--sube) translateX(-50%);
   opacity: calc(1 - var(--t) * 4);
+}
+
+@media (min-width: 900px) {
+  .cue {
+    display: block;
+  }
 }
 
 .cueBoton {

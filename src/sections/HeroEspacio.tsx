@@ -94,9 +94,11 @@ export function CapasNasaJourney() {
 
 /**
  * Invitación a bajar, clavada en la cima del arco. Es el primer paso del
- * recorrido: lleva al primer destino por el mismo camino que la rueda o el
- * panel de pasos. La flecha da tres empujones tras la entrada y se queda
- * quieta.
+ * recorrido: lleva al primer destino por el mismo camino que la rueda. La
+ * flecha da tres empujones tras la entrada y se queda quieta.
+ *
+ * Sólo se pinta en escritorio (`espacio.module.css`): en el teléfono el panel
+ * de pasos ya lleva ese trabajo en el borde inferior.
  */
 function CueDescenso() {
   return (
