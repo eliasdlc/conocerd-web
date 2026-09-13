@@ -13,7 +13,7 @@
 
 .escena {
   --globo-r: 42.8vw;
-  --arco: max(60dvh, 300px);
+  --arco: max(62dvh, 300px);
   --dx: 0px;
   --globo-baja: calc(var(--arco) + var(--globo-r) - 50dvh);
 
@@ -99,7 +99,7 @@
 
 .estampa {
   display: block;
-  width: clamp(118px, 12vw, 168px);
+  width: clamp(104px, 12vw, 168px);
   height: auto;
 }
 
@@ -130,9 +130,9 @@
 }
 
 .titular {
-  margin: 22px 0 0;
+  margin: 20px 0 0;
   max-width: 14ch;
-  font-size: clamp(34px, 8.8vw, 60px);
+  font-size: clamp(32px, 8vw, 60px);
   line-height: 1.04;
 }
 
@@ -148,7 +148,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 @media (min-width: 900px) {
