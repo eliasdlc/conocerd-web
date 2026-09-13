@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
-import Kicker from "@/components/Kicker";
-import { FICHAS, NODOS, TOTAL_DESTINOS, TOTAL_PROVINCIAS } from "./datos";
+import { FICHAS, NODOS } from "./datos";
 import { useConstelacion } from "./estado";
 import Ficha from "./Ficha";
 import s from "./estilos.module.css";
@@ -56,21 +55,17 @@ export default function Overlay() {
       </div>
 
       <div className={s.rail}>
-        <Kicker icon="location_on" tone="mint" className={s.kicker}>
-          {TOTAL_DESTINOS} destinos · {TOTAL_PROVINCIAS} provincias
-        </Kicker>
-
         <Image
-          src="/assets/logo.png"
-          alt="ConoceRD — Descubre Lo Nuestro"
-          width={760}
-          height={363}
+          src="/assets/logo.svg"
+          alt="ConoceRD, descubre lo nuestro"
+          width={1296}
+          height={595}
           priority
-          sizes="(max-width: 899px) 58vw, 210px"
+          unoptimized
           className={s.marca}
         />
 
-        <h1 className={s.titulo}>
+        <h1 className={s.titulo} style={{ fontVariationSettings: '"opsz" 96' }}>
           Lo nuestro, <em className="crd-accent">punto por punto</em>
         </h1>
 
@@ -83,7 +78,7 @@ export default function Overlay() {
           <Button variant="primary" size="lg" icon="download" className={CTA_MOVIL}>
             Descargar la app
           </Button>
-          <Button variant="outline" size="lg" icon="storefront" className={CTA_MOVIL}>
+          <Button variant="ghost" size="lg" icon="storefront" className={CTA_MOVIL}>
             Soy un negocio
           </Button>
         </div>

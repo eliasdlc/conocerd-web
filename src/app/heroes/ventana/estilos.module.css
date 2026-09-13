@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   "Ventana al país" — el globo se ve a través de un troquel en el papel.
+   "Ventana al país": el globo se ve a través de un troquel en el papel.
 
    La geometría del hueco vive ENTERA en custom properties y se deriva de
    `--descenso` (0..1), que GloboHero publica en el contenedor sticky. Nada de
@@ -12,9 +12,9 @@
    mapa ya está a tamaño real y no hay ningún reencuadre.
 
    Reparto de capas (orden de pintado dentro del sticky):
-     z -1  .cielo   fondo oscuro — es lo que hace que el hueco tenga fondo
+     z -1  .cielo   fondo oscuro; es lo que hace que el hueco tenga fondo
                     propio y no se confunda con el crema del papel
-      —    canvas   el globo (transparente fuera de la esfera)
+      -    canvas   el globo (transparente fuera de la esfera)
      z  2  .papel   la superficie crema, enmascarada con el troquel
      z  3  .capa    editorial: dos copias registradas, una por cara del corte
      z  4  .canto   el filo del troquel (línea, sombra hacia dentro y guía)
@@ -26,9 +26,9 @@
   /* Apertura del troquel. Va con ease-out (el papel se rasga de golpe y luego
      termina de salir sin tirones) y con dos constantes medidas contra el motor
      de cámara, no elegidas a ojo:
-       · 0.09 de retardo — los primeros píxeles de scroll son para que el texto
+       · 0.09 de retardo: los primeros píxeles de scroll son para que el texto
          se retire; el corte no debe alcanzarlo nunca.
-       · 0.83 de pendiente — el papel termina de salir en t≈0.72. Antes de eso
+       · 0.83 de pendiente: el papel termina de salir en t≈0.72. Antes de eso
          la cámara aún está arrancando (GloboHero mapea la pista a p = t·0.12,
          y el keyframe del hero vive en 0.041: hasta t≈0.34 la cámara no se
          mueve), y después queda un tercio de pista de vuelo limpio a pantalla
@@ -88,9 +88,9 @@
        limbo del planeta en x=700 ⇒ 257px de cielo, de sobra para que las dos
        líneas largas del titular crucen sin llegar nunca a pisar la esfera. */
     /* El `clamp()` es el suelo y el techo de la composición: el filo del
-       troquel nunca sube por encima de 440px —ancho mínimo con el que la
+       troquel nunca sube por encima de 440px (ancho mínimo con el que la
        columna editorial sigue siendo una columna; a 1280 el corte se comía el
-       párrafo y medio botón— ni baja de 470px, o el titular dejaría de
+       párrafo y medio botón) ni baja de 470px, o el titular dejaría de
        alcanzarlo (pasa en monitores bajos, donde el radio lo limita el alto).
        El globo mide lo mismo en píxeles a cualquier tamaño de ventana, así que
        el reparto no puede ser sólo proporcional. */
@@ -127,7 +127,7 @@
       rgba(37, 204, 184, 0.08) 52%,
       transparent 74%
     ),
-    radial-gradient(46vmax 40vmax at 12% 98%, rgba(247, 108, 77, 0.26), transparent 70%),
+    radial-gradient(46vmax 40vmax at 12% 98%, rgba(224, 85, 47, 0.26), transparent 70%),
     linear-gradient(154deg, #1e3e4a 0%, #14303a 46%, #0c222a 100%);
 }
 
@@ -140,7 +140,7 @@
   background:
     radial-gradient(70% 56% at 10% 6%, rgba(37, 204, 184, 0.1), transparent 68%),
     radial-gradient(58% 48% at 2% 98%, rgba(255, 141, 22, 0.11), transparent 70%),
-    radial-gradient(52% 42% at 94% 92%, rgba(247, 108, 77, 0.08), transparent 72%),
+    radial-gradient(52% 42% at 94% 92%, rgba(224, 85, 47, 0.08), transparent 72%),
     var(--color-cream);
   -webkit-mask-image: var(--vt-recorte);
   mask-image: var(--vt-recorte);
@@ -191,7 +191,7 @@
 
 .canto {
   z-index: 4;
-  box-shadow: 0 0 0 1.5px rgba(38, 70, 83, 0.16);
+  box-shadow: 0 0 0 1.5px rgba(15, 26, 46, 0.16);
 }
 
 /* Guía de troquelado: la línea de puntos por la que "se cortó" la página. */
@@ -199,7 +199,7 @@
   content: "";
   position: absolute;
   inset: -15px;
-  border: 1px dashed rgba(38, 70, 83, 0.15);
+  border: 1px dashed rgba(15, 26, 46, 0.15);
   border-radius: 50%;
 }
 
@@ -231,7 +231,7 @@
 }
 
 /* La copia del hueco es sólo el titular: el resto del bloque conserva su caja
-   —de ahí depende que las dos copias queden registradas al píxel— pero no se
+   (de ahí depende que las dos copias queden registradas al píxel) pero no se
    pinta ni se lee. */
 .capaHueco * {
   visibility: hidden;
@@ -256,7 +256,7 @@
 /* Móvil: la columna vive en la franja de papel que queda BAJO el arco, y su
    tope se ata a la geometría del troquel (punto más bajo del arco + 6px). Si
    se anclara sólo al borde inferior, cualquier línea de más empujaría la marca
-   hacia arriba y la máscara le cortaría la cabeza — que es exactamente lo que
+   hacia arriba y la máscara le cortaría la cabeza, que es exactamente lo que
    pasaba en la primera ronda. */
 .columna {
   position: absolute;
@@ -280,7 +280,7 @@
   /* Sólo el titular puede cruzar el corte. Todo lo demás se mide contra el
      papel que queda a SU altura: `--vt-ancho-*` aproxima el arco (a distancia
      d del centro, el filo está en cx − rx·cos(asin(d/rx))) con el coseno ya
-     resuelto para las dos alturas que importan — el párrafo, pegado al centro,
+     resuelto para las dos alturas que importan: el párrafo, pegado al centro,
      y la fila de botones, más abajo. Así el reparto se recalcula solo en
      cualquier monitor en vez de depender de un max-width elegido en 1440. */
   .columna {
@@ -322,30 +322,14 @@
   }
 }
 
-.coords {
-  display: none;
-}
-@media (min-width: 900px) {
-  .coords {
-    display: block;
-    margin: 16px 0 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-}
-
 .titular {
   margin: 10px 0 0;
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: clamp(27px, 7.6vw, 34px);
   line-height: 1.02;
-  letter-spacing: -0.026em;
-  color: var(--color-ink-2);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
 }
 @media (min-width: 900px) {
   .titular {
@@ -354,7 +338,7 @@
        el troquel y ninguna llega al limbo del globo (a 612px del borde
        izquierdo en 1440). Subirlo mete "en las guías" sobre la esfera, donde
        el crema deja de tener contraste. */
-    font-size: clamp(42px, 5.6vw, 80px);
+    font-size: clamp(40px, 5.2vw, 74px);
     line-height: 0.98;
     letter-spacing: -0.03em;
   }
@@ -374,7 +358,7 @@
 }
 
 .acento {
-  font-style: italic;
+  font-style: normal;
   color: var(--color-coral-ink);
 }
 
@@ -444,7 +428,7 @@
   flex: none;
   width: 34px;
   height: 34px;
-  border: 1.5px solid rgba(38, 70, 83, 0.22);
+  border: 1.5px solid rgba(15, 26, 46, 0.22);
   border-radius: 999px;
   color: var(--color-coral-ink);
   font-size: 18px;
@@ -461,10 +445,10 @@
 
 .cueTexto {
   display: block;
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--text-micro);
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 .cueNota {
@@ -474,10 +458,11 @@
   .cueNota {
     display: block;
     margin-top: 1px;
-    font-family: var(--font-hand);
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.1;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-transform: none;
+    letter-spacing: 0;
     color: var(--color-coral-ink);
   }
 }
@@ -521,8 +506,8 @@
   border-radius: 999px;
   background: rgba(253, 248, 240, 0.96);
   box-shadow: 0 4px 12px rgba(6, 20, 26, 0.3);
-  font-family: var(--font-hand);
-  font-size: 16px;
+  font-family: var(--font-label);
+  font-size: var(--text-mini);
   font-weight: 700;
   line-height: 1.1;
   color: var(--color-ink);

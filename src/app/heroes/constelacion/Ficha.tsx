@@ -2,18 +2,19 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import Icon from "@/components/Icon";
 import { CATEGORY_META } from "@/data/destinations";
 import type { NodoConstelacion } from "./datos";
 import { useConstelacion } from "./estado";
 import s from "./estilos.module.css";
 
 // Ficha de destino: foto real, nombre, provincia y chip con el color de su
-// categoría. Es un botón de verdad —conmuta el destaque— porque en táctil no
+// categoría. Es un botón de verdad (conmuta el destaque) porque en táctil no
 // hay hover: tocar tiene que hacer lo mismo que pasar el ratón, y con teclado
 // el foco lo enciende igual.
 //
 // El puntero se distingue a propósito. Al tocar, el navegador emula la
-// secuencia del ratón —pointerenter, focus y recién entonces click— así que
+// secuencia del ratón (pointerenter, focus y recién entonces click) así que
 // cuando llega el click la ficha YA está encendida: un `onClick` que conmutara
 // a secas la apagaba en el mismo gesto y en móvil no pasaba nada. Por eso el
 // gesto se recuerda desde `pointerdown`, que es lo último que ocurre antes de
@@ -80,7 +81,7 @@ export default function Ficha({ nodo }: { nodo: NodoConstelacion }) {
           <span className={s.fichaNombre}>{d.name}</span>
           <span className={s.fichaProvincia}>{d.province}</span>
           <span className={s.chip}>
-            <span className={s.chipPunto} aria-hidden="true" />
+            <Icon name={meta.icon} className={s.chipIcono} aria-hidden="true" />
             {meta.label}
           </span>
         </span>

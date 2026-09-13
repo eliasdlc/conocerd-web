@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   Constelación de destinos — primera pantalla.
+   Constelación de destinos: primera pantalla.
 
    Todo lo que reacciona al descenso lo hace leyendo `--descenso` (0..1), la
    custom property que GloboHero publica en su contenedor sticky. Nada de esto
@@ -10,14 +10,14 @@
    propio descenso.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Fondo de la escena: el mismo crema con halos de marca del recorrido real —el
+/* Fondo de la escena: el mismo crema con halos de marca del recorrido real. El
    globo, ya sin atmósfera, tiene que recortarse contra algo cálido, no contra
    un blanco plano. */
 .escena {
   background:
     radial-gradient(58% 48% at 16% 14%, rgba(37, 204, 184, 0.11), transparent 70%),
     radial-gradient(52% 44% at 86% 22%, rgba(255, 141, 22, 0.1), transparent 70%),
-    radial-gradient(60% 50% at 52% 100%, rgba(247, 108, 77, 0.09), transparent 74%),
+    radial-gradient(60% 50% at 52% 100%, rgba(224, 85, 47, 0.09), transparent 74%),
     var(--color-cream);
 }
 
@@ -56,10 +56,6 @@
   pointer-events: none;
 }
 
-.kicker {
-  margin-bottom: 12px;
-}
-
 .marca {
   display: block;
   width: 210px;
@@ -69,11 +65,11 @@
 .titulo {
   margin: 16px 0 0;
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: clamp(30px, 3vw, 41px);
   line-height: 1.04;
-  letter-spacing: -0.02em;
-  color: var(--color-ink-2);
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
 }
 
 .copy {
@@ -96,9 +92,9 @@
   align-items: center;
   gap: 8px;
   margin: 18px 0 0;
-  font-family: var(--font-hand);
-  font-size: 17px;
-  line-height: 1.2;
+  font-size: var(--text-copy);
+  font-weight: 500;
+  line-height: 1.3;
   color: var(--color-muted);
 }
 
@@ -130,8 +126,8 @@
 
 .bajar:hover {
   transform: translateY(-2px);
-  border-color: #d9d2c1;
-  box-shadow: var(--shadow-card);
+  border-color: var(--color-line-strong);
+  box-shadow: var(--shadow-e1);
 }
 
 .bajarIcono {
@@ -154,7 +150,7 @@
 }
 
 .bajarKicker {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -165,7 +161,7 @@
 .bajarDestino {
   font-size: var(--text-copy);
   font-weight: 700;
-  color: var(--color-ink-2);
+  color: var(--color-ink);
 }
 
 /* ── Fichas ─────────────────────────────────────────────────────────────── */
@@ -196,9 +192,9 @@
   gap: 10px;
   padding: 9px;
   border: 1px solid rgba(235, 230, 217, 0.96);
-  border-radius: var(--radius-card);
-  background: #fff;
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-block);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-e1);
   cursor: pointer;
   text-align: left;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -206,14 +202,14 @@
 
 .fichaBoton:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--shadow-e1);
 }
 
 /* Cuando hay una ficha destacada, las demás bajan de peso. La atenuación NO
    toca el panel: bajar la opacidad de la tarjeta entera dejaba leer la
    toponimia del mapa a través del texto (la regla de PANEL_SOLID) y hundía el
    contraste por debajo de AA. Se apaga la foto, se aplana la elevación y el
-   nombre pasa a `muted` —que sigue cumpliendo AA sobre blanco—. */
+   nombre pasa a `muted`, que sigue cumpliendo AA sobre blanco. */
 .fichas[data-activo] .fichaBoton {
   box-shadow: none;
   border-color: rgba(235, 230, 217, 0.7);
@@ -238,7 +234,7 @@
 
 .fichas[data-activo] .ficha[data-on="1"] .fichaBoton {
   border-color: var(--tono);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--shadow-e1);
   /* El levantamiento vale también para el foco de teclado, no solo el hover. */
   transform: translateY(-2px);
 }
@@ -249,7 +245,7 @@
 }
 
 .fichas[data-activo] .ficha[data-on="1"] .fichaNombre {
-  color: var(--color-ink-2);
+  color: var(--color-ink);
 }
 
 .fichas[data-activo] .ficha[data-on="1"] .fichaProvincia {
@@ -263,7 +259,7 @@
   height: 62px;
   flex: none;
   overflow: hidden;
-  border-radius: var(--radius-tile);
+  border-radius: var(--radius-chip);
   background: var(--color-cream-2);
   transition: opacity 0.2s ease;
 }
@@ -284,13 +280,13 @@
   font-size: var(--text-copy);
   font-weight: 700;
   line-height: 1.15;
-  color: var(--color-ink-2);
+  color: var(--color-ink);
 }
 
 .fichaProvincia {
   display: block;
   margin-top: 2px;
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -312,11 +308,9 @@
   color: var(--tono-ink);
 }
 
-.chipPunto {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--tono);
+.chipIcono {
+  font-size: 12px;
+  color: var(--tono-ink);
 }
 
 /* Nodo del hilo: el punto por el que la ficha se engancha a su pin. */
@@ -396,7 +390,7 @@
   position: relative;
   width: 62px;
   height: 62px;
-  border: 1.5px solid rgba(38, 70, 83, 0.4);
+  border: 1.5px solid rgba(15, 26, 46, 0.4);
   border-radius: 999px;
   box-shadow: 0 0 0 4px rgba(253, 248, 240, 0.5);
   opacity: calc((0.72 - var(--descenso, 0)) * 3);
@@ -409,7 +403,7 @@
   padding: 2px 7px;
   border-radius: 999px;
   background: rgba(253, 248, 240, 0.92);
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -429,7 +423,7 @@
 }
 
 /* El primer destino es donde aterriza la cámara: su pin no se apaga nunca ni
-   encoge — es el que queda en pie sobre el aterrizaje. */
+   encoge: es el que queda en pie sobre el aterrizaje. */
 .pinDescenso[data-final="1"] {
   opacity: 1;
   transform: none;
@@ -456,14 +450,14 @@
   height: 15px;
   border-radius: 999px;
   background: var(--tono);
-  box-shadow: 0 0 0 2.5px #fff, 0 3px 9px rgba(38, 70, 83, 0.38);
+  box-shadow: 0 0 0 2.5px var(--color-paper), 0 3px 9px rgba(15, 26, 46, 0.38);
   pointer-events: auto;
 }
 
 .punto[data-menor="1"] {
   width: 10px;
   height: 10px;
-  box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(38, 70, 83, 0.32);
+  box-shadow: 0 0 0 2px var(--color-paper), 0 2px 6px rgba(15, 26, 46, 0.32);
   pointer-events: none;
 }
 
@@ -477,13 +471,13 @@
   padding: 4px 9px;
   border: 1px solid var(--color-line);
   border-radius: 999px;
-  background: #fff;
-  box-shadow: var(--shadow-card);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-e1);
   font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  color: var(--color-ink-2);
+  color: var(--color-ink);
   transform: translateX(-50%);
   opacity: 0;
   transition: opacity 0.22s ease;
@@ -504,8 +498,8 @@
 
 /* ─────────────────────────────────────────────────────────────────────────
    Desktop estrecho: entre 900 y 1240 px la columna editorial y las dos fichas
-   de la izquierda se disputan el mismo carril. Se retiran esas dos —sus pines
-   siguen en la constelación— antes que dejar tarjetas pisando el titular.
+   de la izquierda se disputan el mismo carril. Se retiran esas dos (sus pines
+   siguen en la constelación) antes que dejar tarjetas pisando el titular.
    ───────────────────────────────────────────────────────────────────────── */
 @media (min-width: 900px) and (max-width: 1239px) {
   .raiz {
@@ -621,11 +615,6 @@
     font-size: 9px;
   }
 
-  .chipPunto {
-    width: 5px;
-    height: 5px;
-  }
-
   .nodo {
     top: 0;
     left: 50% !important;
@@ -662,12 +651,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  /* El dato de cobertura es un lujo de desktop: en 844 px de alto compite con
-     el copy, que es lo que hay que leer. */
-  .kicker {
-    display: none;
   }
 
   /* La marca es imagen: en móvil el <h1> queda para lectores de pantalla y el

@@ -6,14 +6,14 @@ import Image from "next/image";
 import Button from "@/components/Button";
 import Icon from "@/components/Icon";
 import { CATEGORY_META } from "@/data/destinations";
-import { PIEZAS, TOTAL_LUGARES, TOTAL_PROVINCIAS } from "./piezas";
+import { PIEZAS } from "./piezas";
 import styles from "./estilos.module.css";
 
 // ─── Mosaico vivo ─────────────────────────────────────────────────────────────
 //
 // La primera pantalla ES el mosaico: no hay foto de fondo con una caja encima.
 // El bloque de marca ocupa una celda más de la rejilla, del mismo tamaño que
-// las piezas grandes, y las fotos lo rodean por los cuatro lados.
+// las piezas grandes, y las fotos lo rodean por los tres lados restantes.
 //
 // Interacción: señalar una pieza (mouse, dedo o teclado) la agranda, atenúa las
 // demás y actualiza la ficha del bloque de copy con el dato real del destino.
@@ -25,36 +25,25 @@ export default function Mosaico() {
   const destino = PIEZAS.find((p) => p.id === activa) ?? PIEZAS[0];
   const meta = CATEGORY_META[destino.category];
 
-  const maqueta = () => {
-    /* Maqueta de revisión: los CTA no navegan a ningún sitio todavía. */
-  };
-
   return (
     <main className={styles.escena}>
       <div className={styles.rejilla}>
         {/* ── Bloque de marca y propuesta ── */}
         <section className={styles.copy} style={{ "--d": "60ms" } as React.CSSProperties}>
           <div className={styles.cabecera}>
-            <p className={styles.kicker}>
-              <span aria-hidden="true" className={styles.kickerPunto} />
-              {TOTAL_LUGARES} lugares · {TOTAL_PROVINCIAS} provincias
-              {/* La coletilla no cabe en 360px sin partir el sello en dos. */}
-              <span className="max-desk:hidden"> · una sola ruta</span>
-            </p>
-
             {/* El logo es la marca; el h1 va escrito debajo, así que la imagen
                 sólo necesita el nombre. */}
             <Image
-              src="/assets/logo.png"
+              src="/assets/logo.svg"
               alt="ConoceRD"
-              width={760}
-              height={363}
+              width={1296}
+              height={595}
               priority
-              sizes="(max-width: 899px) 140px, min(17vw, 244px)"
+              unoptimized
               className={styles.logo}
             />
 
-            <h1 className={styles.titulo}>
+            <h1 className={styles.titulo} style={{ fontVariationSettings: '"opsz" 96' }}>
               El país entero,
               <br />
               <em className="crd-accent">pieza por pieza</em>
@@ -67,37 +56,29 @@ export default function Mosaico() {
           </div>
 
           <div className={styles.acciones}>
-            <Button
-              variant="primary"
-              size="lg"
-              icon="download"
-              onClick={maqueta}
-              className="max-desk:h-12 max-desk:px-3.5 max-desk:text-sm"
-            >
+            <Button variant="primary" size="lg" icon="download" className="max-desk:h-12 max-desk:px-3.5 max-desk:text-sm">
               Descargar la app
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              icon="storefront"
-              onClick={maqueta}
-              className="max-desk:h-12 max-desk:px-3.5 max-desk:text-sm"
-            >
+            <Button variant="ghost" size="lg" icon="storefront" className="max-desk:h-12 max-desk:px-3.5 max-desk:text-sm">
               Soy un negocio
             </Button>
           </div>
 
           {/* Ficha viva: cambia con la pieza señalada. */}
-          <p className={styles.ficha} style={{ "--cat": meta.color } as React.CSSProperties}>
-            <span className={styles.fichaRotulo}>Ahora mirando</span>
+          <p className={styles.ficha} style={{ "--cat": meta.color, "--cat-ink": meta.ink } as React.CSSProperties}>
+            <span className={styles.fichaCategoria}>
+              <Icon name={meta.icon} className="text-[13px]" />
+              {meta.label}
+            </span>
             <span className={styles.fichaNombre}>
-              <span aria-hidden="true" className={styles.fichaPunto} />
               {destino.name}
-              {destino.province !== destino.name && ` · ${destino.province}`}
+              {destino.province !== destino.name && (
+                <span className={styles.fichaProvincia}>{destino.province}</span>
+              )}
             </span>
             <span className={styles.fichaDesc}>{destino.desc}</span>
             <span className={styles.fichaRating}>
-              <span aria-hidden="true">★ </span>
+              <Icon name="star" className="text-[13px]" />
               {destino.rating.toFixed(1).replace(".", ",")}
               <span className="sr-only"> de valoración</span>
             </span>
@@ -148,29 +129,6 @@ export default function Mosaico() {
             );
           })}
         </div>
-
-        {/* ── Pista de que la página sigue ── */}
-        <button
-          type="button"
-          onClick={maqueta}
-          className={styles.cue}
-          style={{ "--d": "560ms" } as React.CSSProperties}
-        >
-          <span aria-hidden="true" className={styles.cueMini}>
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className={styles.cueRotulo}>El recorrido</span>
-          <span className={styles.cueTexto}>
-            Sigue bajando
-            <span aria-hidden="true" className={styles.cueFlecha}>
-              <Icon name="arrow_downward" />
-            </span>
-          </span>
-        </button>
       </div>
     </main>
   );

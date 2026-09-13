@@ -4,7 +4,7 @@ import Icon from "@/components/Icon";
 import s from "./estilos.module.css";
 
 // Invitación a bajar. No dice "scroll": nombra el gesto (la ventana se abre) y
-// el destino real del descenso — Bahía de las Águilas es el keyframe siguiente
+// el destino real del descenso; Bahía de las Águilas es el keyframe siguiente
 // del recorrido, no un ejemplo inventado.
 //
 // Es un botón de verdad y lleva a donde promete: un adorno que parece pulsable
@@ -28,8 +28,8 @@ export default function CueBajar() {
         <Icon name="arrow_downward" />
       </span>
       <span>
-        <span className={s.cueTexto}>Baja — la ventana se abre</span>
-        <span className={s.cueNota}>primera parada: Bahía de las Águilas</span>
+        <span className={s.cueTexto}>Baja y la ventana se abre</span>
+        <span className={s.cueNota}>Primera parada: Bahía de las Águilas</span>
       </span>
     </button>
   );

@@ -12,7 +12,7 @@ import { PIEZAS, PIEZA_INICIAL, type Pieza } from "./datos";
 import s from "./estilos.module.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Propuesta "Portada de revista" — primera pantalla alternativa.
+//  Propuesta "Portada de revista": primera pantalla alternativa.
 //
 //  Dos superficies y una costura: papel crema a la izquierda con la cabecera
 //  editorial, foto a sangre a la derecha. El pliegue que las separa hace de
@@ -20,7 +20,7 @@ import s from "./estilos.module.css";
 //  y se entinta.
 //
 //  La pieza viva son los chips. Elegir una categoría cambia tres cosas a la
-//  vez —la foto, el acento de la edición y la línea de sumario— y nada más:
+//  vez (la foto, el acento de la edición y la línea de sumario) y nada más:
 //  no hay rotación automática, no hay carrusel. El visitante manda.
 //
 //  Cruce de fotos sin parpadeo: las capas ya mostradas se quedan opacas debajo
@@ -140,29 +140,24 @@ export default function Portada() {
       {/* ── Columna editorial ────────────────────────────────────────────── */}
       <div className={s.columna}>
         <header className={s.entra} style={{ animationDelay: "40ms" }}>
-          <div className="flex items-baseline justify-between gap-3 font-mono text-micro font-bold uppercase tracking-[.18em]">
-            <span className="text-muted">Guía de viaje · RD</span>
-            <span style={{ color: "var(--crd-rev-tinta)" }}>
-              N.º 01 · Ago 2026
-            </span>
-          </div>
-          <div aria-hidden="true" className="mt-2 h-px w-full bg-ink/15" />
           {/* El wordmark es la marca: SVG plano, sin pasar por el optimizador
-              (no hay nada que optimizar y sí que romper). */}
+              (no hay nada que optimizar y sí que romper). El filete debajo es
+              la cabecera de la revista. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/wordmark.svg"
             alt="ConoceRD"
             width={668}
             height={211}
-            className={`${s.marca} mt-3 block h-auto w-[clamp(124px,13.5vw,200px)]`}
+            className={`${s.marca} block h-auto w-[clamp(124px,13.5vw,200px)]`}
           />
+          <div aria-hidden="true" className="mt-3 h-px w-full bg-ink/15" />
         </header>
 
         <div className={s.medio}>
           <h1
-            className={`${s.entra} ${s.titular} m-0 max-w-[17ch] font-display text-[clamp(31px,4.3vw,62px)] font-bold leading-[1.02] tracking-[-.022em] text-ink-2 [text-wrap:balance] desk:max-w-[13ch]`}
-            style={{ animationDelay: "120ms" }}
+            className={`${s.entra} ${s.titular} m-0 max-w-[17ch] font-display text-[clamp(31px,4.1vw,58px)] font-extrabold leading-[1.02] tracking-[-.03em] text-ink [text-wrap:balance] desk:max-w-[13ch]`}
+            style={{ animationDelay: "120ms", fontVariationSettings: '"opsz" 96' }}
           >
             {/* El acento no se parte nunca: "no" arriba y "cabe" abajo mata la
                 broma y deja una viuda en itálica. */}
@@ -178,7 +173,7 @@ export default function Portada() {
           </p>
 
           <p
-            className={`${s.entra} m-0 -mb-1.5 mt-1 font-mono text-micro font-bold uppercase tracking-[.16em] text-muted-2 max-desk:hidden`}
+            className={`${s.entra} m-0 -mb-1.5 mt-1 font-label text-micro font-extrabold uppercase tracking-[.14em] text-muted max-desk:hidden`}
             style={{ animationDelay: "230ms" }}
             id="crd-rev-sumario"
           >
@@ -254,7 +249,7 @@ export default function Portada() {
               Descargar la app
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="lg"
               icon="storefront"
               className="max-desk:h-11 max-desk:w-full"
@@ -264,46 +259,8 @@ export default function Portada() {
             </Button>
           </div>
 
-          <p
-            className={`${s.entra} ${s.gratis} m-0 font-mono text-mini text-muted-2 max-desk:mt-0.5 max-desk:text-micro`}
-            style={{ animationDelay: "380ms" }}
-          >
-            Gratis · iOS y Android · pronto en las tiendas
-          </p>
         </div>
 
-        <footer
-          className={`${s.entra} mt-auto pt-3`}
-          style={{ animationDelay: "430ms" }}
-        >
-          {/* Sumario de portada: las tres líneas de cubierta. En columna, como
-              en una revista, y no en fila: apiladas ocupan el pie de la página
-              en vez de dejarlo vacío. */}
-          <ul className="m-0 flex list-none flex-col gap-1.5 p-0 font-mono text-mini text-muted-2 max-desk:hidden">
-            {[
-              "Rutas listas para el fin de semana",
-              "Negocios locales verificados uno por uno",
-              "Mapa que funciona sin datos",
-            ].map((t, i) => (
-              <li key={t} className="flex items-center gap-2">
-                <b style={{ color: "var(--crd-rev-tinta)" }}>0{i + 1}</b>
-                <span aria-hidden="true" className="h-px w-4 bg-ink/15" />
-                {t}
-              </li>
-            ))}
-          </ul>
-          {/* Pista de que esto es un recorrido y sigue hacia abajo. No es un
-              botón: no llevaría a ninguna parte en una maqueta, y una flecha
-              que parece pulsable y no responde es peor que ninguna. */}
-          <p className="m-0 mt-3 flex items-center gap-2 font-mono text-micro font-bold uppercase tracking-[.16em] text-muted max-desk:mt-2">
-            <Icon
-              name="arrow_downward"
-              className="text-sm"
-              aria-hidden="true"
-            />
-            El recorrido sigue abajo
-          </p>
-        </footer>
       </div>
 
       {/* ── Foto de portada ──────────────────────────────────────────────── */}
@@ -326,14 +283,12 @@ export default function Portada() {
         <StampCRD
           size={118}
           rotate={-9}
-          line1="EDICIÓN 01"
-          line2="· AGO 2026 ·"
           className="absolute right-[clamp(16px,2.2vw,34px)] top-[clamp(16px,3vh,34px)] z-[7] max-desk:hidden"
         />
 
         {destino.imageCredit && (
           <p
-            className={`${s.credito} z-[7] m-0 font-mono text-micro font-medium text-white/80`}
+            className={`${s.credito} z-[7] m-0 text-micro font-medium text-white/80`}
           >
             Foto: {destino.imageCredit}
           </p>
@@ -341,20 +296,16 @@ export default function Portada() {
 
         <figcaption
           key={activa}
-          className={`${s.ficha} ${s.cambia} z-[7] rounded-card border border-line bg-cream px-4 py-3.5 shadow-panel`}
+          className={`${s.ficha} ${s.cambia} z-[7] rounded-block border border-line bg-cream px-4 py-3.5 shadow-e1`}
         >
           <span
-            className="flex items-center gap-2 font-mono text-micro font-bold uppercase tracking-[.14em]"
+            className="flex items-center gap-1.5 font-label text-micro font-extrabold uppercase tracking-[.14em]"
             style={{ color: "var(--crd-rev-tinta)" }}
           >
-            <span
-              aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full"
-              style={{ background: "var(--crd-rev-acento)" }}
-            />
-            {info.label} · Portada
+            <Icon name={info.icon} className="text-[13px]" aria-hidden="true" />
+            {info.label}
           </span>
-          <p className="m-0 mt-1.5 font-display text-feature font-bold leading-[1.1] text-ink-2">
+          <p className="m-0 mt-1.5 font-display text-feature font-bold leading-[1.1] tracking-[-.02em] text-ink">
             {destino.name}
           </p>
           <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-tiny text-muted">
@@ -365,7 +316,7 @@ export default function Portada() {
             <span className="inline-flex items-center gap-1">
               <Icon
                 name="star"
-                className="text-[13px] text-mango"
+                className="text-[13px] text-mango-ink"
                 aria-hidden="true"
               />
               <span className="tabular-nums">

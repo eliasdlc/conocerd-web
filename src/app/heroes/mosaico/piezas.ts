@@ -19,6 +19,9 @@ const ORDEN = [
   { id: "duarte", sizes: "(max-width: 899px) 68vw, 34vw" },
   { id: "haitises", sizes: "(max-width: 899px) 68vw, 18vw" },
   { id: "santiago", sizes: "(max-width: 899px) 68vw, 18vw" },
+  // La séptima cierra la esquina inferior derecha: la rejilla tiene tantas
+  // celdas como piezas, ninguna vacía.
+  { id: "playa-rincon", sizes: "(max-width: 899px) 68vw, 18vw" },
 ] as const;
 
 export const PIEZAS: Pieza[] = ORDEN.map(({ id, sizes }) => {
@@ -27,6 +30,3 @@ export const PIEZAS: Pieza[] = ORDEN.map(({ id, sizes }) => {
   return { ...destino, sizes };
 });
 
-/** Cifras del kicker: se derivan del dato real para no prometer de más. */
-export const TOTAL_LUGARES = DESTINATIONS.length;
-export const TOTAL_PROVINCIAS = new Set(DESTINATIONS.map((d) => d.province)).size;

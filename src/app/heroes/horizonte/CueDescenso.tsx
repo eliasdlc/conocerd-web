@@ -21,7 +21,7 @@ export default function CueDescenso() {
   return (
     <div className={s.cue}>
       <button type="button" onClick={bajar} className={`${s.cueBoton} ${s.entra}`} style={{ animationDelay: "560ms" }}>
-        <span className="font-mono text-micro font-bold uppercase tracking-[.16em]">
+        <span className="font-label text-micro font-extrabold uppercase tracking-[.14em]">
           Baja sobre el país
         </span>
         <span aria-hidden="true" className={s.cueFlecha}>

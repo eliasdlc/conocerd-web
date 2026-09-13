@@ -21,11 +21,9 @@ function Destino({ id, ang }: { id: string; ang: number }) {
   return (
     <span className={s.marca} style={{ "--ang": `${ang}deg` } as React.CSSProperties}>
       <span className={s.chip}>
-        <span aria-hidden="true" className={s.punto} style={{ background: meta.color }} />
+        <Icon name={meta.icon} className="text-[14px]" style={{ color: meta.ink }} />
         {destino.name}
-        <span className={`font-mono text-micro font-normal uppercase tracking-[.12em] text-muted`}>
-          {destino.province}
-        </span>
+        <span className="text-tiny font-normal text-muted">{destino.province}</span>
       </span>
     </span>
   );
@@ -38,9 +36,9 @@ function Destino({ id, ang }: { id: string; ang: number }) {
 export default function Contenido() {
   return (
     <>
-      {/* ── Cabecera: marca a la izquierda, coordenadas del keyframe a la
-          derecha. Es el único bloque asimétrico, y es lo que evita que la
-          pantalla se lea como un póster centrado. ── */}
+      {/* ── Cabecera: la marca, a la izquierda. Es el único bloque
+          asimétrico, y es lo que evita que la pantalla se lea como un póster
+          centrado. ── */}
       <div className={`${s.cabecera} absolute inset-x-0 top-0 flex items-start justify-between px-[22px] pt-6 desk:px-[clamp(28px,4vw,64px)] desk:pt-8`}>
         {/* El wordmark es la marca: SVG plano, sin pasar por el optimizador. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -51,31 +49,15 @@ export default function Contenido() {
           height={211}
           className={`${s.entra} block h-auto w-[122px] desk:w-[152px]`}
         />
-        <p
-          className={`${s.entra} m-0 hidden text-right font-mono text-micro font-bold uppercase leading-[1.7] tracking-[.14em] text-muted desk:block`}
-          style={{ animationDelay: "120ms" }}
-        >
-          18.7357° N · 70.1627° O
-          <br />
-          <span className="text-mango-ink">República Dominicana</span>
-        </p>
       </div>
 
-      {/* ── Cielo: kicker, titular, promesa y acciones. Todo termina justo por
-          encima de la cima del arco, así que los botones quedan apoyados sobre
-          la curvatura del planeta. ── */}
-      <div className={`${s.columna} absolute inset-x-0 top-0 flex flex-col items-center px-[22px] pt-[124px] text-center desk:pt-[clamp(78px,9vh,108px)]`}>
-        <span
-          className={`${s.entra} inline-flex items-center gap-[7px] font-mono text-micro font-bold uppercase tracking-[.14em] text-mango-ink`}
-          style={{ animationDelay: "80ms" }}
-        >
-          <Icon name="explore" className="text-sm" />
-          En órbita sobre el Caribe
-        </span>
-
+      {/* ── Cielo: titular, promesa y acciones. Todo termina justo por encima
+          de la cima del arco, así que los botones quedan apoyados sobre la
+          curvatura del planeta. ── */}
+      <div className={`${s.columna} absolute inset-x-0 top-0 flex flex-col items-center px-[22px] pt-[112px] text-center desk:pt-[clamp(78px,9vh,108px)]`}>
         <h1
-          className={`${s.entra} ${s.titular} m-0 mt-3 max-w-[15ch] font-display text-[clamp(34px,8.8vw,62px)] font-bold leading-[1.04] tracking-[-.02em] text-ink-2 [text-wrap:balance] desk:mt-4`}
-          style={{ animationDelay: "160ms" }}
+          className={`${s.entra} ${s.titular} m-0 max-w-[15ch] font-display text-[clamp(34px,8.8vw,60px)] font-extrabold leading-[1.04] tracking-[-.03em] text-ink [text-wrap:balance]`}
+          style={{ animationDelay: "160ms", fontVariationSettings: '"opsz" 96' }}
         >
           Lo nuestro se ve mejor <em className="crd-accent">de cerca</em>
         </h1>
@@ -95,7 +77,7 @@ export default function Contenido() {
           <Button variant="primary" size="lg" icon="download">
             Descargar la app
           </Button>
-          <Button variant="outline" size="lg" icon="storefront">
+          <Button variant="ghost" size="lg" icon="storefront">
             Soy un negocio
           </Button>
         </div>

@@ -7,7 +7,7 @@ import {
 } from "@/data/destinations";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Portada de revista — el "sumario" de la edición.
+//  Portada de revista: el "sumario" de la edición.
 //
 //  Cada categoría del producto tiene UNA foto de portada, que es un destino
 //  real del catálogo (nunca uno inventado). La foto se elige por lo que aguanta

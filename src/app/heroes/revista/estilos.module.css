@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   Portada de revista — estructura, pliegue y cambio de portada.
+   Portada de revista: estructura, pliegue y cambio de portada.
 
    Lo que vive aquí y no en utilidades de Tailwind es lo que Tailwind no
    expresa bien: el reparto en dos superficies con un pliegue encima de la
@@ -72,7 +72,7 @@
 }
 
 /* Bloque central de la portada. En desktop se centra entre la cabecera y el
-   pie —una portada llena la página, no se apelmaza arriba—; en móvil se
+   pie (una portada llena la página, no se apelmaza arriba); en móvil se
    disuelve con `display: contents` para que sus hijos sean hijos directos de
    la columna y los chips puedan subir a montarse sobre la foto. */
 .medio {
@@ -87,7 +87,7 @@
 
 /* ── Pliegue: la costura entre las dos superficies ──────────────────────── */
 /* No es un borde: es el lomo de la revista. Un filo de sombra hacia la foto,
-   una hairline, y cinco muescas que hacen de índice — la de la portada visible
+   una hairline, y cinco muescas que hacen de índice; la de la portada visible
    crece y se entinta. Decorativo (aria-hidden): la información ya la da el
    chip activo. */
 
@@ -108,8 +108,8 @@
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(38, 70, 83, 0.26) 7%,
-    rgba(38, 70, 83, 0.26) 93%,
+    rgba(15, 26, 46, 0.26) 7%,
+    rgba(15, 26, 46, 0.26) 93%,
     transparent
   );
 }
@@ -118,7 +118,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 22px;
-  background: linear-gradient(to right, rgba(38, 70, 83, 0.16), transparent);
+  background: linear-gradient(to right, rgba(15, 26, 46, 0.16), transparent);
 }
 
 .muesca {
@@ -126,7 +126,7 @@
   left: -7px;
   width: 14px;
   height: 1px;
-  background: rgba(38, 70, 83, 0.3);
+  background: rgba(15, 26, 46, 0.3);
   border-radius: 2px;
   transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
     height 0.45s cubic-bezier(0.16, 1, 0.3, 1), left 0.45s cubic-bezier(0.16, 1, 0.3, 1),
@@ -171,8 +171,8 @@
   height: 54%;
   background: linear-gradient(
     to top,
-    rgba(16, 34, 41, 0.82),
-    rgba(16, 34, 41, 0.34) 46%,
+    rgba(15, 26, 46, 0.82),
+    rgba(15, 26, 46, 0.34) 46%,
     transparent
   );
 }
@@ -180,7 +180,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 12%;
-  background: linear-gradient(to right, rgba(16, 34, 41, 0.34), transparent);
+  background: linear-gradient(to right, rgba(15, 26, 46, 0.34), transparent);
 }
 
 .veloAlto {
@@ -188,7 +188,7 @@
 }
 
 /* Crédito de foto: sube por el canto derecho de la imagen, como en una revista
-   impresa. Es minúsculo a propósito —no compite con nada— pero está siempre que
+   impresa. Es minúsculo a propósito, no compite con nada, pero está siempre que
    la licencia lo exige. */
 .credito {
   position: absolute;
@@ -235,7 +235,7 @@
   border-radius: 999px;
   background: #fff;
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-label);
   font-size: var(--text-tiny);
   font-weight: 600;
   line-height: 1;
@@ -256,14 +256,14 @@
   background: color-mix(in srgb, var(--chip) 15%, #fff);
   color: var(--chip-ink);
   font-weight: 700;
-  box-shadow: var(--shadow-sticker);
+  box-shadow: var(--shadow-e1);
 }
 .chip[data-activa="true"]:hover {
-  box-shadow: 0 5px 0 rgba(38, 70, 83, 0.18);
+  box-shadow: var(--shadow-e1);
 }
 
 /* ── Entradas y cambio de portada ───────────────────────────────────────── */
-/* Todo el movimiento nace de un disparador —la carga o el clic— y termina.
+/* Todo el movimiento nace de un disparador (la carga o el clic) y termina.
    Nada se anima en reposo. */
 
 @keyframes crdRevistaEntra {
@@ -335,7 +335,7 @@
   .chip {
     height: 38px;
     padding: 0 10px;
-    box-shadow: 0 6px 18px rgba(38, 70, 83, 0.16);
+    box-shadow: 0 6px 18px rgba(15, 26, 46, 0.16);
   }
   /* Sólo la portada elegida enseña su nombre: cinco etiquetas completas no
      caben en 390px sin encogerse a un cuerpo ilegible. El nombre sigue en el
@@ -379,8 +379,8 @@
     height: 46%;
     background: linear-gradient(
       to bottom,
-      rgba(16, 34, 41, 0.5),
-      rgba(16, 34, 41, 0.16) 55%,
+      rgba(15, 26, 46, 0.5),
+      rgba(15, 26, 46, 0.16) 55%,
       transparent
     );
   }
@@ -427,9 +427,6 @@
   }
   .acciones button {
     height: 44px;
-  }
-  .gratis {
-    display: none;
   }
   .credito {
     bottom: 30px;

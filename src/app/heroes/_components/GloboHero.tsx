@@ -17,7 +17,7 @@ import { MOBILE_BREAKPOINT } from "@/hooks/useIsMobile";
 //
 //  La home real es un recorrido: el hero muestra el globo y, al bajar, la
 //  cámara desciende hasta el primer destino. Una propuesta de primera pantalla
-//  que no demuestre ese descenso no se puede juzgar — por eso este componente
+//  que no demuestre ese descenso no se puede juzgar: por eso este componente
 //  monta el mismo <Map> del journey, con el mismo keyframe `hero`, y reproduce
 //  el tramo hero → polaroid-0 usando LA MATEMÁTICA REAL (`cameraAtProgress`),
 //  no una aproximación.
@@ -27,7 +27,7 @@ import { MOBILE_BREAKPOINT } from "@/hooks/useIsMobile";
 //  sienta igual que en producción.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Map = dynamic(() => import("@/components/map/Map").then((m) => m.Map), {
+const Map = dynamic(() => import("@/components/map/engine").then((m) => m.Map), {
   ssr: false,
   loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
@@ -114,7 +114,7 @@ export type GloboHeroProps = {
  *
  * El canvas SIEMPRE ocupa el viewport completo: si tu diseño recorta el globo
  * (una ventana, un medallón), hazlo con máscara/overlay encima, nunca
- * encogiendo el contenedor del mapa — al descender, el recorte tiene que poder
+ * encogiendo el contenedor del mapa: al descender, el recorte tiene que poder
  * abrirse sin que la cámara cambie de tamaño.
  */
 export default function GloboHero({

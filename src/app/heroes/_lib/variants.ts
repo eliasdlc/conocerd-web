@@ -1,4 +1,4 @@
-// Banco de propuestas para la primera pantalla de la home (ago 2026).
+// Banco de propuestas para la primera pantalla de la home.
 //
 // Cada variante vive en su propio directorio bajo /heroes/<slug> y es
 // autónoma: no toca la home real ni el journey. El índice (/heroes) y el
@@ -10,13 +10,18 @@
 //  - `globo`: el globo del journey es obligatorio y visible, porque al bajar la
 //    cámara desciende sobre él hacia el primer destino (scrollytelling). Estas
 //    se construyen sobre `_components/GloboHero`.
+//
+// Todas hablan el sistema de la web (los nueve roles de color, Bricolage para
+// titulares, Jakarta para etiquetas, coral sólo en acción y selección) y
+// reutilizan las piezas de marca que ya existen: polaroid con cinta, cuño de
+// equipaje, pin de marca, teléfono con la app.
 
 export type GrupoVariante = "libre" | "globo";
 
 export type HeroVariant = {
   slug: string;
   nombre: string;
-  /** Idea rectora en una línea — lo que la hace distinta de las demás. */
+  /** Idea rectora en una línea: lo que la hace distinta de las demás. */
   concepto: string;
   /** Color de marca que domina la propuesta (para la ficha del índice). */
   acento: string;
@@ -41,31 +46,31 @@ export const HERO_VARIANTS: HeroVariant[] = [
     slug: "sello",
     nombre: "Sello de entrada",
     concepto:
-      "Editorial de pasaporte: titular serif enorme, sellos de tinta y un pase de abordar como CTA.",
-    acento: "#F76C4D",
+      "Portada de documento de viaje: titular a cuerpo de portada, cuños de tinta y un pase de abordar como CTA.",
+    acento: "#E0552F",
     grupo: "libre",
   },
   {
     slug: "mosaico",
     nombre: "Mosaico vivo",
     concepto:
-      "Bento asimétrico de destinos reales; el copy se incrusta entre las piezas y en móvil se vuelve carrusel.",
+      "Bento asimétrico de destinos reales; el copy ocupa una celda más y en móvil las piezas se vuelven carrusel.",
     acento: "#25CCB8",
     grupo: "libre",
   },
   {
-    slug: "globo",
-    nombre: "Globo protagonista",
+    slug: "mesa",
+    nombre: "Mesa de viaje",
     concepto:
-      "El país a sangre completa con panel de cristal encima: coordenadas vivas y pines que responden.",
-    acento: "#264653",
+      "Las polaroids del recorrido tiradas sobre la mesa, con cinta y cuño de equipaje; el titular es la nota que las acompaña.",
+    acento: "#FF8D16",
     grupo: "libre",
   },
   {
     slug: "ruta",
     nombre: "Ruta trazada",
     concepto:
-      "Una línea dibujada a mano cruza la pantalla uniendo paradas; el titular vive sobre el trazo.",
+      "Una línea dibujada a mano cruza la pantalla uniendo paradas reales; el titular vive sobre el trazo y el CTA es el destino.",
     acento: "#FF8D16",
     grupo: "libre",
   },
@@ -73,7 +78,7 @@ export const HERO_VARIANTS: HeroVariant[] = [
     slug: "revista",
     nombre: "Portada de revista",
     concepto:
-      "Split a pantalla completa: columna editorial contra foto viva que cambia con la categoría elegida.",
+      "Split a pantalla completa: columna editorial contra foto a sangre que cambia con la categoría elegida.",
     acento: "#B23410",
     grupo: "libre",
   },
@@ -83,15 +88,15 @@ export const HERO_VARIANTS: HeroVariant[] = [
     nombre: "Ventana al país",
     concepto:
       "El globo asoma por un recorte en el papel; al bajar, la ventana se abre y la cámara se lanza dentro.",
-    acento: "#F76C4D",
+    acento: "#E0552F",
     grupo: "globo",
   },
   {
-    slug: "cabina",
-    nombre: "Cabina de vuelo",
+    slug: "en-la-mano",
+    nombre: "La app en la mano",
     concepto:
-      "Globo a sangre con instrumental en los bordes: retícula, coordenadas vivas y altímetro que marca el descenso.",
-    acento: "#264653",
+      "El teléfono con la app de verdad se apoya sobre el globo; al bajar, el teléfono se retira y la cámara aterriza donde la pantalla señalaba.",
+    acento: "#0F1A2E",
     grupo: "globo",
   },
   {
@@ -111,10 +116,10 @@ export const HERO_VARIANTS: HeroVariant[] = [
     grupo: "globo",
   },
   {
-    slug: "medallon",
-    nombre: "Medallón",
+    slug: "cinta",
+    nombre: "Cinta de polaroids",
     concepto:
-      "El globo tratado como sello troquelado dentro de un anillo con texto curvo; al bajar, el anillo se abre.",
+      "El globo arriba y una cinta de polaroids reales abajo; rozar una enciende su pin y al bajar la cinta se retira bajo la cámara.",
     acento: "#0C6A60",
     grupo: "globo",
   },

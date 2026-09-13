@@ -7,31 +7,24 @@ import SelloTinta from "./SelloTinta";
 import s from "./estilos.module.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Propuesta "Sello de entrada" — la primera pantalla como portada de un
+//  Propuesta "Sello de entrada": la primera pantalla como portada de un
 //  documento de viaje.
 //
-//  La jerarquía es tipográfica, no fotográfica: manda un titular Fraunces a
-//  cuerpo de portada, y todo lo demás —campos monoespaciados, cuños, troqueles
-//  y el pase de abordar— es el aparato del pasaporte que lo enmarca. La única
-//  foto entra como estampilla pegada con cinta, nunca como fondo.
+//  La jerarquía es tipográfica, no fotográfica: manda el titular en la familia
+//  de titulares a cuerpo de portada, y todo lo demás (cuños, troqueles y el
+//  pase de abordar) es el aparato del pasaporte que lo enmarca. La única foto
+//  entra como estampilla pegada con cinta, nunca como fondo.
 //
 //  Guion de entrada (una sola pasada, disparada por la carga):
-//    0.05 s  cabecera y campos del documento
+//    0.05 s  cabecera
 //    0.15 s  el titular sube línea a línea (+90 ms por línea)
 //    0.62 s  el pase de abordar se asienta
 //    0.70 s  caen los cuños y la estampilla
 //  Después de ~1,3 s la pantalla está completamente quieta.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Líneas del titular. La última se entinta en coral itálico (.crd-accent). */
+/** Líneas del titular. La última se entinta en coral (.crd-accent). */
 const TITULAR = ["Conoce la", "República", "Dominicana", "auténtica"];
-
-/** Campos del documento, arriba a la derecha (sólo desktop). */
-const CAMPOS = [
-  { etiqueta: "Tipo", valor: "P / RD" },
-  { etiqueta: "Emisión", valor: "2026" },
-  { etiqueta: "Válido en", valor: "Toda la isla" },
-];
 
 export default function PantallaSello() {
   return (
@@ -45,58 +38,40 @@ export default function PantallaSello() {
           desk:px-[clamp(28px,4.4vw,60px)] desk:pb-[70px] desk:pt-[26px]"
       >
         {/* ── Cabecera del documento ────────────────────────────────────── */}
-        {/* El filete bajo la cabecera es lo que ata logotipo y campos en una
-            sola banda de datos, como el encabezado de una página de pasaporte.
-            En móvil no cabe: ahí manda el titular. */}
+        {/* El filete bajo la cabecera es lo que ata el logotipo a la página,
+            como el encabezado de una hoja de pasaporte. En móvil no cabe: ahí
+            manda el titular. */}
         <header
           className={`${s.sube} flex items-start justify-between gap-4 desk:border-b desk:border-line desk:pb-5`}
           style={{ "--d": ".05s" } as React.CSSProperties}
         >
           <Image
-            src="/assets/logo.png"
-            alt="ConoceRD — Descubre Lo Nuestro"
-            width={760}
-            height={363}
+            src="/assets/logo.svg"
+            alt="ConoceRD, descubre lo nuestro"
+            width={1296}
+            height={595}
             priority
-            sizes="(max-width: 899px) 120px, 196px"
+            unoptimized
             className="block h-auto w-[118px] desk:w-[196px]"
           />
 
-          <div className="hidden items-stretch gap-5 desk:flex">
-            {CAMPOS.map((c) => (
-              <div key={c.etiqueta} className="border-l border-line pl-5 first:border-l-0 first:pl-0">
-                <div className="font-mono text-micro font-bold uppercase leading-none tracking-[.18em] text-muted">
-                  {c.etiqueta}
-                </div>
-                <div className="mt-1.5 font-mono text-copy font-bold leading-none text-ink">{c.valor}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Móvil: el cuño ocupa el sitio de los campos. */}
+          {/* Móvil: el cuño ocupa la esquina de la cabecera. */}
           <div
             className={`${s.cae} shrink-0 desk:hidden`}
             style={{ "--giro": "-11deg", "--d": ".7s" } as React.CSSProperties}
           >
-            <StampCRD size={74} rotate={0} line1="EST. 2026" line2="· HECHO EN RD ·" />
+            <StampCRD size={74} rotate={0} />
           </div>
         </header>
 
         {/* ── Cuerpo: editorial + pase ──────────────────────────────────── */}
-        {/* En móvil el reparto es vertical y el pase cae al fondo (mt-auto en la
-            pista de scroll empuja todo lo que va detrás); en desktop es una
-            rejilla de dos columnas y la pista se ancla al pie de la página. */}
+        {/* En móvil el reparto es vertical y el pase cae al fondo; en desktop es
+            una rejilla de dos columnas separadas por el troquel del talón. */}
         <div className="relative flex flex-1 flex-col gap-3 pt-4 desk:grid desk:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] desk:items-center desk:gap-[clamp(30px,4.6vw,66px)] desk:pt-0">
           {/* Columna editorial */}
           <div className="min-w-0 max-desk:order-1">
-            <p
-              className={`${s.sube} m-0 font-mono text-micro font-bold uppercase leading-none tracking-[.22em] text-coral-ink desk:text-mini`}
-              style={{ "--d": ".1s" } as React.CSSProperties}
-            >
-              Documento de viaje · N.º 001
-            </p>
-
-            <h1 className={`${s.titular} mt-3 desk:mt-4`}>
+            <h1 className={`${s.titular} mt-1 desk:mt-4`} style={{ fontVariationSettings: '"opsz" 96' }}>
+              <span className="sr-only">ConoceRD, descubre lo nuestro. </span>
               {TITULAR.map((linea, i) => (
                 <span key={linea} className={s.linea}>
                   <span
@@ -116,8 +91,8 @@ export default function PantallaSello() {
               Rutas, playas y comedores que solo saben los de aquí. Todo junto en una app.
             </p>
 
-            {/* Pie del bloque editorial: la estampilla, el cuño de aduana y las
-                coordenadas — el collage pegado al pie de la página. */}
+            {/* Pie del bloque editorial: la estampilla y el cuño de aduana, el
+                collage pegado al pie de la página. */}
             <div className="mt-3.5 flex flex-wrap items-center gap-4 desk:mt-7 desk:gap-6">
               <figure
                 className={`${s.cae} relative m-0 hidden w-[118px] shrink-0 desk:block`}
@@ -135,47 +110,17 @@ export default function PantallaSello() {
                     />
                   </div>
                 </div>
-                <figcaption className="pointer-events-none absolute inset-x-0 bottom-[9px] text-center font-mono text-[8px] font-bold uppercase tracking-[.12em] text-muted">
-                  Zona Colonial · SD
+                <figcaption className="pointer-events-none absolute inset-x-0 bottom-[7px] text-center font-label text-[9px] font-bold uppercase tracking-[.1em] text-muted">
+                  Zona Colonial
                 </figcaption>
               </figure>
 
               <SelloTinta titulo="Entrada aprobada" sub="Sin trampa para turistas" giro={-6} retardo={0.74} />
-
-              <div
-                className={`${s.sube} font-mono text-mini font-bold uppercase leading-[1.5] tracking-[.14em] text-muted`}
-                style={{ "--d": ".56s" } as React.CSSProperties}
-              >
-                18°28′N 69°53′O
-                <span className="hidden desk:block">Punto de partida</span>
-              </div>
             </div>
           </div>
 
-          {/* ── Pista de que el recorrido sigue abajo ─────────────────────── */}
-          <div
-            className={`${s.sube} pointer-events-none flex items-center gap-3 max-desk:order-2 max-desk:mt-auto max-desk:pt-4 desk:absolute desk:bottom-[-38px] desk:left-0`}
-            style={{ "--d": ".9s" } as React.CSSProperties}
-          >
-            <span className="grid size-8 shrink-0 place-items-center rounded-full border border-ink/25">
-              <svg viewBox="0 0 24 24" aria-hidden className="size-[15px]">
-                <polyline
-                  points="5,8 12,16 19,8"
-                  fill="none"
-                  stroke="#B23410"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="font-mono text-micro font-bold uppercase tracking-[.18em] text-muted desk:text-mini">
-              Sigue bajando<span className="hidden desk:inline"> — el recorrido empieza aquí</span>
-            </span>
-          </div>
-
           {/* Columna del pase, con el cuño de marca sobre el talón */}
-          <div className={`${s.troquelGutter} relative max-desk:order-3 desk:pb-4`}>
+          <div className={`${s.troquelGutter} relative max-desk:order-3 max-desk:mt-auto desk:pb-4`}>
             <PaseDeAbordar retardo={0.62} />
 
             {/* Cuño de marca sobre la esquina del talón. */}
@@ -183,7 +128,7 @@ export default function PantallaSello() {
               className={`${s.cae} pointer-events-none absolute -bottom-[26px] -right-[26px] z-[3] hidden desk:block`}
               style={{ "--giro": "-13deg", "--d": ".7s" } as React.CSSProperties}
             >
-              <StampCRD size={118} rotate={0} line1="EST. 2026" line2="· HECHO EN RD ·" />
+              <StampCRD size={118} rotate={0} />
             </div>
           </div>
         </div>

@@ -3,8 +3,8 @@ import Button from "@/components/Button";
 import CueBajar from "./CueBajar";
 import s from "./estilos.module.css";
 
-// Bloque editorial de la propuesta. Se renderiza DOS veces —una por cara del
-// troquel— así que tiene que ser puramente declarativo y producir exactamente
+// Bloque editorial de la propuesta. Se renderiza DOS veces (una por cara del
+// troquel) así que tiene que ser puramente declarativo y producir exactamente
 // la misma caja en las dos: cualquier diferencia de altura descuadraría el
 // registro del titular contra el corte. `espejo` sólo cambia lo que no puede
 // duplicarse (la etiqueta del titular y la prioridad de carga de la imagen),
@@ -30,23 +30,19 @@ export default function Editorial({ espejo = false }: { espejo?: boolean }) {
         className={`${s.marcaMovil} ${s.entra}`}
       />
       <Image
-        src="/assets/logo.png"
-        alt={espejo ? "" : "ConoceRD — Descubre Lo Nuestro"}
-        width={760}
-        height={363}
+        src="/assets/logo.svg"
+        alt={espejo ? "" : "ConoceRD, descubre lo nuestro"}
+        width={1296}
+        height={595}
         priority={!espejo}
+        unoptimized
         aria-hidden={espejo || undefined}
-        sizes="(max-width: 899px) 42vw, min(20vw, 224px)"
         className={`${s.marcaDesk} ${s.entra}`}
       />
 
-      <p className={`${s.coords} ${s.entra}`} style={{ "--vt-d": ".08s" } as React.CSSProperties}>
-        República Dominicana · 18.7° N 70.2° O
-      </p>
-
       <Titulo
         className={`${s.titular} ${s.entra}`}
-        style={{ "--vt-d": ".14s" } as React.CSSProperties}
+        style={{ "--vt-d": ".14s", fontVariationSettings: '"opsz" 96' } as React.CSSProperties}
       >
         <span className={s.linea}>Asómate</span>{" "}
         <span className={s.linea}>
@@ -82,7 +78,7 @@ export default function Editorial({ espejo = false }: { espejo?: boolean }) {
           Descargar la app
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           size="lg"
           icon="storefront"
           className="max-desk:h-12 max-desk:px-3.5 max-desk:text-sm desk:px-[22px]"

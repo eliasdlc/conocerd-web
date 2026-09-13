@@ -23,7 +23,7 @@ function Ficha({ v, n }: { v: HeroVariant; n: number }) {
   const mobile = miniatura(v.slug, "mobile");
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-panel border border-line bg-white shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-panel">
+    <article className="flex h-full flex-col overflow-hidden rounded-surface border border-line bg-paper shadow-e1 transition-transform duration-200 hover:-translate-y-0.5">
       <Link
         href={lista ? `/heroes/${v.slug}` : "/heroes"}
         aria-disabled={!lista}
@@ -38,11 +38,11 @@ function Ficha({ v, n }: { v: HeroVariant; n: number }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={desk}
-            alt={`Captura de escritorio — ${v.nombre}`}
+            alt={`Captura de escritorio de ${v.nombre}`}
             className="size-full object-cover object-top"
           />
         ) : (
-          <span className="grid size-full place-items-center font-mono text-mini font-bold uppercase tracking-[.14em] text-muted-2">
+          <span className="grid size-full place-items-center font-label text-mini font-bold uppercase tracking-[.14em] text-muted-2">
             {lista ? "sin captura todavía" : "en construcción"}
           </span>
         )}
@@ -51,8 +51,8 @@ function Ficha({ v, n }: { v: HeroVariant; n: number }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={mobile}
-            alt={`Captura móvil — ${v.nombre}`}
-            className="absolute bottom-3 right-3 w-[13%] min-w-[54px] rounded-[6px] border-2 border-white object-cover shadow-panel"
+            alt={`Captura móvil de ${v.nombre}`}
+            className="absolute bottom-3 right-3 w-[13%] min-w-[54px] rounded-[6px] border-2 border-paper object-cover shadow-e1"
           />
         )}
       </Link>
@@ -60,7 +60,7 @@ function Ficha({ v, n }: { v: HeroVariant; n: number }) {
       <div className="flex flex-1 flex-col gap-2 p-[clamp(16px,2vw,22px)]">
         <div className="flex items-center gap-2.5">
           <span
-            className="grid size-6 shrink-0 place-items-center rounded-full font-mono text-micro font-bold text-white"
+            className="grid size-6 shrink-0 place-items-center rounded-full font-label text-micro font-bold text-white"
             style={{ backgroundColor: v.acento }}
           >
             {n}
@@ -74,13 +74,13 @@ function Ficha({ v, n }: { v: HeroVariant; n: number }) {
           <Link
             href={lista ? `/heroes/${v.slug}` : "/heroes"}
             aria-disabled={!lista}
-            className={`crd-button crd-sticker inline-flex h-10 cursor-pointer items-center rounded-full bg-mango px-[18px] text-sm font-bold text-white no-underline ${
+            className={`crd-button inline-flex h-10 cursor-pointer items-center rounded-full bg-selected px-[18px] font-label text-sm font-bold text-on-selected no-underline ${
               lista ? "" : "pointer-events-none opacity-40"
             }`}
           >
             Ver propuesta
           </Link>
-          <code className="font-mono text-mini text-muted-2">/heroes/{v.slug}</code>
+          <code className="text-mini text-muted-2">/heroes/{v.slug}</code>
         </div>
       </div>
     </article>
@@ -91,7 +91,7 @@ export default function HeroesIndex() {
   return (
     <main className="min-h-dvh bg-cream px-[clamp(18px,5vw,64px)] py-[clamp(36px,7vh,80px)]">
       <header className="mx-auto max-w-[1180px]">
-        <p className="m-0 font-mono text-micro font-bold uppercase tracking-[.18em] text-muted">
+        <p className="m-0 font-label text-micro font-bold uppercase tracking-[.18em] text-muted">
           ConoceRD · taller de diseño
         </p>
         <h1 className="m-0 mt-2 max-w-[20ch] font-display text-[clamp(30px,5vw,52px)] font-bold leading-[1.05] text-ink">
@@ -99,7 +99,7 @@ export default function HeroesIndex() {
         </h1>
         <p className="m-0 mt-3.5 max-w-[64ch] text-lead leading-[1.55] text-muted">
           Cada propuesta es una home completa y autónoma. Entra, míralas en el teléfono y en el
-          monitor, y salta entre las de una misma tanda con las flechas ← → del teclado (Esc vuelve
+          monitor, y salta entre las de una misma tanda con las flechas del teclado (Esc vuelve
           aquí).
         </p>
       </header>
@@ -123,7 +123,7 @@ export default function HeroesIndex() {
 
       <footer className="mx-auto mt-[clamp(30px,6vh,60px)] max-w-[1180px] border-t border-line pt-5">
         <Link href="/" className="text-copy font-semibold text-muted no-underline hover:text-ink">
-          ← Volver a la home actual
+          Volver a la home actual
         </Link>
       </footer>
     </main>

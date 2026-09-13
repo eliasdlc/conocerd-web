@@ -3,14 +3,12 @@ import Image from "next/image";
 
 import BrandPin from "@/components/BrandPin";
 import Button from "@/components/Button";
-import Icon from "@/components/Icon";
 
 import s from "./estilos.module.css";
 import { PARADAS } from "./paradas";
 import {
   COLA,
   OVALO_CTA,
-  ROSA_CIRCULO,
   PARADA_T_DESK,
   PARADA_T_MOVIL,
   TRAZO_DESK,
@@ -23,11 +21,11 @@ export const metadata: Metadata = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Propuesta de primera pantalla — "Ruta trazada".
+//  Propuesta de primera pantalla: "Ruta trazada".
 //
 //  La pantalla no ILUSTRA un itinerario: es uno. Un trazo a mano cruza el papel
 //  uniendo cuatro paradas reales (tres en móvil), pasa por debajo del titular
-//  —cruza la palabra "ruta"— y termina en el CTA, que es el destino. Más allá
+//  (cruza la palabra "ruta") y termina en el CTA, que es el destino. Más allá
 //  del CTA el trazo continúa punteado fuera de pantalla: esa es la pista de que
 //  la página sigue bajando.
 //
@@ -51,33 +49,64 @@ const retardo = (t: number, dur: number) => `${(INICIO + dur * t - 0.1).toFixed(
 
 const vars = (o: Record<string, string | number>) => o as React.CSSProperties;
 
+/** Sombra del trazo y trazo: el mismo path dos veces, tinta debajo y mango encima. */
+function Trazo({ d, dur, sombraOpacidad, sombraAncho, ancho, sombraDesplazamiento }: {
+  d: string;
+  dur: number;
+  sombraOpacidad: number;
+  sombraAncho: number;
+  ancho: number;
+  sombraDesplazamiento: string;
+}) {
+  const estilo = vars({ "--dur": `${dur}s`, "--ini": `${INICIO}s` });
+  return (
+    <>
+      <path
+        d={d}
+        pathLength={1}
+        className={s.linea}
+        style={estilo}
+        stroke="var(--color-ink)"
+        strokeOpacity={sombraOpacidad}
+        strokeWidth={sombraAncho}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        transform={sombraDesplazamiento}
+      />
+      <path
+        d={d}
+        pathLength={1}
+        className={s.linea}
+        style={estilo}
+        stroke="var(--color-mango)"
+        strokeWidth={ancho}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  );
+}
+
 export default function RutaTrazada() {
   return (
     <main className={s.hoja}>
-      {/* ── Marca + hoja de ruta ─────────────────────────────────────────── */}
+      {/* ── Marca ─────────────────────────────────────────────────────────── */}
       <header className={`${s.cabecera} ${s.entra}`}>
         <Image
-          src="/assets/logo.png"
-          alt="ConoceRD — Descubre Lo Nuestro"
-          width={760}
-          height={363}
+          src="/assets/logo.svg"
+          alt="ConoceRD, descubre lo nuestro"
+          width={1296}
+          height={595}
           priority
-          sizes="(max-width: 899px) 134px, 178px"
+          unoptimized
           className="block h-auto w-[134px] desk:w-[178px]"
         />
-        <p
-          className={`m-0 text-right font-mono text-micro font-bold uppercase leading-[1.75] tracking-[.16em] text-muted-2 ${s.halo}`}
-        >
-          Itinerario n.º 01
-          <br />
-          <span className="text-muted">De Pedernales a Samaná</span>
-        </p>
       </header>
 
       {/* ── Titular ──────────────────────────────────────────────────────── */}
       <h1
-        className={`${s.titular} ${s.halo} ${s.entra} font-display text-[clamp(34px,5.4vw,78px)] font-bold leading-[1.03] tracking-[-.02em] text-ink-2`}
-        style={vars({ "--d": "0.08s" })}
+        className={`${s.titular} ${s.halo} ${s.entra} font-display text-[clamp(34px,5.2vw,74px)] font-extrabold leading-[1.03] tracking-[-.03em] text-ink`}
+        style={{ ...vars({ "--d": "0.08s" }), fontVariationSettings: '"opsz" 96' }}
       >
         Un país entero
         <br />
@@ -85,7 +114,7 @@ export default function RutaTrazada() {
       </h1>
 
       <p
-        className={`${s.bajada} ${s.halo} ${s.entra} text-[clamp(15px,1.25vw,17.5px)] leading-[1.55] text-muted`}
+        className={`${s.bajada} ${s.halo} ${s.entra} text-[clamp(15px,1.25vw,17.5px)] leading-[1.55] text-ink`}
         style={vars({ "--d": "0.2s" })}
       >
         Destinos reales, negocios de la zona y el camino que va de uno al otro.
@@ -105,27 +134,13 @@ export default function RutaTrazada() {
           fill="none"
           aria-hidden="true"
         >
-          <path
+          <Trazo
             d={TRAZO_MOVIL}
-            pathLength={1}
-            className={s.linea}
-            style={vars({ "--dur": `${DUR_MOVIL}s`, "--ini": `${INICIO}s` })}
-            stroke="#264653"
-            strokeOpacity={0.12}
-            strokeWidth={5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            transform="translate(1.5 3)"
-          />
-          <path
-            d={TRAZO_MOVIL}
-            pathLength={1}
-            className={s.linea}
-            style={vars({ "--dur": `${DUR_MOVIL}s`, "--ini": `${INICIO}s` })}
-            stroke="#FF8D16"
-            strokeWidth={3.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            dur={DUR_MOVIL}
+            sombraOpacidad={0.12}
+            sombraAncho={5}
+            ancho={3.2}
+            sombraDesplazamiento="translate(1.5 3)"
           />
         </svg>
 
@@ -137,59 +152,14 @@ export default function RutaTrazada() {
           fill="none"
           aria-hidden="true"
         >
-          <path
+          <Trazo
             d={TRAZO_DESK}
-            pathLength={1}
-            className={s.linea}
-            style={vars({ "--dur": `${DUR_DESK}s`, "--ini": `${INICIO}s` })}
-            stroke="#264653"
-            strokeOpacity={0.085}
-            strokeWidth={5.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            transform="translate(1.5 3.5)"
+            dur={DUR_DESK}
+            sombraOpacidad={0.085}
+            sombraAncho={5.6}
+            ancho={3.6}
+            sombraDesplazamiento="translate(1.5 3.5)"
           />
-          <path
-            d={TRAZO_DESK}
-            pathLength={1}
-            className={s.linea}
-            style={vars({ "--dur": `${DUR_DESK}s`, "--ini": `${INICIO}s` })}
-            stroke="#FF8D16"
-            strokeWidth={3.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-
-        {/* Rosa de los vientos: el instrumento que acompaña a toda carta
-            dibujada. Llena el hueco que abraza el arco de la ruta. */}
-        <svg className={s.rosa} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-          <path d={ROSA_CIRCULO} stroke="#264653" strokeWidth={1.4} strokeLinecap="round" />
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
-            <path
-              key={a}
-              d={`M50 8.6 V${a % 90 === 0 ? 15.5 : 12.4}`}
-              stroke="#264653"
-              strokeWidth={a % 90 === 0 ? 1.5 : 1}
-              strokeLinecap="round"
-              transform={`rotate(${a} 50 50)`}
-            />
-          ))}
-          {/* Aguja: rombo largo norte-sur, con el norte entintado en coral. */}
-          <path d="M50 18 L57.5 48 L50 82 L42.5 48 Z" stroke="#264653" strokeWidth={1.2} strokeLinejoin="round" />
-          <path d="M50 18 L57.5 48 L50 48 Z" fill="#F76C4D" fillOpacity={0.85} />
-          <path d="M20 50 L47 45.5 L80 50 L47 54.5 Z" stroke="#264653" strokeWidth={1} strokeLinejoin="round" opacity={0.45} />
-          <text
-            x="50"
-            y="5.6"
-            textAnchor="middle"
-            fontFamily="var(--font-mono), ui-monospace, monospace"
-            fontSize="9"
-            fontWeight="700"
-            fill="#264653"
-          >
-            N
-          </text>
         </svg>
 
         {/* Paradas. `soloDesk` cae en móvil: tres nodos respiran, cuatro no. */}
@@ -223,24 +193,25 @@ export default function RutaTrazada() {
                   "--lw": `${p.etiqueta.ancho}px`,
                 })}
               >
-                <span className="block font-mono text-micro font-bold uppercase tracking-[.14em] text-muted-2">
-                  {p.numeroMovil ? (
-                    <>
-                      <span className="desk:hidden">{p.numeroMovil}</span>
-                      <span className="hidden desk:inline">{p.numero}</span>
-                    </>
-                  ) : (
-                    p.numero
-                  )}
-                  <span aria-hidden="true" className="px-1 opacity-45">
-                    ·
+                {/* El número es información: las paradas van en orden de
+                    viaje, de suroeste a nordeste. */}
+                <span className="flex items-baseline gap-2 font-label text-micro font-extrabold uppercase tracking-[.14em] text-muted">
+                  <span className="text-ink">
+                    {p.numeroMovil ? (
+                      <>
+                        <span className="desk:hidden">{p.numeroMovil}</span>
+                        <span className="hidden desk:inline">{p.numero}</span>
+                      </>
+                    ) : (
+                      p.numero
+                    )}
                   </span>
                   {p.destino.province}
                 </span>
-                <span className="mt-[3px] block text-[15px] font-semibold leading-[1.15] text-ink desk:text-[16.5px]">
+                <span className="mt-[3px] block font-display text-[17px] font-bold leading-[1.15] tracking-[-.02em] text-ink desk:text-[19px]">
                   {p.destino.name}
                 </span>
-                <span className="mt-[1px] block font-hand text-[19px] font-bold leading-[1.15] text-mint-ink desk:text-[21px]">
+                <span className="mt-[2px] block text-[13.5px] font-medium leading-[1.3] text-mint-ink desk:text-[14px]">
                   {p.nota}
                 </span>
               </div>
@@ -252,9 +223,9 @@ export default function RutaTrazada() {
       {/* ── El destino: donde termina el trazo empiezan las acciones ─────── */}
       <div className={`${s.destino} ${s.entra}`} style={vars({ "--d": "1s" })}>
         <p
-          className={`m-0 mb-2.5 font-hand text-[clamp(23px,2vw,31px)] font-bold leading-[1.1] text-coral-ink ${s.halo}`}
+          className={`m-0 mb-3 font-display text-[clamp(20px,1.7vw,26px)] font-bold leading-[1.1] tracking-[-.02em] text-coral-ink ${s.halo}`}
         >
-          y desde aquí, sigues tú
+          Y desde aquí, sigues tú
         </p>
 
         <div className={s.botones}>
@@ -275,7 +246,7 @@ export default function RutaTrazada() {
                 d={OVALO_CTA}
                 pathLength={1}
                 className={`${s.linea} ${s.ovaloLinea}`}
-                stroke="#B23410"
+                stroke="var(--color-coral-ink)"
                 strokeOpacity={0.72}
                 strokeWidth={2.4}
                 strokeLinecap="round"
@@ -284,47 +255,27 @@ export default function RutaTrazada() {
             </svg>
           </span>
 
-          <Button variant="outline" size="lg" icon="storefront">
+          <Button variant="ghost" size="lg" icon="storefront">
             Soy un negocio
           </Button>
         </div>
       </div>
 
-      {/* Pie de lámina: ocupa el margen inferior izquierdo que el trazo deja
-          libre y firma la hoja. */}
-      <p
-        className={`${s.margen} ${s.entra} m-0 font-mono text-micro font-bold uppercase leading-[1.6] tracking-[.16em] text-muted-2`}
-        style={vars({ "--d": "1.5s" })}
-      >
-        Trazado a mano
-        <br />
-        <span className="opacity-70">desde Santiago de los Caballeros</span>
-      </p>
-
       {/* ── La página continúa: el trazo se va punteado fuera de pantalla ── */}
-      <div className={`${s.cola} ${s.entra}`} style={vars({ "--d": "2.3s" })}>
+      <div className={`${s.cola} ${s.entra}`} style={vars({ "--d": "2.3s" })} aria-hidden="true">
         {/* Sin dibujado: el patrón de puntos ya ocupa el stroke-dasharray, así
             que esta pieza entra con el fade del bloque, no trazándose. */}
-        <svg
-          viewBox="0 0 60 150"
-          fill="none"
-          aria-hidden="true"
-          className="h-[44px] w-[24px] desk:h-[88px] desk:w-[38px]"
-        >
+        <svg viewBox="0 0 60 150" fill="none" className="h-[44px] w-[24px] desk:h-[88px] desk:w-[38px]">
           <path
             d={COLA}
             pathLength={1}
-            stroke="#FF8D16"
+            stroke="var(--color-mango)"
             strokeOpacity={0.8}
             strokeWidth={9}
             strokeLinecap="round"
             strokeDasharray="0.014 0.05"
           />
         </svg>
-        <span className="inline-flex items-center gap-1.5 font-mono text-micro font-bold uppercase tracking-[.16em] text-muted-2">
-          El recorrido sigue
-          <Icon name="arrow_downward" className="text-[13px] text-coral-ink" />
-        </span>
       </div>
     </main>
   );

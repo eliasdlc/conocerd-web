@@ -10,7 +10,7 @@ import s from "./estilos.module.css";
  *
  * El contenido llega como `children` desde un componente de servidor, así que
  * este cliente puede re-renderizar en cada frame de scroll sin volver a
- * renderizar el árbol de dentro — React reutiliza los mismos elementos.
+ * renderizar el árbol de dentro: React reutiliza los mismos elementos.
  */
 export default function CapaHero({ children }: { children: React.ReactNode }) {
   const { t } = useDescenso();

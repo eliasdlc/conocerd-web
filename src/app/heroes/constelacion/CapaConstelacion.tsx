@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { MapMarker, MarkerContent, useMap } from "@/components/map/Map";
+import { MapMarker, MarkerContent, useMap } from "@/components/map/context";
 import { CATEGORY_META } from "@/data/destinations";
 import { CENTRO_HERO, DESTINO_ATERRIZAJE, NODOS } from "./datos";
 import { useConstelacion } from "./estado";
@@ -23,8 +23,8 @@ import s from "./estilos.module.css";
 //  sigue anclado a su coordenada: cuando el descenso termina, el desplazamiento
 //  es cero y el pin está literalmente sobre el destino.
 //
-//  El hilo va del nodo de la ficha —medido del DOM, así no hay que duplicar la
-//  maquetación en JS— hasta el pin, y el "pelo" punteado sigue del pin a su
+//  El hilo va del nodo de la ficha (medido del DOM, así no hay que duplicar la
+//  maquetación en JS) hasta el pin, y el "pelo" punteado sigue del pin a su
 //  coordenada exacta. Los dos se cortan a 11 px del pin para no cruzarlo.
 // ─────────────────────────────────────────────────────────────────────────────
 

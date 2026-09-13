@@ -69,7 +69,7 @@ export default function VariantSwitcher() {
         type="button"
         onClick={() => plegar(true)}
         aria-label="Mostrar el conmutador de propuestas"
-        className="fixed bottom-3 left-3 z-[999] grid size-9 cursor-pointer place-items-center rounded-full border border-white/25 bg-ink-2/85 font-mono text-mini font-bold text-white shadow-panel backdrop-blur-md"
+        className="fixed bottom-3 left-3 z-[999] grid size-9 cursor-pointer place-items-center rounded-full border border-white/25 bg-ink-2/85 font-label text-mini font-bold text-white shadow-e1 backdrop-blur-md"
       >
         {indice + 1}
       </button>
@@ -77,7 +77,7 @@ export default function VariantSwitcher() {
   }
 
   return (
-    <div className="fixed bottom-3 left-1/2 z-[999] flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-full border border-white/20 bg-ink-2/88 p-1 pl-1.5 text-white shadow-panel backdrop-blur-md">
+    <div className="fixed bottom-3 left-1/2 z-[999] flex max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-full border border-white/20 bg-ink-2/88 p-1 pl-1.5 text-white shadow-e1 backdrop-blur-md">
       <Link
         href={`/heroes/${anterior.slug}`}
         aria-label={`Anterior: ${anterior.nombre}`}
@@ -91,7 +91,7 @@ export default function VariantSwitcher() {
         className="flex min-w-0 items-center gap-2 rounded-full px-2.5 py-1.5 transition-colors hover:bg-white/15"
         title="Volver al índice (Esc)"
       >
-        <span className="font-mono text-micro font-bold tabular-nums text-white/55">
+        <span className="font-label text-micro font-bold tabular-nums text-white/55">
           {indice + 1}/{tanda.length}
         </span>
         <span className="truncate text-tiny font-semibold">{actual.nombre}</span>

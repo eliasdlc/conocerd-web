@@ -1,4 +1,4 @@
-import { DESTINATIONS, FEATURED_DESTINATIONS, type Destination } from "@/data/destinations";
+import { FEATURED_DESTINATIONS, type Destination } from "@/data/destinations";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Geometría de la constelación.
@@ -8,8 +8,8 @@ import { DESTINATIONS, FEATURED_DESTINATIONS, type Destination } from "@/data/de
 //  reales serían un borrón de 20 px y los hilos convergerían todos al mismo
 //  punto: ilegible.
 //
-//  Solución: cada destino tiene un SLOT en pantalla —ángulo y radio alrededor
-//  del centro del globo— derivado de su rumbo real desde el centro del país y
+//  Solución: cada destino tiene un SLOT en pantalla (ángulo y radio alrededor
+//  del centro del globo) derivado de su rumbo real desde el centro del país y
 //  separado a mano lo justo para que se lean. El pin viaja entre su coordenada
 //  verdadera y su slot según el descenso: en reposo está en el slot (constelación
 //  legible, con un hilo fino de vuelta a su punto exacto sobre la isla) y al
@@ -119,5 +119,3 @@ export const NODOS: NodoConstelacion[] = [
 /** Fichas del overlay, en el orden en que se leen (y en que se retiran). */
 export const FICHAS = NODOS.filter((n) => n.ficha);
 
-export const TOTAL_DESTINOS = DESTINATIONS.length;
-export const TOTAL_PROVINCIAS = new Set(DESTINATIONS.map((d) => d.province)).size;

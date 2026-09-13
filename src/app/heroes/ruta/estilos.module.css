@@ -1,11 +1,11 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   "Ruta trazada" — la primera pantalla ES un itinerario dibujado a mano.
+   "Ruta trazada": la primera pantalla ES un itinerario dibujado a mano.
 
    Reparto móvil/desktop: un solo DOM, dos maquetas CSS. En móvil la página es
    una columna en flujo (cabecera, titular, bajada, lienzo, destino, cola) y el
    lienzo del trazo es el elemento elástico que absorbe la holgura. A partir de
-   900px el lienzo pasa a `absolute inset:0` —el trazo cruza la pantalla entera,
-   por debajo del texto— y cada bloque se ancla en porcentajes.
+   900px el lienzo pasa a `absolute inset:0` (el trazo cruza la pantalla entera,
+   por debajo del texto) y cada bloque se ancla en porcentajes.
 
    Los porcentajes de los nodos casan con el viewBox porque los dos SVG van con
    preserveAspectRatio="none": el mapeo viewBox→caja es lineal, así que
@@ -32,7 +32,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, rgba(38, 70, 83, 0.16) 1px, transparent 1.2px);
+  background-image: radial-gradient(circle, rgba(15, 26, 46, 0.16) 1px, transparent 1.2px);
   background-size: 27px 27px;
   opacity: 0.5;
   -webkit-mask-image: radial-gradient(120% 90% at 50% 46%, #000 22%, transparent 78%);
@@ -114,7 +114,7 @@
   position: absolute;
   left: -15px;
   top: -27px;
-  filter: drop-shadow(0 2px 3px rgba(38, 70, 83, 0.28));
+  filter: drop-shadow(0 2px 3px rgba(15, 26, 46, 0.28));
 }
 
 .etiqueta {
@@ -163,46 +163,6 @@
   overflow: visible;
   pointer-events: none;
   transform: rotate(-1.1deg);
-}
-
-/* Nota al margen y rosa de los vientos: sólo en el trazo ancho. En móvil no hay
-   margen que ocupar y meterlos sería ruido. */
-.margen,
-.rosa {
-  display: none;
-}
-@media (min-width: 900px) {
-  .margen {
-    position: absolute;
-    display: block;
-    left: 4.4%;
-    bottom: 4.6%;
-    margin: 0;
-  }
-  /* Cae dentro del arco que dibuja la ruta: sin ella ese hueco se lee como un
-     vacío, y con ella como el mar que la ruta bordea. */
-  .rosa {
-    position: absolute;
-    display: block;
-    left: 58%;
-    top: 54%;
-    width: clamp(88px, 8vw, 124px);
-    height: auto;
-    /* El transform ya lo ocupa el centrado, así que su entrada sólo puede ser
-       opacidad; por eso no reutiliza `.entra`. */
-    transform: translate(-50%, -50%) rotate(-6deg);
-    opacity: 0.24;
-    animation: aparece 0.8s ease 1.55s both;
-  }
-}
-
-@keyframes aparece {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 0.24;
-  }
 }
 
 /* ── Cola: el trazo no termina en pantalla ──────────────────────────────────── */
@@ -336,11 +296,17 @@
    comen el arranque del trazo. Se compacta el bloque de texto en vez de
    introducir otro breakpoint de ancho. */
 @media (min-width: 900px) and (max-height: 760px) {
+  .cabecera {
+    top: 3.5%;
+  }
+  .cabecera img {
+    width: 150px;
+  }
   .titular {
-    top: 15%;
+    top: 19%;
   }
   .bajada {
-    top: 40%;
+    top: 41%;
   }
   .destino {
     top: 65%;
@@ -354,8 +320,7 @@
   /* Aparece ya dibujado: mismo estado final, sin recorrido. */
   .linea,
   .entra,
-  .nodo,
-  .rosa {
+  .nodo {
     animation: none;
   }
   .linea {
