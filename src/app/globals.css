@@ -396,6 +396,18 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    hasta 190px que la pantalla no tenía. */
 :root { --crd-franja: calc(100svh - var(--crd-nav-clear) - var(--crd-stepper-h)); }
 
+/* Banda segura de las escenas laterales (Viajeros y Negocios) en escritorio:
+   arriba descuenta la píldora más el vuelo del sello, que asoma 40px por
+   encima del canto de la card y otros ~12 al girar; abajo, la franja del
+   panel de pasos más su aire. La card y el teléfono se centran dentro de esta
+   banda y no en la pantalla: centrados en la pantalla, una ventana de altura
+   media dejaba el sello metido bajo la píldora. */
+:root {
+  --crd-sello-vuelo: 52px;
+  --crd-banda-top: calc(var(--crd-nav-clear) + var(--crd-sello-vuelo));
+  --crd-banda-bottom: calc(var(--crd-stepper-h) + 20px);
+}
+
 /* Cuánto se eleva la pila de polaroids sobre el panel de pasos: 10 de aire más
    los 42 del desparrame de la carta más alta (`--pile-bottom` en
    DestinosSection). Es lo que el titular tiene que saltar para no montarse. */
@@ -429,8 +441,9 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    capa sticky del journey. El UI de la app se lee de frente; la profundidad la
    aportan la sombra y el mapa, no una rotación que deforme el contenido. */
 .crd-phone-device {
-  /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto. */
-  width: min(264px, 18vw, calc((100svh - 120px) * 0.480));
+  /* 0.480 = aspect 264/550 del frame: el teléfono cabe completo en alto
+     dentro de la banda segura. */
+  width: min(264px, 18vw, calc((100svh - var(--crd-banda-top) - var(--crd-banda-bottom)) * 0.480));
 }
 
 /* El panel de pasos vive centrado abajo también aquí, así que la franja es la
@@ -442,15 +455,31 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
   }
 
-  /* El panel lateral va centrado en vertical, así que no necesita padding
-     (dejaría un hueco muerto dentro de la tarjeta): le basta con no poder
-     crecer hasta la franja, y el tope se descuenta por arriba y por abajo
-     porque el centrado reparte. El sello vive FUERA de esta caja (hermano en
-     .crd-ol-wrap): overflow-y: auto arrastra overflow-x a auto, y dentro el
-     canto lo recortaba. */
+  /* El envoltorio ocupa la banda segura y centra la caja dentro de ella; la
+     caja (card + sello) no puede crecer más que la banda y la card scrollea
+     cuando no cabe. El sello vive FUERA de la card (hermano en .crd-ol-caja):
+     overflow-y: auto arrastra overflow-x a auto, y dentro el canto lo
+     recortaba. */
+  .crd-ol-wrap {
+    top: var(--crd-banda-top);
+    bottom: var(--crd-banda-bottom);
+    display: flex;
+    align-items: center;
+  }
+  .crd-ol-caja {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+  }
   .crd-ol-panel {
-    max-height: calc(100svh - 2 * (var(--crd-stepper-h) + 20px));
+    min-height: 0;
     overflow-y: auto;
+  }
+  /* El teléfono se centra en la misma banda que la card, para que los dos
+     compartan eje. */
+  .crd-phone-wrap {
+    top: calc(50% + (var(--crd-banda-top) - var(--crd-banda-bottom)) / 2);
   }
 
   /* La carta del CTA vive centrada entre la píldora y la franja. Los 20 son el
