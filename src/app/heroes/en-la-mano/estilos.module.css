@@ -1,0 +1,279 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   "La app en la mano": el teléfono con la app real apoyado sobre el globo.
+
+   Todo lo que reacciona al descenso lee `--descenso` (0..1), la custom
+   property que GloboHero publica en su contenedor sticky. El scroll escribe la
+   variable una vez por frame y el navegador resuelve opacidades y transforms
+   sin pasar por React.
+
+   Nada se mueve en reposo: la entrada corre una vez al cargar y todo lo demás
+   lo dispara el scroll.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.escena {
+  --t: var(--descenso, 0);
+  background:
+    radial-gradient(58% 48% at 14% 12%, rgba(37, 204, 184, 0.11), transparent 70%),
+    radial-gradient(52% 44% at 88% 16%, rgba(255, 141, 22, 0.1), transparent 70%),
+    radial-gradient(60% 50% at 50% 100%, rgba(224, 85, 47, 0.09), transparent 74%),
+    var(--color-cream);
+}
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Columna editorial ─────────────────────────────────────────────────────── */
+
+.columna {
+  position: absolute;
+  left: clamp(24px, 5vw, 72px);
+  top: 50%;
+  width: min(36vw, 440px);
+  transform: translateY(-50%);
+  pointer-events: auto;
+  opacity: calc(1 - var(--t) * 3);
+}
+
+:global([data-fase]:not([data-fase="hero"])) .columna {
+  pointer-events: none;
+}
+
+.logo {
+  display: block;
+  width: clamp(168px, 15vw, 224px);
+  height: auto;
+}
+
+.titulo {
+  margin: clamp(16px, 2.4vh, 26px) 0 0;
+  max-width: 13ch;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 3.6vw, 50px);
+  line-height: 1.03;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.copy {
+  margin: clamp(10px, 1.6vh, 16px) 0 0;
+  max-width: 34ch;
+  font-size: var(--text-lead);
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(18px, 2.6vh, 28px);
+}
+
+/* ── Invitación a bajar ────────────────────────────────────────────────────── */
+
+.cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(18px, 3vh, 28px);
+  padding: 6px 14px 6px 6px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  color: var(--color-ink);
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.cue:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-line-strong);
+  box-shadow: var(--shadow-e1);
+}
+.cueDisco {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-coral-soft);
+  color: var(--color-coral-ink);
+  font-size: 17px;
+}
+.cueTexto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cueRotulo {
+  font-family: var(--font-label);
+  font-size: var(--text-micro);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.cueDestino {
+  font-size: var(--text-copy);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* ── El teléfono ───────────────────────────────────────────────────────────── */
+/* Apoyado sobre el cuadrante inferior derecho del globo (centro en 71vw).
+   Al bajar se retira por abajo, más rápido que el texto: es lo que deja el
+   aterrizaje limpio. */
+.telefono {
+  position: absolute;
+  right: clamp(24px, 7vw, 120px);
+  bottom: 4vh;
+  width: clamp(196px, 16vw, 248px);
+  transform: translateY(calc(var(--t) * 70vh));
+  opacity: calc(1 - var(--t) * 2.2);
+}
+.telefono :global(.crd-phone-device) {
+  width: 100%;
+}
+
+/* ── Marcadores del mapa ───────────────────────────────────────────────────── */
+
+.pinPais {
+  opacity: calc(1 - (var(--t) - 0.5) * 3.5);
+}
+.pinDestino {
+  opacity: calc((var(--t) - 0.62) * 5);
+}
+
+/* ── Entradas ──────────────────────────────────────────────────────────────── */
+/* Sólo elementos SIN estilo dirigido por el scroll: una animación con `both`
+   congela la propiedad que anima. El teléfono entra con una animación propia
+   que sólo toca la opacidad de un hijo, para no pisar el transform del
+   descenso. */
+@keyframes manoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entra {
+  animation: manoEntra 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes manoTelefono {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.entraTelefono > :global(.crd-phone-device) {
+  animation: manoTelefono 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+/* ── Portátiles bajos ──────────────────────────────────────────────────────── */
+@media (min-width: 900px) and (max-height: 760px) {
+  .titulo {
+    font-size: clamp(30px, 3.2vw, 42px);
+  }
+  .telefono {
+    width: clamp(176px, 14vw, 204px);
+    bottom: 2vh;
+  }
+}
+
+/* ── Móvil: globo arriba, teléfono apoyado en su borde, nota abajo ─────────── */
+@media (max-width: 899px) {
+  .columna {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: calc(58px + env(safe-area-inset-bottom));
+    width: auto;
+    transform: none;
+    padding: 0 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .logo {
+    width: 140px;
+  }
+  .titulo {
+    margin-top: 10px;
+    max-width: 100%;
+    font-size: clamp(26px, 7.4vw, 32px);
+  }
+  .copy {
+    margin-top: 8px;
+    font-size: 14.5px;
+    line-height: 1.42;
+  }
+  .acciones {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .cue {
+    margin-top: 12px;
+    padding: 5px 12px 5px 5px;
+  }
+  .cueDisco {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  /* El teléfono se apoya en el borde inferior derecho del globo, que ocupa la
+     mitad superior (padBottom 0.5): el centro está a 25vh del techo. */
+  .telefono {
+    right: 12px;
+    top: 22vh;
+    bottom: auto;
+    width: 34vw;
+    max-width: 150px;
+    transform: translateY(calc(var(--t) * 60vh));
+  }
+
+  /* Velo crema bajo la nota: la toponimia del mapa no puede cruzarse con el
+     titular. */
+  .capa::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 50%;
+    background: linear-gradient(
+      to top,
+      var(--color-cream) 40%,
+      rgba(253, 248, 240, 0.9) 66%,
+      rgba(253, 248, 240, 0) 100%
+    );
+    opacity: calc(1 - var(--t) * 3);
+  }
+}
+
+@media (max-width: 899px) and (max-height: 700px) {
+  .logo {
+    width: 118px;
+  }
+  .telefono {
+    top: 18vh;
+    width: 30vw;
+  }
+}
