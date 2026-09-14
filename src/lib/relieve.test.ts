@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capaDeReferencia, ponerRelieve, RELIEVE_CAPA, RELIEVE_COLOR, RELIEVE_FUENTE, RELIEVE_MINZOOM, RELIEVE_ORILLA } from "./relieve";
+import { capaDeReferencia, ponerRelieve, RELIEVE_CAPA, RELIEVE_COLOR, RELIEVE_FUENTE, RELIEVE_MINZOOM } from "./relieve";
 
 type Capa = { id: string; type: string };
 
@@ -55,20 +55,11 @@ describe("ponerRelieve", () => {
     const mapa = mapaFalso(POSITRON);
     expect(ponerRelieve(mapa)).toBe(true);
     expect(mapa.fuentes.has(RELIEVE_FUENTE)).toBe(true);
-    expect(mapa.añadidas.map((a) => a.capa.id)).toEqual([
-      RELIEVE_COLOR,
-      RELIEVE_CAPA,
-      `${RELIEVE_ORILLA}-2`,
-      `${RELIEVE_ORILLA}-1`,
-      `${RELIEVE_ORILLA}-0`,
-    ]);
+    expect(mapa.añadidas.map((a) => a.capa.id)).toEqual([RELIEVE_COLOR, RELIEVE_CAPA]);
     expect(mapa.añadidas.every((a) => a.capa.minzoom === RELIEVE_MINZOOM)).toBe(true);
-    expect(mapa.añadidas[0].antesDe).toBe("waterway");
-    expect(mapa.añadidas[1].antesDe).toBe("waterway");
-    // Las bandas del mar van justo encima del agua, la más ancha primero.
-    expect(mapa.añadidas.slice(2).every((a) => a.antesDe === "road_pri")).toBe(true);
+    expect(mapa.añadidas.every((a) => a.antesDe === "waterway")).toBe(true);
 
     expect(ponerRelieve(mapa)).toBe(false);
-    expect(mapa.añadidas).toHaveLength(5);
+    expect(mapa.añadidas).toHaveLength(2);
   });
 });

@@ -23,18 +23,18 @@ import { RELIEVE_DEM } from "./basemap";
 export const RELIEVE_FUENTE = "relieve";
 export const RELIEVE_CAPA = "relieve-sombra";
 export const RELIEVE_COLOR = "relieve-color";
-export const RELIEVE_ORILLA = "relieve-orilla";
-/** Ancho de cada banda del mar a z9, en píxeles; a z12 es el triple. */
-const ANCHO_ORILLAS = [4, 12, 26];
 export const RELIEVE_MINZOOM = 6;
 
 // ─── La paleta ───────────────────────────────────────────────────────────────
 //
-// El color del suelo sale de la altura (capa `color-relief`: el DEM decide qué
-// tono lleva cada píxel) y el del agua de dos tonos: el relleno y una orilla
-// clara que sigue la costa y los lagos, como el agua baja. Los bosques y
-// parques del basemap se tiñen encima, a media opacidad, para que el verde
-// caiga donde hay vegetación de verdad y no en toda la llanura.
+// Tierra y mar se colorean desde el mismo DEM (capa `color-relief`): la altura
+// decide el tono del suelo y la profundidad el del agua, píxel a píxel y sin
+// costuras de tesela. El mar oscurece pegado a la costa y aclara mar adentro:
+// no es el color del fondo real (ahí sería al revés), es la forma de leer la
+// isla como un objeto sobre el agua. Encima, el relleno del océano a media
+// opacidad unifica el tono; lagos y ríos van opacos, del color de mar abierto.
+// Los bosques y parques del basemap se tiñen sobre el suelo, a media opacidad,
+// para que el verde caiga donde hay vegetación de verdad.
 //
 // Tropical, elegida por Elias el 14 sep 2026 entre tres: el verde húmedo del
 // Cibao y el turquesa de la costa, con la Cordillera en oliva y las cumbres
@@ -43,11 +43,11 @@ export const RELIEVE_MINZOOM = 6;
 export type Paleta = {
   /** Metros a color, de la costa a la cumbre (el Pico Duarte tiene 3.087). */
   suelo: [number, string][];
-  /** El mar lejos de la costa: el tono más claro. */
+  /** Profundidad a color, de la orilla (0) a mar abierto (-5000). Se ve a
+   *  través del relleno del océano, que va a media opacidad. */
+  mar: [number, string][];
+  /** El relleno del agua: mar abierto y, opaco, lagos y ríos. */
   agua: string;
-  /** El mar desde la costa hacia fuera: del más oscuro al más claro, cada
-   *  banda más ancha y más difusa que la anterior. */
-  orillas: [string, string, string];
   bosque: string;
   sombra: string;
 };
@@ -62,8 +62,14 @@ export const PALETA: Paleta = {
     [2300, "#B29A73"],
     [3100, "#F0E9DC"],
   ],
+  mar: [
+    [-5000, "#BDE8E4"],
+    [-1500, "#A6DCDA"],
+    [-300, "#7CC3C6"],
+    [-40, "#4FA3AA"],
+    [-1, "#3C8F98"],
+  ],
   agua: "#B9E8E4",
-  orillas: ["#4FA9B0", "#7CC6C8", "#A3DAD8"],
   bosque: "#8FC77A",
   sombra: "#3F5F3A",
 };
@@ -88,13 +94,6 @@ type MapaConRelieve = Pick<
   "getStyle" | "getSource" | "addSource" | "addLayer" | "getLayer" | "setPaintProperty"
 >;
 
-/** Capa que va justo encima de `id`, o `undefined` si es la última. */
-function capaSiguiente(map: Pick<maplibregl.Map, "getStyle">, id: string): string | undefined {
-  const capas = map.getStyle()?.layers ?? [];
-  const i = capas.findIndex((c) => c.id === id);
-  return i >= 0 ? capas[i + 1]?.id : undefined;
-}
-
 /**
  * Añade la fuente, el color por altura, la sombra, la orilla y los tintes,
  * una sola vez. Devuelve `false` si ya estaban, para que quien lo llame sepa
@@ -104,15 +103,16 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
   if (map.getSource(RELIEVE_FUENTE)) return false;
   map.addSource(RELIEVE_FUENTE, RELIEVE_DEM);
   const antesDe = capaDeReferencia(map);
+  // De mar abierto a la orilla y de la costa a la cumbre, en una sola rampa:
+  // el paso por el cero es el borde de la isla.
+  const rampa = [...paleta.mar, ...paleta.suelo].flat();
   map.addLayer(
     {
       id: RELIEVE_COLOR,
       type: "color-relief",
       source: RELIEVE_FUENTE,
       minzoom: RELIEVE_MINZOOM,
-      paint: {
-        "color-relief-color": ["interpolate", ["linear"], ["elevation"], ...paleta.suelo.flat()],
-      },
+      paint: { "color-relief-color": ["interpolate", ["linear"], ["elevation"], ...rampa] },
     },
     antesDe
   );
@@ -138,35 +138,13 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
     },
     antesDe
   );
-  // El mar con relieve: el relleno es el tono claro de mar abierto y, desde
-  // la costa hacia fuera, tres bandas cada vez más anchas, más difusas y más
-  // claras, dibujadas sobre el borde de los polígonos de agua. `line-offset`
-  // empuja cada banda hacia dentro del agua para que ninguna pise la tierra.
-  // La más ancha va primero y la más oscura, pegada a la costa, encima.
+  // El relleno del agua va encima del color por profundidad: el océano a
+  // media opacidad, para que el degradado de la costa se vea a través y el
+  // tono quede unificado; lagos y ríos opacos, que no tienen profundidad en
+  // el DEM que valga la pena enseñar.
   if (map.getLayer("water")) {
     map.setPaintProperty("water", "fill-color", paleta.agua);
-    const encima = capaSiguiente(map, "water");
-    [2, 1, 0].forEach((i) => {
-      const ancho = ANCHO_ORILLAS[i];
-      map.addLayer(
-        {
-          id: `${RELIEVE_ORILLA}-${i}`,
-          type: "line",
-          source: "carto",
-          "source-layer": "water",
-          filter: ["==", "$type", "Polygon"],
-          minzoom: RELIEVE_MINZOOM,
-          paint: {
-            "line-color": paleta.orillas[i],
-            "line-width": ["interpolate", ["linear"], ["zoom"], 6, ancho / 3, 9, ancho, 12, ancho * 3],
-            "line-blur": ["interpolate", ["linear"], ["zoom"], 6, ancho / 4, 9, ancho * 0.7, 12, ancho * 2],
-            "line-offset": ["interpolate", ["linear"], ["zoom"], 6, ancho / 6, 9, ancho / 2, 12, ancho * 1.5],
-            "line-opacity": 0.85,
-          },
-        },
-        encima
-      );
-    });
+    map.setPaintProperty("water", "fill-opacity", ["case", ["==", ["get", "class"], "ocean"], 0.45, 1]);
   }
   // Bosques y parques del basemap, teñidos a media opacidad sobre el color de
   // altura: el verde cae donde hay vegetación de verdad.

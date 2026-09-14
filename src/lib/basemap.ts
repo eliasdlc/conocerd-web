@@ -52,7 +52,10 @@ export const CARTO_HOSTS = [
 //     tesela se sobreescalaba hasta seis veces. A z11 un encuadre de teléfono
 //     pide unas seis teselas (medido abajo, en el PR) y el relieve se lee
 //     nítido; por encima de z11 MapLibre sobreescala como mucho 1,4 veces.
-//   · `bounds` acotado a la isla: el mar alrededor no tiene relieve que pedir.
+//   · `bounds` con la isla y una franja ancha de mar: el DEM trae también la
+//     profundidad, y con ella el mar se colorea de la costa hacia fuera. La
+//     franja cubre cualquier encuadre del recorrido para que nunca se vea el
+//     borde donde el color se acaba.
 //
 // Sólo la spec, sin maplibre: este módulo entra en el bundle inicial. El tipo
 // es un `import type`, que el compilador borra.
@@ -63,7 +66,7 @@ export const RELIEVE_DEM = {
   tileSize: 256,
   minzoom: 4,
   maxzoom: 11,
-  bounds: [-72.1, 17.35, -68.25, 20.1],
+  bounds: [-73.6, 16.6, -67.0, 21.0],
   attribution:
     'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, NASA SRTM, USGS, GEBCO)',
 } satisfies RasterDEMSourceSpecification;

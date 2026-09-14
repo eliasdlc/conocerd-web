@@ -99,7 +99,14 @@ export function teselasDeTerreno(escena: string, v: JourneyViewport): Tesela[] {
   const cam = cameraForBand(banda, v);
   if (cam.zoom < 6) return [];
   const zoom = Math.min(cam.zoom, NIVEL_DEM);
-  return unicas(teselasDeEncuadre(cam.center, zoom, v.width, v.height, 1)).filter(tocaRD);
+  // El nivel de la escena con holgura, y los dos padres sin ella: el vuelo
+  // desde el destino anterior cruza esos niveles antes de asentarse.
+  const out = teselasDeEncuadre(cam.center, zoom, v.width, v.height, 1);
+  for (const salto of [1, 2]) {
+    if (zoom - salto < 6) break;
+    out.push(...teselasDeEncuadre(cam.center, zoom - salto, v.width, v.height, 0));
+  }
+  return unicas(out).filter(tocaRD);
 }
 
 const calentadas = new Set<string>();
