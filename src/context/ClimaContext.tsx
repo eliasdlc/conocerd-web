@@ -4,8 +4,8 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useScene } from "@/context/SceneContext";
 import type { Clima } from "@/lib/clima/openMeteo";
 
-// El clima de ahora, una vez por sesión, compartido por las polaroids de
-// Destinos y la línea que abre Tu ruta. Se pide la primera vez que el
+// El clima de ahora, una vez por sesión, para los chips de las polaroids de
+// Destinos. Se pide la primera vez que el
 // recorrido entra a un destino, nunca en el hero: ahí el LCP es el logo y una
 // petición más en 4G lo retrasa. Si el handler falla, el valor se queda en
 // null y nadie pinta nada.

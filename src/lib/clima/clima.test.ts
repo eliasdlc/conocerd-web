@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "./__fixtures__/open-meteo.json";
 import { cieloDeWMO, grados } from "./etiquetas";
-import { extremosDeClima } from "./extremos";
 import { horaEnRD, parsearOpenMeteo, urlOpenMeteo } from "./openMeteo";
 import { CACHE_CLIMA, responderClima } from "./responder";
 
@@ -70,20 +69,6 @@ describe("horaEnRD", () => {
   it("escribe la hora de Santo Domingo con a. m. o p. m.", () => {
     // 20:00 UTC es 16:00 en Santo Domingo (UTC-4, sin horario de verano).
     expect(horaEnRD(new Date("2026-09-13T20:00:00Z"))).toMatch(/^4:00\s?p\.\s?m\.$/);
-  });
-});
-
-describe("extremosDeClima", () => {
-  it("elige el más caliente y el más frío por nombre", () => {
-    const ext = extremosDeClima(parsearOpenMeteo(fixture, IDS));
-    expect(ext).toEqual({ caliente: { id: "lago-enriquillo", temp: 28.7 }, frio: { id: "duarte", temp: 6.1 } });
-  });
-
-  it("sin contraste no hay frase", () => {
-    expect(extremosDeClima({ a: { temp: 27, codigo: 0, dia: true } })).toBeNull();
-    expect(
-      extremosDeClima({ a: { temp: 27.2, codigo: 0, dia: true }, b: { temp: 27.4, codigo: 0, dia: true } })
-    ).toBeNull();
   });
 });
 

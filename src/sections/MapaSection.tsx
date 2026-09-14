@@ -47,7 +47,6 @@ import {
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
 import pairs from "@/data/routes/pairs.json";
-import ClimaAhora from "@/components/ClimaAhora";
 
 // ─── Datos de carretera (pares reales precalculados) ─────────────────────────
 
@@ -1125,7 +1124,6 @@ export default function MapaSection() {
                   Tus paradas aparecen aquí en orden, con los kilómetros y el
                   tiempo de cada tramo.
                 </p>
-                <ClimaAhora className="mb-3 min-[900px]:hidden" />
                 <p className="text-center text-tiny leading-[1.55] text-muted min-[900px]:hidden">
                   Toca cualquier pin del mapa y aquí se arma tu viaje, tramo por
                   tramo, con kilómetros y tiempos reales de carretera.
@@ -1418,7 +1416,6 @@ export default function MapaSection() {
         <div
           className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 shadow-e1 max-[899px]:hidden`}
         >
-          <ClimaAhora className="mb-3 border-b border-line pb-3" />
           <h2 className="m-0 font-display text-[20px] font-bold leading-tight tracking-[-.02em] text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
           </h2>
