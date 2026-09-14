@@ -62,11 +62,14 @@ function AchievementSeal({ icon }: { icon: IconName }) {
 export interface SuccessPanelProps {
   audience: Audience;
   alreadyIn: boolean;
+  /** El número de fundador que devolvió el registro; el pase de arriba ya lo
+   *  enseña, aquí se nombra para que el logro tenga su cifra. */
+  numero?: number;
   /** Reabre el formulario en la otra audiencia (viajero con negocio propio). */
   onSwitchAudience: () => void;
 }
 
-export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: SuccessPanelProps) {
+export default function SuccessPanel({ audience, alreadyIn, numero, onSwitchAudience }: SuccessPanelProps) {
   const copy = CONTENT[audience].success;
   const seal = audience === "negocio" ? "storefront" : "workspace_premium";
 
@@ -87,6 +90,13 @@ export default function SuccessPanel({ audience, alreadyIn, onSwitchAudience }: 
         {alreadyIn
           ? "Tu correo ya estaba registrado — no hace falta nada más de tu parte."
           : copy.body}
+        {audience === "viajero" && typeof numero === "number" && (
+          <>
+            {" "}
+            Eres el fundador número{" "}
+            <b className="font-display font-bold text-ink">{numero}</b>: tu pase, arriba, ya lo dice.
+          </>
+        )}
       </p>
 
       {/* Siguiente paso */}

@@ -206,6 +206,8 @@ export interface SubscribeSuccess {
   audience: Audience;
   /** El correo ya estaba en la lista: no es un alta nueva. */
   alreadyIn: boolean;
+  /** El número de fundador que devolvió el registro (la posición en la lista). */
+  numero?: number;
 }
 
 export interface SubscribeFormProps {
@@ -262,6 +264,7 @@ export default function SubscribeForm({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [alreadyIn, setAlreadyIn] = useState(false);
+  const [numero, setNumero] = useState<number | undefined>(undefined);
   // Controlado sólo este campo: es el único que se reescribe mientras se teclea.
   const [instagram, setInstagram] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -344,9 +347,10 @@ export default function SubscribeForm({
         }
         const already = data.status === "already_subscribed";
         setAlreadyIn(already);
+        setNumero(data.numero);
         setStatus("success");
         trackWaitlistSuccess({ source, audience, already });
-        onSuccess?.({ audience, alreadyIn: already });
+        onSuccess?.({ audience, alreadyIn: already, numero: data.numero });
       } catch {
         setError("No hay conexión. Revisa tu señal e inténtalo de nuevo.");
         setStatus("error");
@@ -360,7 +364,7 @@ export default function SubscribeForm({
 
   // ── Éxito ──
   if (status === "success") {
-    if (renderSuccess) return <>{renderSuccess({ audience, alreadyIn })}</>;
+    if (renderSuccess) return <>{renderSuccess({ audience, alreadyIn, numero })}</>;
     const copy = SUCCESS_COPY[audience];
     return (
       <div

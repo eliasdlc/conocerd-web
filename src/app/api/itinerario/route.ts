@@ -102,12 +102,12 @@ export async function POST(request: Request) {
 
   let status: "created" | "already_subscribed";
   try {
-    status = await getWaitlistStore().save({
+    ({ status } = await getWaitlistStore().save({
       email,
       audience: "viajero",
       ref: "mapa-itinerario",
       consentAt: new Date(),
-    });
+    }));
   } catch (err) {
     console.error("[itinerario] fallo al guardar", err);
     return json(

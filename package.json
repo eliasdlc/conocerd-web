@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@21st-sdk/agent": "^0.0.18",
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^20",
