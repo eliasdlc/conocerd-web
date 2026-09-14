@@ -147,11 +147,18 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
   // opacos: no tienen profundidad en el DEM que valga la pena enseñar.
   if (map.getLayer("water")) {
     map.setPaintProperty("water", "fill-color", paleta.agua);
+    // El zoom sólo puede ir en la raíz de la expresión; el dato, dentro.
+    const oceano = (o: number) => ["case", ["==", ["get", "class"], "ocean"], o, 1];
     map.setPaintProperty("water", "fill-opacity", [
-      "case",
-      ["==", ["get", "class"], "ocean"],
-      ["interpolate", ["linear"], ["zoom"], 7.5, 0.3, 9.5, 0.6, 11, 0.85],
-      1,
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      7.5,
+      oceano(0.3),
+      9.5,
+      oceano(0.6),
+      11,
+      oceano(0.85),
     ]);
   }
   // Bosques y parques del basemap, teñidos a media opacidad sobre el color de
