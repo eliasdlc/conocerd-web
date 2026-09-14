@@ -55,13 +55,16 @@ export function ponerRelieve(map: MapaConRelieve): boolean {
       source: RELIEVE_FUENTE,
       minzoom: RELIEVE_MINZOOM,
       paint: {
-        // Sombra en la tinta de marca y luz en crema, ambas a media fuerza:
-        // el relieve tiene que leerse como parte del mapa, no como una capa
-        // pegada encima. Con 0.35 la Cordillera se ve y el llano sigue crema.
-        "hillshade-exaggeration": 0.35,
-        "hillshade-shadow-color": "#0F1A2E",
+        // Relieve en 2D, suave a propósito. El método "igor" sombrea por
+        // pendiente sin el contraste duro del estándar, así que a z9 sobre
+        // los closeups no se ve el grano de la tesela. La sombra va en la
+        // tinta secundaria y no en la de marca, y la luz en blanco: la
+        // Cordillera se lee y el llano sigue siendo crema, no gris.
+        "hillshade-method": "igor",
+        "hillshade-exaggeration": 0.3,
+        "hillshade-shadow-color": "#3B5073",
         "hillshade-highlight-color": "#FFFFFF",
-        "hillshade-accent-color": "#D9D2C1",
+        "hillshade-accent-color": "#EBE6D9",
         "hillshade-illumination-direction": 335,
         "hillshade-illumination-anchor": "map",
       },
