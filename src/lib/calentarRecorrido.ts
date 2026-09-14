@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { cameraForBand, SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
+import { RELIEVE_DEM } from "@/lib/basemap";
 import {
   plantillasDeTesela,
   teselasDeEncuadre,
@@ -79,3 +80,40 @@ function conexionPideAhorrar(): boolean {
  */
 export const calentarRecorrido = (v: JourneyViewport, señal?: AbortSignal) =>
   conexionPideAhorrar() ? Promise.resolve(0) : calentar(teselasDelRecorrido(v), señal, 2);
+
+// ─── El terreno ──────────────────────────────────────────────────────────────
+//
+// Las teselas del DEM pesan de 70 a 115 KB y un closeup pide ocho o nueve: si
+// se piden cuando la cámara llega, el color y la sombra van apareciendo por
+// trozos durante un par de segundos. Se calienta el terreno del primer destino
+// junto con el recorrido, y el de cada destino siguiente en cuanto la persona
+// llega al anterior: lee la carta unos segundos y eso basta en 4G.
+
+const NIVEL_DEM = RELIEVE_DEM.maxzoom;
+
+/** Teselas del DEM para el encuadre de una escena, al nivel máximo de la
+ *  fuente (por encima MapLibre sobreescala, no pide más). */
+export function teselasDeTerreno(escena: string, v: JourneyViewport): Tesela[] {
+  const banda = SCENE_BANDS.find((b) => b.name === escena);
+  if (!banda) return [];
+  const cam = cameraForBand(banda, v);
+  if (cam.zoom < 6) return [];
+  const zoom = Math.min(cam.zoom, NIVEL_DEM);
+  return unicas(teselasDeEncuadre(cam.center, zoom, v.width, v.height, 1)).filter(tocaRD);
+}
+
+const calentadas = new Set<string>();
+
+/** Calienta el terreno de una escena una sola vez por sesión. */
+export function calentarTerreno(escena: string, v: JourneyViewport, señal?: AbortSignal): Promise<number> {
+  if (calentadas.has(escena) || conexionPideAhorrar()) return Promise.resolve(0);
+  calentadas.add(escena);
+  const urls = teselasDeTerreno(escena, v).map((t) => urlDeTesela(RELIEVE_DEM.tiles, t));
+  return traerTeselas(urls, { concurrencia: 3, señal });
+}
+
+/** La escena de destino que sigue a `escena`, si la hay. */
+export function siguienteDestino(escena: string): string | undefined {
+  const i = SCENE_BANDS.findIndex((b) => b.name === escena);
+  return SCENE_BANDS.slice(i + 1).find((b) => b.name.startsWith("polaroid-"))?.name;
+}

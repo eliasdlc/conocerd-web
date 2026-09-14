@@ -10,7 +10,7 @@ import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
-import { calentarRecorrido } from "@/lib/calentarRecorrido";
+import { calentarRecorrido, calentarTerreno, siguienteDestino } from "@/lib/calentarRecorrido";
 import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
@@ -179,6 +179,17 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
 
+  // Al llegar a un destino se calienta el terreno del siguiente: la persona lee
+  // la carta unos segundos y las teselas llegan antes que la cámara.
+  useEffect(() => {
+    if (!activeScene.startsWith("polaroid-")) return;
+    const siguiente = siguienteDestino(activeScene);
+    if (!siguiente) return;
+    const ctl = new AbortController();
+    calentarTerreno(siguiente, currentViewport(), ctl.signal).catch(() => {});
+    return () => ctl.abort();
+  }, [activeScene]);
+
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena.
   // Un link desde el pie llega con la página desbloqueada y abajo: volver
   // arriba y dejar que el motor anime hasta la escena.
@@ -304,7 +315,13 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         if (calentado.current) return;
         const ctl = new AbortController();
         calentado.current = ctl;
-        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        const arrancar = () => {
+          const v = currentViewport();
+          calentarRecorrido(v, ctl.signal).catch(() => {});
+          // El terreno del primer destino, para que el color y la sombra
+          // estén ahí cuando termine el primer vuelo.
+          calentarTerreno("polaroid-0", v, ctl.signal).catch(() => {});
+        };
         // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
         // hasta 16.4 y TypeScript lo da por presente siempre.
         const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;

@@ -55,14 +55,20 @@ describe("ponerRelieve", () => {
     const mapa = mapaFalso(POSITRON);
     expect(ponerRelieve(mapa)).toBe(true);
     expect(mapa.fuentes.has(RELIEVE_FUENTE)).toBe(true);
-    expect(mapa.añadidas.map((a) => a.capa.id)).toEqual([RELIEVE_COLOR, RELIEVE_CAPA, RELIEVE_ORILLA]);
-    expect(mapa.añadidas.map((a) => a.capa.minzoom)).toEqual([RELIEVE_MINZOOM, RELIEVE_MINZOOM, RELIEVE_MINZOOM]);
+    expect(mapa.añadidas.map((a) => a.capa.id)).toEqual([
+      RELIEVE_COLOR,
+      RELIEVE_CAPA,
+      `${RELIEVE_ORILLA}-2`,
+      `${RELIEVE_ORILLA}-1`,
+      `${RELIEVE_ORILLA}-0`,
+    ]);
+    expect(mapa.añadidas.every((a) => a.capa.minzoom === RELIEVE_MINZOOM)).toBe(true);
     expect(mapa.añadidas[0].antesDe).toBe("waterway");
     expect(mapa.añadidas[1].antesDe).toBe("waterway");
-    // La orilla va justo encima del agua.
-    expect(mapa.añadidas[2].antesDe).toBe("road_pri");
+    // Las bandas del mar van justo encima del agua, la más ancha primero.
+    expect(mapa.añadidas.slice(2).every((a) => a.antesDe === "road_pri")).toBe(true);
 
     expect(ponerRelieve(mapa)).toBe(false);
-    expect(mapa.añadidas).toHaveLength(3);
+    expect(mapa.añadidas).toHaveLength(5);
   });
 });
