@@ -1,0 +1,433 @@
+[
+ {
+  "latitude": 17.820738,
+  "longitude": -71.58096,
+  "generationtime_ms": 1.592397689819336,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 0.0,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 28.2,
+   "weather_code": 0,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.015816,
+  "longitude": -71.00592,
+  "generationtime_ms": 2.105593681335449,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 3075.0,
+  "location_id": 1,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 6.1,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.29701,
+  "longitude": -69.41583,
+  "generationtime_ms": 0.20766258239746094,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 135.0,
+  "location_id": 2,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 26.6,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.789103,
+  "longitude": -70.79761,
+  "generationtime_ms": 3.7071704864501953,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 149.0,
+  "location_id": 3,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.0,
+   "weather_code": 1,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.87522,
+  "longitude": -70.688965,
+  "generationtime_ms": 3.1795501708984375,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 1508.0,
+  "location_id": 4,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 16.4,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.015816,
+  "longitude": -69.585815,
+  "generationtime_ms": 0.1995563507080078,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 286.0,
+  "location_id": 5,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 25.6,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.29701,
+  "longitude": -69.23761,
+  "generationtime_ms": 0.1888275146484375,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": -4.0,
+  "location_id": 6,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 28.0,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.29701,
+  "longitude": -69.23761,
+  "generationtime_ms": 0.17786026000976562,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 15.0,
+  "location_id": 7,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 28.5,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.29701,
+  "longitude": -69.504944,
+  "generationtime_ms": 0.3339052200317383,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 14.0,
+  "location_id": 8,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.4,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.242529,
+  "longitude": -71.12195,
+  "generationtime_ms": 0.8625984191894531,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 37.0,
+  "location_id": 9,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.7,
+   "weather_code": 2,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.523726,
+  "longitude": -71.57687,
+  "generationtime_ms": 0.5699396133422852,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": -37.0,
+  "location_id": 10,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 28.7,
+   "weather_code": 0,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.437609,
+  "longitude": -70.714264,
+  "generationtime_ms": 0.25200843811035156,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 223.0,
+  "location_id": 11,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.0,
+   "weather_code": 0,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.453426,
+  "longitude": -68.95303,
+  "generationtime_ms": 0.2695322036743164,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 28.0,
+  "location_id": 12,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.3,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.523726,
+  "longitude": -69.90204,
+  "generationtime_ms": 0.2560615539550781,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 18.0,
+  "location_id": 13,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.2,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 18.453426,
+  "longitude": -68.86496,
+  "generationtime_ms": 0.25904178619384766,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 73.0,
+  "location_id": 14,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.0,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.789103,
+  "longitude": -70.707886,
+  "generationtime_ms": 0.20956993103027344,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 9.0,
+  "location_id": 15,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 27.7,
+   "weather_code": 2,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.718803,
+  "longitude": -70.36853,
+  "generationtime_ms": 0.20778179168701172,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 8.0,
+  "location_id": 16,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 28.5,
+   "weather_code": 3,
+   "is_day": 0
+  }
+ },
+ {
+  "latitude": 19.156414,
+  "longitude": -70.61264,
+  "generationtime_ms": 1.6109943389892578,
+  "utc_offset_seconds": -14400,
+  "timezone": "America/Santo_Domingo",
+  "timezone_abbreviation": "GMT-4",
+  "elevation": 530.0,
+  "location_id": 17,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "\u00b0C",
+   "weather_code": "wmo code",
+   "is_day": ""
+  },
+  "current": {
+   "time": "2026-09-13T21:15",
+   "interval": 900,
+   "temperature_2m": 23.0,
+   "weather_code": 1,
+   "is_day": 0
+  }
+ }
+]

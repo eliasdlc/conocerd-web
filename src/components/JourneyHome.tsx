@@ -1,4 +1,5 @@
 import { SceneProvider } from "@/context/SceneContext";
+import { ClimaProvider } from "@/context/ClimaContext";
 import Nav from "@/components/Nav";
 import MapScrollJourney from "@/components/MapScrollJourney";
 import Footer from "@/components/Footer";
@@ -15,9 +16,14 @@ export default function JourneyHome() {
         Saltar al contenido
       </a>
       <Nav />
-      <main id="main-content">
-        <MapScrollJourney />
-      </main>
+      {/* El clima de ahora se pide una vez, al entrar al primer destino, y lo
+          leen las polaroids y Tu ruta. Va dentro del proveedor de escena porque
+          es la escena la que decide cuándo pedirlo. */}
+      <ClimaProvider>
+        <main id="main-content">
+          <MapScrollJourney />
+        </main>
+      </ClimaProvider>
       <Footer />
     </SceneProvider>
   );

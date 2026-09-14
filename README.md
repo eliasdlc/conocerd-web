@@ -78,6 +78,10 @@ Con las cinco definidas (`vercel env`) no hay que tocar código: la selección d
 almacenamiento, el alta en el ESP, el envío del itinerario y el acceso al panel
 dependen sólo de su presencia.
 
+El clima de `/api/clima` (los chips de las polaroids y la línea que abre Tu
+ruta) sale de Open-Meteo, que no pide clave: ninguna variable lo gobierna, y la
+caché de 15 minutos vive en la CDN.
+
 `ITINERARY_FROM` es el remitente completo (`ConoceRD <info@conocerd.app>`) y su
 dominio tiene que estar verificado en Resend: SPF y MX de rebote en
 `send.conocerd.app`, DKIM en `resend._domainkey`. La raíz conserva su MX y su
