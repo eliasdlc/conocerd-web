@@ -7,13 +7,12 @@ import { useScene } from "@/context/SceneContext";
 import { useJourneySteps } from "@/hooks/useJourneySteps";
 import { useJourneyGestos } from "@/hooks/useJourneyGestos";
 import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
-import { useTerreno } from "@/hooks/useTerreno";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
-import { ponerRelieve, TERRENO_EN_MOVIL } from "@/lib/relieve";
+import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -178,11 +177,6 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
-
-  // La malla del terreno sube y baja con el zoom de la cámara (hooks/useTerreno).
-  // En teléfono depende del interruptor de lib/relieve, que fija la medida en
-  // dispositivo real.
-  useTerreno(mapRef, progress, viewportResolved && (!isMobile || TERRENO_EN_MOVIL));
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena.
   // Un link desde el pie llega con la página desbloqueada y abajo: volver
