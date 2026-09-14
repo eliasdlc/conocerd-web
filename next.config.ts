@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
     "/api/itinerario": ["public/assets/email/marca/*.png"],
     "/api/subscribe": ["public/assets/email/marca/*.png"],
   },
+  // Las teselas del relieve están horneadas y son inmutables: su contenido no
+  // cambia nunca, y cuando la paleta cambie se rehornean en otra carpeta de
+  // versión (`lib/relieve` · RELIEVE_VERSION). Sin esta cabecera Next las sirve
+  // con el default de `public/`, que obliga a revalidar cada una en cada visita.
+  async headers() {
+    return [
+      {
+        source: "/relieve/:ruta*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

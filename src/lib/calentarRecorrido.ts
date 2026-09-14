@@ -15,7 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { cameraForBand, SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
-import { RELIEVE_DEM } from "@/lib/basemap";
+import { RELIEVE_MAXZOOM, RELIEVE_MINZOOM, RELIEVE_TESELAS } from "@/lib/relieve";
 import {
   plantillasDeTesela,
   teselasDeEncuadre,
@@ -83,27 +83,26 @@ export const calentarRecorrido = (v: JourneyViewport, señal?: AbortSignal) =>
 
 // ─── El terreno ──────────────────────────────────────────────────────────────
 //
-// Las teselas del DEM pesan de 70 a 115 KB y un closeup pide ocho o nueve: si
-// se piden cuando la cámara llega, el color y la sombra van apareciendo por
-// trozos durante un par de segundos. Se calienta el terreno del primer destino
-// junto con el recorrido, y el de cada destino siguiente en cuanto la persona
-// llega al anterior: lee la carta unos segundos y eso basta en 4G.
+// Las teselas del relieve son nuestras y pesan del orden de 30 a 50 KB; un
+// closeup pide seis u ocho. Si se piden cuando la cámara llega, la sombra y el
+// color van apareciendo por trozos durante un par de segundos. Se calienta el
+// terreno del primer destino junto con el recorrido, y el de cada destino
+// siguiente en cuanto la persona llega al anterior: lee la carta unos segundos
+// y eso basta en 4G.
 
-const NIVEL_DEM = RELIEVE_DEM.maxzoom;
-
-/** Teselas del DEM para el encuadre de una escena, al nivel máximo de la
+/** Teselas del relieve para el encuadre de una escena, al nivel máximo de la
  *  fuente (por encima MapLibre sobreescala, no pide más). */
 export function teselasDeTerreno(escena: string, v: JourneyViewport): Tesela[] {
   const banda = SCENE_BANDS.find((b) => b.name === escena);
   if (!banda) return [];
   const cam = cameraForBand(banda, v);
-  if (cam.zoom < 6) return [];
-  const zoom = Math.min(cam.zoom, NIVEL_DEM);
+  if (cam.zoom < RELIEVE_MINZOOM) return [];
+  const zoom = Math.min(cam.zoom, RELIEVE_MAXZOOM);
   // El nivel de la escena con holgura, y los dos padres sin ella: el vuelo
   // desde el destino anterior cruza esos niveles antes de asentarse.
   const out = teselasDeEncuadre(cam.center, zoom, v.width, v.height, 1);
   for (const salto of [1, 2]) {
-    if (zoom - salto < 6) break;
+    if (zoom - salto < RELIEVE_MINZOOM) break;
     out.push(...teselasDeEncuadre(cam.center, zoom - salto, v.width, v.height, 0));
   }
   return unicas(out).filter(tocaRD);
@@ -115,7 +114,7 @@ const calentadas = new Set<string>();
 export function calentarTerreno(escena: string, v: JourneyViewport, señal?: AbortSignal): Promise<number> {
   if (calentadas.has(escena) || conexionPideAhorrar()) return Promise.resolve(0);
   calentadas.add(escena);
-  const urls = teselasDeTerreno(escena, v).map((t) => urlDeTesela(RELIEVE_DEM.tiles, t));
+  const urls = teselasDeTerreno(escena, v).map((t) => urlDeTesela([RELIEVE_TESELAS], t));
   return traerTeselas(urls, { concurrencia: 3, señal });
 }
 

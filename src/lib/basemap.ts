@@ -11,8 +11,6 @@
 //  bundle inicial de la home.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { RasterDEMSourceSpecification } from "maplibre-gl";
-
 export const MAP_STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -42,35 +40,13 @@ export const CARTO_HOSTS = [
   "https://tiles.basemaps.cartocdn.com",
 ] as const;
 
-// ─── Relieve ─────────────────────────────────────────────────────────────────
+// ─── Créditos ────────────────────────────────────────────────────────────────
 //
-// El DEM de AWS Terrain Tiles (Mapzen, hoy en el registro de datos abiertos de
-// AWS), en formato terrarium: gratis, sin clave, con CORS abierto. Cada tesela
-// pesa entre 70 y 115 KB sobre la isla (medido el 13 sep 2026 a z9), así que:
-//
-//   · `maxzoom: 11`. A z9 los closeups (z10 a z11.5) salían borrosos: la
-//     tesela se sobreescalaba hasta seis veces. A z11 un encuadre de teléfono
-//     pide unas seis teselas (medido abajo, en el PR) y el relieve se lee
-//     nítido; por encima de z11 MapLibre sobreescala como mucho 1,4 veces.
-//   · `bounds` con la isla y una franja ancha de mar: el DEM trae también la
-//     profundidad, y con ella el mar se colorea de la costa hacia fuera. La
-//     franja cubre cualquier encuadre del recorrido para que nunca se vea el
-//     borde donde el color se acaba.
-//
-// Sólo la spec, sin maplibre: este módulo entra en el bundle inicial. El tipo
-// es un `import type`, que el compilador borra.
-export const RELIEVE_DEM = {
-  type: "raster-dem",
-  tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
-  encoding: "terrarium",
-  tileSize: 256,
-  minzoom: 4,
-  maxzoom: 11,
-  bounds: [-73.6, 16.6, -67.0, 21.0],
-  attribution:
-    'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, NASA SRTM, USGS, GEBCO)',
-} satisfies RasterDEMSourceSpecification;
+// El relieve ya no se pide a AWS en vivo: las teselas se hornean una vez desde
+// el DEM abierto de Terrain Tiles y se sirven desde nuestro dominio
+// (scripts/hornear-relieve.mjs, lib/relieve). La atribución sigue siendo
+// obligatoria y vive en el pie del sitio, porque el mapa del recorrido no lleva
+// control de atribución.
 
-/** La misma atribución en texto plano, para el pie del sitio. */
 export const RELIEVE_CREDITO = "Relieve: Terrain Tiles (Mapzen, NASA SRTM, USGS, GEBCO)";
 export const MAPA_CREDITO = "Mapa: © CARTO, © OpenStreetMap contributors";

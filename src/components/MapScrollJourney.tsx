@@ -11,9 +11,10 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido, calentarTerreno, siguienteDestino } from "@/lib/calentarRecorrido";
-import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { aligerarEstilo, pintarCartografia, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import { marcar, publicarMapa } from "@/lib/medicion/marcas";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
@@ -76,14 +77,6 @@ const CACHE_NIVELES_DE_ZOOM = 20;
 // Applied once on map load — aligns water/border colors with brand palette.
 // Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
 export function applyBrandPaint(map: maplibregl.Map) {
-  // El estilo Carto no siempre expone estas capas → guardar con getLayer para
-  // no ensuciar la consola con "Cannot style non-existing layer".
-  if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
-  if (map.getLayer("admin_country")) {
-    map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
-    map.setPaintProperty("admin_country", "line-width", 2);
-  }
-
   // El globo del hero va sin etiquetas. Los nombres de continente y de país
   // sobre la esfera no dicen nada que el hero necesite, y a este zoom compiten
   // con el titular y con el pin, que es lo único que hay que mirar.
@@ -107,26 +100,18 @@ export function applyBrandPaint(map: maplibregl.Map) {
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
   map.setSky({ "atmosphere-blend": 0 });
 
-  // `water_shadow` de Positron dibuja el mismo polígono de agua que `water`,
-  // desplazado, para simular una sombra bajo la costa. Con nuestro color de
-  // agua queda tapada al 100 %: no aporta un solo píxel y sí manda toda la
-  // geometría del océano una segunda vez. En el hero son 425,9k índices y 20
-  // draw calls por frame para no cambiar nada (medido: 0 px de diferencia
-  // sobre 2.073.600 en tres encuadres).
-  if (map.getLayer("water_shadow")) {
-    map.setLayoutProperty("water_shadow", "visibility", "none");
-  }
-
-  // Los otros dos recortes al basemap, con su porqué y sus cifras en
-  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
-  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  // Los tres recortes al basemap, con su porqué y sus cifras en lib/mapaLigero:
+  // fuera las capas que a este zoom dibujan lo mismo que otra (o que el
+  // relieve), las carreteras dejan de ser cicatrices blancas, y de la toponimia
+  // sólo quedan las ciudades y los pueblos de RD, y sólo en los closeups.
   aligerarEstilo(map);
+  pintarCartografia(map);
   soloTopónimosDeRD(map);
 
-  // El terreno real de la isla bajo los destinos (lib/relieve): color por
-  // altura y sombra sobre el suelo, orilla clara sobre el agua, todo bajo las
-  // carreteras y los nombres. Arranca en z6, así que el globo del hero no
-  // pide ni una tesela del DEM.
+  // El relieve de la isla bajo todo lo vectorial (lib/relieve): teselas nuestras
+  // con el color por altura y la sombra ya horneados. Arranca en z5, así que el
+  // globo del hero no pide ni una. Va al final porque también fija el fondo y
+  // el color del agua, que es lo que acompaña a la paleta del terreno.
   ponerRelieve(map);
 }
 
@@ -333,6 +318,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
+      marcar("mapa:load");
+      publicarMapa(map);
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());

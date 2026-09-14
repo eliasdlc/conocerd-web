@@ -60,3 +60,6 @@ next-env.d.ts
 # Las mismas sondas cuando se nombran con punto delante: los patrones de arriba
 # no las ven y acaban apareciendo como archivos sin trackear.
 /.*.mjs
+
+# Caché del DEM que alimenta el horneado del relieve (scripts/hornear-relieve).
+.cache/
