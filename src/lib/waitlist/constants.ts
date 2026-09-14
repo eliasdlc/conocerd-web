@@ -23,5 +23,11 @@ export const HONEYPOT_FIELD = "empresa_web";
 
 /** Respuesta del endpoint. El cliente sólo necesita distinguir estos casos. */
 export type SubscribeResult =
-  | { ok: true; status: "created" | "already_subscribed" }
+  | {
+      ok: true;
+      status: "created" | "already_subscribed";
+      /** Número de fundador: la posición del correo en la lista. Falta sólo en
+       *  la respuesta al honeypot, que no guarda nada. */
+      numero?: number;
+    }
   | { ok: false; error: string; fields?: Record<string, string> };
