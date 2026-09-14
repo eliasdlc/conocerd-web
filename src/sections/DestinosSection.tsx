@@ -215,9 +215,13 @@ export default function DestinosOverlay() {
               // ganaban ellas. La carta llevaba el papel sin pintar y el pie se
               // leía sobre el mapa. `p-0` sí puede quedarse: `px-3`/`pt-3` son
               // más específicas y le ganan.
+              // Las cartas que aún no llegaron (opacidad 0, más arriba en el
+              // z-index) no pueden atrapar el puntero: un botón deshabilitado
+              // se traga los eventos, y tapaban el tercio alto de la carta del
+              // frente para el hover y la inclinación.
               className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
                 isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
-              }`}
+              } ${isCardVisible ? "" : "pointer-events-none"}`}
               style={{
                 "--pile-left": offset.left,
                 "--pile-bottom": offset.bottomPx,
