@@ -194,6 +194,14 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   star: <path d="m12 3.6 2.6 5.5 6 .9-4.3 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.4 10l6-.9Z" />,
+  share: (
+    <>
+      <circle cx="6" cy="12" r="2.6" />
+      <circle cx="17.4" cy="5.6" r="2.6" />
+      <circle cx="17.4" cy="18.4" r="2.6" />
+      <path d="m8.3 10.8 6.8-3.9M8.3 13.2l6.8 3.9" />
+    </>
+  ),
   support_agent: (
     <>
       <path d="M5.6 14.2v-2.4a6.4 6.4 0 0 1 12.8 0v2.4" />

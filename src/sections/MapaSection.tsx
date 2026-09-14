@@ -47,6 +47,10 @@ import {
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
 import pairs from "@/data/routes/pairs.json";
+import CompartirRuta from "@/components/CompartirRuta";
+import { PRESETS, type Preset } from "@/data/rutas";
+import { idsDeSlug } from "@/lib/ruta/slug";
+import { duracion, totalesDeRuta } from "@/lib/ruta/totales";
 
 // ─── Datos de carretera (pares reales precalculados) ─────────────────────────
 
@@ -117,23 +121,10 @@ function legCoords(a: string, b: string, legs: RoadLegs | null): [number, number
   return [DEST[a].coords, DEST[b].coords];
 }
 
-function totalsFor(stops: string[]): { km: number; min: number } {
-  let km = 0;
-  let min = 0;
-  for (let i = 0; i < stops.length - 1; i++) {
-    km += pairKm(stops[i], stops[i + 1]);
-    min += pairMin(stops[i], stops[i + 1]);
-  }
-  return { km: Math.round(km), min: Math.round(min) };
-}
-
-function fmtDur(totalMin: number): string {
-  const h = Math.floor(totalMin / 60);
-  const m = Math.round(totalMin % 60);
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
+// Los totales y la duración larga viven en lib/ruta/totales: el pase de
+// embarque de /ruta/<slug> suma con la misma matriz y escribe igual.
+const totalsFor = totalesDeRuta;
+const fmtDur = duracion;
 
 /** Formato corto para la fila de totales: "6 h 59" cabe, "6 h 59 min" no. */
 function fmtDurShort(totalMin: number): string {
@@ -168,40 +159,8 @@ function nearestNeighborOrder(ids: string[]): string[] {
 
 // ─── Viajes recomendados (v2) ────────────────────────────────────────────────
 
-type Preset = {
-  id: string;
-  name: string;
-  tagline: string;
-  cover: string; // id del destino cuya foto ilustra la carta
-  stops: string[];
-};
-
-// El orden de paradas está pensado como se maneja de verdad (los km de la
-// matriz lo confirman), no en el orden en que se nombran los lugares.
-const PRESETS: Preset[] = [
-  {
-    id: "sur",
-    name: "Sur salvaje",
-    tagline: "Playa virgen, costa y lago",
-    cover: "aguilas",
-    stops: ["aguilas", "barahona", "lago-enriquillo"],
-  },
-  {
-    id: "samana",
-    name: "Samaná completo",
-    tagline: "Cascada, playas y Los Haitises",
-    cover: "limon",
-    stops: ["las-terrenas", "limon", "playa-rincon", "playa-fronton", "haitises"],
-  },
-  {
-    id: "cibao",
-    name: "Cibao aventurero",
-    tagline: "Charcos, kite y montaña",
-    cover: "charcos",
-    stops: ["charcos", "cabarete", "jarabacoa", "constanza"],
-  },
-];
-
+// Los tres viajes recomendados viven en data/rutas: también los lee el
+// servidor para nombrar la URL de una ruta armada.
 // ─── Demo por URL (solo capturas; esto solo corre en cliente: la sección
 //     monta dentro de <Map>, que entra con dynamic ssr:false) ────────────────
 
@@ -212,12 +171,18 @@ function readDemo(): { stops: string[]; card: string | null; sello: boolean } {
   try {
     const p = new URLSearchParams(window.location.search);
     const ruta = p.get("demo-ruta");
+    // Una ruta compartida (/ruta/<slug>, o ?ruta=<slug>) llega ya armada:
+    // es la misma precarga que `demo-ruta`, pero con URL propia y pública.
+    const camino = window.location.pathname.match(/^\/ruta\/([^/]+)/)?.[1];
+    const compartida = camino ?? p.get("ruta");
     const stops =
       ruta === "1"
         ? DEMO_ROUTE
         : ruta
           ? ruta.split(",").filter((id) => id in DEST)
-          : [];
+          : compartida
+            ? idsDeSlug(decodeURIComponent(compartida))
+            : [];
     const card = p.get("demo-card");
     return {
       stops,
@@ -1353,7 +1318,7 @@ export default function MapaSection() {
             </div>
           </div>
           {stops.length >= 2 && (
-            <div className="px-[18px] pb-3.5 pt-0.5 max-[899px]:pb-5">
+            <div className="grid grid-cols-2 gap-2 px-[18px] pb-3.5 pt-0.5 max-[899px]:pb-5">
               <button
                 type="button"
                 onClick={startSave}
@@ -1364,6 +1329,9 @@ export default function MapaSection() {
                 <Glyph d={GLYPH_SAVE} className="text-sm" />
                 Guardar viaje
               </button>
+              {/* Compartir vive al lado de guardar: son dos salidas distintas
+                  de la misma ruta, una al correo y otra a un chat. */}
+              <CompartirRuta stops={stops} />
             </div>
           )}
         </div>
