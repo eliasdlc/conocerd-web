@@ -63,11 +63,12 @@ export const PALETA: Paleta = {
     [3100, "#F0E9DC"],
   ],
   mar: [
-    [-5000, "#BDE8E4"],
-    [-1500, "#A6DCDA"],
-    [-300, "#7CC3C6"],
-    [-40, "#4FA3AA"],
-    [-1, "#3C8F98"],
+    [-5000, "#BFE9E5"],
+    [-2500, "#B4E4E0"],
+    [-600, "#93D0D0"],
+    [-120, "#66B7BA"],
+    [-25, "#3E97A0"],
+    [-1, "#2C7F8A"],
   ],
   agua: "#B9E8E4",
   bosque: "#8FC77A",
@@ -138,13 +139,13 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
     },
     antesDe
   );
-  // El relleno del agua va encima del color por profundidad: el océano a
-  // media opacidad, para que el degradado de la costa se vea a través y el
-  // tono quede unificado; lagos y ríos opacos, que no tienen profundidad en
-  // el DEM que valga la pena enseñar.
+  // El relleno del agua va encima del color por profundidad: el océano casi
+  // transparente, sólo lo justo para unificar el tono y tapar el grano del
+  // DEM; lagos y ríos opacos, que no tienen profundidad en el DEM que valga
+  // la pena enseñar.
   if (map.getLayer("water")) {
     map.setPaintProperty("water", "fill-color", paleta.agua);
-    map.setPaintProperty("water", "fill-opacity", ["case", ["==", ["get", "class"], "ocean"], 0.45, 1]);
+    map.setPaintProperty("water", "fill-opacity", ["case", ["==", ["get", "class"], "ocean"], 0.3, 1]);
   }
   // Bosques y parques del basemap, teñidos a media opacidad sobre el color de
   // altura: el verde cae donde hay vegetación de verdad.
