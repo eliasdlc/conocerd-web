@@ -17,7 +17,10 @@ import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/jour
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
-import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
+import HeroEspacio, { CapasNasaJourney, descensoDe, HeroPinMarker } from "@/sections/HeroEspacio";
+import Cielo from "@/sections/espacio/Cielo";
+import { cajaDelGlobo } from "@/components/DiscoDelGlobo";
+import e from "@/sections/espacio/espacio.module.css";
 
 // Los paneles de las escenas van detrás del mismo `dynamic` que el motor del
 // mapa. Son ~4.000 líneas que el arranque no necesita: en el primer pixel sólo
@@ -137,6 +140,7 @@ const GESTO = { umbral: 40, silencioMs: 220 };
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
   const { activeScene, setActiveScene, progress } = useScene();
   const outerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
   // El recorrido bloquea el scroll de la página; solo se libera al final para
@@ -189,6 +193,32 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
     calentarTerreno(siguiente, currentViewport(), ctl.signal).catch(() => {});
     return () => ctl.abort();
   }, [activeScene]);
+
+  // La escena desde el espacio lee el descenso desde CSS: el sticky publica
+  // `--descenso` (0 en el hero, 1 al aterrizar en el primer destino) y la
+  // fase, una vez por frame del vuelo y sin pasar por React. También el radio
+  // exacto del globo, del mismo modelo que dimensiona el disco de reserva.
+  useEffect(() => {
+    const sticky = stickyRef.current;
+    if (!sticky) return;
+    const escribir = (p: number) => {
+      const t = descensoDe(p);
+      sticky.style.setProperty("--descenso", t.toFixed(4));
+      sticky.dataset.fase = t < 0.04 ? "hero" : t > 0.96 ? "destino" : "descenso";
+    };
+    const medir = () => {
+      const { diametro } = cajaDelGlobo(window.innerWidth, window.innerHeight);
+      sticky.style.setProperty("--globo-r", `${(diametro / 2).toFixed(1)}px`);
+    };
+    escribir(progress.get());
+    medir();
+    const parar = progress.on("change", escribir);
+    window.addEventListener("resize", medir);
+    return () => {
+      parar();
+      window.removeEventListener("resize", medir);
+    };
+  }, [progress]);
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena.
   // Un link desde el pie llega con la página desbloqueada y abajo: volver
@@ -339,9 +369,9 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       data-active-scene={activeScene}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
-          Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
-          ya sin atmósfera, flota sobre este crema en el hero. En las escenas con
-          zoom el mapa es opaco y tapa el gradiente. */}
+          Fondo crema (con halos cálidos de marca) detrás del canvas: es lo que
+          queda cuando el cielo del hero se ha ido. En las escenas con zoom el
+          mapa es opaco y tapa el gradiente. */}
       {/* h-[100dvh] y no 100vh: en móvil la barra de URL cambia el 100vh y el
           globo se movía verticalmente al aparecer/desaparecer. El fondo son tres
           radial-gradients de marca; como utilidad arbitraria sería ilegible, así
@@ -351,7 +381,11 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           pequeño. Con dvh la capa medía hasta 190px más de lo visible y todo lo
           anclado abajo —el botón del sheet, el pie de la carta del CTA— caía
           detrás del panel de pasos o fuera de pantalla. */}
-      <div className="crd-journey-sticky sticky top-0 h-[100svh] w-full overflow-hidden">
+      <div ref={stickyRef} className={`crd-journey-sticky ${e.escena} ${e.arcoBajo} sticky top-0 h-[100svh] w-full overflow-hidden`}>
+        {/* El cielo, DEBAJO del canvas: estrellas, noche y el amanecer que la
+            cubre durante el vuelo. Al aterrizar ya no queda nada de él. */}
+        <Cielo />
+
         <Map
           ref={mapRef}
           theme="light"
@@ -366,6 +400,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           touchZoomRotate={false}
           attributionControl={false}
         >
+          <CapasNasaJourney />
           <HeroPinMarker />
           <DestinosSection />
           <MapaSection />
@@ -383,7 +418,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             cuelgue de él desaparece del HTML inicial. El hero es lo primero
             que se ve y su logo es el LCP, así que se sirve renderizado desde
             el servidor y se pinta sin esperar a MapLibre (audit 5.6). */}
-        <HeroOverlay />
+        <HeroEspacio />
       </div>
 
       {/* Fuera de la capa sticky: son `fixed` y deben sobrevivir a todo el

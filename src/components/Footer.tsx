@@ -127,7 +127,9 @@ export default function Footer() {
             panel de pasos), así que el crédito del basemap y del relieve vive
             aquí, junto al de las fotos. */}
         <p className="m-0 w-full text-xs leading-[1.7] text-white/55">
-          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}. {MAPA_CREDITO}. {RELIEVE_CREDITO}.
+          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}. Imágenes de la Tierra
+          del hero: NASA GIBS (Blue Marble, Black Marble y nubes de Visible Earth).{" "}
+          {MAPA_CREDITO}. {RELIEVE_CREDITO}.
         </p>
         <div className="text-xs text-white/55">
           © 2026 ConoceRD · Hecho con orgullo en RD
