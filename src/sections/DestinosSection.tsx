@@ -176,7 +176,7 @@ export default function DestinosOverlay() {
             el titular del mapa antes de que existiera el panel, y con panel
             debajo sólo emborronaba el canto de las letras. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-surface desk:border desk:border-[var(--crd-glass-line)] desk:bg-[var(--crd-glass)] desk:px-4 desk:py-3.5 desk:shadow-e1 desk:backdrop-blur-[24px] desk:backdrop-saturate-[1.8] ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out crd-cristal-liquido desk:w-fit desk:rounded-surface desk:border desk:px-4 desk:py-3.5 ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
@@ -277,7 +277,7 @@ export default function DestinosOverlay() {
                     // largos ("Pueblo & valle") lo empujaban fuera de la foto.
                     <span
                       aria-hidden="true"
-                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
+                      className="crd-cristal-liquido-chip flex size-7 flex-none items-center justify-center rounded-full text-ink"
                     >
                       <Icon name="arrow_forward" className="text-sm" />
                     </span>

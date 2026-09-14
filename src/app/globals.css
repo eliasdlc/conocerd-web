@@ -147,42 +147,51 @@
   background:
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-paper) 48%, transparent),
-      color-mix(in srgb, var(--color-cream) 36%, transparent) 52%,
-      color-mix(in srgb, var(--color-cream-2) 46%, transparent)
+      color-mix(in srgb, var(--color-paper) 62%, transparent),
+      color-mix(in srgb, var(--color-cream) 52%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 56%, transparent)
     );
-  border-color: rgba(255, 255, 255, .55);
+  border-color: rgba(255, 255, 255, .62);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .8),
-    inset 0 -1px 0 rgba(255, 255, 255, .28),
-    0 10px 30px rgba(38, 70, 83, .16);
+    inset 0 1px 0 rgba(255, 255, 255, .85),
+    inset 0 -1px 0 rgba(255, 255, 255, .3),
+    0 10px 30px rgba(38, 70, 83, .14);
   transition: background .5s ease, border-color .5s ease, box-shadow .5s ease;
 }
 
+/* De noche el fondo puede ser el negro del espacio, donde no hay nada que
+   difuminar: un backdrop que oscurece sobre negro sigue siendo negro, y la
+   píldora del nav desaparecía. El cuerpo lo pone el relleno, que termina en
+   blanco al 8 % en vez de en tinta, y el oscurecido del backdrop sube para
+   compensar el blanco de más donde SÍ hay planeta detrás. */
 .crd-cristal-liquido[data-noche="true"] {
   background:
     linear-gradient(
       to bottom,
-      rgba(255, 255, 255, .16),
-      rgba(255, 255, 255, .07) 52%,
-      rgba(15, 26, 46, .22)
+      rgba(255, 255, 255, .2),
+      rgba(255, 255, 255, .12) 55%,
+      rgba(255, 255, 255, .08)
     );
-  border-color: rgba(255, 255, 255, .24);
+  border-color: rgba(255, 255, 255, .3);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .34),
-    inset 0 -1px 0 rgba(255, 255, 255, .1),
-    0 14px 36px rgba(0, 0, 0, .45);
+    inset 0 1px 0 rgba(255, 255, 255, .45),
+    inset 0 -1px 0 rgba(255, 255, 255, .12),
+    0 14px 36px rgba(7, 12, 23, .5);
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  /* La saturación se queda cerca de 1 a propósito. Con 1.85 el azul del mar
+     (#A4D0E0) salía del filtro convertido en cian puro y el chip competía con
+     el mint de la marca; sobre tierra, que ya es pálida, el mismo par sólo
+     aclaraba, y por eso ahí no se notaba. El vidrio tiene que enseñar el fondo
+     como tono, no como neón. */
   .crd-cristal-liquido {
-    -webkit-backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
-    backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
+    -webkit-backdrop-filter: blur(28px) saturate(1.12) brightness(1.06);
+    backdrop-filter: blur(28px) saturate(1.12) brightness(1.06);
   }
-  /* De noche el realce se invierte: lo que sobra es luz, no falta. */
   .crd-cristal-liquido[data-noche="true"] {
-    -webkit-backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
-    backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
+    -webkit-backdrop-filter: blur(30px) saturate(1.4) brightness(.78);
+    backdrop-filter: blur(30px) saturate(1.4) brightness(.78);
   }
 }
 
@@ -210,6 +219,80 @@
   background: rgba(255, 255, 255, .12);
   border-color: rgba(255, 255, 255, .28);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
+/* ── Cristal líquido de pieza corta ───────────────────────────────────────────
+   Chips, etiquetas de marcador y botones redondos sobre foto. Es el mismo
+   material con la óptica corta: a 28px de alto un blur de 32 promedia todo lo
+   que hay debajo y la pieza se vuelve una pastilla plana de un solo tono. Con
+   16 el color de la foto sigue moviéndose por detrás, que es exactamente lo que
+   hace que se lea como vidrio y no como calcomanía.
+
+   Sin sombra exterior: sobre una foto nítida no separa, sólo ensucia. */
+.crd-cristal-liquido-chip {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .64),
+      rgba(255, 255, 255, .5) 55%,
+      rgba(253, 248, 240, .56)
+    );
+  border: 1px solid rgba(255, 255, 255, .64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .85),
+    inset 0 -1px 0 rgba(255, 255, 255, .22);
+}
+
+.crd-cristal-liquido-chip[data-noche="true"] {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .18),
+      rgba(255, 255, 255, .08) 55%,
+      rgba(15, 26, 46, .26)
+    );
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -1px 0 rgba(255, 255, 255, .1);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .crd-cristal-liquido-chip {
+    -webkit-backdrop-filter: blur(16px) saturate(1.12) brightness(1.05);
+    backdrop-filter: blur(16px) saturate(1.12) brightness(1.05);
+  }
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    -webkit-backdrop-filter: blur(16px) saturate(1.5) brightness(.8);
+    backdrop-filter: blur(16px) saturate(1.5) brightness(.8);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crd-cristal-liquido-chip {
+    background: rgba(255, 255, 255, .88);
+    border-color: var(--crd-glass-line);
+  }
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    background: rgba(15, 26, 46, .82);
+  }
+}
+
+/* Quien pide menos transparencia recibe el cristal opaco del tema. Vale para el
+   panel y para el chip: la transparencia es el material, no la información. */
+@media (prefers-reduced-transparency: reduce) {
+  .crd-cristal-liquido,
+  .crd-cristal-liquido-chip {
+    background: var(--crd-glass);
+    border-color: var(--crd-glass-line);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .crd-cristal-liquido[data-noche="true"],
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    background: rgba(15, 26, 46, .82);
+    border-color: rgba(255, 255, 255, .24);
+  }
 }
 
 html {
@@ -741,9 +824,17 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
      pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
      y se montaba sobre la pila en un SE, porque el cromo flotante (píldora +
      panel de pasos) mide igual en las dos y el 46% no. */
+  /* En el teléfono el titular no lleva panel: lo que lo separa del mapa es el
+     velo crema de la escena, y una superficie más ahí tapa isla. El cristal
+     líquido que trae la clase se apaga entero. */
   .crd-destinos-heading {
     left: 16px !important;
     bottom: calc(var(--crd-stepper-h) + var(--crd-pila-alza) + var(--crd-pila-h) + 10px) !important;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
      cristal del tema y ahí la sombra únicamente emborrona el canto de las
@@ -937,26 +1028,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 .crd-accent-on-ink { color: var(--color-mango); }
 
 /* ── Píldora del nav ──────────────────────────────────────────────────────────
-   Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
-   crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
-   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema, la
-   misma receta que todo lo que flota sobre el mapa, y ahí sí se apoya con e1.
-
-   El blur va en CSS y no en utilidades con variante `data-`: las dos
-   escribirían la misma custom property de Tailwind y el orden de capas
-   decidiría cuál gana, que es justo lo que no se quiere depurar. */
-.crd-nav-pill {
-  background: color-mix(in srgb, var(--color-cream) 60%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: none;
-}
-/* En reposo flota sobre la noche del hero, no sobre crema: la píldora se hace
-   de tinta translúcida y los enlaces pasan a blanco. Pasado el hero vuelve al
-   cristal crema de siempre (`data-solid`). */
-.crd-nav-pill[data-solid="false"] {
-  background: rgba(15, 26, 46, 0.55);
-  border-color: rgba(255, 255, 255, 0.16);
-}
+   El material es `crd-cristal-liquido`, el mismo del panel de pasos, con sus
+   dos fondos: `data-noche` sobre el hero, día en las doce escenas restantes.
+   Aquí no queda ni fondo ni blur ni sombra, sólo qué color toman los enlaces y
+   el CTA sobre cada uno de los dos cristales. */
 .crd-nav-pill[data-solid="false"] .crd-navlink {
   color: rgba(255, 255, 255, 0.72);
 }
@@ -970,12 +1045,6 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   background: #ffffff;
   color: var(--color-ink);
 }
-.crd-nav-pill[data-solid="true"] {
-  background: var(--crd-glass);
-  backdrop-filter: var(--crd-glass-blur);
-  box-shadow: var(--shadow-e1);
-}
-
 /* El enlace es UI, no titular: familia de etiqueta y su propia píldora
    invisible de 40, para que el área táctil exista aunque no se vea. El
    subrayado animado y el hover coral mueren: el acento de la web es para
@@ -1028,6 +1097,50 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 .crd-button:active {
   transform: translateY(1px) !important;
+}
+
+/* La acción secundaria de cristal. El material entero viene de
+   `.crd-cristal-liquido`; aquí sólo se mueve el gradiente de lente con el
+   puntero, que es lo que hace que un vidrio responda al tacto. El anillo de
+   foco es el global. */
+.crd-button.crd-cristal-liquido {
+  transition: transform .2s, background .25s ease;
+}
+.crd-button.crd-cristal-liquido:hover {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 70%, transparent),
+      color-mix(in srgb, var(--color-cream) 60%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 64%, transparent)
+    );
+}
+.crd-button.crd-cristal-liquido:active {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 52%, transparent),
+      color-mix(in srgb, var(--color-cream) 44%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 48%, transparent)
+    );
+}
+.crd-button.crd-cristal-liquido[data-noche="true"]:hover {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .28),
+      rgba(255, 255, 255, .18) 55%,
+      rgba(255, 255, 255, .14)
+    );
+}
+.crd-button.crd-cristal-liquido[data-noche="true"]:active {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .14),
+      rgba(255, 255, 255, .08) 55%,
+      rgba(255, 255, 255, .05)
+    );
 }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */
