@@ -20,6 +20,7 @@ import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import InstagramTile from "./InstagramTile";
 import SubscribeForm, { AudienceToggle, type SubscribeSuccess } from "@/components/SubscribeForm";
 import SuccessPanel from "./SuccessPanel";
+import PaseFundador from "./PaseFundador";
 import { CONTENT, type Item } from "./content";
 import { AUDIENCES, type Audience } from "@/lib/waitlist/constants";
 
@@ -126,6 +127,7 @@ export default function ListaExperience() {
       <SuccessPanel
         audience={info.audience}
         alreadyIn={info.alreadyIn}
+        numero={info.numero}
         onSwitchAudience={switchAfterSuccess}
       />
     ),
@@ -172,6 +174,11 @@ export default function ListaExperience() {
         >
           {c.sub}
         </p>
+
+        {/* El pase de fundador, sólo para el viajero: el beneficio de un
+            negocio es el perfil destacado, no un número. Se completa en su
+            sitio cuando el registro devuelve el número. */}
+        {audience === "viajero" && <PaseFundador numero={done?.numero} />}
 
         {/* El formulario es la única acción de la página: siempre sobre el fold.
             overflow-visible porque el confeti del panel de éxito se sale. */}

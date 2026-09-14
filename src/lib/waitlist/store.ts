@@ -29,6 +29,11 @@ export type SubscriberInput = {
 /** `created` = correo nuevo. `already_subscribed` = ya estaba (perfil actualizado). */
 export type SaveResult = "created" | "already_subscribed";
 
+/** Lo que devuelve un guardado: el estado y el número de fundador, que es la
+ *  posición de ese correo en la lista (el `id` de su fila) y no cambia aunque
+ *  vuelva a registrarse. */
+export type SaveOutcome = { status: SaveResult; numero: number };
+
 /** Una fila tal como la lee el panel interno. Fechas en ISO: cruzan el límite servidor→cliente. */
 export type Subscriber = {
   email: string;
@@ -47,7 +52,7 @@ export type Subscriber = {
 
 export interface WaitlistStore {
   readonly kind: "neon" | "local";
-  save(input: SubscriberInput): Promise<SaveResult>;
+  save(input: SubscriberInput): Promise<SaveOutcome>;
   /** Todos los registros, del más reciente al más antiguo. */
   list(): Promise<Subscriber[]>;
 }
@@ -125,9 +130,12 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
           instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
           ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
           updated_at    = now()
-        returning (xmax = 0) as inserted
+        returning (xmax = 0) as inserted, id
       `;
-      return rows[0]?.inserted ? "created" : "already_subscribed";
+      return {
+        status: rows[0]?.inserted ? "created" : "already_subscribed",
+        numero: Number(rows[0]?.id ?? 0),
+      };
     },
 
     async list() {
@@ -173,7 +181,7 @@ type LocalRow = Omit<SubscriberInput, "consentAt"> & {
   updatedAt: string;
 };
 
-function createLocalStore(): WaitlistStore {
+export function createLocalStore(): WaitlistStore {
   // Serializa las escrituras: sin esto, dos envíos simultáneos leen el mismo
   // archivo y el segundo pisa al primero.
   let queue: Promise<unknown> = Promise.resolve();
@@ -193,7 +201,7 @@ function createLocalStore(): WaitlistStore {
   return {
     kind: "local",
     save(input) {
-      const run = queue.then(async (): Promise<SaveResult> => {
+      const run = queue.then(async (): Promise<SaveOutcome> => {
         const fs = await import("node:fs/promises");
         const nodePath = await import("node:path");
         const dir = nodePath.join(process.cwd(), ".waitlist");
@@ -214,7 +222,11 @@ function createLocalStore(): WaitlistStore {
         }
         await fs.mkdir(dir, { recursive: true });
         await fs.writeFile(file, JSON.stringify(rows, null, 2), "utf8");
-        return existing >= 0 ? "already_subscribed" : "created";
+        // En el archivo el número es la posición de la fila, empezando en 1,
+        // igual que el `id` de Postgres.
+        return existing >= 0
+          ? { status: "already_subscribed", numero: existing + 1 }
+          : { status: "created", numero: rows.length };
       });
       queue = run.catch(() => {});
       return run;
