@@ -216,11 +216,10 @@
 
 /* ═══ Cue ═════════════════════════════════════════════════════════════════ */
 
-/* Sólo en escritorio. En el teléfono el panel de pasos vive fijo al borde
-   inferior con su chevron de avanzar a 54: el cue decía lo mismo, más pequeño
-   y más arriba, y encima de la noche era una segunda píldora compitiendo con
-   la del nav. En escritorio no hay panel, así que el cue es la única
-   invitación a bajar y se queda. */
+/* Sólo lo usa el banco de propuestas (`app/heroes`). En la home se retiró: era
+   una píldora gris posada justo sobre el limbo del planeta, que es la única
+   silueta limpia de la escena, y decía lo que ya dicen el planeta cortado por
+   el borde inferior y el riel de capítulos de la derecha. */
 .cue {
   display: none;
   position: absolute;
