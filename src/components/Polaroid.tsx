@@ -10,7 +10,8 @@
 
 import Image from "next/image";
 import CategoryChip from "@/components/CategoryChip";
-import type { IconName } from "@/components/Icon";
+import Icon, { type IconName } from "@/components/Icon";
+import { cieloDeWMO, grados } from "@/lib/clima/etiquetas";
 
 /** Papel de la polaroid: fondo, márgenes desiguales (más aire abajo) y sombra.
  *  `crd-tape` le pega la cinta adhesiva del ::before: la polaroid deja de ser
@@ -93,5 +94,23 @@ export function PolaroidCaption({ name, meta }: { name: string; meta?: string })
       </div>
       <div className="mt-[3px] text-[11.5px] text-muted">{meta}</div>
     </>
+  );
+}
+
+/** El clima de ahora mismo en ese lugar, bajo el pie. Tinte mint con el cielo
+ *  abierto y azul con el cielo cubierto o mojado; el glifo y la palabra llevan
+ *  el significado, el color sólo acompaña. El azul es un par de tinte propio
+ *  del tiempo, no un rol del tema: no hay nada más en el sitio que lo use. */
+export function PolaroidVivo({ temp, codigo }: { temp: number; codigo: number }) {
+  const cielo = cieloDeWMO(codigo);
+  const tono =
+    cielo.tono === "calido" ? "bg-mint-soft text-mint-ink" : "bg-[#E4ECF7] text-[#2B4C7E]";
+  return (
+    <span
+      className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-[3px] font-label text-[11px] font-bold leading-none ${tono}`}
+    >
+      <Icon name={cielo.icono} className="text-[13px]" />
+      Ahora {grados(temp)}, {cielo.etiqueta}
+    </span>
   );
 }

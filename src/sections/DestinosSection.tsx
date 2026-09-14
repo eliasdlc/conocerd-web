@@ -9,7 +9,8 @@ import Icon from "@/components/Icon";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
-import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
+import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption, PolaroidVivo } from "@/components/Polaroid";
+import { useClima } from "@/context/ClimaContext";
 import { PIN_CHROME } from "@/components/map/pins";
 import featuredRoute from "@/data/routes/featured-route.json";
 
@@ -70,6 +71,7 @@ export default function DestinosOverlay() {
   // un brillo que cruza el papel (hooks/useInclinacion). Sólo mientras la
   // escena es un destino: fuera de la pila no hay carta que responda.
   const inclinacion = useInclinacion({ grados: 8, activo: activeScene.startsWith("polaroid-") });
+  const clima = useClima();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
   const headingVisible = isVisible;
@@ -293,6 +295,9 @@ export default function DestinosOverlay() {
                 }`}
               >
                 <PolaroidCaption name={pol.name} meta={pol.meta} />
+                {clima?.destinos[pol.id] && (
+                  <PolaroidVivo temp={clima.destinos[pol.id].temp} codigo={clima.destinos[pol.id].codigo} />
+                )}
                 <p className="crd-destinos-desc m-0 mt-1 text-tiny leading-[1.4] text-ink-3">{pol.desc}</p>
               </div>
               {/* El brillo que cruza el papel con el puntero. Blanco al 35 %
