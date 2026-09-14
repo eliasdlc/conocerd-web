@@ -264,8 +264,15 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   // que cae en cualquier sitio. Se resuelve con el mismo saltador del nav, ya
   // registrado por el efecto de arriba.
   useEffect(() => {
-    const scene = window.location.hash.slice(1);
-    if (!scene.startsWith("trigger-")) return;
+    const hash = window.location.hash.slice(1);
+    // Una ruta compartida (/ruta/<slug>) abre directo en Tu ruta, que es donde
+    // esas paradas ya están puestas.
+    const scene = hash.startsWith("trigger-")
+      ? hash
+      : window.location.pathname.startsWith("/ruta/")
+        ? "trigger-mapa"
+        : "";
+    if (!scene) return;
     const id = window.setTimeout(() => scrollToSection(scene), 120);
     return () => window.clearTimeout(id);
   }, []);
