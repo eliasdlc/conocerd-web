@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Medicion from "@/components/Medicion";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
@@ -111,6 +112,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Vistas de página y los cuatro eventos del embudo (src/lib/analytics).
             En local no envía nada: el script sólo se carga en Vercel. */}
         <Analytics />
+        {/* Sólo con `?medir` en la URL: sin el parámetro no descarga la sonda
+            ni pinta nada. Es el instrumento con el que se compara un cambio
+            de rendimiento contra el anterior. */}
+        <Medicion />
       </body>
     </html>
   );
