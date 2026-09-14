@@ -171,6 +171,36 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
       setReady(true);
     });
 
+    // Pérdida del contexto WebGL. MapLibre destruye el pintor y pone su estilo
+    // a null, así que durante unos frames CUALQUIER llamada al mapa lanza. No
+    // es hipotético: medido el 14 sep 2026, el recorrido lo pierde al pasar de
+    // Tu ruta a Viajeros, y también en producción.
+    //
+    // No se destruye nada aquí: MapLibre se restaura solo (rehace el estilo
+    // entero con `setStyle`, capas añadidas incluidas). Lo único que hace falta
+    // es que el resto de la página deje de tocar el mapa mientras tanto, y eso
+    // es lo que dice el contexto en null. Lo que se re-emite al volver es
+    // `onLoad`: la pintura de marca viaja dentro del estilo restaurado, pero
+    // los consumidores sí tienen que volver a engancharse.
+    map.on("webglcontextlost", () => {
+      console.warn("[Map] contexto WebGL perdido — el mapa se reconstruye solo");
+      mapRef.current = null;
+      setReady(false);
+    });
+    map.on("webglcontextrestored", () => {
+      if (!map) return;
+      // `setStyle` del restaurador es asíncrono: el estilo no está hasta que
+      // vuelve a cargar, y añadir capas antes las perdería.
+      const listo = () => {
+        if (!map) return;
+        if (projection) map.setProjection(projection);
+        mapRef.current = map;
+        setReady(true);
+      };
+      if (map.isStyleLoaded()) listo();
+      else map.once("styledata", listo);
+    });
+
     if (onViewportChange) {
       map.on("moveend", () => {
         if (!map) return;

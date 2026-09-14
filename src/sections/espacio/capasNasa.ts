@@ -1,4 +1,5 @@
 import type maplibregl from "maplibre-gl";
+import { mapaVivo } from "@/lib/mapaVivo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  La Tierra de verdad sobre el globo.
@@ -78,6 +79,7 @@ export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {})
     ? (map.getStyle().layers ?? []).filter((l) => l.type === "symbol").map((l) => l.id)
     : [];
   const pintarEtiquetas = (op: number) => {
+    if (!mapaVivo(map)) return;
     for (const id of simbolos) {
       map.setPaintProperty(id, "text-opacity", op);
       map.setPaintProperty(id, "icon-opacity", op);
@@ -85,7 +87,10 @@ export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {})
   };
 
   const pintar = (t: number) => {
-    if (!map.getLayer("espacio-noche")) return;
+    // Esto corre una vez por frame desde el progreso del recorrido. Si el
+    // contexto WebGL se perdió, el estilo del mapa es null y `getLayer` lanza:
+    // era lo que dejaba el recorrido congelado en Viajeros (lib/mapaVivo).
+    if (!mapaVivo(map) || !map.getLayer("espacio-noche")) return;
     const op = opacidades(t);
     map.setPaintProperty("espacio-noche", "raster-opacity", op.noche);
     map.setPaintProperty("espacio-dia", "raster-opacity", op.dia);
@@ -100,7 +105,7 @@ export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {})
   return {
     pintar,
     desmontar: () => {
-      if (!map.getStyle()) return;
+      if (!mapaVivo(map) || !map.getStyle()) return;
       for (const id of ["espacio-nubes", "espacio-noche", "espacio-dia"]) {
         if (map.getLayer(id)) map.removeLayer(id);
       }
