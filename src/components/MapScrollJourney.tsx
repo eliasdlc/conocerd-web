@@ -12,7 +12,7 @@ import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido } from "@/lib/calentarRecorrido";
 import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
-import { paletaDeURL, ponerRelieve } from "@/lib/relieve";
+import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
@@ -124,7 +124,7 @@ export function applyBrandPaint(map: maplibregl.Map) {
   // altura y sombra sobre el suelo, orilla clara sobre el agua, todo bajo las
   // carreteras y los nombres. Arranca en z6, así que el globo del hero no
   // pide ni una tesela del DEM.
-  ponerRelieve(map, paletaDeURL());
+  ponerRelieve(map);
 }
 
 // Feel del slideshow de escritorio, elegido entre tres variantes en el mismo

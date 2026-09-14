@@ -26,13 +26,17 @@ export const RELIEVE_COLOR = "relieve-color";
 export const RELIEVE_ORILLA = "relieve-orilla";
 export const RELIEVE_MINZOOM = 6;
 
-// ─── Paletas ─────────────────────────────────────────────────────────────────
+// ─── La paleta ───────────────────────────────────────────────────────────────
 //
 // El color del suelo sale de la altura (capa `color-relief`: el DEM decide qué
 // tono lleva cada píxel) y el del agua de dos tonos: el relleno y una orilla
 // clara que sigue la costa y los lagos, como el agua baja. Los bosques y
 // parques del basemap se tiñen encima, a media opacidad, para que el verde
 // caiga donde hay vegetación de verdad y no en toda la llanura.
+//
+// Tropical, elegida por Elias el 14 sep 2026 entre tres: el verde húmedo del
+// Cibao y el turquesa de la costa, con la Cordillera en oliva y las cumbres
+// en crema. Lo más parecido a la isla vista desde arriba sin ser una foto.
 
 export type Paleta = {
   /** Metros a color, de la costa a la cumbre (el Pico Duarte tiene 3.087). */
@@ -43,62 +47,21 @@ export type Paleta = {
   sombra: string;
 };
 
-export const PALETAS = {
-  // Atlas escolar: el código hipsométrico clásico, verde abajo, ocre en la
-  // loma y pardo arriba. Lo que todo el mundo aprendió a leer en la escuela.
-  atlas: {
-    suelo: [
-      [0, "#DCEBC9"],
-      [150, "#C9E1AE"],
-      [400, "#DCD99A"],
-      [800, "#D9BE7F"],
-      [1400, "#C89C6B"],
-      [2200, "#B9866A"],
-      [3100, "#EDE3D8"],
-    ],
-    agua: "#BCE3E4",
-    orilla: "#E3F5F3",
-    bosque: "#B7D49B",
-    sombra: "#5B6B4A",
-  },
-  // Acuarela: pocos tonos y todos rebajados, con el llano en arena y el verde
-  // sólo donde hay monte. La versión que menos compite con las polaroids.
-  acuarela: {
-    suelo: [
-      [0, "#F1E9D6"],
-      [200, "#E7E5C9"],
-      [600, "#CFD6AE"],
-      [1200, "#B9BE95"],
-      [2000, "#A9A188"],
-      [3100, "#E8E1D6"],
-    ],
-    agua: "#C6E2E0",
-    orilla: "#EAF5F2",
-    bosque: "#C4D3A6",
-    sombra: "#6C6A5A",
-  },
-  // Tropical: el verde húmedo del Cibao y el turquesa de la costa, con la
-  // Cordillera en oliva y las cumbres en crema. Lo más parecido a la isla vista
-  // desde arriba sin ser una foto.
-  tropical: {
-    suelo: [
-      [0, "#DDEFC6"],
-      [120, "#BFE0A0"],
-      [400, "#A3CF86"],
-      [900, "#8DB870"],
-      [1500, "#9DA86A"],
-      [2300, "#B29A73"],
-      [3100, "#F0E9DC"],
-    ],
-    agua: "#9FDCD9",
-    orilla: "#D9F4EF",
-    bosque: "#8FC77A",
-    sombra: "#3F5F3A",
-  },
-} satisfies Record<string, Paleta>;
-
-export type NombreDePaleta = keyof typeof PALETAS;
-export const PALETA_POR_DEFECTO: NombreDePaleta = "tropical";
+export const PALETA: Paleta = {
+  suelo: [
+    [0, "#DDEFC6"],
+    [120, "#BFE0A0"],
+    [400, "#A3CF86"],
+    [900, "#8DB870"],
+    [1500, "#9DA86A"],
+    [2300, "#B29A73"],
+    [3100, "#F0E9DC"],
+  ],
+  agua: "#9FDCD9",
+  orilla: "#D9F4EF",
+  bosque: "#8FC77A",
+  sombra: "#3F5F3A",
+};
 
 /**
  * Debajo de qué capa va el relieve. Positron dibuja en este orden: fondo,
@@ -132,7 +95,7 @@ function capaSiguiente(map: Pick<maplibregl.Map, "getStyle">, id: string): strin
  * una sola vez. Devuelve `false` si ya estaban, para que quien lo llame sepa
  * que no hizo nada.
  */
-export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETAS[PALETA_POR_DEFECTO]): boolean {
+export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): boolean {
   if (map.getSource(RELIEVE_FUENTE)) return false;
   map.addSource(RELIEVE_FUENTE, RELIEVE_DEM);
   const antesDe = capaDeReferencia(map);
@@ -200,12 +163,4 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETAS[PALET
     map.setPaintProperty(id, "fill-opacity", 0.45);
   }
   return true;
-}
-
-/** La paleta que pide la URL (`?paleta=atlas`), sólo para comparar en
- *  capturas mientras se decide. Sin parámetro, la de defecto. */
-export function paletaDeURL(): Paleta {
-  if (typeof window === "undefined") return PALETAS[PALETA_POR_DEFECTO];
-  const nombre = new URLSearchParams(window.location.search).get("paleta");
-  return nombre && nombre in PALETAS ? PALETAS[nombre as NombreDePaleta] : PALETAS[PALETA_POR_DEFECTO];
 }
