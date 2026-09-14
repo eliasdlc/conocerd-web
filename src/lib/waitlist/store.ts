@@ -7,8 +7,6 @@
 //  es únicamente añadir la variable de entorno — el código de producto no cambia.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { NeonQueryFunction } from "@neondatabase/serverless";
-
 import type { Audience } from "./constants";
 import type { BusinessType } from "./business-types";
 
@@ -29,9 +27,10 @@ export type SubscriberInput = {
 /** `created` = correo nuevo. `already_subscribed` = ya estaba (perfil actualizado). */
 export type SaveResult = "created" | "already_subscribed";
 
-/** Lo que devuelve un guardado: el estado y el número de fundador, que es la
- *  posición de ese correo en la lista (el `id` de su fila) y no cambia aunque
- *  vuelva a registrarse. */
+/** Lo que devuelve un guardado: el estado y el número de fundador. El número
+ *  es cuántas personas se habían registrado cuando entró esa, más una: lo
+ *  reparte un contador atómico (ver `SQL_NUMERO`), es único por constraint y
+ *  no cambia aunque la persona vuelva a registrarse. */
 export type SaveOutcome = { status: SaveResult; numero: number };
 
 /** Una fila tal como la lee el panel interno. Fechas en ISO: cruzan el límite servidor→cliente. */
@@ -79,77 +78,131 @@ const CREATE_TABLE = `
 // Migraciones idempotentes para tablas que ya existen en producción. `create
 // table if not exists` no toca una tabla creada antes de que el campo existiera,
 // así que cada columna añadida después necesita su propio `alter`.
+// ─── El número de fundador ───────────────────────────────────────────────────
+//
+// No sirve el `id`: `bigserial` deja huecos (un upsert que cae en conflicto
+// consume el número igual), y el número tiene que ser "cuántos había antes,
+// más uno". Se reparte con un contador de una sola fila: la fila queda
+// bloqueada mientras dura la sentencia, así que diez registros a la vez se
+// serializan y salen consecutivos. `numero` lleva UNIQUE como garantía dura de
+// que dos personas nunca comparten uno, pase lo que pase con el contador.
+//
+// El reparto y la escritura van en UNA sentencia: si el proceso muere a mitad,
+// no hay número consumido sin dueño. Y sólo corre para filas sin número, así
+// que quien vuelve a registrarse no mueve el contador.
 const MIGRATIONS = [
   `alter table waitlist_subscribers add column if not exists instagram text`,
   `alter table waitlist_subscribers add column if not exists business_type_other text`,
+  `alter table waitlist_subscribers add column if not exists numero bigint unique`,
+  `create table if not exists waitlist_contador (
+    id smallint primary key check (id = 1),
+    n  bigint not null
+  )`,
+  `insert into waitlist_contador (id, n) values (1, 0) on conflict (id) do nothing`,
+  // Quien se registró antes de existir el número lo recibe por orden de
+  // llegada. Idempotente: sólo toca filas sin número, y el contador nunca
+  // baja del mayor número repartido.
+  `with ordenados as (
+     select email, row_number() over (order by created_at, id)
+            + (select n from waitlist_contador where id = 1) as n
+     from waitlist_subscribers where numero is null
+   )
+   update waitlist_subscribers s set numero = o.n from ordenados o where s.email = o.email`,
+  `update waitlist_contador c
+     set n = greatest(c.n, (select coalesce(max(numero), 0) from waitlist_subscribers))
+   where id = 1`,
 ];
 
-function createNeonStore(databaseUrl: string): WaitlistStore {
-  // Import perezoso: el driver sólo se carga si de verdad hay base de datos.
-  let ready: Promise<NeonQueryFunction<false, false>> | null = null;
+/** Reparte el siguiente número al correo dado, sólo si aún no tiene. Una sola
+ *  sentencia: el contador se bloquea, sube y se escribe en la fila en el
+ *  mismo instante. Devuelve una fila con `numero` si repartió, ninguna si no. */
+export const SQL_NUMERO = `
+  with reparto as (
+    update waitlist_contador c
+       set n = c.n + 1
+      from waitlist_subscribers s
+     where c.id = 1 and s.email = $1 and s.numero is null
+    returning c.n
+  )
+  update waitlist_subscribers s
+     set numero = reparto.n
+    from reparto
+   where s.email = $1 and s.numero is null
+  returning s.numero
+`;
 
-  async function sql() {
-    if (!ready) {
-      ready = (async () => {
-        const { neon } = await import("@neondatabase/serverless");
-        const client = neon(databaseUrl);
-        await client.query(CREATE_TABLE);
-        for (const migration of MIGRATIONS) await client.query(migration);
-        return client;
-      })();
-    }
-    return ready;
-  }
+/** Cualquier cliente Postgres que ejecute texto con parámetros y devuelva
+ *  filas: el driver de Neon en producción, PGlite en las pruebas. */
+export type QueryFn = (text: string, params?: unknown[]) => Promise<Record<string, unknown>[]>;
 
+/** El upsert por correo. Los campos nuevos sólo pisan si vienen con valor:
+ *  quien se apuntó como viajero y luego registra su negocio conserva lo
+ *  anterior. `xmax = 0` distingue INSERT de UPDATE sin un SELECT previo. */
+export const SQL_GUARDAR = `
+  insert into waitlist_subscribers
+    (email, audience, name, business_name, business_type, business_type_other,
+     whatsapp, instagram, ref, consent_at)
+  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+  on conflict (email) do update set
+    audience      = excluded.audience,
+    name          = coalesce(excluded.name, waitlist_subscribers.name),
+    business_name = coalesce(excluded.business_name, waitlist_subscribers.business_name),
+    business_type = coalesce(excluded.business_type, waitlist_subscribers.business_type),
+    business_type_other = coalesce(excluded.business_type_other, waitlist_subscribers.business_type_other),
+    whatsapp      = coalesce(excluded.whatsapp, waitlist_subscribers.whatsapp),
+    instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
+    ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
+    updated_at    = now()
+  returning (xmax = 0) as inserted, numero
+`;
+
+export const SQL_LISTAR = `
+  select email, audience, name, business_name, business_type,
+         business_type_other, whatsapp, instagram, ref, consent_at,
+         created_at, updated_at
+  from waitlist_subscribers
+  order by created_at desc
+`;
+
+/** Crea la tabla y aplica las migraciones, en orden. Idempotente. */
+export async function prepararEsquema(query: QueryFn): Promise<void> {
+  await query(CREATE_TABLE);
+  for (const migration of MIGRATIONS) await query(migration);
+}
+
+/** El almacén sobre Postgres, con el esquema ya preparado. */
+export function createSqlStore(query: QueryFn): WaitlistStore {
   return {
     kind: "neon",
     async save(input) {
-      const q = await sql();
-      // `xmax = 0` distingue INSERT de UPDATE en un upsert de Postgres: en una
-      // fila recién insertada xmax vale 0. Evita un SELECT previo (y su carrera).
-      // Los campos nuevos sólo pisan si vienen con valor: quien se apuntó como
-      // viajero y luego registra su negocio conserva lo anterior.
-      const rows = await q`
-        insert into waitlist_subscribers
-          (email, audience, name, business_name, business_type, business_type_other,
-           whatsapp, instagram, ref, consent_at)
-        values (
-          ${input.email}, ${input.audience}, ${input.name ?? null},
-          ${input.businessName ?? null}, ${input.businessType ?? null},
-          ${input.businessTypeOther ?? null},
-          ${input.whatsapp ?? null}, ${input.instagram ?? null},
-          ${input.ref ?? null}, ${input.consentAt.toISOString()}
-        )
-        on conflict (email) do update set
-          audience      = excluded.audience,
-          name          = coalesce(excluded.name, waitlist_subscribers.name),
-          business_name = coalesce(excluded.business_name, waitlist_subscribers.business_name),
-          business_type = coalesce(excluded.business_type, waitlist_subscribers.business_type),
-          business_type_other = coalesce(excluded.business_type_other, waitlist_subscribers.business_type_other),
-          whatsapp      = coalesce(excluded.whatsapp, waitlist_subscribers.whatsapp),
-          instagram     = coalesce(excluded.instagram, waitlist_subscribers.instagram),
-          ref           = coalesce(waitlist_subscribers.ref, excluded.ref),
-          updated_at    = now()
-        returning (xmax = 0) as inserted, id
-      `;
-      return {
-        status: rows[0]?.inserted ? "created" : "already_subscribed",
-        numero: Number(rows[0]?.id ?? 0),
-      };
+      const rows = await query(SQL_GUARDAR, [
+        input.email,
+        input.audience,
+        input.name ?? null,
+        input.businessName ?? null,
+        input.businessType ?? null,
+        input.businessTypeOther ?? null,
+        input.whatsapp ?? null,
+        input.instagram ?? null,
+        input.ref ?? null,
+        input.consentAt.toISOString(),
+      ]);
+      const status: SaveResult = rows[0]?.inserted ? "created" : "already_subscribed";
+      // Alta nueva, o una fila antigua que se quedó sin número: se reparte.
+      // Si ya lo tenía, la sentencia no devuelve nada y vale el que había.
+      let numero = rows[0]?.numero == null ? null : Number(rows[0].numero);
+      if (numero === null) {
+        const repartido = await query(SQL_NUMERO, [input.email]);
+        numero = Number(repartido[0]?.numero ?? 0);
+      }
+      return { status, numero };
     },
 
     async list() {
-      const q = await sql();
-      const rows = await q`
-        select email, audience, name, business_name, business_type,
-               business_type_other, whatsapp, instagram, ref, consent_at,
-               created_at, updated_at
-        from waitlist_subscribers
-        order by created_at desc
-      `;
-      return (rows as Record<string, unknown>[]).map(
+      const rows = await query(SQL_LISTAR);
+      return rows.map(
         (r): Subscriber => ({
-          email: String(r.email),
+          email: r.email as string,
           audience: r.audience as Audience,
           name: (r.name as string) ?? null,
           businessName: (r.business_name as string) ?? null,
@@ -167,6 +220,29 @@ function createNeonStore(databaseUrl: string): WaitlistStore {
   };
 }
 
+function createNeonStore(databaseUrl: string): WaitlistStore {
+  // Import perezoso: el driver sólo se carga si de verdad hay base de datos.
+  let ready: Promise<WaitlistStore> | null = null;
+  const store = () => {
+    if (!ready) {
+      ready = (async () => {
+        const { neon } = await import("@neondatabase/serverless");
+        const client = neon(databaseUrl);
+        const query: QueryFn = (text, params) =>
+          client.query(text, params) as Promise<Record<string, unknown>[]>;
+        await prepararEsquema(query);
+        return createSqlStore(query);
+      })();
+    }
+    return ready;
+  };
+  return {
+    kind: "neon",
+    save: async (input) => (await store()).save(input),
+    list: async () => (await store()).list(),
+  };
+}
+
 /** El driver devuelve `Date` para timestamptz; el panel sólo maneja ISO. */
 function isoDate(value: unknown): string {
   if (value instanceof Date) return value.toISOString();
@@ -179,6 +255,8 @@ type LocalRow = Omit<SubscriberInput, "consentAt"> & {
   consentAt: string;
   createdAt: string;
   updatedAt: string;
+  /** Falta en filas anteriores al número; se reparte al siguiente guardado. */
+  numero?: number;
 };
 
 export function createLocalStore(): WaitlistStore {
@@ -215,18 +293,24 @@ export function createLocalStore(): WaitlistStore {
           createdAt: existing >= 0 ? rows[existing].createdAt : now,
           updatedAt: now,
         };
+        // El mismo contrato que Postgres: el siguiente al mayor repartido,
+        // sólo para quien no tiene. La cola de escrituras serializa.
+        const siguiente = rows.reduce((m, r) => Math.max(m, r.numero ?? 0), 0) + 1;
         if (existing >= 0) {
-          rows[existing] = { ...rows[existing], ...row, ref: rows[existing].ref ?? row.ref };
+          const previo = rows[existing];
+          rows[existing] = {
+            ...previo,
+            ...row,
+            ref: previo.ref ?? row.ref,
+            numero: previo.numero ?? siguiente,
+          };
         } else {
-          rows.push(row);
+          rows.push({ ...row, numero: siguiente });
         }
         await fs.mkdir(dir, { recursive: true });
         await fs.writeFile(file, JSON.stringify(rows, null, 2), "utf8");
-        // En el archivo el número es la posición de la fila, empezando en 1,
-        // igual que el `id` de Postgres.
-        return existing >= 0
-          ? { status: "already_subscribed", numero: existing + 1 }
-          : { status: "created", numero: rows.length };
+        const numero = existing >= 0 ? rows[existing].numero! : siguiente;
+        return existing >= 0 ? { status: "already_subscribed", numero } : { status: "created", numero };
       });
       queue = run.catch(() => {});
       return run;
