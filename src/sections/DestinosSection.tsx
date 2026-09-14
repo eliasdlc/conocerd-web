@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { useInclinacion } from "@/hooks/useInclinacion";
 
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
@@ -66,6 +67,10 @@ const DESTINOS_SCENES = new Set([
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
   const reduceMotion = useReducedMotion();
+  // En escritorio la carta del frente se inclina hacia el mouse hasta 8° con
+  // un brillo que cruza el papel (hooks/useInclinacion). Sólo mientras la
+  // escena es un destino: fuera de la pila no hay carta que responda.
+  const inclinacion = useInclinacion({ grados: 8, activo: activeScene.startsWith("polaroid-") });
   const clima = useClima();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
@@ -212,14 +217,21 @@ export default function DestinosOverlay() {
               // ganaban ellas. La carta llevaba el papel sin pintar y el pie se
               // leía sobre el mapa. `p-0` sí puede quedarse: `px-3`/`pt-3` son
               // más específicas y le ganan.
+              // Las cartas que aún no llegaron (opacidad 0, más arriba en el
+              // z-index) no pueden atrapar el puntero: un botón deshabilitado
+              // se traga los eventos, y tapaban el tercio alto de la carta del
+              // frente para el hover y la inclinación.
               className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
                 isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
-              }`}
+              } ${isCardVisible ? "" : "pointer-events-none"}`}
               style={{
                 "--pile-left": offset.left,
                 "--pile-bottom": offset.bottomPx,
                 bottom: offset.bottom,
+                // Sólo la carta del frente sigue al mouse; las de atrás no.
+                ...(isFront ? inclinacion.style : {}),
               } as React.CSSProperties}
+              {...(isFront ? inclinacion.handlers : {})}
               initial={false}
               animate={{
                 opacity: isCardVisible ? 1 : 0,
@@ -288,6 +300,16 @@ export default function DestinosOverlay() {
                 )}
                 <p className="crd-destinos-desc m-0 mt-1 text-tiny leading-[1.4] text-ink-3">{pol.desc}</p>
               </div>
+              {/* El brillo que cruza el papel con el puntero. Blanco al 35 %
+                  como máximo para que la foto no se lave; sin puntero fino no
+                  existe. */}
+              {isFront && inclinacion.activa && (
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[6px]"
+                  style={{ background: inclinacion.brillo }}
+                />
+              )}
             </motion.button>
           );
         })}
