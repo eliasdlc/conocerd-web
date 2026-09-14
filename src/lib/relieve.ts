@@ -142,8 +142,8 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
   // El relleno del agua va encima del color por profundidad. La profundidad
   // del DEM viene de una malla gruesa (medio kilómetro): de lejos dibuja un
   // degradado limpio alrededor de la isla, de cerca se ve a bloques. Por eso
-  // el océano se deja casi transparente en la isla entera y casi opaco en los
-  // closeups, donde queda sólo un rastro del borde oscuro. Lagos y ríos van
+  // el océano se deja casi transparente en la isla entera y opaco a partir de
+  // z9.5: en los closeups el mar es liso, que es lo que se ve limpio. Lagos y ríos van
   // opacos: no tienen profundidad en el DEM que valga la pena enseñar.
   if (map.getLayer("water")) {
     map.setPaintProperty("water", "fill-color", paleta.agua);
@@ -155,10 +155,10 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
       ["zoom"],
       7.5,
       oceano(0.3),
+      8.5,
+      oceano(0.7),
       9.5,
-      oceano(0.6),
-      11,
-      oceano(0.85),
+      oceano(1),
     ]);
   }
   // Bosques y parques del basemap, teñidos a media opacidad sobre el color de
