@@ -108,6 +108,9 @@ export default function Nav() {
           variant="selected"
           size="sm"
           icon="notifications_active"
+          // `.crd-nav-cta`: en reposo, sobre la noche del hero, la píldora es
+          // de tinta y el botón se invierte (globals.css).
+          className="crd-nav-cta"
           onClick={() => requestSubscribe("viajero")}
         >
           Unirme a la lista

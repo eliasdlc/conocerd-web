@@ -28,7 +28,7 @@ import { PROYECCION_DEL_RECORRIDO } from "@/lib/mapaLigero";
 import { applyBrandPaint } from "@/components/MapScrollJourney";
 import Nav from "@/components/Nav";
 import JourneyStepper from "@/components/JourneyStepper";
-import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
+import HeroEspacio, { HeroPinMarker } from "@/sections/HeroEspacio";
 import DestinosSection from "@/sections/DestinosSection";
 import MapaSection from "@/sections/MapaSection";
 import ViajerosNegociosSection from "@/sections/ViajerosNegociosSection";
@@ -192,7 +192,7 @@ function LienzoInner() {
           <EquipoSection />
           <CTASection />
         </Map>
-        <HeroOverlay />
+        <HeroEspacio />
       </div>
 
       <div className="crd-capa-nav">

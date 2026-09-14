@@ -1,0 +1,454 @@
+/* ── La escena desde el espacio ───────────────────────────────────────────────
+   Compartida por todas las propuestas. Aquí vive todo lo que no es la
+   composición del cielo: la geometría del arco, el cielo y sus estrellas, el
+   amanecer, la atmósfera, el cue, los marcadores y el sistema de movimiento.
+
+   Geometría: el planeta sale por el borde inferior de la pantalla, sólo asoma
+   su casquete. `--globo-r` es el radio de la silueta que dibuja MapLibre en el
+   keyframe `hero` del journey, medido contra capturas reales (ver Horizonte en
+   el historial); si el keyframe cambiara, es el número a rehacer. El canvas
+   nunca cambia de tamaño: se desplaza en vertical y vuelve a cero a mitad de
+   pista, así que el aterrizaje es idéntico al de producción.
+
+   Movimiento, en tres tiempos:
+    · Entrada, una sola vez: el planeta sube desde abajo, el cielo se enciende,
+      la atmósfera prende, la composición llega escalonada.
+    · Reposo: el globo gira despacio (GloboHero), las estrellas respiran y
+      derivan, cae alguna fugaz, el limbo alienta y el pin del país pulsa. Todo
+      barato: opacidades y transforms de unos pocos elementos.
+    · Scroll: todo sigue a `--descenso` desde CSS; las capas del mapa, desde
+      Espacio.tsx.
+   Con prefers-reduced-motion el bloque global de globals.css deja las
+   animaciones en nada; el scroll sigue funcionando. */
+
+/* La entrada del planeta se anima como longitud registrada: así puede sumarse
+   al desplazamiento de scroll sin que una animación congele el transform. */
+@property --entrada {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.escena {
+  --globo-r: 42.8vw;
+  --arco: max(62dvh, 300px);
+  --globo-baja: calc(var(--arco) + var(--globo-r) - 50dvh);
+
+  --t: var(--descenso, 0);
+  --u: min(1, calc(var(--t) / 0.62));
+  --alza: calc(1 - var(--u) * var(--u) * (3 - 2 * var(--u)));
+  --sube: translate3d(0, calc(var(--globo-baja) * var(--alza) + var(--entrada)), 0);
+
+  /* La noche se va en el primer tramo del descenso; para cuando el planeta
+     llena la pantalla ya es de día. */
+  --noche-op: calc(1 - var(--t) * 2.2);
+
+  /* Dónde cuelga el cue respecto a la cima del arco: centrado en ella por
+     defecto; una propuesta con texto en el limbo lo baja a la corteza. */
+  --cue-baja: -22px;
+
+  --entrada: 0px;
+  animation: planetaEntra 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.escena.cueBajo {
+  --cue-baja: 40px;
+}
+
+@media (min-width: 900px) {
+  .escena {
+    /* Ajuste lineal del modelo de DiscoDelGlobo para el zoom 1.95 del hero
+       (r = 316.85 − 38768/alto): 260 a 686 de alto, 274 a 900, 278 a 1000. La
+       home escribe el valor exacto en línea desde ese mismo modelo. */
+    --globo-r: calc(221px + 5.67dvh);
+    --arco: max(50dvh, 400px);
+  }
+}
+
+/* Las propuestas con el logo grande centrado bajan un poco el horizonte. */
+.escena.arcoBajo {
+  --arco: max(64dvh, 320px);
+}
+
+@media (min-width: 900px) {
+  .escena.arcoBajo {
+    --arco: max(55dvh, 440px);
+  }
+}
+
+.escena :global(.maplibregl-map),
+.escena > [aria-hidden="true"]:not(.capa),
+.atmosferaEntra {
+  transform: var(--sube);
+}
+
+.escena :global(.maplibregl-map) {
+  animation: aparece 1.4s ease-out both;
+}
+
+/* Aterrizado, el mapa no lleva transform: en la home cuelgan de él paneles
+   posicionados respecto al viewport y un transform los dejaría atrapados. */
+.escena[data-fase="destino"] :global(.maplibregl-map) {
+  transform: none;
+}
+
+/* ═══ Cielo ═══════════════════════════════════════════════════════════════ */
+
+.noche {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: var(--noche-op);
+  background: linear-gradient(180deg, #070c17 0%, #0f1a2e 62%, #1a2540 100%);
+  /* Al bajar el cielo se aleja: sube y se abre un poco, más despacio que el
+     planeta. */
+  transform: translate3d(0, calc(var(--t) * -12dvh), 0) scale(calc(1 + var(--t) * 0.12));
+  transform-origin: 50% 70%;
+}
+
+/* Estrellas estáticas generadas una vez (public/assets/estrellas.png). La capa
+   es más grande que el cielo y deriva en un ciclo de dos minutos. */
+.estrellas {
+  position: absolute;
+  inset: -8%;
+  background: url("/assets/estrellas.png") center / cover no-repeat;
+  animation: aparece 1.6s ease-out both, deriva 140s ease-in-out infinite alternate;
+}
+
+/* La misma imagen, desplazada y a otra escala: un subconjunto distinto de
+   estrellas que respira en opacidad. Es el parpadeo. */
+.titila {
+  position: absolute;
+  inset: -8%;
+  background: url("/assets/estrellas.png") 30% 62% / 135% no-repeat;
+  mix-blend-mode: screen;
+  animation: titila 5.5s ease-in-out infinite alternate;
+}
+
+/* Estrella fugaz: un trazo que cruza en diagonal, visible el 5 % de su ciclo. */
+.fugaz {
+  position: absolute;
+  left: 78%;
+  top: 12%;
+  width: 140px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  transform: rotate(-32deg);
+  opacity: 0;
+  animation: fugaz 11s linear infinite;
+  animation-delay: 2.6s;
+}
+
+.fugaz2 {
+  left: 30%;
+  top: 6%;
+  width: 110px;
+  animation-duration: 17s;
+  animation-delay: 9s;
+}
+
+/* El día: el cielo cálido de la web, que va cubriendo la noche conforme se
+   baja. Se retira antes del final, cuando el planeta ya llena la pantalla. */
+.dia {
+  position: absolute;
+  inset: 0;
+  opacity: min(calc(var(--t) * 2.6), max(0, calc((0.78 - var(--t)) * 3.3)));
+  background:
+    radial-gradient(78% 30% at 50% var(--arco), rgba(255, 141, 22, 0.28), transparent 72%),
+    linear-gradient(180deg, #fdf8f0 0%, #fdf5ea 26%, #fff0dd 50%, #ffe6c8 74%, #ffe1d3 100%);
+}
+
+/* La claridad del alba: nace en el horizonte y crece con el primer tramo. */
+.alba {
+  position: absolute;
+  inset: 0;
+  opacity: calc(min(1, 0.55 + var(--t) * 1.5) * max(0, var(--noche-op)));
+  background:
+    radial-gradient(70% 34% at 50% var(--arco), rgba(255, 141, 22, 0.42), transparent 70%),
+    radial-gradient(120% 48% at 50% calc(var(--arco) + 4vh), rgba(224, 85, 47, 0.28), transparent 70%);
+}
+
+.atmosferaEntra {
+  position: absolute;
+  inset: 0;
+  animation: aparece 1.6s ease-out both;
+  animation-delay: 300ms;
+  pointer-events: none;
+}
+
+/* El filo del amanecer sobre el limbo: fuera de la silueta, así que el planeta
+   no se tiñe. */
+.atmosfera,
+.aliento {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--globo-r) * 2);
+  height: calc(var(--globo-r) * 2);
+  margin: calc(var(--globo-r) * -1) 0 0 calc(var(--globo-r) * -1);
+  border-radius: 50%;
+}
+
+.atmosfera {
+  opacity: calc(min(1, 0.35 + var(--t) * 2.2) * max(0, var(--noche-op)));
+  box-shadow:
+    0 0 0 1px rgba(255, 141, 22, 0.55),
+    0 0 30px 6px rgba(255, 141, 22, 0.32),
+    0 0 130px 34px rgba(224, 85, 47, 0.2);
+}
+
+/* El aliento: un segundo halo que respira. */
+.aliento {
+  box-shadow:
+    0 0 40px 10px rgba(255, 141, 22, 0.28),
+    0 0 160px 50px rgba(224, 85, 47, 0.14);
+  animation: aliento 6s ease-in-out infinite alternate;
+}
+
+/* ═══ Overlay ═════════════════════════════════════════════════════════════ */
+
+.capa {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* ═══ Cue ═════════════════════════════════════════════════════════════════ */
+
+/* Sólo en escritorio. En el teléfono el panel de pasos vive fijo al borde
+   inferior con su chevron de avanzar a 54: el cue decía lo mismo, más pequeño
+   y más arriba, y encima de la noche era una segunda píldora compitiendo con
+   la del nav. En escritorio no hay panel, así que el cue es la única
+   invitación a bajar y se queda. */
+.cue {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: calc(50dvh - var(--globo-r) + var(--cue-baja));
+  width: max-content;
+  transform: var(--sube) translateX(-50%);
+  opacity: calc(1 - var(--t) * 4);
+}
+
+@media (min-width: 900px) {
+  .cue {
+    display: block;
+  }
+}
+
+.cueBoton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 26, 46, 0.62);
+  backdrop-filter: blur(14px);
+  padding: 7px 8px 7px 16px;
+  white-space: nowrap;
+  color: #ffffff;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.cueBoton:hover {
+  transform: translateY(3px);
+  background: rgba(15, 26, 46, 0.8);
+}
+
+.cueFlecha {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-coral);
+  color: var(--color-paper);
+  flex: none;
+}
+
+/* Tres empujones tras la entrada; después, quieta. */
+.cueEmpujon {
+  animation: empujon 1.1s ease-in-out 3;
+  animation-delay: 2.2s;
+}
+
+/* Crédito de las imágenes en el banco de propuestas, que no tiene pie. En la
+   home el crédito de GIBS va al pie del sitio con los de las fotos. Sólo en
+   escritorio: en el teléfono no hay esquina libre que no pise algo. */
+.credito {
+  display: none;
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: calc(1 - var(--t) * 4);
+}
+
+@media (min-width: 900px) {
+  .credito {
+    display: block;
+  }
+}
+
+/* ═══ Marcadores ══════════════════════════════════════════════════════════ */
+
+.punto {
+  opacity: calc(1 - (var(--t) - 0.5) * 3.5);
+}
+
+/* El halo del punto de luz: un disco de mango que se disuelve hacia fuera,
+   centrado en la cabeza del pin. */
+.halo {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 141, 22, 0.55) 0%, rgba(255, 141, 22, 0.18) 38%, transparent 68%);
+}
+
+/* El pulso: un anillo que nace en el pin y se expande hasta desaparecer. */
+.pulso {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 2px solid rgba(255, 141, 22, 0.9);
+  border-radius: 50%;
+  animation: pulso 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+/* En el teléfono la etiqueta va ENCIMA del pin: debajo caía bajo el panel de
+   pasos en las pantallas cortas. Con ancho, al costado. */
+.etiquetaRd {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+}
+
+@media (min-width: 900px) {
+  .etiquetaRd {
+    left: calc(100% + 8px);
+    bottom: auto;
+    top: 13px;
+    transform: translateY(-50%);
+  }
+}
+
+.pinDestino {
+  opacity: calc((var(--t) - 0.62) * 5);
+}
+
+/* ═══ Movimiento ══════════════════════════════════════════════════════════ */
+
+@keyframes planetaEntra {
+  from {
+    --entrada: 18vh;
+  }
+  to {
+    --entrada: 0px;
+  }
+}
+
+@keyframes aparece {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Entrada de la composición: sube, se desdibuja y aterriza. */
+@keyframes entra {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes deriva {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-2.5%, 1.5%, 0);
+  }
+}
+
+@keyframes titila {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+
+@keyframes fugaz {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(-32deg);
+  }
+  1% {
+    opacity: 1;
+  }
+  5% {
+    opacity: 0;
+    transform: translate3d(-34vw, 21vw, 0) rotate(-32deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-34vw, 21vw, 0) rotate(-32deg);
+  }
+}
+
+@keyframes aliento {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+
+@keyframes pulso {
+  from {
+    opacity: 0.85;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes empujon {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* Sólo la llevan elementos SIN estilo dirigido por el scroll: una animación
+   con `both` congela la propiedad que anima, y sobre `--descenso` eso apagaría
+   el descenso entero. */
+.entra {
+  animation: entra 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

@@ -1,0 +1,99 @@
+/* ── Propuesta «Corona» ───────────────────────────────────────────────────────
+   Sólo la composición del cielo; la escena vive en _espacio/espacio.module.css
+   y publica `--t` (el descenso), `--sube` y `--globo-r` en el contenedor. */
+
+.columna {
+  position: absolute;
+  inset: 0 22px auto;
+  padding-top: max(64px, 11dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate3d(0, calc(var(--t) * -24dvh), 0) scale(calc(1 - var(--t) * 0.3));
+  transform-origin: 50% 0;
+  opacity: calc(1 - var(--t) * 3);
+  --color-ink: #ffffff;
+  --color-line-strong: rgba(255, 255, 255, 0.34);
+}
+
+.logo {
+  display: block;
+  width: min(78vw, 320px);
+  height: auto;
+  filter: drop-shadow(0 18px 40px rgba(255, 141, 22, 0.18));
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+@media (min-width: 900px) {
+  .columna {
+    padding-top: clamp(56px, 9vh, 96px);
+  }
+  .logo {
+    width: clamp(420px, 36vw, 520px);
+  }
+  .acciones {
+    flex-direction: row;
+    gap: 14px;
+    margin-top: 30px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .columna {
+    padding-top: 40px;
+  }
+  .logo {
+    width: clamp(320px, 28vw, 400px);
+  }
+}
+
+/* ── La línea en el arco ─────────────────────────────────────────────────── */
+
+.corona {
+  --aro: calc(var(--globo-r) + 18px);
+  position: absolute;
+  left: 50%;
+  top: 50dvh;
+  width: 0;
+  height: 0;
+  margin: 0;
+  transform: var(--sube);
+  opacity: calc(1 - var(--t) * 3);
+}
+
+@media (min-width: 900px) {
+  .corona {
+    --aro: calc(var(--globo-r) + 26px);
+  }
+}
+
+.aro {
+  position: absolute;
+  left: calc(var(--aro) * -1);
+  top: calc(var(--aro) * -1);
+  width: calc(var(--aro) * 2);
+  height: calc(var(--aro) * 2);
+  overflow: visible;
+}
+
+/* 58 unidades del viewBox de 1000: unos 46px en escritorio y 22 en un
+   teléfono de 390. */
+.aroTexto {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 58px;
+  font-variation-settings: "opsz" 96;
+  letter-spacing: -0.02em;
+  fill: #ffffff;
+}
+
+.aroAcento {
+  fill: var(--color-mango);
+}

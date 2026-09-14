@@ -119,6 +119,99 @@
   --crd-glass-blur: blur(24px) saturate(1.8);
 }
 
+/* ── Cristal líquido · el panel de pasos ──────────────────────────────────────
+   El cristal del tema es un panel: crema al 84 % que tapa lo que hay debajo.
+   Sobre la noche del hero eso es una pastilla encendida pegada encima del
+   planeta, no una pieza de la escena. Este material es lo contrario: el fondo
+   se ve, y el cuerpo lo pone la óptica, no la opacidad.
+
+   Tres capas, ninguna de relleno plano:
+     1. `backdrop-filter`, que es quien trabaja. Blur largo (32) para que lo de
+        debajo se deshaga en color, saturación alta, y un realce de brillo que
+        aclara justo lo oscuro que pasaría por detrás del texto: eso es lo que
+        deja bajar la crema del 84 al 40 % sin perder contraste.
+     2. Un degradado de lente, más claro arriba que abajo. Sin él el panel es
+        una calcomanía de un solo tono.
+     3. Dos hairlines internos y el canto blanco del borde. El canto es lo que
+        le da grosor; sin él no hay cristal, hay transparencia.
+
+   Dos materiales, no uno, porque el recorrido tiene dos fondos. De día la
+   crema; sobre la noche del hero (`data-noche`, el mismo criterio que la
+   píldora del nav) el cristal se hace de tinta translúcida y lo de dentro se
+   invierte. Un solo material claro sobre los dos fondos es justamente lo que
+   se veía mal.
+
+   Sin `backdrop-filter` la transparencia mentiría, así que ahí cae al cristal
+   opaco del tema. */
+.crd-cristal-liquido {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 48%, transparent),
+      color-mix(in srgb, var(--color-cream) 36%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 46%, transparent)
+    );
+  border-color: rgba(255, 255, 255, .55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .8),
+    inset 0 -1px 0 rgba(255, 255, 255, .28),
+    0 10px 30px rgba(38, 70, 83, .16);
+  transition: background .5s ease, border-color .5s ease, box-shadow .5s ease;
+}
+
+.crd-cristal-liquido[data-noche="true"] {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .16),
+      rgba(255, 255, 255, .07) 52%,
+      rgba(15, 26, 46, .22)
+    );
+  border-color: rgba(255, 255, 255, .24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -1px 0 rgba(255, 255, 255, .1),
+    0 14px 36px rgba(0, 0, 0, .45);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .crd-cristal-liquido {
+    -webkit-backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
+    backdrop-filter: blur(32px) saturate(1.85) brightness(1.22);
+  }
+  /* De noche el realce se invierte: lo que sobra es luz, no falta. */
+  .crd-cristal-liquido[data-noche="true"] {
+    -webkit-backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
+    backdrop-filter: blur(30px) saturate(1.6) brightness(.86);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crd-cristal-liquido {
+    background: var(--crd-glass);
+    border-color: var(--crd-glass-line);
+  }
+  .crd-cristal-liquido[data-noche="true"] {
+    background: rgba(15, 26, 46, .78);
+    border-color: rgba(255, 255, 255, .24);
+  }
+}
+
+/* El hueco del control secundario dentro del panel: no es otra superficie, es
+   el mismo cristal con un velo encima y su propio canto. Con `bg-paper` opaco
+   el círculo se leía pegado sobre el cristal en vez de excavado en él. */
+.crd-cristal-hueco {
+  background: rgba(255, 255, 255, .42);
+  border-color: rgba(255, 255, 255, .62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: background .5s ease, border-color .5s ease;
+}
+.crd-cristal-hueco[data-noche="true"] {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: clip; /* clip horizontal overflow at html level without affecting scroll container */
@@ -238,17 +331,6 @@ body::after {
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
 
-/* Hero entrance */
-@keyframes crdLogoIn {
-  0%   { opacity: 0; transform: translateY(22px) scale(.92); filter: blur(8px); }
-  60%  { filter: blur(0); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-@keyframes crdRise {
-  0%   { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 /* ───────────────────── Map scrollytelling ────────────────────── */
 @keyframes mapBubbleIn {
   from { opacity: 0; transform: scale(0.7) translateY(12px); }
@@ -262,19 +344,6 @@ body::after {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
-
-/* ── Cue de scroll: empujón acotado ──────────────────────────────────────────
-   No es levitación en reposo (el proyecto no la usa): la flecha está quieta y
-   solo se mueve cuando el visitante lleva unos segundos en el hero sin bajar
-   —el disparador vive en useEmpujonDeScroll—, tres iteraciones y para. Al
-   primer scroll no vuelve a dispararse. */
-@keyframes crdScrollNudge {
-  0%, 100% { transform: translateY(0);   opacity: .8; }
-  40%      { transform: translateY(6px); opacity: 1;  }
-  70%      { transform: translateY(0);   opacity: .8; }
-}
-.crd-scroll-arrow[data-empujon] { animation: crdScrollNudge 1.15s ease-in-out 3 both; }
-.crd-scroll-cue:hover .crd-scroll-arrow { transform: translateY(3px); transition: transform .2s ease; }
 
 /* ── Auto-demo del rail de pasos (Viajeros / Negocios) ───────────────────────
    Barra que consume el tiempo del paso activo mientras la demo se pasa sola.
@@ -290,6 +359,28 @@ body::after {
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── El reloj de las animaciones de entrada ───────────────────────────────────
+   Una animación CSS arranca cuando el navegador resuelve el estilo, no cuando
+   pinta. En un teléfono real median segundos entre las dos cosas (1,28 s y
+   2,70 s medidos con la CPU a un cuarto y red 3G sobre el build de
+   producción), así que toda la entrada del hero se consumía antes del primer
+   pixel y el visitante veía el estado final, sin animación.
+
+   El script de `layout.tsx` pone `lista` al empezar a parsear el body y
+   `corre` en el primer frame pintado. Entre esos dos momentos, todo queda
+   congelado en el frame cero: `paused` con relleno `both` deja a la vista el
+   fotograma inicial de cada animación, que es justo lo que hay que ver antes
+   de que empiece.
+
+   Es el `*` más justificado del archivo: la alternativa es marcar a mano cada
+   pieza que anima al entrar, y la siguiente que alguien añada nacería otra vez
+   con el bug. Sólo vive durante ese hueco; en el primer frame desaparece. */
+html[data-entrada="lista"] *,
+html[data-entrada="lista"] *::before,
+html[data-entrada="lista"] *::after {
+  animation-play-state: paused !important;
 }
 
 /* ─────────────────────────── Journey ──────────────────────────────────── */
@@ -768,11 +859,6 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
      pasos de la esquina, y con los 196 originales su canto superior alcanzaba
      el titular de la sección. */
   .crd-destinos-card-media { height: 140px !important; }
-
-  .crd-hero-logo { width: min(34vw, 360px) !important; }
-  .crd-hero-title { font-size: 34px !important; line-height: 1.06 !important; margin-top: 10px !important; }
-  .crd-hero-copy { margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 16px !important; }
 }
 
 /* ── Teléfonos cortos: la compresión manda por ALTO, no por ancho ─────────────
@@ -782,24 +868,11 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    no 667. En esa franja el hero no cabía y el wordmark salía cortado por
    arriba, con la píldora encima.
 
-   El bloque del hero es la lista completa de lo que cede: logo, titular,
-   párrafo, botones y el cue. Nada se oculta — un control que desaparece en una
-   pantalla chica es una función que el visitante no sabe que existe. */
-@media (max-width: 899px) and (max-height: 700px) {
-  .crd-hero-logo { width: min(66vw, 340px) !important; }
-  .crd-hero-title { font-size: 27px !important; line-height: 30px !important; margin-top: 10px !important; }
-  .crd-hero-copy { font-size: 15px !important; line-height: 1.38 !important; margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 14px !important; gap: 10px !important; }
-  .crd-hero-cue { margin-top: 6px !important; }
-}
+   Lo que cede el hero en estas alturas vive con él (sections/espacio/hero.module.css).
+   Nada se oculta: un control que desaparece en una pantalla chica es una función
+   que el visitante no sabe que existe. */
 
 @media (max-width: 899px) and (max-height: 600px) {
-  .crd-hero-content { max-width: 300px !important; }
-  .crd-hero-logo { width: min(52vw, 240px) !important; }
-  .crd-hero-title { font-size: 22px !important; line-height: 25px !important; margin-top: 8px !important; }
-  .crd-hero-copy { font-size: 14px !important; margin-top: 6px !important; }
-  .crd-hero-actions { margin-top: 10px !important; gap: 8px !important; }
-  .crd-hero-cue { margin-top: 2px !important; }
   /* Adorno, no control: a este alto el globo y el titular ocupan la misma
      franja y el pin se posaba sobre "República Dominicana". */
   .crd-hero-pin { display: none; }
@@ -876,6 +949,26 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   background: color-mix(in srgb, var(--color-cream) 60%, transparent);
   backdrop-filter: blur(12px);
   box-shadow: none;
+}
+/* En reposo flota sobre la noche del hero, no sobre crema: la píldora se hace
+   de tinta translúcida y los enlaces pasan a blanco. Pasado el hero vuelve al
+   cristal crema de siempre (`data-solid`). */
+.crd-nav-pill[data-solid="false"] {
+  background: rgba(15, 26, 46, 0.55);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.crd-nav-pill[data-solid="false"] .crd-navlink {
+  color: rgba(255, 255, 255, 0.72);
+}
+.crd-nav-pill[data-solid="false"] .crd-navlink:hover,
+.crd-nav-pill[data-solid="false"] .crd-navlink[aria-current="location"] {
+  color: #ffffff;
+}
+/* El botón de la lista, de tinta, se fundía con la píldora de tinta: en
+   reposo va en blanco con la etiqueta en tinta. */
+.crd-nav-pill[data-solid="false"] .crd-nav-cta {
+  background: #ffffff;
+  color: var(--color-ink);
 }
 .crd-nav-pill[data-solid="true"] {
   background: var(--crd-glass);

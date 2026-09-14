@@ -1,0 +1,155 @@
+/* ── El hero de la home: la composición «Insignia» ────────────────────────────
+   Sólo lo que vive en el cielo; la escena (planeta, amanecer, movimiento)
+   está en espacio.module.css y publica `--t` (el descenso) en el sticky del
+   recorrido. Las franjas del cromo flotante se respetan aquí: la píldora del
+   nav arriba (`--crd-nav-clear`) y, en el teléfono, el panel de pasos abajo
+   (`--crd-stepper-h`, que sólo afecta al cue porque el resto vive arriba). */
+
+.columna {
+  position: absolute;
+  inset: 0 22px auto;
+  padding-top: max(var(--crd-nav-clear), 9dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translate3d(0, calc(var(--t) * -24dvh), 0) scale(calc(1 - var(--t) * 0.3));
+  transform-origin: 50% 0;
+  opacity: calc(1 - var(--t) * 3);
+  /* Sobre tinta, el botón secundario dibuja contorno y etiqueta en blanco. */
+  --color-ink: #ffffff;
+  --color-line-strong: rgba(255, 255, 255, 0.34);
+}
+
+/* El logo es la portada. */
+.logo {
+  display: block;
+  width: min(74vw, 300px);
+  height: auto;
+  filter: drop-shadow(0 18px 40px rgba(255, 141, 22, 0.18));
+}
+
+.linea {
+  margin: 18px 0 0;
+  max-width: 30ch;
+  font-size: clamp(16px, 1.7vw, 20px);
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+/* ── La entrada de la frase ───────────────────────────────────────────────────
+   La línea no entra con el mismo fundido que el logo y los botones: llega
+   palabra por palabra, y cuando la última se posa, el subrayado se dibuja. El
+   retraso de cada palabra lo escribe el componente (depende de cuántas hay);
+   aquí sólo viven la forma y la duración. */
+.palabra {
+  display: inline-block;
+  opacity: 0;
+  animation: palabraEntra 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* La palabra que carga la frase. El trazo va en mango, que es el acento sobre
+   tinta, y se dibuja de izquierda a derecha: aparecer de golpe lo convierte en
+   un subrayado de enlace. Va en <em>, sin la cursiva del navegador, como el
+   resto de los acentos del sitio. */
+.clave {
+  position: relative;
+  font-style: normal;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.clave::after {
+  content: "";
+  position: absolute;
+  left: -0.04em;
+  right: -0.04em;
+  bottom: -0.2em;
+  height: 0.15em;
+  border-radius: 0.08em;
+  background: var(--color-mango);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: rayaEntra 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--raya-retraso, 1.24s) both;
+}
+
+@keyframes palabraEntra {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+    filter: blur(0.12em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes rayaEntra {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Sin movimiento, la frase entera llega junta y ya subrayada. El bloque global
+   de globals.css sólo acorta la duración: el retraso sigue vivo, y sin esto la
+   frase aparecería a trozos durante un segundo. El !important es para ganarle
+   al `animation-delay` que el componente escribe en línea. */
+@media (prefers-reduced-motion: reduce) {
+  .palabra,
+  .clave::after {
+    animation-delay: 0ms !important;
+  }
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+@media (min-width: 900px) {
+  .columna {
+    padding-top: max(calc(var(--crd-nav-clear) + 4px), 8vh);
+  }
+  .logo {
+    width: clamp(380px, 32vw, 460px);
+  }
+  .linea {
+    margin-top: 22px;
+  }
+  .acciones {
+    flex-direction: row;
+    gap: 14px;
+    margin-top: 26px;
+  }
+}
+
+/* Pantallas bajas: el logo cede y la columna se aprieta para no invadir el
+   arco. Nada se oculta. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .logo {
+    width: clamp(300px, 26vw, 380px);
+  }
+}
+
+@media (max-width: 899px) and (max-height: 700px) {
+  .logo {
+    width: min(60vw, 250px);
+  }
+  .linea {
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  .acciones {
+    margin-top: 14px;
+    gap: 10px;
+  }
+}

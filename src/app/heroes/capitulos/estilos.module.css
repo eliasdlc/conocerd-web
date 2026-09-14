@@ -1,0 +1,100 @@
+/* ── Propuesta «Capítulos» ────────────────────────────────────────────────────
+   Sólo la composición del cielo y las tarjetas de la bajada; la escena vive
+   en _espacio/espacio.module.css y publica `--t` (el descenso). */
+
+.columna {
+  position: absolute;
+  inset: 0 22px auto;
+  padding-top: max(72px, 13dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Se va más rápido que en las otras propuestas: el primer capítulo entra en
+     el 20 % de la pista y el cielo tiene que estar ya vacío. */
+  transform: translate3d(0, calc(var(--t) * -30dvh), 0) scale(calc(1 - var(--t) * 0.4));
+  transform-origin: 50% 0;
+  opacity: calc(1 - var(--t) * 5.5);
+  --color-ink: #ffffff;
+  --color-line-strong: rgba(255, 255, 255, 0.34);
+}
+
+.logo {
+  display: block;
+  width: min(78vw, 320px);
+  height: auto;
+  filter: drop-shadow(0 18px 40px rgba(255, 141, 22, 0.18));
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+@media (min-width: 900px) {
+  .columna {
+    padding-top: clamp(64px, 10vh, 104px);
+  }
+  .logo {
+    width: clamp(420px, 36vw, 520px);
+  }
+  .acciones {
+    flex-direction: row;
+    gap: 14px;
+    margin-top: 30px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .columna {
+    padding-top: 44px;
+  }
+  .logo {
+    width: clamp(320px, 28vw, 400px);
+  }
+}
+
+/* ── Las tarjetas de la bajada ─────────────────────────────────────────────
+   Cada una tiene su ventana [--a, --b]: entra en 0.06 de pista, se queda y
+   sale en otros 0.06. Todo sale de `--t` en CSS. */
+
+.capitulos {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding: 0 22px;
+  pointer-events: none;
+}
+
+.capitulo {
+  --in: min(1, max(0, calc((var(--t) - var(--a)) / 0.06)));
+  --out: min(1, max(0, calc((var(--b) - var(--t)) / 0.06)));
+  --vivo: min(var(--in), var(--out));
+  grid-area: 1 / 1;
+  margin-top: max(120px, 18dvh);
+  max-width: 22ch;
+  padding: 16px 24px;
+  border: 1px solid var(--crd-glass-line);
+  border-radius: var(--radius-surface);
+  background: var(--crd-glass);
+  backdrop-filter: var(--crd-glass-blur);
+  box-shadow: var(--shadow-e1);
+  font-size: clamp(24px, 4.4vw, 40px);
+  line-height: 1.1;
+  text-align: center;
+  text-wrap: balance;
+  opacity: var(--vivo);
+  /* Entra subiendo y sale subiendo: el texto viaja en la dirección del vuelo. */
+  transform: translate3d(0, calc((1 - var(--in)) * 28px - (1 - var(--out)) * 28px), 0)
+    scale(calc(0.96 + var(--vivo) * 0.04));
+}
+
+@media (min-width: 900px) {
+  .capitulo {
+    margin-top: clamp(96px, 16vh, 160px);
+    padding: 20px 32px;
+  }
+}
