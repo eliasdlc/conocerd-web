@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capaDeReferencia, ponerRelieve, RELIEVE_CAPA, RELIEVE_FUENTE, RELIEVE_MINZOOM } from "./relieve";
+import { capaDeReferencia, ponerRelieve, RELIEVE_CAPA, RELIEVE_COLOR, RELIEVE_FUENTE, RELIEVE_MINZOOM, RELIEVE_ORILLA } from "./relieve";
 
 type Capa = { id: string; type: string };
 
@@ -18,6 +18,8 @@ function mapaFalso(capas: Capa[]) {
     addLayer: (capa: { id: string; minzoom?: number }, antesDe?: string) => {
       añadidas.push({ capa, antesDe });
     },
+    getLayer: (id: string) => capas.find((c) => c.id === id),
+    setPaintProperty: () => {},
   } as unknown as Parameters<typeof ponerRelieve>[0] & {
     añadidas: typeof añadidas;
     fuentes: typeof fuentes;
@@ -49,16 +51,18 @@ describe("capaDeReferencia", () => {
 });
 
 describe("ponerRelieve", () => {
-  it("añade la fuente y la capa una sola vez, y la capa no arranca antes de z6", () => {
+  it("añade la fuente y las capas una sola vez, bajo los ríos, y ninguna arranca antes de z6", () => {
     const mapa = mapaFalso(POSITRON);
     expect(ponerRelieve(mapa)).toBe(true);
     expect(mapa.fuentes.has(RELIEVE_FUENTE)).toBe(true);
-    expect(mapa.añadidas).toHaveLength(1);
-    expect(mapa.añadidas[0].capa.id).toBe(RELIEVE_CAPA);
-    expect(mapa.añadidas[0].capa.minzoom).toBe(RELIEVE_MINZOOM);
+    expect(mapa.añadidas.map((a) => a.capa.id)).toEqual([RELIEVE_COLOR, RELIEVE_CAPA, RELIEVE_ORILLA]);
+    expect(mapa.añadidas.map((a) => a.capa.minzoom)).toEqual([RELIEVE_MINZOOM, RELIEVE_MINZOOM, RELIEVE_MINZOOM]);
     expect(mapa.añadidas[0].antesDe).toBe("waterway");
+    expect(mapa.añadidas[1].antesDe).toBe("waterway");
+    // La orilla va justo encima del agua.
+    expect(mapa.añadidas[2].antesDe).toBe("road_pri");
 
     expect(ponerRelieve(mapa)).toBe(false);
-    expect(mapa.añadidas).toHaveLength(1);
+    expect(mapa.añadidas).toHaveLength(3);
   });
 });

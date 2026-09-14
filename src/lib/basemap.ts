@@ -48,10 +48,10 @@ export const CARTO_HOSTS = [
 // AWS), en formato terrarium: gratis, sin clave, con CORS abierto. Cada tesela
 // pesa entre 70 y 115 KB sobre la isla (medido el 13 sep 2026 a z9), así que:
 //
-//   · `maxzoom: 9`. A los closeups de los destinos (z9 a z11.5) MapLibre
-//     sobreescala la tesela de z9. El relieve sale más suave que a z11, pero a
-//     z11 el mismo encuadre pediría 16 veces más teselas: unos 2,5 MB por
-//     destino en vez de unos 300 KB.
+//   · `maxzoom: 11`. A z9 los closeups (z10 a z11.5) salían borrosos: la
+//     tesela se sobreescalaba hasta seis veces. A z11 un encuadre de teléfono
+//     pide unas seis teselas (medido abajo, en el PR) y el relieve se lee
+//     nítido; por encima de z11 MapLibre sobreescala como mucho 1,4 veces.
 //   · `bounds` acotado a la isla: el mar alrededor no tiene relieve que pedir.
 //
 // Sólo la spec, sin maplibre: este módulo entra en el bundle inicial. El tipo
@@ -62,7 +62,7 @@ export const RELIEVE_DEM = {
   encoding: "terrarium",
   tileSize: 256,
   minzoom: 4,
-  maxzoom: 9,
+  maxzoom: 11,
   bounds: [-72.1, 17.35, -68.25, 20.1],
   attribution:
     'Relieve: <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, NASA SRTM, USGS, GEBCO)',
