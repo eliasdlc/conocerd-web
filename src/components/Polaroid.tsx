@@ -27,8 +27,9 @@ import { cieloDeWMO, grados } from "@/lib/clima/etiquetas";
  *  carta hacia abajo: la proporción salía 1 : 1,55 y la polaroid se leía como
  *  una card blanca con una foto encima.
  *
- *  La cinta ya no vive aquí. Con las cartas en pareja, una sola cinta cruza las
- *  dos y por eso es un elemento de la escena, no del papel.
+ *  `crd-tape` le pega la cinta adhesiva del ::before. Se probó una sola cinta
+ *  larga cruzando las dos cartas del par y no se sostuvo: una cinta por carta
+ *  es lo que hace que cada foto se lea pegada al papel por su cuenta.
  *
  *  El radio 6 (y el 3 de la foto) es el artefacto y NO entra en la escala de
  *  radios del sistema: una polaroid a radio 22 deja de ser una polaroid y pasa
@@ -41,7 +42,7 @@ import { cieloDeWMO, grados } from "@/lib/clima/etiquetas";
  *  se salían del posicionamiento. Cada consumidor declara su posición; lo que
  *  el papel garantiza es que haya una (la cinta se ancla a ella).*/
 export const POLAROID_PAPER =
-  "@container flex flex-col aspect-[1/1.215] rounded-[6px] border border-line bg-[#FFFDF7] px-[5.4%] pb-0 pt-[5.4%] shadow-e1";
+  "crd-tape @container flex flex-col aspect-[1/1.215] rounded-[6px] border border-line bg-[#FFFDF7] px-[5.4%] pb-0 pt-[5.4%] shadow-e1";
 
 export function PolaroidMedia({
   image,

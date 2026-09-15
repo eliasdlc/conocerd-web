@@ -180,10 +180,6 @@ export default function DestinosOverlay() {
             distintos y nada salta de sitio. */}
         {pileSeen && (
           <div className="crd-destinos-mesa">
-            {/* Una sola cinta cruza las dos (decisión 1A). Por eso vive aquí y
-                no en el papel: sostiene el par, no una carta. */}
-            <span aria-hidden="true" className="crd-destinos-cinta" />
-
             {POLAROIDS.map((pol, i) => {
               const puesto = puestoDe(i, visibleCount);
               const enFrente = puesto === "frente";
@@ -197,7 +193,13 @@ export default function DestinosOverlay() {
                   // Sólo la del frente sigue al puntero: la de atrás está a
                   // medio salir y moverla con el mouse la convierte en un
                   // objeto vivo que no se puede tocar.
-                  style={enFrente ? inclinacion.style : undefined}
+                  // Cada carta lleva su cinta (`crd-tape` en el papel) y el
+                  // ángulo alterna: dos cintas idénticas una al lado de la otra
+                  // delatan que las pegó una máquina.
+                  style={{
+                    "--cinta-giro": i % 2 === 0 ? "-2.8deg" : "2.4deg",
+                    ...(enFrente ? inclinacion.style : {}),
+                  } as React.CSSProperties}
                   {...(enFrente ? inclinacion.handlers : {})}
                   initial={false}
                   animate={{ ...MESA[puesto], rotate: MESA[puesto].rotate + (pol.rotate ?? 0) }}
