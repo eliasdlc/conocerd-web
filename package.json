@@ -14,6 +14,7 @@
     "medir:hero": "node scripts/medir-hero.mjs",
     "medir:carto": "node scripts/medir-carto.mjs",
     "medir:osm": "node scripts/medir-osm.mjs",
+    "medir:contexto": "node scripts/medir-contexto-webgl.mjs",
     "relieve": "node scripts/hornear-relieve.mjs",
     "provincias": "node scripts/hornear-provincias.mjs",
     "mundo": "node scripts/hornear-mundo.mjs",
