@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DESTINATIONS, FEATURED_DESTINATIONS } from "@/data/destinations";
+import pairs from "@/data/routes/pairs.json";
 
 // Lo que estas pruebas cuidan es una sola cosa: que el catálogo no mienta.
 //
@@ -46,6 +47,22 @@ describe("catálogo de destinos", () => {
       return lon < CAJA.oeste || lon > CAJA.este || lat < CAJA.sur || lat > CAJA.norte;
     });
     expect(fuera.map((d) => `${d.name}: ${d.coords.join(",")}`)).toEqual([]);
+  });
+
+  it("está entero en la matriz de carreteras", () => {
+    // El fallo que esto evita ya ocurrió: los 20 destinos nuevos entraron al
+    // catálogo el 15 sep y la matriz se quedó con 18 ids, así que cualquier
+    // ruta que tocara uno decía 0 km y 0 min en pantalla. Añadir un destino sin
+    // correr `pnpm rutas` vuelve a romperlo, y en silencio.
+    const fuera = DESTINATIONS.filter((d) => !(pairs.ids as string[]).includes(d.id));
+    expect(fuera.map((d) => d.id)).toEqual([]);
+  });
+
+  it("tiene la geometría de carretera de cada destino en su propio fichero", () => {
+    const sinTramos = DESTINATIONS.filter(
+      (d) => !existsSync(`public/data/route-legs/${d.id}.json`)
+    );
+    expect(sinTramos.map((d) => d.id)).toEqual([]);
   });
 
   it("no inventa una valoración donde no hay foto", () => {
