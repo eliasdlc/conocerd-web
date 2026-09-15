@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:journey": "node scripts/journey-smoke.mjs",
     "mundo": "node scripts/hornear-mundo.mjs",
+    "medir:hero": "node scripts/medir-hero.mjs",
     "qr": "node scripts/generate-qr.mjs",
     "email:assets": "node scripts/gen-email-assets.mjs",
     "email:photos": "node scripts/gen-email-photos.mjs",
