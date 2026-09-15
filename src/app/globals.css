@@ -503,10 +503,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   --crd-banda-bottom: calc(var(--crd-stepper-h) + 20px);
 }
 
-/* Cuánto se eleva la pila de polaroids sobre el panel de pasos: 10 de aire más
-   los 42 del desparrame de la carta más alta (`--pile-bottom` en
-   DestinosSection). Es lo que el titular tiene que saltar para no montarse. */
-:root { --crd-pila-alza: 52px; }
+/* Cuánto se eleva el par de polaroids sobre el panel de pasos: 10 de aire más
+   lo que la carta del frente sube al inclinarse. Es lo que el titular tiene que
+   saltar para no montarse encima. */
+:root { --crd-pila-alza: 26px; }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
@@ -545,11 +545,6 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    misma que en el teléfono y se lee del mismo token. Lo que cambia por viewport
    es qué contenido baja hasta ella. */
 @media (min-width: 900px) {
-  /* La pila de Destinos se apoya en la franja, igual que en móvil. */
-  .crd-destinos-card {
-    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
-  }
-
   /* El envoltorio ocupa la banda segura y centra la caja dentro de ella; la
      caja (card + sello) no puede crecer más que la banda y la card scrollea
      cuando no cabe. El sello vive FUERA de la card (hermano en .crd-ol-caja):
@@ -739,7 +734,7 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
      que este número es lo único que hace falta para que los dos se aparten sin
      tocarse a ningún alto de pantalla. Si cambia la foto o el pie de la carta,
      cambia aquí. */
-  :root { --crd-pila-h: 282px; }
+  :root { --crd-pila-h: 238px; }
 
   /* El titular se apoya sobre la carta más alta de la pila, no sobre un % de
      pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
@@ -757,18 +752,6 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   .crd-destinos-heading h2 {
     text-shadow: 0 1px 2px rgba(253, 248, 240, .95), 0 0 16px rgba(253, 248, 240, .6);
   }
-  .crd-destinos-card {
-    width: min(196px, calc(100vw - 116px)) !important;
-    padding: 9px 9px 0 !important;
-    /* La pila se apoya en el panel de pasos. `--pile-bottom` es el desparrame
-       vertical de cada carta (0 a 42) y lo trae el componente, igual que
-       `--pile-left`: en escritorio el desparrame sigue siendo el % del inline
-       style, aquí manda el píxel porque el cromo que hay debajo también mide
-       píxeles. */
-    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
-    margin-bottom: 0 !important;
-  }
-  .crd-destinos-card-media { height: 150px !important; }
 }
 
 /* Short laptop/browser viewports need vertical composition, not another width
@@ -859,10 +842,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 
 @media (min-width: 900px) and (max-height: 700px) {
-  /* La foto de la polaroid cede 56: la pila ya subió para esquivar el panel de
-     pasos de la esquina, y con los 196 originales su canto superior alcanzaba
-     el titular de la sección. */
-  .crd-destinos-card-media { height: 140px !important; }
+  /* La carta cede ancho, y con él alto: la proporción de la 600 es fija, así
+     que encoger la mesa es lo único que hace falta para que el par no alcance
+     el titular en una pantalla baja. */
+  .crd-destinos-mesa { width: min(216px, 15vw) !important; }
 }
 
 /* ── Teléfonos cortos: la compresión manda por ALTO, no por ancho ─────────────
@@ -881,14 +864,68 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
      franja y el pin se posaba sobre "República Dominicana". */
   .crd-hero-pin { display: none; }
 
-  /* La pila baja de 282 a 238: la foto encoge y la descripción del papel sale,
-     que es lo que la hacía ~30px más alta. El titular la sigue solo porque
+  /* El par baja de 282 a 214: la carta encoge de 196 a 176 de ancho y su alto
+     sale de la proporción, 176 x 1,215. El titular lo sigue solo porque
      `--crd-pila-h` es la misma variable que usa su `bottom`. */
-  :root { --crd-pila-h: 238px; }
+  :root { --crd-pila-h: 214px; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
-  .crd-destinos-card { width: 176px !important; }
-  .crd-destinos-card-media { height: 124px !important; }
-  .crd-destinos-desc { display: none; }
+  .crd-destinos-mesa { width: 176px !important; }
+}
+
+
+/* ── La mesa de las polaroids ─────────────────────────────────────────────────
+   Las dos cartas en cuadro viven aquí, superpuestas en el mismo origen, y cada
+   una llega a su puesto por transform (DestinosSection · MESA). La mesa sólo
+   fija dónde está el par y cuánto mide una carta; la proporción de la carta la
+   pone el papel, que es la de una Polaroid 600.
+
+   La caja se declara con la misma proporción que la carta para que `inset-0`
+   sirva de origen: sin alto, las cartas absolutas no tendrían contra qué medir.
+
+   No lleva `overflow: hidden`: la carta que se retira y la que sale se van por
+   la izquierda y tienen que poder salirse de la caja. */
+.crd-destinos-mesa {
+  position: absolute;
+  z-index: 10;
+  /* El 13 % deja sitio a la carta retirada, que asoma un 44 % del ancho de la
+     carta por la izquierda: con el 7 % de la pila vieja se salía de pantalla. */
+  left: 13%;
+  /* En el teléfono el par se apoya en el panel de pasos, que ya lo levanta. En
+     escritorio no hay panel y `--crd-stepper-h` vale 0, así que la separación
+     del borde la pone el porcentaje: pegado a 10 px el par se leía como caído
+     en la esquina. */
+  bottom: calc(var(--crd-stepper-h) + 7%);
+  width: clamp(210px, 17vw, 270px);
+  aspect-ratio: 1 / 1.215;
+}
+
+/* Una sola cinta para las dos (decisión 1A). Cruza desde la carta retirada
+   hasta la del frente, por encima de las dos: es lo que las convierte en un par
+   pegado al papel y no en dos cartas que coinciden en pantalla. */
+.crd-destinos-cinta {
+  position: absolute;
+  z-index: 5;
+  top: -9px;
+  left: -34%;
+  width: 118%;
+  height: 19px;
+  transform: rotate(-1.6deg);
+  background: linear-gradient(180deg, rgba(255,255,255,.66), rgba(253,248,240,.46));
+  border-left: 1px solid rgba(38,70,83,.07);
+  border-right: 1px solid rgba(38,70,83,.07);
+  box-shadow: 0 1px 2px rgba(38,70,83,.10);
+  pointer-events: none;
+}
+
+@media (max-width: 899px) {
+  /* Centrada por el PAR entero y no por la carta del frente: la retirada asoma
+     un 44 % por la izquierda, así que el conjunto mide un 144 % de una carta y
+     su borde izquierdo cae en el 34 % de la pantalla. */
+  .crd-destinos-mesa {
+    left: 34%;
+    bottom: calc(var(--crd-stepper-h) + 10px);
+    width: min(196px, calc(100vw - 150px));
+  }
 }
 
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
