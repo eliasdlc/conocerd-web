@@ -589,7 +589,7 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 /* Cuánto se eleva el par de polaroids sobre el panel de pasos: 10 de aire más
    lo que la carta del frente sube al inclinarse. Es lo que el titular tiene que
    saltar para no montarse encima. */
-:root { --crd-pila-alza: 26px; }
+:root { --crd-par-alza: 26px; }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
@@ -812,23 +812,23 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     content: "";
     flex: 1 0 0;
   }
-  /* Alto de la carta del frente, MEDIDO (foto 150 + papel + pie + descripción).
-     El titular se cuelga de la pila y la pila se apoya en el panel de pasos, así
-     que este número es lo único que hace falta para que los dos se aparten sin
-     tocarse a ningún alto de pantalla. Si cambia la foto o el pie de la carta,
-     cambia aquí. */
-  :root { --crd-pila-h: 238px; }
+  /* Alto de la carta del frente. Ya no se mide sumando partes: sale de la
+     proporción de la Polaroid 600, 196 de ancho por 1,215. El titular se cuelga
+     del par y el par se apoya en el panel de pasos, así que este número es lo
+     único que hace falta para que los dos se aparten sin tocarse a ningún alto
+     de pantalla. Si cambia el ancho de la carta, cambia aquí. */
+  :root { --crd-par-h: 238px; }
 
-  /* El titular se apoya sobre la carta más alta de la pila, no sobre un % de
-     pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
-     y se montaba sobre la pila en un SE, porque el cromo flotante (píldora +
-     panel de pasos) mide igual en las dos y el 46% no. */
+  /* El titular se apoya sobre la carta del frente, no sobre un % de pantalla.
+     Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max y se
+     montaba sobre la carta en un SE, porque el cromo flotante (píldora + panel
+     de pasos) mide igual en las dos y el 46% no. */
   /* En el teléfono el titular no lleva panel: lo que lo separa del mapa es el
      velo crema de la escena, y una superficie más ahí tapa isla. El cristal
      líquido que trae la clase se apaga entero. */
   .crd-destinos-heading {
     left: 16px !important;
-    bottom: calc(var(--crd-stepper-h) + var(--crd-pila-alza) + var(--crd-pila-h) + 10px) !important;
+    bottom: calc(var(--crd-stepper-h) + var(--crd-par-alza) + var(--crd-par-h) + 10px) !important;
     background: none;
     border: 0;
     box-shadow: none;
@@ -845,10 +845,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   }
 }
 
-/* Short laptop/browser viewports need vertical composition, not another width
-   breakpoint. The heading remains above the interactive deck instead of
-   competing for the same absolute region. (El chip crema del heading vive en
-   el componente desde audit 2.1 — aquí solo queda el reposicionado.) */
+/* Los viewports de portátil bajos piden composición vertical, no otro
+   breakpoint de ancho: el titular se queda por encima del par en vez de
+   competir con él por la misma región absoluta. (El chip crema del titular vive
+   en el componente desde audit 2.1; aquí sólo queda el reposicionado.) */
 @media (min-width: 900px) and (max-height: 780px) {
   .crd-destinos-heading {
     top: clamp(112px, 19vh, 148px) !important;
@@ -957,8 +957,8 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 
   /* El par baja de 282 a 214: la carta encoge de 196 a 176 de ancho y su alto
      sale de la proporción, 176 x 1,215. El titular lo sigue solo porque
-     `--crd-pila-h` es la misma variable que usa su `bottom`. */
-  :root { --crd-pila-h: 214px; }
+     `--crd-par-h` es la misma variable que usa su `bottom`. */
+  :root { --crd-par-h: 214px; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
   .crd-destinos-mesa { width: 176px !important; }
 }
@@ -1004,9 +1004,16 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
    Media pulgada de cinta translúcida asomando por el borde superior. Es lo que
    convierte una card blanca con foto en una foto pegada al papel. Va en un
-   ::before y no en el markup para que las dos escenas que dibujan polaroids
-   —la pila de Destinos y el deck del finale— la hereden del papel compartido
-   sin añadir un nodo por carta. */
+   ::before y no en el markup para que las dos piezas que dibujan polaroids (el
+   par de Destinos y la carta del equipo) la hereden del papel sin añadir un
+   nodo por carta.
+
+   UNA CINTA POR CARTA, elegido el 15 sep 2026 entre tres tratamientos puestos
+   sobre la carta real. La alternativa era una sola cinta larga cruzando las dos
+   cartas del par: convierte el par en un bloque pegado y se pierde lo que la
+   cinta cuenta, que cada foto está pegada al papel por su cuenta. El ángulo lo
+   pone `--cinta-giro`, que el par alterna carta a carta para que las dos no se
+   lean como cintas gemelas puestas por una máquina. */
 .crd-tape::before {
   content: '';
   position: absolute;
