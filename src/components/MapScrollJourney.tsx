@@ -50,9 +50,12 @@ const CTASection = dynamic(() => import("@/sections/CTASection"), { ssr: false }
 // consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
 // de valor desde el grafo inicial devolvería el motor al HTML de arranque y
 // este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
+// Sin placeholder: el hueco del mapa lo ocupa el cielo, que ya está pintado
+// detrás. El crema que había aquí era una sábana blanca a pantalla completa
+// sobre el espacio durante todo lo que tarda el chunk de MapLibre, y el disco
+// del globo se encarga de reservar el sitio de la esfera.
 const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
   ssr: false,
-  loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
 
 // Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
@@ -74,7 +77,9 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
 // la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
 const CACHE_NIVELES_DE_ZOOM = 20;
 
-// Applied once on map load — aligns water/border colors with brand palette.
+// La pintura de marca del mapa. Se aplica en `onStyle`, o sea en cuanto el
+// estilo está parseado y antes del primer frame, no en `load`: lo que se pinta
+// aquí es lo que decide de qué color nace el planeta.
 // Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
 export function applyBrandPaint(map: maplibregl.Map) {
   // El globo del hero va sin etiquetas. Los nombres de continente y de país
@@ -108,10 +113,11 @@ export function applyBrandPaint(map: maplibregl.Map) {
   pintarCartografia(map);
   soloTopónimosDeRD(map);
 
-  // El relieve de la isla bajo todo lo vectorial (lib/relieve): teselas nuestras
-  // con el color por altura y la sombra ya horneados. Arranca en z5, así que el
-  // globo del hero no pide ni una. Va al final porque también fija el fondo y
-  // el color del agua, que es lo que acompaña a la paleta del terreno.
+  // El relieve de la isla, encima del agua y bajo todo lo demás (lib/relieve):
+  // teselas nuestras con el color por altura, la sombra y el mar ya horneados.
+  // Arranca en z4, así que el globo del hero no pide ni una. Va al final porque
+  // también fija el fondo y el color del agua, incluidos los tonos de noche con
+  // los que nace el planeta.
   ponerRelieve(map);
 }
 
@@ -379,6 +385,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           projection={PROYECCION_DEL_RECORRIDO}
           initialViewState={initialViewState}
           maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
+          onStyle={applyBrandPaint}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
