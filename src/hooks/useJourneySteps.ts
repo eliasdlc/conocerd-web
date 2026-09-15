@@ -5,6 +5,7 @@ import { animate, type AnimationPlaybackControls, type MotionValue } from "motio
 import type maplibregl from "maplibre-gl";
 import { SCENE_BANDS, SCENE_COUNT, nearestSceneIndex, sceneAtProgress } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { marcar } from "@/lib/medicion/marcas";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Motor de PASOS — el único motor del recorrido, en teléfono y en escritorio.
@@ -95,9 +96,11 @@ export function useJourneySteps({
       indexRef.current = clamped;
       setIndex(clamped);
       animRef.current?.stop();
+      marcar("paso:pide", { a: clamped, desde: nearestSceneIndex(from) });
 
       if (Math.abs(to - from) < 1e-6) {
         apply(to);
+        marcar("paso:llega", { a: clamped });
         return;
       }
 
@@ -118,6 +121,7 @@ export function useJourneySteps({
         onUpdate: apply,
         onComplete: () => {
           animatingRef.current = false;
+          marcar("paso:llega", { a: clamped });
         },
       });
     },

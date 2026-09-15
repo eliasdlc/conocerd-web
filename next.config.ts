@@ -15,12 +15,16 @@ const nextConfig: NextConfig = {
     "/api/itinerario": ["public/assets/email/marca/*.png"],
     "/api/subscribe": ["public/assets/email/marca/*.png"],
   },
-  // Las imágenes del cielo del hero están horneadas y son inmutables: su
-  // contenido no cambia nunca, y el día que cambien se hornean en otra carpeta
-  // de versión (`lib/mundo` · MUNDO_VERSION). Sin esta cabecera Next las sirve
-  // con el default de `public/`, que obliga a revalidarlas en cada visita.
+  // Los dos horneados son inmutables: su contenido no cambia nunca, y el día
+  // que cambie se hornean en otra carpeta de versión (`lib/relieve` ·
+  // RELIEVE_VERSION y `lib/mundo` · MUNDO_VERSION). Sin esta cabecera Next las
+  // sirve con el default de `public/`, que obliga a revalidarlas en cada visita.
   async headers() {
     return [
+      {
+        source: "/relieve/:ruta*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
       {
         source: "/mundo/:ruta*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],

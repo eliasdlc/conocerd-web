@@ -1,10 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Button from "@/components/Button";
 import BrandPin from "@/components/BrandPin";
-import Icon from "@/components/Icon";
 import { MapMarker, MarkerContent, useMap } from "@/components/map/context";
 import { useScene } from "@/context/SceneContext";
 import { scrollToSection } from "@/lib/journeyNav";
@@ -56,7 +55,13 @@ export function HeroPinMarker() {
           <span className="relative block [filter:drop-shadow(0_4px_6px_rgba(15,26,46,0.35))]">
             <BrandPin size={34} color="var(--color-mango)" fondoVentana="#FFFFFF" />
           </span>
-          <span className={`${e.etiquetaRd} whitespace-nowrap rounded-full border border-line bg-cream/94 px-2.5 py-1 font-label text-micro font-extrabold uppercase tracking-[.14em] text-coral-ink shadow-e1 backdrop-blur-[10px]`}>
+          {/* Cristal de noche, como la píldora del nav y el panel de pasos: la
+              pastilla crema con tinta coral era el único objeto opaco del
+              cielo, y el coral sobre tinta no llegaba a 2:1. */}
+          <span
+            data-noche="true"
+            className={`${e.etiquetaRd} crd-cristal-liquido-chip whitespace-nowrap rounded-full px-2.5 py-1 font-label text-micro font-extrabold uppercase tracking-[.14em] text-white/92`}
+          >
             República Dominicana
           </span>
         </div>
@@ -70,55 +75,44 @@ export function HeroPinMarker() {
  * el `progress` del recorrido (sin pasar por React). El mapa llega ya cargado
  * y con la pintura de marca aplicada, que apaga la atmósfera: aquí se
  * enciende de nuevo mientras manda el hero.
+ *
+ * Existen SÓLO mientras dura el cielo. Antes se montaban al cargar el mapa y
+ * se quedaban las trece escenas: dos fuentes raster del mundo entero hasta z8,
+ * 241 peticiones a GIBS y sus texturas ocupando GPU durante todo el recorrido,
+ * para no dibujar un píxel desde el primer destino. Al terminar el amanecer se
+ * desmontan, y si alguien vuelve arriba se montan de nuevo.
  */
 export function CapasNasaJourney() {
   const map = useMap();
   const { progress } = useScene();
-  const capas = useRef<CapasNasa | null>(null);
+  const [enElCielo, setEnElCielo] = useState(() => descensoDe(progress.get()) < 1);
+
+  // El progreso cambia una vez por frame; el booleano, dos veces por recorrido.
+  // El ref es lo que evita un render por frame.
+  const ultimo = useRef(enElCielo);
+  useEffect(() => {
+    const ver = (p: number) => {
+      const cielo = descensoDe(p) < 1;
+      if (cielo === ultimo.current) return;
+      ultimo.current = cielo;
+      setEnElCielo(cielo);
+    };
+    ver(progress.get());
+    return progress.on("change", ver);
+  }, [progress]);
 
   useEffect(() => {
-    if (!map) return;
-    const c = montarCapasNasa(map);
-    capas.current = c;
+    if (!map || !enElCielo) return;
+    const c: CapasNasa = montarCapasNasa(map);
     c.pintar(descensoDe(progress.get()));
     const parar = progress.on("change", (p) => c.pintar(descensoDe(p)));
     return () => {
       parar();
       c.desmontar();
-      capas.current = null;
     };
-  }, [map, progress]);
+  }, [map, enElCielo, progress]);
 
   return null;
-}
-
-/**
- * Invitación a bajar, clavada en la cima del arco. Es el primer paso del
- * recorrido: lleva al primer destino por el mismo camino que la rueda. La
- * flecha da tres empujones tras la entrada y se queda quieta.
- *
- * Sólo se pinta en escritorio (`espacio.module.css`): en el teléfono el panel
- * de pasos ya lleva ese trabajo en el borde inferior.
- */
-function CueDescenso() {
-  return (
-    <div className={e.cue}>
-      <button
-        type="button"
-        onClick={() => scrollToSection("trigger-polaroid-0")}
-        className={`${e.cueBoton} ${e.entra}`}
-        style={{ animationDelay: "640ms" }}
-      >
-        <span className="font-label text-micro font-extrabold uppercase tracking-[.14em]">
-          Baja a verlo
-        </span>
-        <span aria-hidden="true" className={e.cueFlecha}>
-          <Icon name="arrow_downward" className={`${e.cueEmpujon} text-base`} />
-        </span>
-        <span className="sr-only">Bajar al primer destino</span>
-      </button>
-    </div>
-  );
 }
 
 // La frase del hero, partida para poder escalonarla. El logo ya dio el nombre
@@ -174,7 +168,7 @@ export default function HeroEspacio() {
           />
         </h1>
 
-        <p className={`${s.linea} font-medium text-white/85`}>
+        <p className={s.linea}>
           {FRASE.map((palabra, i) => (
             <Fragment key={`${palabra}-${i}`}>
               <span className={s.palabra} style={{ animationDelay: `${retrasoDe(i)}ms` }}>
@@ -194,13 +188,17 @@ export default function HeroEspacio() {
           <Button variant="primary" size="lg" icon="download" onClick={() => scrollToSection("trigger-cta")}>
             Descargar la app
           </Button>
-          <Button variant="ghost" size="lg" icon="storefront" onClick={() => scrollToSection("trigger-negocios")}>
+          <Button
+            variant="glass"
+            size="lg"
+            noche
+            icon="storefront"
+            onClick={() => scrollToSection("trigger-negocios")}
+          >
             Soy un negocio
           </Button>
         </div>
       </div>
-
-      <CueDescenso />
     </div>
   );
 }

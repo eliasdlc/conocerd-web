@@ -39,3 +39,14 @@ export const CARTO_HOSTS = [
   "https://basemaps.cartocdn.com",
   "https://tiles.basemaps.cartocdn.com",
 ] as const;
+
+// ─── Créditos ────────────────────────────────────────────────────────────────
+//
+// El relieve ya no se pide a AWS en vivo: las teselas se hornean una vez desde
+// el DEM abierto de Terrain Tiles y se sirven desde nuestro dominio
+// (scripts/hornear-relieve.mjs, lib/relieve). La atribución sigue siendo
+// obligatoria y vive en el pie del sitio, porque el mapa del recorrido no lleva
+// control de atribución.
+
+export const RELIEVE_CREDITO = "Relieve: Terrain Tiles (Mapzen, NASA SRTM, USGS, GEBCO)";
+export const MAPA_CREDITO = "Mapa: © CARTO, © OpenStreetMap contributors";

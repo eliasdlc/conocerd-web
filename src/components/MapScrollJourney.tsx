@@ -10,9 +10,11 @@ import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
-import { calentarRecorrido } from "@/lib/calentarRecorrido";
-import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { calentarRecorrido, calentarTerreno, siguienteDestino } from "@/lib/calentarRecorrido";
+import { aligerarEstilo, pintarCartografia, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import { marcar, publicarMapa } from "@/lib/medicion/marcas";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
@@ -79,60 +81,7 @@ const CACHE_NIVELES_DE_ZOOM = 20;
 // estilo está parseado y antes del primer frame, no en `load`: lo que se pinta
 // aquí es lo que decide de qué color nace el planeta.
 // Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
-/** El océano y la tierra sin luces de la imagen de noche (`public/mundo`). El
- *  mapa se pinta con ellos mientras la cámara está en el globo, así que la
- *  esfera nace de noche y la imagen aterriza encima sin que se note. */
-const NOCHE_MAR = "#00011C";
-const NOCHE_TIERRA = "#0B1222";
-
 export function applyBrandPaint(map: maplibregl.Map) {
-  // El planeta nace de noche, no pálido.
-  //
-  // Entre que el mapa arranca y que la imagen del cielo llega hay un hueco, y
-  // en ese hueco se veía el globo con los colores de Positron: océano mint
-  // claro y tierra casi blanca. Un planeta blanco durante un segundo largo en
-  // mitad del espacio, que es justo lo que se reportó al revisar la fase 1.
-  //
-  // El arreglo no es cargar antes (que también), es que el color de partida sea
-  // el correcto: por debajo de z5 el agua y el fondo son los de la imagen de
-  // noche, y desde z5,5 vuelven a los del mapa. Las dos únicas escenas por
-  // debajo de z5 son los dos globos, el del hero y el del cierre.
-  // El color de arriba se lee del estilo, no se escribe a mano, para que si
-  // Carto cambia su fondo el mapa siga siendo el suyo desde z5,5. Si lo que hay
-  // no es un color plano (una expresión, por ejemplo), no se puede meter como
-  // parada de una interpolación: entonces vale el crema del sitio.
-  const leido = map.getLayer("background")
-    ? map.getPaintProperty("background", "background-color")
-    : undefined;
-  const fondoOriginal = typeof leido === "string" ? leido : "#FAFAF8";
-
-  if (map.getLayer("water")) {
-    map.setPaintProperty("water", "fill-color", [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      4,
-      NOCHE_MAR,
-      5.5,
-      "#c8ede9",
-    ]);
-  }
-  if (map.getLayer("background")) {
-    map.setPaintProperty("background", "background-color", [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      4,
-      NOCHE_TIERRA,
-      5.5,
-      fondoOriginal,
-    ]);
-  }
-  if (map.getLayer("admin_country")) {
-    map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
-    map.setPaintProperty("admin_country", "line-width", 2);
-  }
-
   // El globo del hero va sin etiquetas. Los nombres de continente y de país
   // sobre la esfera no dicen nada que el hero necesite, y a este zoom compiten
   // con el titular y con el pin, que es lo único que hay que mirar.
@@ -156,21 +105,20 @@ export function applyBrandPaint(map: maplibregl.Map) {
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
   map.setSky({ "atmosphere-blend": 0 });
 
-  // `water_shadow` de Positron dibuja el mismo polígono de agua que `water`,
-  // desplazado, para simular una sombra bajo la costa. Con nuestro color de
-  // agua queda tapada al 100 %: no aporta un solo píxel y sí manda toda la
-  // geometría del océano una segunda vez. En el hero son 425,9k índices y 20
-  // draw calls por frame para no cambiar nada (medido: 0 px de diferencia
-  // sobre 2.073.600 en tres encuadres).
-  if (map.getLayer("water_shadow")) {
-    map.setLayoutProperty("water_shadow", "visibility", "none");
-  }
-
-  // Los otros dos recortes al basemap, con su porqué y sus cifras en
-  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
-  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  // Los tres recortes al basemap, con su porqué y sus cifras en lib/mapaLigero:
+  // fuera las capas que a este zoom dibujan lo mismo que otra (o que el
+  // relieve), las carreteras dejan de ser cicatrices blancas, y de la toponimia
+  // sólo quedan las ciudades y los pueblos de RD, y sólo en los closeups.
   aligerarEstilo(map);
+  pintarCartografia(map);
   soloTopónimosDeRD(map);
+
+  // El relieve de la isla, encima del agua y bajo todo lo demás (lib/relieve):
+  // teselas nuestras con el color por altura, la sombra y el mar ya horneados.
+  // Arranca en z4, así que el globo del hero no pide ni una. Va al final porque
+  // también fija el fondo y el color del agua, incluidos los tonos de noche con
+  // los que nace el planeta.
+  ponerRelieve(map);
 }
 
 // Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
@@ -225,6 +173,17 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
+
+  // Al llegar a un destino se calienta el terreno del siguiente: la persona lee
+  // la carta unos segundos y las teselas llegan antes que la cámara.
+  useEffect(() => {
+    if (!activeScene.startsWith("polaroid-")) return;
+    const siguiente = siguienteDestino(activeScene);
+    if (!siguiente) return;
+    const ctl = new AbortController();
+    calentarTerreno(siguiente, currentViewport(), ctl.signal).catch(() => {});
+    return () => ctl.abort();
+  }, [activeScene]);
 
   // La escena desde el espacio lee el descenso desde CSS: el sticky publica
   // `--descenso` (0 en el hero, 1 al aterrizar en el primer destino) y la
@@ -365,6 +324,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
+      marcar("mapa:load");
+      publicarMapa(map);
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
@@ -377,7 +338,13 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         if (calentado.current) return;
         const ctl = new AbortController();
         calentado.current = ctl;
-        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        const arrancar = () => {
+          const v = currentViewport();
+          calentarRecorrido(v, ctl.signal).catch(() => {});
+          // El terreno del primer destino, para que el color y la sombra
+          // estén ahí cuando termine el primer vuelo.
+          calentarTerreno("polaroid-0", v, ctl.signal).catch(() => {});
+        };
         // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
         // hasta 16.4 y TypeScript lo da por presente siempre.
         const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;

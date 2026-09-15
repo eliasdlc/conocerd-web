@@ -568,7 +568,7 @@ function CategoryFilter({
       // vive centrado abajo: es el filtro el que sube, no el panel el que se
       // aparta. En móvil el filtro cuelga de la píldora, arriba, y la franja de
       // abajo la ocupa el sheet del itinerario.
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[calc(var(--crd-stepper-h)+clamp(10px,1.6%,20px))] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[calc(var(--crd-stepper-h)+clamp(10px,1.6%,20px))] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];
@@ -591,7 +591,7 @@ function CategoryFilter({
             className={`grid h-16 w-16 cursor-pointer content-center justify-items-center gap-1 rounded-ctrl border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5 ${
               picked
                 ? "border-selected bg-selected text-on-selected"
-                : "border-line bg-paper text-ink-3"
+                : "crd-cristal-hueco text-ink-3"
             }`}
           >
             <Icon name={meta.icon} active={picked} className="text-lg leading-none" />
@@ -1382,7 +1382,7 @@ export default function MapaSection() {
         {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
             en móvil ambos viven dentro del sheet del itinerario). */}
         <div
-          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 shadow-e1 max-[899px]:hidden`}
+          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 max-[899px]:hidden`}
         >
           <h2 className="m-0 font-display text-[20px] font-bold leading-tight tracking-[-.02em] text-ink">
             Arma tu <em className="crd-accent">itinerario</em>

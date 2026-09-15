@@ -91,7 +91,7 @@ export default function JourneyStepper({
           disabled={isFirst}
           aria-label="Escena anterior"
           data-noche={enNoche}
-          className={`crd-cristal-hueco flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border transition-opacity duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+          className={`crd-cristal-hueco flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border transition-opacity duration-200 ${
             noche ? "text-white" : "text-ink"
           } ${isFirst ? "cursor-default opacity-35" : ""}`}
         >
@@ -148,7 +148,7 @@ export default function JourneyStepper({
           aria-label={isLast ? "Ver el pie de página" : "Siguiente escena"}
           // De noche el relleno de tinta se funde con el cielo: la acción se
           // invierte a papel con el glifo en tinta, como el CTA de la píldora.
-          className={`flex size-[54px] flex-none cursor-pointer items-center justify-center rounded-full transition-[transform,background-color,color] duration-200 active:scale-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
+          className={`flex size-[54px] flex-none cursor-pointer items-center justify-center rounded-full transition-[transform,background-color,color] duration-200 active:scale-95 ${
             noche ? "bg-paper text-ink" : "bg-selected text-on-selected"
           }`}
         >

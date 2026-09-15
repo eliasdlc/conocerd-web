@@ -15,6 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { cameraForBand, SCENE_BANDS, type JourneyViewport } from "@/lib/journey";
+import { RELIEVE_MAXZOOM, RELIEVE_MINZOOM, RELIEVE_TESELAS } from "@/lib/relieve";
 import {
   plantillasDeTesela,
   teselasDeEncuadre,
@@ -79,3 +80,46 @@ function conexionPideAhorrar(): boolean {
  */
 export const calentarRecorrido = (v: JourneyViewport, señal?: AbortSignal) =>
   conexionPideAhorrar() ? Promise.resolve(0) : calentar(teselasDelRecorrido(v), señal, 2);
+
+// ─── El terreno ──────────────────────────────────────────────────────────────
+//
+// Las teselas del relieve son nuestras y pesan del orden de 30 a 50 KB; un
+// closeup pide seis u ocho. Si se piden cuando la cámara llega, la sombra y el
+// color van apareciendo por trozos durante un par de segundos. Se calienta el
+// terreno del primer destino junto con el recorrido, y el de cada destino
+// siguiente en cuanto la persona llega al anterior: lee la carta unos segundos
+// y eso basta en 4G.
+
+/** Teselas del relieve para el encuadre de una escena, al nivel máximo de la
+ *  fuente (por encima MapLibre sobreescala, no pide más). */
+export function teselasDeTerreno(escena: string, v: JourneyViewport): Tesela[] {
+  const banda = SCENE_BANDS.find((b) => b.name === escena);
+  if (!banda) return [];
+  const cam = cameraForBand(banda, v);
+  if (cam.zoom < RELIEVE_MINZOOM) return [];
+  const zoom = Math.min(cam.zoom, RELIEVE_MAXZOOM);
+  // El nivel de la escena con holgura, y los dos padres sin ella: el vuelo
+  // desde el destino anterior cruza esos niveles antes de asentarse.
+  const out = teselasDeEncuadre(cam.center, zoom, v.width, v.height, 1);
+  for (const salto of [1, 2]) {
+    if (zoom - salto < RELIEVE_MINZOOM) break;
+    out.push(...teselasDeEncuadre(cam.center, zoom - salto, v.width, v.height, 0));
+  }
+  return unicas(out).filter(tocaRD);
+}
+
+const calentadas = new Set<string>();
+
+/** Calienta el terreno de una escena una sola vez por sesión. */
+export function calentarTerreno(escena: string, v: JourneyViewport, señal?: AbortSignal): Promise<number> {
+  if (calentadas.has(escena) || conexionPideAhorrar()) return Promise.resolve(0);
+  calentadas.add(escena);
+  const urls = teselasDeTerreno(escena, v).map((t) => urlDeTesela([RELIEVE_TESELAS], t));
+  return traerTeselas(urls, { concurrencia: 3, señal });
+}
+
+/** La escena de destino que sigue a `escena`, si la hay. */
+export function siguienteDestino(escena: string): string | undefined {
+  const i = SCENE_BANDS.findIndex((b) => b.name === escena);
+  return SCENE_BANDS.slice(i + 1).find((b) => b.name.startsWith("polaroid-"))?.name;
+}

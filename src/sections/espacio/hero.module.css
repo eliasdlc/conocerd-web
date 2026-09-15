@@ -29,11 +29,23 @@
   filter: drop-shadow(0 18px 40px rgba(255, 141, 22, 0.18));
 }
 
+/* La única frase del hero es el titular de facto: el h1 es el logo, y esta
+   línea es lo único que promete algo. En Inter a 20 y al 85 % de blanco se
+   leía como un pie de foto debajo de un logo enorme. Va en la display de la
+   marca, en 700 y en el crema del wordmark: la misma voz que los titulares del
+   resto del sitio, y el mismo peso visual que lo que hay encima. */
 .linea {
   margin: 18px 0 0;
-  max-width: 30ch;
-  font-size: clamp(16px, 1.7vw, 20px);
-  line-height: 1.45;
+  max-width: 26ch;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  /* El crema del wordmark, entero. La transparencia era la mitad de la
+     flaqueza. */
+  color: #fdf8f0;
+  font-optical-sizing: auto;
   text-wrap: balance;
 }
 
@@ -55,18 +67,22 @@
 .clave {
   position: relative;
   font-style: normal;
-  font-weight: 600;
-  color: #ffffff;
+  /* Hereda el 700 de la línea: la palabra que carga la frase no necesita otro
+     peso, la marca el trazo. */
+  font-weight: inherit;
+  color: inherit;
   white-space: nowrap;
 }
 
 .clave::after {
   content: "";
   position: absolute;
-  left: -0.04em;
-  right: -0.04em;
-  bottom: -0.2em;
-  height: 0.15em;
+  left: -0.03em;
+  right: -0.03em;
+  bottom: -0.14em;
+  /* Proporcional al cuerpo nuevo: con 0.15em sobre 28px el trazo pesaba más
+     que las astas de la palabra que subraya. */
+  height: 0.12em;
   border-radius: 0.08em;
   background: var(--color-mango);
   transform: scaleX(0);
@@ -124,6 +140,8 @@
   }
   .linea {
     margin-top: 22px;
+    font-size: clamp(22px, 1.9vw, 28px);
+    line-height: 1.18;
   }
   .acciones {
     flex-direction: row;
@@ -146,7 +164,7 @@
   }
   .linea {
     margin-top: 12px;
-    font-size: 15px;
+    font-size: 19px;
   }
   .acciones {
     margin-top: 14px;

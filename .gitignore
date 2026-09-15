@@ -61,6 +61,7 @@ next-env.d.ts
 # no las ven y acaban apareciendo como archivos sin trackear.
 /.*.mjs
 
-# Caché de las teselas de GIBS que alimentan el horneado del cielo del hero
-# (scripts/hornear-mundo.mjs). Se vuelven a bajar solas si hacen falta.
+# Caché de los dos horneados: el DEM de Terrain Tiles que alimenta el relieve
+# (scripts/hornear-relieve.mjs) y las teselas de GIBS que alimentan el cielo del
+# hero (scripts/hornear-mundo.mjs). Se vuelven a bajar solas si hacen falta.
 /.cache/

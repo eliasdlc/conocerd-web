@@ -246,7 +246,7 @@ function TeamPolaroid({
                 )}
                 {/* Señal de que la foto se voltea */}
                 <span
-                  className="absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
+                  className="crd-cristal-liquido-chip absolute bottom-1.5 right-1.5 flex size-7 items-center justify-center rounded-full text-ink"
                   aria-hidden="true"
                 >
                   <FlipGlyph />
@@ -480,7 +480,7 @@ export default function EquipoSection() {
                 Caveat sólo vive en la firma del dorso. Píldora de cristal del
                 tema, como todo lo que flota sobre el mapa. */}
             <p
-              className={`m-0 rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-3.5 py-1.5 font-label text-micro font-extrabold uppercase leading-none tracking-[.12em] text-muted backdrop-blur-[24px] backdrop-saturate-[1.8] ${
+              className={`crd-cristal-liquido-chip m-0 rounded-full px-3.5 py-1.5 font-label text-micro font-extrabold uppercase leading-none tracking-[.12em] text-ink-3 ${
                 isVisible ? "equipo6-line" : "opacity-0"
               }`}
               style={isVisible ? { animationDelay: "0.85s" } : undefined}

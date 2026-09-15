@@ -26,19 +26,17 @@ import type maplibregl from "maplibre-gl";
 // ─── 1. Capas que no aportan al recorrido ────────────────────────────────────
 
 /**
- * Capas que no se ven, o que se ven como duplicado de otra, dentro del rango de
- * zoom del recorrido (2,2 a 11,5).
+ * Capas que no se ven, que duplican a otra, o que dejaron de tener sentido
+ * desde que el suelo lo pinta el relieve, dentro del rango de zoom del
+ * recorrido (2,2 a 11,5).
  *
- * Túneles y puentes son el grueso: a z10-11 dibujan los MISMOS segmentos que la
- * carretera que tienen debajo, sólo que con otro trazo. Quitarlos hace que un
- * puente se lea como carretera normal, que a esa escala es lo que parece de
- * todas formas. Tren, aeropuertos, caminos de servicio y ríos no participan de
- * la narrativa del recorrido.
- *
- * NO entra aquí nada que ubique al visitante: autopistas, troncales, primarias
- * y secundarias se quedan, y los nombres de ciudades y pueblos también.
+ * NO entra aquí nada que ubique al visitante: autopistas, troncales y primarias
+ * se quedan (repintadas en `pintarCartografia`), y los nombres de ciudades y
+ * pueblos también (acotados en `soloTopónimosDeRD`).
  */
 const RUIDO = [
+  // Túneles, puentes, tren, aeropuertos y caminos de servicio: a este zoom
+  // dibujan lo mismo que la carretera de debajo, o no participan del relato.
   /^tunnel_/,
   /^bridge_/,
   /^rail/,
@@ -47,6 +45,31 @@ const RUIDO = [
   /^road_minor_/,
   /^road_path$/,
   /^waterway/,
+  // Los contornos de carretera. Son la "línea blanca muy gorda": Positron
+  // dibuja cada vía como relleno blanco sobre un casing gris de hasta 3 px, y
+  // sobre el crema del basemap eso se lee como una carretera. Sobre el verde
+  // del relieve se lee como una cicatriz.
+  /_case(_ramp|_noramp)?$/,
+  /_fill_ramp$/,
+  /^road_sec_fill_noramp$/,
+  // El suelo lo pone el relieve, no los polígonos de OSM: su cobertura es
+  // parcial y el verde caía a manchas donde había datos.
+  /^landcover$/,
+  /^landuse$/,
+  /^park_/,
+  /^building/,
+  // La banda rosa de 8 px a lo largo de la frontera con Haití.
+  /^boundary_country_outline$/,
+  /^boundary_state$/,
+  /^boundary_county$/,
+  // El mismo polígono de agua dibujado otra vez, desplazado, para simular una
+  // sombra de costa: con el agua opaca no aporta un píxel.
+  /^water_shadow$/,
+  // Nombres que no son de sitios: mares, calles, números y puntos de interés.
+  /^watername_/,
+  /^roadname_/,
+  /^housenumber$/,
+  /^poi_/,
 ];
 
 /**
@@ -70,6 +93,15 @@ export function aligerarEstilo(map: maplibregl.Map): number {
   return apagadas;
 }
 
+/** La tinta de la marca (`--color-ink`). Aquí en literal porque MapLibre no
+ *  resuelve `var()`: el estilo del mapa no es CSS. */
+const TINTA = "#0F1A2E";
+/** `--color-ink-3`: el azul de segundo plano del sistema. */
+const TEXTO = "#3B5073";
+/** `--color-cream`: el halo, opaco, para que el nombre se lea sobre la ladera
+ *  más oscura sin encender un rectángulo blanco. */
+const HALO = "#FDF8F0";
+
 // ─── 2. Proyección ───────────────────────────────────────────────────────────
 
 /**
@@ -85,7 +117,76 @@ export const PROYECCION_DEL_RECORRIDO = {
   type: ["interpolate", ["linear"], ["zoom"], 4, "vertical-perspective", 7, "mercator"],
 } as unknown as maplibregl.ProjectionSpecification;
 
-// ─── 3. Topónimos ────────────────────────────────────────────────────────────
+
+// ─── 3. Carreteras, frontera y mancha urbana ─────────────────────────────────
+
+/**
+ * Lo poco que queda de la cartografía de Positron, repintado para que se lea
+ * COMO un mapa y no como una capa encima de otro mapa.
+ *
+ * Las carreteras de Positron son blancas con un contorno gris claro: están
+ * pensadas para leerse sobre un fondo casi blanco. Sobre el verde del relieve,
+ * ese blanco es lo más brillante de la pantalla y la vía pasa de dato a
+ * cicatriz. Aquí pasan a ser trazos de lápiz: tinta a baja opacidad y un píxel
+ * de grosor, que es lo que un mapa de papel haría.
+ *
+ * Por debajo de z10 no queda una sola carretera. La isla entera no las
+ * necesita: lo que hay que seguir ahí es la ruta que dibuja el itinerario.
+ */
+export function pintarCartografia(map: maplibregl.Map): void {
+  const trazo = (id: string, opacidad: number, finoEn: number, gruesoEn: number) => {
+    if (!map.getLayer(id)) return;
+    map.setPaintProperty(id, "line-color", TINTA);
+    map.setPaintProperty(id, "line-opacity", opacidad);
+    map.setPaintProperty(id, "line-width", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      10,
+      finoEn,
+      11.5,
+      gruesoEn,
+    ]);
+  };
+
+  trazo("road_mot_fill_noramp", 0.3, 0.8, 1.4);
+  trazo("road_trunk_fill_noramp", 0.3, 0.8, 1.4);
+  trazo("road_pri_fill_noramp", 0.22, 0.5, 1);
+
+  // La frontera con Haití. Discontinua y en tinta: es la única línea política
+  // que el recorrido necesita, y a trazos no compite con la costa.
+  if (map.getLayer("boundary_country_inner")) {
+    map.setPaintProperty("boundary_country_inner", "line-color", TINTA);
+    map.setPaintProperty("boundary_country_inner", "line-opacity", 0.35);
+    map.setPaintProperty("boundary_country_inner", "line-width", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5,
+      1,
+      11,
+      1.5,
+    ]);
+    map.setPaintProperty("boundary_country_inner", "line-dasharray", [3, 2]);
+  }
+
+  // Las ciudades, como mancha tenue de tinta sobre el relieve. Es lo único que
+  // queda de `landuse`: dice dónde vive la gente sin dibujar una sola manzana.
+  if (map.getLayer("landuse_residential")) {
+    map.setPaintProperty("landuse_residential", "fill-color", TINTA);
+    map.setPaintProperty("landuse_residential", "fill-opacity", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6,
+      0.05,
+      11,
+      0.09,
+    ]);
+  }
+}
+
+// ─── 4. Topónimos ────────────────────────────────────────────────────────────
 
 /**
  * República Dominicana, con la frontera de verdad por el oeste y holgura sobre
@@ -167,21 +268,34 @@ function aExpresión(f: unknown): unknown {
 }
 
 /**
- * Deja en el mapa únicamente los topónimos de República Dominicana.
+ * Los nombres que sobreviven, con el zoom a partir del cual aparecen y su
+ * tamaño. Todo lo demás de la capa `place` se apaga.
  *
- * En el globo del hero se leían CANADA, MEXICO, BRAZIL y otros veinte nombres
- * de países que no son de lo que va este sitio, y durante el vuelo aparecían
- * Puerto Príncipe, Cap-Haïtien, Hinche y Fort-Liberté. El filtro `within` los
- * descarta por geometría, así que no hay que enumerar países ni depender de que
- * cada capa traiga `iso_a2`.
+ * El criterio: en la isla entera no va un solo nombre. Los pines y las cartas
+ * dicen dónde están las cosas, y el logo dice de qué país va esto; encima, lo
+ * que Positron ponía ahí era "DOMINICAN REPUBLIC" en inglés, en gris y en
+ * versalitas atravesando el país, con los nombres de provincia chocando contra
+ * los pines. Los nombres reaparecen en los closeups, que es donde ubican de
+ * verdad.
+ */
+const TOPÓNIMOS: Record<string, { desde: number; tamaño: [number, number] }> = {
+  place_city_r5: { desde: 9.5, tamaño: [12, 14] },
+  place_city_r6: { desde: 9.5, tamaño: [12, 14] },
+  place_town: { desde: 10, tamaño: [11, 12.5] },
+};
+
+/**
+ * Apaga toda la toponimia salvo ciudades y pueblos, los acota a República
+ * Dominicana y los repinta.
  *
- * Los nombres de mares y océanos no entran en este filtro porque viven en otra
- * capa de origen (`water_name`) y no son países. Eso NO significa que se vean:
- * el globo del hero y el del cierre van sin un solo texto encima, y de eso se
- * encarga el corte por zoom de `applyBrandPaint`, que sube el mínimo de toda
- * capa de símbolo a z5. Aquí se dijo un tiempo que "Caribbean Sea" situaba al
- * visitante; se decidió que no, y el corte por zoom se lo lleva por delante
- * junto con lo demás.
+ * El repintado no es cosmético. Positron los dibuja en versalitas grises con
+ * halo blanco al 50 %, y usa `{name_en}` por debajo de z13: sobre el relieve
+ * eso era gris sobre verde, ilegible, gritado y en inglés. Ahora van en el azul
+ * de segundo plano del sistema, con halo crema opaco y el nombre en español.
+ *
+ * El filtro `within` descarta por geometría, así que no hay que enumerar países
+ * ni depender de que cada capa traiga `iso_a2`: durante el vuelo aparecían
+ * Puerto Príncipe, Cap-Haïtien, Hinche y Fort-Liberté.
  *
  * Devuelve cuántas capas quedaron acotadas.
  */
@@ -192,15 +306,45 @@ export function soloTopónimosDeRD(map: maplibregl.Map): number {
 
   let acotadas = 0;
   for (const capa of capas) {
+    const vivo = TOPÓNIMOS[capa.id];
     try {
+      if (!vivo) {
+        map.setLayoutProperty(capa.id, "visibility", "none");
+        continue;
+      }
+
       const previo = map.getFilter(capa.id);
       const dentro = ["within", CONTORNO_RD];
       const combinado = previo ? ["all", aExpresión(previo), dentro] : dentro;
       map.setFilter(capa.id, combinado as maplibregl.FilterSpecification);
+      map.setLayerZoomRange(capa.id, vivo.desde, capa.maxzoom ?? 24);
+
+      // `name` y no `{name_en}`: el nombre del sitio en su idioma. El coalesce
+      // es para el puñado de sitios que sólo traen el inglés.
+      map.setLayoutProperty(capa.id, "text-field", [
+        "coalesce",
+        ["get", "name"],
+        ["get", "name_en"],
+      ]);
+      map.setLayoutProperty(capa.id, "text-transform", "none");
+      map.setLayoutProperty(capa.id, "text-letter-spacing", 0);
+      map.setLayoutProperty(capa.id, "text-size", [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        vivo.desde,
+        vivo.tamaño[0],
+        11.5,
+        vivo.tamaño[1],
+      ]);
+      map.setPaintProperty(capa.id, "text-color", TEXTO);
+      map.setPaintProperty(capa.id, "text-halo-color", HALO);
+      map.setPaintProperty(capa.id, "text-halo-width", 1.5);
+      map.setPaintProperty(capa.id, "text-halo-blur", 0.5);
       acotadas++;
     } catch (err) {
       // Una capa que el estilo ya no expone no es motivo para tumbar el mapa,
-      // pero sí conviene enterarse de que el filtro no se aplicó.
+      // pero sí conviene enterarse de que no se aplicó.
       console.warn(`[mapa] no se pudo acotar ${capa.id}:`, err);
     }
   }

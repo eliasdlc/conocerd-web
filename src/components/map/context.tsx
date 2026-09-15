@@ -128,13 +128,14 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
 
   return (
     <div
+      // El material (fondo, canto, óptica) es el cristal líquido corto, el
+      // mismo de los chips: la etiqueta mide 20px de alto y un blur largo la
+      // convertiría en una pastilla plana.
+      className="crd-cristal-liquido-chip"
       style={{
         position: "absolute",
         ...posStyle,
         whiteSpace: "nowrap",
-        background: "var(--crd-glass)",
-        backdropFilter: "blur(24px) saturate(1.8)",
-        border: "1px solid var(--crd-glass-line)",
         borderRadius: 999,
         padding: "3px 8px",
         fontSize: 11,
@@ -143,7 +144,6 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
         fontFamily: "var(--font-jakarta), system-ui, sans-serif",
         fontWeight: 700,
         color: "#0F1A2E",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
         pointerEvents: "none",
       }}
     >
