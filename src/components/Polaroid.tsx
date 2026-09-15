@@ -1,12 +1,11 @@
-// Piezas compartidas de la polaroid. El sitio la dibuja en dos escenas —la pila
-// apilada de Destinos y el deck deslizable del finale— y estaban duplicadas
-// carácter por carácter, ya con drift real entre copias (audit 4.2).
+// Las piezas de la polaroid: el papel, el recorte de la foto y el pie. Su único
+// consumidor es el par de Destinos, que las dibuja en las seis escenas de
+// destino y en el finale. Nacieron aquí porque estaban duplicadas carácter por
+// carácter entre dos escenas, ya con drift real entre copias (audit 4.2).
 //
-// Se comparte lo que es la polaroid en sí: el papel, el recorte de la foto, el
-// velo inferior y el pie manuscrito. NO se comparte el contenedor: la pila usa
-// <figure> con transform, z-index y entrada escalonada por carta; el deck usa
-// <div> dentro de una fila que hace scroll. Forzar un solo componente para
-// ambos obligaría a pasar media docena de props de layout.
+// NO se comparte el contenedor. El par declara su propio <figure> con transform
+// y z-index, porque la posición de cada carta sale del puesto que le toca en la
+// mesa y eso no cabe en una prop.
 
 import Image from "next/image";
 import CategoryChip from "@/components/CategoryChip";
@@ -27,18 +26,18 @@ import { cieloDeWMO, grados } from "@/lib/clima/etiquetas";
  *  carta hacia abajo: la proporción salía 1 : 1,55 y la polaroid se leía como
  *  una card blanca con una foto encima.
  *
- *  `crd-tape` le pega la cinta adhesiva del ::before. Se probó una sola cinta
- *  larga cruzando las dos cartas del par y no se sostuvo: una cinta por carta
- *  es lo que hace que cada foto se lea pegada al papel por su cuenta.
+ *  `crd-tape` le pega la cinta adhesiva del ::before, una por carta. La cinta
+ *  larga cruzando las dos cartas del par quedó descartada el 15 sep 2026; el
+ *  porqué vive en el bloque de `.crd-tape`, que es donde está la pieza.
  *
  *  El radio 6 (y el 3 de la foto) es el artefacto y NO entra en la escala de
  *  radios del sistema: una polaroid a radio 22 deja de ser una polaroid y pasa
  *  a ser una card. El papel es `#FFFDF7` literal, papel fotográfico, no la
  *  superficie `paper` del tema. Una sola sombra, e1.
  *
- *  Sin `relative` aquí: la pila de Destinos añade su propio `absolute` y las
+ *  Sin `relative` aquí: el par de Destinos añade su propio `absolute` y las
  *  dos utilidades escriben la misma propiedad, así que gana la que Tailwind
- *  emita después —no la que se escriba después en el className— y las cartas
+ *  emita después, no la que se escriba después en el className, y las cartas
  *  se salían del posicionamiento. Cada consumidor declara su posición; lo que
  *  el papel garantiza es que haya una (la cinta se ancla a ella).*/
 export const POLAROID_PAPER =
@@ -50,30 +49,19 @@ export function PolaroidMedia({
   sizes,
   icon,
   chip,
-  action,
-  className = "",
-  overlayClassName = "",
 }: {
   image: string;
   alt: string;
   sizes: string;
   icon: IconName;
-  /** La pila de Destinos puede no traer tagline para una carta. */
+  /** El par de Destinos puede no traer tagline para una carta. */
   chip?: string;
-  /** Affordance opcional en la esquina opuesta al chip (p. ej. "ver más →"). */
-  action?: React.ReactNode;
-  /** Alto del recorte: fijo en la pila, fluido en el deck. */
-  className?: string;
-  /** La pila sólo revela el texto de la carta del frente. */
-  overlayClassName?: string;
 }) {
   return (
     // `aspect` y no alto: la ventana manda sobre la foto, que entra recortada
     // desde el centro. Era al revés, y por eso cada foto decidía la forma de
     // su carta.
-    <div
-      className={`relative w-full flex-none overflow-hidden rounded-[3px] bg-cream-2 aspect-[1.028/1] ${className}`}
-    >
+    <div className="relative aspect-[1.028/1] w-full flex-none overflow-hidden rounded-[3px] bg-cream-2">
       {/* Grade cálido común: las fotos vienen de fuentes distintas y cada una
           traía su propia temperatura. Un pelo de saturación, contraste y sepia
           las mete a todas en el mismo revelado (audit §3, movimiento 5). */}
@@ -84,15 +72,12 @@ export function PolaroidMedia({
         sizes={sizes}
         className="object-cover [filter:saturate(1.06)_contrast(1.03)_sepia(.07)]"
       />
-      {/* Sobre la foto sólo el chip y la flecha, los dos en cristal. El velo
-          murió con el rediseño: el chip de cristal ya se separa de la imagen
-          por sí solo, y el velo oscurecía la foto sin que nada lo necesitara.
-          La descripción vive en el papel, nunca sobre la foto. */}
-      <div
-        className={`absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 px-2.5 pb-2.5 ${overlayClassName}`}
-      >
+      {/* Sobre la foto sólo el chip, en cristal. El velo murió con el rediseño:
+          el chip de cristal ya se separa de la imagen por sí solo, y el velo
+          oscurecía la foto sin que nada lo necesitara. La descripción vive en
+          el papel, nunca sobre la foto. */}
+      <div className="absolute inset-x-0 bottom-0 flex items-end px-2.5 pb-2.5">
         <CategoryChip icon={icon}>{chip}</CategoryChip>
-        {action}
       </div>
     </div>
   );
