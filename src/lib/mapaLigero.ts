@@ -23,6 +23,8 @@
 
 import type maplibregl from "maplibre-gl";
 
+import { PROVINCIAS } from "@/data/provincias";
+
 // ─── 1. Capas que no aportan al recorrido ────────────────────────────────────
 
 /**
@@ -60,7 +62,8 @@ const RUIDO = [
   /^building/,
   // La banda rosa de 8 px a lo largo de la frontera con Haití.
   /^boundary_country_outline$/,
-  /^boundary_state$/,
+  // Los municipios. La provincia sí se dibuja (`pintarProvincias`), el
+  // municipio no: son 158 y a este zoom convierten la isla en una malla.
   /^boundary_county$/,
   // El mismo polígono de agua dibujado otra vez, desplazado, para simular una
   // sombra de costa: con el agua opaca no aporta un píxel.
@@ -349,4 +352,146 @@ export function soloTopónimosDeRD(map: maplibregl.Map): number {
     }
   }
   return acotadas;
+}
+
+// ─── 5. Provincias ───────────────────────────────────────────────────────────
+
+/** La capa de Carto que ya dibuja la división provincial, repintada por
+ *  `pintarProvincias`. No es una capa nuestra: es la del estilo, reencendida. */
+export const PROVINCIAS_DIVISION = "boundary_state";
+/** Fuente y capa de los nombres, que sí son nuestros. */
+export const PROVINCIAS_FUENTE = "provincias";
+export const PROVINCIAS_NOMBRES = "provincias-nombres";
+
+/**
+ * La división provincial no hay que publicarla: ya viaja en la tesela.
+ *
+ * `boundary_state` del estilo de Carto filtra `admin_level == 4 && maritime ==
+ * 0`, y en República Dominicana el nivel 4 ES la provincia. Estaba apagada por
+ * nosotros, junto al resto del ruido político, no ausente. Medido en teselas
+ * reales el 15 sep 2026, vértices dentro del contorno de RD por nivel:
+ *
+ *   z4        5   nada: la geometría no llega a este nivel
+ *   z5    1.127
+ *   z6    2.176
+ *   z7    4.660
+ *   z8    7.388
+ *   z9   11.877
+ *
+ * Las tres escenas de mapa viven entre z4,96 y z7,6, así que desde z5 hay
+ * geometría de sobra. Por eso la opacidad sube de 4,9 a 5,4 y no antes: por
+ * debajo el nivel de tesela es 4 y no habría nada que encender.
+ *
+ * Lo que Carto NO trae es el nombre: `place` con `class == state` devuelve cero
+ * rasgos dentro de RD en todos los niveles de 4 a 10. No es el `rank <= 4` del
+ * estilo, es que el rasgo no existe; la misma sonda sobre Texas y Colombia
+ * devuelve decenas. El nombre sale de `data/provincias`, que son 32 puntos de
+ * la ONE y pesan un kilobyte en el bundle.
+ *
+ * Resultado de la fase: cero peticiones nuevas. La división ya se estaba
+ * pagando y los nombres no piden nada.
+ */
+export function pintarProvincias(map: maplibregl.Map): boolean {
+  if (map.getSource(PROVINCIAS_FUENTE)) return false;
+
+  // ── La división ────────────────────────────────────────────────────────────
+  if (map.getLayer(PROVINCIAS_DIVISION)) {
+    map.setLayoutProperty(PROVINCIAS_DIVISION, "visibility", "visible");
+
+    // El mismo `within` que acota los topónimos: sin él se dibujan también los
+    // diez departamentos de Haití, que en este mapa no significan nada. Los
+    // tramos que van pegados a la frontera se caen con el filtro (una línea
+    // sólo pasa si entra ENTERA), y está bien: esa línea ya la dibuja
+    // `boundary_country_inner`, que es de quien es.
+    const previo = map.getFilter(PROVINCIAS_DIVISION);
+    const dentro = ["within", CONTORNO_RD];
+    map.setFilter(
+      PROVINCIAS_DIVISION,
+      (previo ? ["all", aExpresión(previo), dentro] : dentro) as maplibregl.FilterSpecification
+    );
+    map.setLayerZoomRange(PROVINCIAS_DIVISION, 4.9, 24);
+
+    // Continua y en tinta floja, contra la frontera con Haití, que es a trazos
+    // y al doble de opacidad. Las dos líneas políticas del mapa se distinguen
+    // por patrón antes que por peso: un país no es una provincia más gorda.
+    map.setPaintProperty(PROVINCIAS_DIVISION, "line-color", TINTA);
+    map.setPaintProperty(PROVINCIAS_DIVISION, "line-dasharray", [1]);
+    map.setPaintProperty(PROVINCIAS_DIVISION, "line-opacity", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      4.9, 0,
+      5.4, 0.18,
+      9, 0.18,
+      11.5, 0.1,
+    ]);
+    map.setPaintProperty(PROVINCIAS_DIVISION, "line-width", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5, 0.6,
+      9, 1,
+      11.5, 1.2,
+    ]);
+  }
+
+  // ── Los nombres ────────────────────────────────────────────────────────────
+  map.addSource(PROVINCIAS_FUENTE, {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: PROVINCIAS.map((p, orden) => ({
+        type: "Feature" as const,
+        // `orden` es el índice por superficie, de mayor a menor, y se convierte
+        // en la prioridad de colisión. Es lo que resuelve el amontonamiento del
+        // Cibao y el Distrito Nacional dentro de Santo Domingo sin una escalera
+        // de zoom escrita a mano: MapLibre esconde el nombre que se pisa con
+        // otro de `symbol-sort-key` más bajo, así que las grandes salen primero
+        // y las apretadas entran cuando hay sitio de verdad. Una escalera fija
+        // no sabe del ancho de pantalla ni del pitch; la colisión sí.
+        properties: { nombre: p.nombre, orden },
+        geometry: { type: "Point" as const, coordinates: [...p.punto] },
+      })),
+    },
+  });
+
+  map.addLayer({
+    id: PROVINCIAS_NOMBRES,
+    type: "symbol",
+    source: PROVINCIAS_FUENTE,
+    // Hasta 9,8 y no más: a partir de 9,5 mandan las ciudades (`TOPÓNIMOS`), y
+    // el solape corto es el relevo, no un choque.
+    minzoom: 4.7,
+    maxzoom: 9.8,
+    layout: {
+      "text-field": ["get", "nombre"],
+      // El mismo juego de glifos que ya piden las ciudades de Positron. Pedir
+      // otro peso costaría una petición más al servidor de glifos de Carto, y
+      // el número de esta fase es que el peso añadido sea cero.
+      "text-font": ["Montserrat Medium", "Open Sans Bold", "Noto Sans Regular"],
+      // Versalitas espaciadas: es la convención de atlas para una división
+      // administrativa, y es lo que distingue la provincia de la ciudad sin
+      // gastar un segundo color. Las ciudades van justo al revés desde que
+      // `soloTopónimosDeRD` les quitó el `uppercase` que traía Carto.
+      "text-transform": "uppercase",
+      "text-letter-spacing": 0.09,
+      "text-size": ["interpolate", ["linear"], ["zoom"], 5, 9.5, 7, 11, 9.5, 12.5],
+      "text-max-width": 7,
+      "text-padding": 6,
+      "text-line-height": 1.15,
+      "symbol-sort-key": ["get", "orden"],
+    },
+    paint: {
+      // El tratamiento de `soloTopónimosDeRD`, que es el que aguanta sobre el
+      // relieve: azul de segundo plano y halo crema OPACO. El gris con halo
+      // blanco al 50 % de Positron sobre el verde no se lee.
+      "text-color": TEXTO,
+      "text-halo-color": HALO,
+      "text-halo-width": 1.4,
+      "text-halo-blur": 0.4,
+      "text-opacity": ["interpolate", ["linear"], ["zoom"], 4.7, 0, 5.3, 1, 9, 1, 9.7, 0],
+    },
+  });
+
+  return true;
 }
