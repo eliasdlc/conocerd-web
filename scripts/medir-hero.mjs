@@ -93,29 +93,64 @@ await page.evaluateOnNewDocument(() => {
   }).observe({ type: "largest-contentful-paint", buffered: true });
 });
 
+// WebGL antes que nada. Bajo carga, el proceso de GPU de Chromium a veces no
+// levanta: MapLibre no arranca, no se pide una sola tesela y el informe sale
+// precioso. Medido el 14 sep 2026 con la máquina a load 12, dos corridas
+// seguidas dieron cero peticiones al cielo por esto y no por el cambio.
+const webgl = await page.evaluate(() => {
+  const c = document.createElement("canvas");
+  return Boolean(c.getContext("webgl2") ?? c.getContext("webgl"));
+});
+if (!webgl) {
+  console.error("Sin WebGL en este Chromium: el mapa no puede arrancar y la medida no valdría.");
+  await browser.close();
+  process.exit(1);
+}
+
+await page.goto("about:blank");
 await page.goto(`${base}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
 
 // El hero en reposo: el globo tiene que estar dibujado antes de bajar.
 await page.waitForSelector("canvas.maplibregl-canvas", { timeout: 60_000 });
+
+// Y el cielo tiene que haber MONTADO, no sólo el lienzo existir. Sin esperar a
+// esto, en una máquina cargada el recorrido avanzaba antes de que el mapa
+// terminara de arrancar y el informe salía con cero peticiones al cielo: limpio
+// por el motivo equivocado. El cielo son las nubes y las dos capas de la
+// Tierra, vengan de donde vengan.
+const CIELO = ["NASA (teselas)", "mundo horneado", "nubes"];
+const hayCielo = () => CIELO.some((g) => bytes.has(g));
+const arranque = Date.now();
+while (!hayCielo() && Date.now() - arranque < (lento ? 90_000 : 45_000)) await espera(500);
+const cieloMs = Date.now() - arranque;
 await espera(lento ? 9000 : 4000);
 
+/** La escena que el recorrido dice estar pintando. */
+const escena = () =>
+  page.evaluate(
+    () => document.querySelector(".crd-journey")?.getAttribute("data-active-scene") ?? null
+  );
+
 // El amanecer entero: el descenso del globo al primer destino es lo que pide
-// las capas del cielo. Dos pasos bastan para pasarlo de largo.
-for (let i = 0; i < 2; i++) {
+// las capas del cielo. Se avanza HASTA la escena, no N veces: un gesto que se
+// pierde (y se pierden, porque la rueda llega antes de que hidrate) dejaba la
+// cámara en el hero y el informe salía limpio por el motivo equivocado.
+const META = "polaroid-1";
+const limite = Date.now() + (lento ? 120_000 : 60_000);
+let llegada = await escena();
+while (llegada !== META && Date.now() < limite) {
   if (movil) {
-    await page.evaluate(async () => {
-      for (let n = 0; n < 40; n++) {
-        const b = document.querySelector('button[aria-label="Siguiente escena"]');
-        if (b) return b.click();
-        await new Promise((r) => setTimeout(r, 250));
-      }
-    });
+    const boton = await page.$('button[aria-label="Siguiente escena"]');
+    if (boton) await boton.click();
   } else {
     await page.mouse.move(VIEWPORT.width / 2, VIEWPORT.height / 2);
     await page.mouse.wheel({ deltaY: 200 });
   }
-  await espera(lento ? 9000 : 4500);
+  await espera(lento ? 3000 : 1500);
+  llegada = await escena();
 }
+// Con la cámara ya asentada, lo que siga llegando es del tramo, no del gesto.
+await espera(lento ? 9000 : 4500);
 
 const lcp = await page.evaluate(() => window.__lcp);
 await browser.close();
@@ -131,4 +166,10 @@ console.log(
   `LCP ${lcp} ms · ${filas.reduce((a, f) => a + f.peticiones, 0)} peticiones, ` +
     `${filas.reduce((a, f) => a + f.kb, 0)} KB · de dominios ajenos: ` +
     `${ajeno.reduce((a, f) => a + f.peticiones, 0)} peticiones, ${ajeno.reduce((a, f) => a + f.kb, 0)} KB`
+);
+// Sin esta línea el informe no se puede comparar con otro: una corrida que se
+// quedó en el hero pide una fracción de lo que pide el descenso completo.
+console.log(
+  `Escena al cerrar: ${llegada ?? "desconocida"}${llegada === META ? "" : "  ← NO llegó, la medida no compara"}` +
+    ` · el cielo montó a los ${(cieloMs / 1000).toFixed(1)} s${hayCielo() ? "" : "  ← NUNCA montó, la medida no vale"}`
 );
