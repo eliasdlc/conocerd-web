@@ -217,6 +217,19 @@ async function corrida(nombreVp, rama) {
   );
   await espera(2500);
 
+  // Con qué está dibujando REALMENTE, leído del contexto del propio mapa y no
+  // de un navegador aparte. Es lo que separa un fps que vale de uno que mide un
+  // rasterizador por software: si aquí pone SwiftShader o llvmpipe, la columna
+  // fps de esta corrida no significa nada y hay que decirlo en la misma tabla.
+  const gpu = await page.evaluate(() => {
+    const m = window.__crdMapa;
+    const lienzo = m?.getCanvas?.();
+    const gl = lienzo?.getContext("webgl2") ?? lienzo?.getContext("webgl");
+    if (!gl) return "sin contexto webgl";
+    const d = gl.getExtension("WEBGL_debug_renderer_info");
+    return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  });
+
   const porEscena = [];
 
   // Llamadas de dibujo con la cámara QUIETA en la escena. `triggerRepaint` en
@@ -331,6 +344,7 @@ async function corrida(nombreVp, rama) {
   return {
     viewport: nombreVp,
     rama,
+    gpu,
     segunTiming,
     arranque: informe.arranque,
     totales: informe.totales,
@@ -351,7 +365,7 @@ for (const vp of cuales) {
     console.log(`\n▶ ${vp} · Carto ${rama}…`);
     const r = await corrida(vp, rama);
     salida.push(r);
-    console.log(`  ${Math.round((Date.now() - t0) / 1000)} s`);
+    console.log(`  ${Math.round((Date.now() - t0) / 1000)} s · dibujando con: ${r.gpu}`);
     console.table(r.red);
     console.log(
       `  totales: ${r.totales.peticiones} peticiones · ${r.totales.kb} KB (timing API) · ` +
@@ -383,6 +397,10 @@ for (const vp of cuales) {
   const gruposCarto = ["teselas Carto", "estilo y TileJSON Carto", "sprite Carto", "glifos Carto"];
 
   console.log(`\n── ${vp} ──`);
+  console.log(`  GPU: ${con.gpu}`);
+  if (/swiftshader|llvmpipe|software/i.test(con.gpu)) {
+    console.log("  ¡OJO! rasterizador por software: las columnas fps de abajo NO valen.");
+  }
   console.log(
     `  teselas .pbf de Carto: el navegador ve ${pDe(con, "teselas Carto")} salir a la red,` +
       ` la Resource Timing API sólo ${con.segunTiming.pbfCarto}` +
