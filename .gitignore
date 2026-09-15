@@ -60,3 +60,7 @@ next-env.d.ts
 # Las mismas sondas cuando se nombran con punto delante: los patrones de arriba
 # no las ven y acaban apareciendo como archivos sin trackear.
 /.*.mjs
+
+# Caché de las teselas de GIBS que alimentan el horneado del cielo del hero
+# (scripts/hornear-mundo.mjs). Se vuelven a bajar solas si hacen falta.
+/.cache/
