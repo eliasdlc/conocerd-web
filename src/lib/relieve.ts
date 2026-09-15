@@ -26,7 +26,7 @@ import type maplibregl from "maplibre-gl";
 
 /** Carpeta de las teselas horneadas. Un rehorneado sube de versión: las
  *  teselas se sirven inmutables y cacheadas para siempre (next.config.ts). */
-export const RELIEVE_VERSION = "v3";
+export const RELIEVE_VERSION = "v4";
 export const RELIEVE_TESELAS = `/relieve/${RELIEVE_VERSION}/{z}/{x}/{y}.webp`;
 
 export const RELIEVE_FUENTE = "relieve";
@@ -51,14 +51,12 @@ export const RELIEVE_MAXZOOM = 11;
 /**
  * La Española entera, más 45 km de mar por los cuatro lados.
  *
- * Los 45 km son la condición que hace invisible el borde de la caja. Dentro de
- * ella el mar lo pinta la tesela, con su degradado por distancia a la costa;
- * fuera no hay tesela y lo que se ve es el polígono de agua de Positron, plano.
- * Para que ese salto no exista, la rampa del mar tiene que haber terminado
- * ANTES del borde: termina a 30 km, y la caja da 45 de margen contra la costa
- * más cercana (Isla Beata por el sur, Punta Cana por el este, Cabo Isabela por
- * el norte, la punta oeste de Haití). La única excepción es la Tortuga, a 25 km
- * del borde norte: ahí la rampa llega al 97 %, un paso de color.
+ * Los 45 km dejan fuera de cuadro el borde de la caja en los closeups y meten
+ * dentro la plataforma insular entera, que es la estructura que el mar tiene
+ * que contar. Más allá del borde no hay tesela y lo que se ve es el polígono de
+ * agua de Positron, plano, en `marDeFondo`: el azul que a este lado del borde
+ * tiene el fondo a la profundidad mediana del encuadre. No es una coincidencia
+ * afortunada, es la definición de ese color.
  *
  * La isla va entera a todos los niveles. Se probó a hornear sólo República
  * Dominicana en z10 y z11, por peso: sale mal por dos lados. Un encuadre de
@@ -81,13 +79,16 @@ export const RELIEVE_BOUNDS: [number, number, number, number] = [-74.95, 17.15, 
 export type Paleta = {
   /** Metros de altura a color, de la costa a la cumbre. */
   suelo: [number, string][];
-  /** Kilómetros a la costa más cercana a color, de la orilla al mar abierto.
-   *  La última parada es también el color del mar fuera de la caja. */
+  /** Metros de PROFUNDIDAD a color, del banco somero al abismo. */
   mar: [number, string][];
   /** Lagos y ríos: el DEM no distingue un embalse de una ladera, así que los
-   *  sigue pintando el polígono de agua del basemap, plano y en el azul de la
-   *  orilla. */
+   *  sigue pintando el polígono de agua del basemap, plano y en el azul de un
+   *  agua somera, que es lo que un agua rodeada de tierra es. */
   lagos: string;
+  /** El mar sin tesela: fuera de la caja y en los dos globos. Es el color que
+   *  la rampa da a la profundidad mediana del encuadre (3.256 m), para que el
+   *  borde de la caja no se vea como un escalón. */
+  marDeFondo: string;
   /** La tierra sin tesela. Es EXACTAMENTE el color de la cota cero: una tesela
    *  de relieve que aún no llegó se lee como tierra sin sombra, nunca como un
    *  hueco. */
@@ -108,29 +109,34 @@ export const PALETA: Paleta = {
     [2400, "#B89D7A"],
     [3100, "#F0E8DB"],
   ],
-  // El mar aclara con la distancia a la costa, no con la profundidad. Un solo
-  // tono (H 201°) y saturación quieta entre 31 y 32 %: lo que se mueve es la
-  // claridad, de 44 % en la orilla a 77 % en mar abierto. Azul y no turquesa,
-  // porque el mint de la marca (#25CCB8) es un acento y el mar no puede
-  // competir con él ni con los chips de clima.
+  // El mar por profundidad real: somero claro, abismo oscuro, como el agua.
   //
-  // Las cuatro paradas se reparten el cambio a partes casi iguales, pero cada
-  // tramo es más ancho que el anterior: el color corre más rápido pegado a la
-  // costa, que es como se comporta una plataforma de verdad, sin llegar a ser
-  // un trazo. La primera versión metía dos tercios del cambio en 6 km y a la
-  // vista de la isla entera eso no era una plataforma, era un contorno.
+  // La versión anterior lo coloreaba por distancia a la costa y salía al revés:
+  // la bahía de Samaná, que tiene entre 10 y 30 m, era el agua más oscura del
+  // encuadre por estar rodeada de tierra, y el mar abierto del sur, a 4.000 m,
+  // la más clara. Un halo oscuro pegado al contorno no se lee como agua, se lee
+  // como la sombra proyectada de un recorte, y por eso la isla parecía puesta
+  // encima del mapa en vez de estar dentro de él.
   //
-  // Los 30 km del final no son una cifra de gusto: es el ancho real de la
-  // plataforma insular alrededor de la isla, que es lo que la batimetría habría
-  // dibujado si su malla no fuera de medio kilómetro.
+  // Las paradas van donde el Caribe tiene sus escalones, no a intervalos
+  // regulares: sólo el 3,3 % del mar del encuadre baja de 30 m, el 6 % de 200 y
+  // el 13,5 % de 1.000. Con una rampa lineal hasta los 8.427 m de la fosa, todo
+  // menos la costa saldría de un solo color.
+  //
+  // Hue de 196 a 205° y saturación quieta entre 35 y 37 %: el mint de la marca
+  // (#25CCB8) es un acento y el mar no puede competir con él ni con los chips
+  // de clima.
   mar: [
-    [0, "#5B87A0"],
-    [3, "#6B94AB"],
-    [8, "#84A6B9"],
-    [16, "#9DBACB"],
-    [30, "#B3CBD8"],
+    [0, "#C2DAE3"],
+    [30, "#A6C9D8"],
+    [90, "#89B3C8"],
+    [300, "#6E9AB3"],
+    [1000, "#5885A0"],
+    [2800, "#48738D"],
+    [6500, "#3B617C"],
   ],
-  lagos: "#6B94AB",
+  lagos: "#A6C9D8",
+  marDeFondo: "#46718B",
   fondo: "#CFDDB4",
 };
 
@@ -184,8 +190,6 @@ type MapaConRelieve = Pick<
 export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): boolean {
   if (map.getSource(RELIEVE_FUENTE)) return false;
 
-  const marAbierto = paleta.mar[paleta.mar.length - 1][1];
-
   map.addSource(RELIEVE_FUENTE, {
     type: "raster",
     tiles: [RELIEVE_TESELAS],
@@ -219,11 +223,11 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
 
   // Los lagos, por encima del relieve.
   //
-  // El mar lo trae la tesela, pero el DEM sólo sabe de cotas: el lago Enriquillo
-  // está bajo el nivel del mar y sale horneado como agua, mientras que la presa
-  // de Tavera, a 300 m, sale como ladera. Así que el agua interior la siguen
-  // dibujando los polígonos del basemap, que sí saben cuál es cuál, en el azul
-  // de la orilla — que es el que le toca a un agua rodeada de tierra.
+  // El mar lo trae la tesela, pero el DEM sólo sabe de cotas: la presa de
+  // Tavera, a 300 m de altura, es indistinguible de una ladera, y el lago
+  // Enriquillo, a 40 bajo el nivel del mar, lo es de una bahía. Así que el agua
+  // interior la siguen dibujando los polígonos del basemap, que sí saben cuál
+  // es cuál, en el azul de un agua somera.
   //
   // Sólo desde `RELIEVE_MINZOOM`: por debajo no hay relieve que tapar, y ahí el
   // polígono de agua entero es el océano de los dos globos.
@@ -268,7 +272,7 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
       RELIEVE_MINZOOM,
       NOCHE_MAR,
       DIA_DESDE,
-      marAbierto,
+      paleta.marDeFondo,
     ]);
     map.setPaintProperty("water", "fill-opacity", 1);
   }

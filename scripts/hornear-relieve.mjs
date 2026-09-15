@@ -17,16 +17,34 @@
 //  DEM, sin remuestreo, el doble de resolución que servir el DEM a su propio
 //  nivel.
 //
-//  El mar aclara con la distancia a la costa, no con la profundidad. Es el
-//  tercer intento de un mar con degradado y los dos anteriores murieron por
-//  motivos que este método no puede repetir: tres líneas sobre el polígono de
-//  agua dibujaban también el borde de recorte de cada tesela (rayas en mar
-//  abierto), y colorear la batimetría del DEM salía a bloques en las bahías,
-//  porque la malla de GEBCO es de medio kilómetro. La distancia a la costa no
-//  tiene ninguno de los dos problemas CON UNA CONDICIÓN, que es la razón de ser
-//  de `campoDeDistancia`: el campo se calcula UNA vez sobre un raster global y
-//  se muestrea para cada tesela de cada nivel. Calculado por tesela, cada borde
-//  de tesela volvería a ser "costa" y volverían las rayas.
+//  El mar se colorea por PROFUNDIDAD real, desde la batimetría de GEBCO que el
+//  mismo DEM trae bajo el nivel del mar: somero claro, abismo oscuro, como el
+//  agua. Ahí están el Banco de la Plata, la plataforma de Samaná y la fosa de
+//  Puerto Rico, que son los "parches de color distinto" que pedía el dueño, y
+//  son dato, no textura.
+//
+//  Tres intentos anteriores murieron, y los tres por cómo se dibujaba, no por
+//  qué se dibujaba:
+//
+//    1. Tres líneas sobre el polígono de agua: dibujaban también el borde de
+//       recorte de cada tesela, o sea rayas en mar abierto.
+//    2. `color-relief` sobre la batimetría cruda, muestreada a la resolución de
+//       la tesela: a bloques en las bahías.
+//    3. Degradado por distancia a la costa: sin artefactos, pero al revés que
+//       el agua de verdad. La bahía de Samaná, de 10 a 30 m, salía como el agua
+//       más oscura del encuadre por estar rodeada de tierra, y el mar abierto
+//       del sur, a 4.000 m, como la más clara. Un halo oscuro pegado al
+//       contorno no se lee como agua: se lee como la sombra de un recorte.
+//
+//  Las dos condiciones que hacen que la 4 no repita a la 1 ni a la 2 viven en
+//  `campoDelMar`. Primera: el campo se calcula UNA vez sobre un raster global y
+//  se muestrea para cada tesela de cada nivel; calculado por tesela, cada borde
+//  de tesela sería un borde de dato y volverían las rayas. Segunda: el campo se
+//  suaviza con una media móvil de 4 km, que está POR ENCIMA de la malla real de
+//  GEBCO (15 segundos de arco, unos 450 m). Por debajo de esos 450 m no hay
+//  dato, hay interpolación, y eso era exactamente lo que se veía a bloques.
+//  Suavizado a 4 km no queda nada que pueda salir a bloques, y las estructuras
+//  que importan miden decenas de kilómetros y sobreviven enteras.
 //
 //  La paleta no vive aquí: sale de `src/lib/relieve.ts`, la misma que usa el
 //  runtime. Si se cambia allí, hay que rehornear y subir de versión.
@@ -58,6 +76,15 @@ const ORIGEN = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
 /** Exageración vertical por zoom. De lejos hay que forzarla o la Cordillera no
  *  se distingue; de cerca, la misma cifra convierte cada loma en un acantilado. */
 const EXAGERACION = { 4: 3.6, 5: 3.3, 6: 2.9, 7: 2.5, 8: 2.1, 9: 1.8, 10: 1.6, 11: 1.4 };
+
+/** El radio de la media móvil que se le pasa a la batimetría, en metros.
+ *
+ *  Está POR ENCIMA de la malla real de GEBCO (15 segundos de arco, unos 450 m)
+ *  a propósito: por debajo de esa cifra el dato no existe, se interpola, y esa
+ *  interpolación es lo que se veía a bloques en las bahías. Suavizada a 4 km no
+ *  queda nada que pueda salir a bloques, y los bancos, las plataformas y las
+ *  fosas miden decenas de kilómetros y sobreviven enteros. */
+const SUAVIZADO_MAR = 4000;
 
 /** Por debajo de este zoom la cota se suaviza con una media de 3 × 3 antes de
  *  calcular la pendiente: sin eso el grano del DEM se ve como ruido sobre el
@@ -207,10 +234,10 @@ const TABLA = (() => {
   return { tabla, techo };
 })();
 
-/** La rampa del mar resuelta cada 10 m de distancia a la costa. Igual que la
- *  del suelo, y por la misma razón: son 300 millones de píxeles de mar. */
+/** La rampa del mar resuelta cada 10 m de profundidad. Igual que la del suelo,
+ *  y por la misma razón: son 300 millones de píxeles de mar. */
 const TABLA_MAR = (() => {
-  const paradas = PALETA.mar.map(([km, hex]) => [km * 1000, hexARgb(hex)]);
+  const paradas = PALETA.mar.map(([m, hex]) => [m, hexARgb(hex)]);
   const techo = paradas[paradas.length - 1][0];
   const paso = 10;
   const entradas = Math.floor(techo / paso) + 1;
@@ -227,26 +254,29 @@ const TABLA_MAR = (() => {
   return { tabla, techo, paso };
 })();
 
-// ─── El campo de distancia a la costa ────────────────────────────────────────
+// ─── El campo del mar ────────────────────────────────────────────────────────
 //
-// UNA vez, sobre un raster global, y después se muestrea. Nunca por tesela: la
-// distancia de un píxel a la costa depende de dónde está la costa, y una tesela
-// no sabe qué hay fuera de ella. Un campo por tesela mide la distancia al borde
-// del recorte, y el borde del recorte se dibuja. Eso son las rayas en mar
-// abierto que ya tumbaron dos intentos.
+// Dos cosas por píxel, las dos calculadas UNA vez sobre un raster global y
+// muestreadas después. Nunca por tesela: una tesela no sabe qué hay fuera de
+// ella, así que cualquier cosa que dependa del vecindario mediría hasta el
+// borde del recorte, y el borde del recorte se dibuja.
+//
+//   · `profundidad`, suavizada a 4 km, que es la que colorea el agua.
+//   · `alOceano`, los metros al mar alcanzable desde el borde del raster, que
+//     es la que separa el mar del agua interior.
 //
 // Dos campos, no uno, y los dos globales:
 //
 //   · fino, a resolución z9 (≈ 290 m/px) sobre la caja del relieve. Es el que
-//     usan los niveles de salida 8 a 11, donde el mar que se ve cabe en la caja.
+//     usan los niveles de salida 8 a 11, donde lo que se ve cabe en la caja.
 //   · amplio, a resolución z7 (≈ 1.160 m/px) sobre la extensión de la tesela de
 //     z4, que es el Caribe entero. Lo usan los niveles 4 a 7, cuyas teselas se
-//     salen muchísimo de la caja: sin él, Cuba y Puerto Rico saldrían con su
-//     relieve pero sin plataforma, flotando sobre un azul plano.
+//     salen muchísimo de la caja: sin él, Cuba, Jamaica y Puerto Rico saldrían
+//     con su relieve pero sin plataforma, flotando sobre un azul plano.
 //
-// Que sean dos no reintroduce el problema: los dos aproximan la MISMA función
-// (la distancia a la tierra más cercana), así que allí donde se solapan dan el
-// mismo número y no hay salto al cambiar de nivel.
+// Que sean dos no reintroduce el problema: los dos aproximan las MISMAS
+// funciones, así que allí donde se solapan dan el mismo número y no hay salto
+// al cambiar de nivel.
 
 /** Transformada de distancia exacta en 1D (Felzenszwalb y Huttenlocher, 2012),
  *  sobre distancias AL CUADRADO. `v` y `z` son buffers de trabajo. */
@@ -313,12 +343,38 @@ function enMetros(campo, ancho, alto, px0, py0, zDem) {
 }
 
 /**
- * El campo de un rectángulo de teselas DEM: para cada píxel de mar, los metros
- * que lo separan de la tierra más cercana.
- *
- * `rect` va en teselas del nivel `zDem`, ambos extremos incluidos.
+ * Media móvil separable, en dos pasadas de suma corrida: el coste no depende
+ * del radio, así que suavizar a 4 km sale igual de barato que a 400 m.
  */
-async function campoDeDistancia(zDem, rect) {
+function suavizar(src, ancho, alto, radio) {
+  const n = 2 * radio + 1;
+  const fila = new Float32Array(ancho * alto);
+  for (let j = 0; j < alto; j++) {
+    const base = j * ancho;
+    let suma = 0;
+    for (let i = -radio; i <= radio; i++) suma += src[base + Math.min(ancho - 1, Math.max(0, i))];
+    for (let i = 0; i < ancho; i++) {
+      fila[base + i] = suma / n;
+      suma += src[base + Math.min(ancho - 1, i + radio + 1)] - src[base + Math.max(0, i - radio)];
+    }
+  }
+  const out = new Float32Array(ancho * alto);
+  for (let i = 0; i < ancho; i++) {
+    let suma = 0;
+    for (let j = -radio; j <= radio; j++) suma += fila[Math.min(alto - 1, Math.max(0, j)) * ancho + i];
+    for (let j = 0; j < alto; j++) {
+      out[j * ancho + i] = suma / n;
+      suma += fila[Math.min(alto - 1, j + radio + 1) * ancho + i] - fila[Math.max(0, j - radio) * ancho + i];
+    }
+  }
+  return out;
+}
+
+/**
+ * El campo de un rectángulo de teselas DEM. `rect` va en teselas del nivel
+ * `zDem`, ambos extremos incluidos.
+ */
+async function campoDelMar(zDem, rect) {
   const ancho = (rect.x1 - rect.x0 + 1) * 256;
   const alto = (rect.y1 - rect.y0 + 1) * 256;
   const px0 = rect.x0 * 256;
@@ -334,6 +390,7 @@ async function campoDeDistancia(zDem, rect) {
   const LEJOS = 1e12;
   const campo = new Float64Array(ancho * alto).fill(LEJOS);
   const tierra = new Uint8Array(ancho * alto);
+  const cruda = new Float32Array(ancho * alto);
   for (let ty = rect.y0; ty <= rect.y1; ty++) {
     const fila = [];
     for (let tx = rect.x0; tx <= rect.x1; tx++) fila.push({ tx, cotas: cotas(zDem, tx, ty) });
@@ -345,7 +402,9 @@ async function campoDeDistancia(zDem, rect) {
       for (let j = 0; j < 256; j++) {
         const destino = (oy + j) * ancho + ox;
         for (let i = 0; i < 256; i++) {
-          if (malla[j * 256 + i] >= 1) {
+          const cota = malla[j * 256 + i];
+          cruda[destino + i] = cota;
+          if (cota >= 1) {
             campo[destino + i] = 0;
             tierra[destino + i] = 1;
           }
@@ -395,9 +454,6 @@ async function campoDeDistancia(zDem, rect) {
     }
   }
 
-  // Dos distancias, la misma transformada: a la tierra, que es la que colorea
-  // el mar, y al océano, que es la que dice qué agua es mar.
-  const aLaCosta = enMetros(campo, ancho, alto, px0, py0, zDem);
   const alOceano = enMetros(
     Float64Array.from(oceano, (o) => (o ? 0 : LEJOS)),
     ancho,
@@ -407,7 +463,10 @@ async function campoDeDistancia(zDem, rect) {
     zDem
   );
 
-  return { zDem, px0, py0, ancho, alto, metros: aLaCosta, alOceano };
+  const mpp = (40075016.686 * Math.cos(rad(y2lat((py0 + alto / 2) / 256, zDem)))) / (256 * 2 ** zDem);
+  const profundidad = suavizar(cruda, ancho, alto, Math.max(1, Math.round(SUAVIZADO_MAR / mpp)));
+
+  return { zDem, px0, py0, ancho, alto, profundidad, alOceano };
 }
 
 /**
@@ -432,9 +491,9 @@ function esOceano(campo, fx, fy) {
   return campo.alOceano[Math.round(fy) * campo.ancho + Math.round(fx)] < CERCA_DEL_MAR;
 }
 
-/** Metros a la costa en una coordenada normalizada del mundo, o `null` si cae
- *  fuera del campo. Bilineal: el campo es una función suave, así que subirlo de
- *  290 m/px a los 36 de un closeup no deja escalones. */
+/** Metros de profundidad en un punto del campo, o `null` si cae fuera.
+ *  Bilineal: el campo ya viene suavizado a 4 km, así que subirlo de 290 m/px a
+ *  los 36 de un closeup no deja ni escalones ni bloques. */
 function muestrear(campo, fx, fy) {
   if (fx < 0 || fy < 0 || fx > campo.ancho - 1 || fy > campo.alto - 1) return null;
   const i = fx | 0;
@@ -443,7 +502,7 @@ function muestrear(campo, fx, fy) {
   const ty = fy - j;
   const i1 = i + 1 < campo.ancho ? i + 1 : i;
   const j1 = j + 1 < campo.alto ? j + 1 : j;
-  const m = campo.metros;
+  const m = campo.profundidad;
   const arriba = m[j * campo.ancho + i] + (m[j * campo.ancho + i1] - m[j * campo.ancho + i]) * tx;
   const abajo = m[j1 * campo.ancho + i] + (m[j1 * campo.ancho + i1] - m[j1 * campo.ancho + i]) * tx;
   return arriba + (abajo - arriba) * ty;
@@ -501,7 +560,7 @@ async function hornear(z, x, y, campo, campoAmplio) {
 
   const rgb = Buffer.alloc(512 * 512 * 3);
   let conTierra = false;
-  let conOrilla = false;
+  let conEstructura = false;
 
   for (let oj = 0; oj < 512; oj++) {
     const j = oj + 256;
@@ -511,9 +570,6 @@ async function hornear(z, x, y, campo, campoAmplio) {
       const cota = malla[p];
       const destino = (oj * 512 + oi) * 3;
 
-      // El mar no lleva relieve, y no es un descuido: su degradado venía de la
-      // batimetría del DEM y en las bahías se veía a bloques, porque la malla
-      // es de medio kilómetro. Lo que lo colorea es la distancia a la costa.
       const mar =
         cota < 1 &&
         (esOceano(campo, fino.x0 + oi * fino.paso, fino.y0 + oj * fino.paso) ??
@@ -521,18 +577,16 @@ async function hornear(z, x, y, campo, campoAmplio) {
           true);
 
       if (mar) {
-        // El fino manda mientras encuentre costa dentro de la rampa: tiene
-        // cuatro veces la resolución del amplio y la orilla se juega ahí. El
-        // amplio sólo entra cuando el fino no llega o no ve tierra, que es
-        // justo el mar de Cuba, Jamaica y Puerto Rico en los niveles de arriba.
-        let metros = muestrear(campo, fino.x0 + oi * fino.paso, fino.y0 + oj * fino.paso);
-        if (metros === null || metros >= TABLA_MAR.techo) {
-          const lejano = muestrear(campoAmplio, amplio.x0 + oi * amplio.paso, amplio.y0 + oj * amplio.paso);
-          if (lejano !== null) metros = metros === null ? lejano : Math.min(metros, lejano);
-        }
-        if (metros === null || metros >= TABLA_MAR.techo) metros = TABLA_MAR.techo;
-        else conOrilla = true;
-        const e = (metros / TABLA_MAR.paso) | 0;
+        // El fino manda donde llega: tiene cuatro veces la resolución del
+        // amplio y la plataforma se juega ahí. El amplio sólo entra cuando el
+        // fino se queda fuera, que es el mar de Cuba, Jamaica y Puerto Rico en
+        // los niveles de arriba.
+        const hondo =
+          muestrear(campo, fino.x0 + oi * fino.paso, fino.y0 + oj * fino.paso) ??
+          muestrear(campoAmplio, amplio.x0 + oi * amplio.paso, amplio.y0 + oj * amplio.paso);
+        const prof = hondo === null ? TABLA_MAR.techo : Math.max(0, Math.min(-hondo, TABLA_MAR.techo));
+        if (prof < TABLA_MAR.techo) conEstructura = true;
+        const e = (prof / TABLA_MAR.paso) | 0;
         rgb[destino] = TABLA_MAR.tabla[e * 3];
         rgb[destino + 1] = TABLA_MAR.tabla[e * 3 + 1];
         rgb[destino + 2] = TABLA_MAR.tabla[e * 3 + 2];
@@ -577,15 +631,15 @@ async function hornear(z, x, y, campo, campoAmplio) {
     }
   }
 
-  // `uniforme` = ni un metro de tierra ni un píxel dentro de la rampa, o sea
-  // mar abierto de lado a lado y un solo color en toda la tesela.
-  return { rgb, uniforme: !conTierra && !conOrilla };
+  // `uniforme` = ni un metro de tierra ni un píxel por encima del techo de la
+  // rampa, o sea abismo de lado a lado y un solo color en toda la tesela.
+  return { rgb, uniforme: !conTierra && !conEstructura };
 }
 
 // ─── El recorrido de las teselas ─────────────────────────────────────────────
 
-// Una tesela de mar abierto es un solo color de lado a lado: se escribe una
-// vez y se copia. No escribirla dejaría un 404 por cada encuadre con mar, y
+// Una tesela de puro abismo es un solo color de lado a lado: se escribe una vez
+// y se copia. No escribirla dejaría un 404 por cada encuadre con mar, y
 // MapLibre emite un evento de error por cada uno.
 const [marR, marG, marB] = hexARgb(PALETA.mar[PALETA.mar.length - 1][1]);
 const MAR_ABIERTO = await sharp({
@@ -601,19 +655,19 @@ for (let z = RELIEVE_MINZOOM; z <= RELIEVE_MAXZOOM; z++) {
 
 console.log(`${todas.length} teselas de z${RELIEVE_MINZOOM} a z${RELIEVE_MAXZOOM}`);
 
-// Los dos campos de distancia, antes de la primera tesela. El fino cubre la
-// caja del relieve a resolución z9; el amplio, la extensión de las teselas del
-// nivel más bajo (el Caribe entero) a z7.
+// Los dos campos, antes de la primera tesela. El fino cubre la caja del relieve
+// a resolución z9; el amplio, la extensión de las teselas del nivel más bajo
+// (el Caribe entero) a z7.
 const campoArranque = Date.now();
-const campoFino = await campoDeDistancia(9, rectanguloDem(teselasDe(9, RELIEVE_BOUNDS), 9, 9));
-const campoAmplio = await campoDeDistancia(
+const campoFino = await campoDelMar(9, rectanguloDem(teselasDe(9, RELIEVE_BOUNDS), 9, 9));
+const campoAmplio = await campoDelMar(
   7,
   rectanguloDem(teselasDe(RELIEVE_MINZOOM, RELIEVE_BOUNDS), RELIEVE_MINZOOM, 7)
 );
 console.log(
-  `campo de distancia: ${campoFino.ancho}×${campoFino.alto} a z9 y ` +
-    `${campoAmplio.ancho}×${campoAmplio.alto} a z7, en ` +
-    `${Math.round((Date.now() - campoArranque) / 1000)} s`
+  `campo del mar: ${campoFino.ancho}×${campoFino.alto} a z9 y ` +
+    `${campoAmplio.ancho}×${campoAmplio.alto} a z7, batimetría suavizada a ` +
+    `${SUAVIZADO_MAR / 1000} km, en ${Math.round((Date.now() - campoArranque) / 1000)} s`
 );
 
 let hechas = 0;

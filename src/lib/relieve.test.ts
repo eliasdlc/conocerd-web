@@ -88,11 +88,11 @@ describe("ponerRelieve", () => {
     expect(PALETA.fondo).toBe(PALETA.suelo[0][1]);
   });
 
-  it("el polígono de agua se queda en el mar abierto: es lo único que hay fuera de la caja", () => {
+  it("el polígono de agua se queda en el azul de fuera de la caja, que es lo único que hay allí", () => {
     const mapa = mapaFalso(POSITRON);
     ponerRelieve(mapa);
     const agua = mapa.pintadas.find(([capa, prop]) => capa === "water" && prop === "fill-color");
-    expect(agua?.[2]).toContain(PALETA.mar[PALETA.mar.length - 1][1]);
+    expect(agua?.[2]).toContain(PALETA.marDeFondo);
     expect(mapa.pintadas).toContainEqual(["water", "fill-opacity", 1]);
   });
 
@@ -107,10 +107,16 @@ describe("ponerRelieve", () => {
     expect(lagos.paint["fill-color"]).toBe(PALETA.lagos);
   });
 
-  it("la rampa del mar termina antes del borde de la caja, o el borde se ve", () => {
-    // 45 km es el margen de mar que `RELIEVE_BOUNDS` deja contra la costa más
-    // cercana; pasado el final de la rampa el color ya no cambia, así que la
-    // tesela del borde y el polígono de fuera son el mismo azul.
-    expect(PALETA.mar[PALETA.mar.length - 1][0]).toBeLessThan(45);
+  it("la rampa del mar va de la superficie al abismo, y sus paradas suben", () => {
+    const profundidades = PALETA.mar.map(([m]) => m);
+    expect(profundidades[0]).toBe(0);
+    // La fosa de Puerto Rico, al norte de la isla, mide 8.427 m: la rampa tiene
+    // que llegar al abismo o todo lo hondo saldría del mismo color que el talud.
+    expect(profundidades[profundidades.length - 1]).toBeGreaterThanOrEqual(6000);
+    expect([...profundidades].sort((a, b) => a - b)).toEqual(profundidades);
+  });
+
+  it("un lago es agua somera, no abismo: el DEM no sabe distinguirlos y la capa de lagos sí", () => {
+    expect(PALETA.lagos).toBe(PALETA.mar[1][1]);
   });
 });
