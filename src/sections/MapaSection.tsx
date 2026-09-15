@@ -46,17 +46,10 @@ import {
 } from "@/data/destinations";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
-import pairs from "@/data/routes/pairs.json";
 import CompartirRuta from "@/components/CompartirRuta";
 import { PRESETS, type Preset } from "@/data/rutas";
 import { idsDeSlug } from "@/lib/ruta/slug";
-import { duracion, totalesDeRuta } from "@/lib/ruta/totales";
-
-// ─── Datos de carretera (pares reales precalculados) ─────────────────────────
-
-const IDS = pairs.ids as string[];
-const KM = pairs.km as number[][];
-const MIN = pairs.min as number[][];
+import { duracion, kmEntre, minEntre, totalesDeRuta } from "@/lib/ruta/totales";
 
 /** Geometría por carretera entre dos destinos, indexada por `a|b`. */
 type RoadLegs = Record<string, [number, number][]>;
@@ -105,12 +98,14 @@ const DEST: Record<string, Destination> = Object.fromEntries(
   DESTINATIONS.map((d) => [d.id, d])
 );
 
-function pairKm(a: string, b: string): number {
-  return KM[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
-function pairMin(a: string, b: string): number {
-  return MIN[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
+// Los kilómetros y los minutos entre dos paradas salen de `lib/ruta/totales`,
+// que es donde vive la matriz y donde el pase de embarque suma lo mismo.
+//
+// Aquí había una segunda copia de esa cuenta, y era la insegura: indexaba
+// `KM[IDS.indexOf(a)][IDS.indexOf(b)]` sin el `?.` que sí tiene la de la
+// librería. Con un destino que no está en la matriz, `indexOf` da -1, `KM[-1]`
+// es `undefined` y la sección entera se caía al error boundary en cuanto se
+// armaba una ruta con él.
 
 /** Geometría carretera a→b; invierte el leg si está guardado como b→a. */
 function legCoords(a: string, b: string, legs: RoadLegs | null): [number, number][] {
@@ -145,7 +140,7 @@ function nearestNeighborOrder(ids: string[]): string[] {
     let best = "";
     let bestKm = Infinity;
     for (const c of pool) {
-      const d = pairKm(last, c);
+      const d = kmEntre(last, c);
       if (d < bestKm) {
         bestKm = d;
         best = c;
@@ -314,8 +309,8 @@ function CardBody({
         </div>
       ) : showArrival ? (
         <div className="mt-2 flex items-center gap-1.5 font-display text-micro font-bold text-mint-ink">
-          <Icon name="route" className="text-sm" />A {Math.round(pairKm(last, d.id))} km ·{" "}
-          {fmtDur(pairMin(last, d.id))} de {DEST[last].name}
+          <Icon name="route" className="text-sm" />A {Math.round(kmEntre(last, d.id))} km ·{" "}
+          {fmtDur(minEntre(last, d.id))} de {DEST[last].name}
         </div>
       ) : null}
     </>
@@ -999,8 +994,8 @@ export default function MapaSection() {
     for (let i = 0; i < stops.length - 1; i++) {
       const a = stops[i];
       const b = stops[i + 1];
-      km += pairKm(a, b);
-      min += pairMin(a, b);
+      km += kmEntre(a, b);
+      min += minEntre(a, b);
       const leg = [DEST[a].coords, ...legCoords(a, b, roadLegs), DEST[b].coords];
       coords.push(...(i === 0 ? leg : leg.slice(1)));
     }
@@ -1166,8 +1161,8 @@ export default function MapaSection() {
                       {/* Tramo hacia la siguiente parada: km y minutos reales */}
                       {i < stops.length - 1 && (
                         <div className="ml-[10px] border-l-2 border-dashed border-mint py-1 pl-[19px] text-mini text-muted">
-                          {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
-                          {fmtDur(pairMin(id, stops[i + 1]))} manejando
+                          {Math.round(kmEntre(id, stops[i + 1]))} km ·{" "}
+                          {fmtDur(minEntre(id, stops[i + 1]))} manejando
                         </div>
                       )}
                     </li>
