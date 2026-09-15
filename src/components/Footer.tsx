@@ -6,7 +6,7 @@ import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 import { DESTINATIONS } from "@/data/destinations";
-import { MAPA_CREDITO, RELIEVE_CREDITO } from "@/lib/basemap";
+import { MAPA_CREDITO, PROVINCIAS_CREDITO, RELIEVE_CREDITO } from "@/lib/basemap";
 
 // Atribución obligatoria de las fotos CC BY / BY-SA (Wikimedia Commons). Se
 // deriva de los datos para que añadir o cambiar una foto no desincronice el
@@ -129,7 +129,7 @@ export default function Footer() {
         <p className="m-0 w-full text-xs leading-[1.7] text-white/55">
           Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}. Imágenes de la Tierra
           del hero: NASA GIBS (Blue Marble, Black Marble y nubes de Visible Earth).{" "}
-          {MAPA_CREDITO}. {RELIEVE_CREDITO}.
+          {MAPA_CREDITO}. {RELIEVE_CREDITO}. {PROVINCIAS_CREDITO}.
         </p>
         <div className="text-xs text-white/55">
           © 2026 ConoceRD · Hecho con orgullo en RD

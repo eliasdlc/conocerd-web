@@ -719,10 +719,12 @@ function ViajerosFinal() {
 
   return (
     <>
-      {/* La ruta del país, con el estilo de siempre: casing blanco + mango. */}
+      {/* La ruta del país, con el estilo de siempre: contorno + mango. El
+          contorno pasa de blanco a coral profundo por el mismo motivo que en
+          Tu ruta y en Destinos: el filo se queda, el brillo se va. */}
       {visible && (
         <>
-          <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#FFFFFF" width={6.5} opacity={0.9} />
+          <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#B23410" width={6.5} opacity={0.9} />
           <MapRoute id="vn6-ruta" coordinates={F_ROUTE.pts} color="#FF8D16" width={3.2} opacity={0.95} />
           {traveled && (
             <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#0F1A2E" width={3.2} opacity={0.32} />
@@ -986,7 +988,9 @@ function NegociosFinal() {
   return (
     <>
       {/* Carreteras VIVAS: se dibujan cuando su viajero sale, se desvanecen
-          cuando llega. Solo existen las de los 2–3 clientes en camino. */}
+          cuando llega. Solo existen las de los 2–3 clientes en camino.
+          Mismo contorno coral que las otras rutas del sitio: es el par
+          contorno + mango de siempre, con el blanco fuera. */}
       {visible &&
         estados.map(({ c, est }) => {
           if (!est) return null;
@@ -996,7 +1000,7 @@ function NegociosFinal() {
               key={`road-${c.id}`}
               id={`vn6-road-${c.id}`}
               coordinates={carreteraDe(c, est)}
-              color="#FFFFFF"
+              color="#B23410"
               width={5}
               opacity={0.85 * fade}
             />

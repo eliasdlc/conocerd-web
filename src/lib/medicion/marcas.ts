@@ -63,4 +63,10 @@ export function marcar(marca: Marca, detalle?: Detalle) {
 /** El mapa, para que la sonda pueda escuchar sus teselas y sus reposos. */
 export function publicarMapa(map: MapaObservable) {
   sonda?.observarMapa(map);
+  // Y para que una captura headless pueda PREGUNTARLE al mapa qué dibujó de
+  // verdad, no sólo qué capas existen: `queryRenderedFeatures` sobre la capa de
+  // nombres es lo que distingue "la etiqueta está puesta" de "la etiqueta se
+  // ve", porque el índice de colisión esconde las que no caben. Sólo con sonda
+  // conectada, o sea sólo con `?medir` en la URL.
+  if (sonda) (window as unknown as { __crdMapa: MapaObservable }).__crdMapa = map;
 }

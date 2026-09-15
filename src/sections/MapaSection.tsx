@@ -1343,10 +1343,13 @@ export default function MapaSection() {
     <>
       <style>{V6_CSS}</style>
 
-      {/* Ruta con casing blanco debajo (se lee como carretera, no como trazo) */}
+      {/* Ruta con su contorno debajo (se lee como carretera, no como trazo).
+          El contorno es coral profundo, no blanco: sobre el verde del relieve
+          el blanco era lo más brillante de la pantalla. Es el mismo #B23410 de
+          la ruta de Destinos, así que las rutas del sitio hablan igual. */}
       {isVisible && route && (
         <>
-          <MapRoute id="v6-ruta-casing" coordinates={route.coords} color="#FFFFFF" width={7.5} opacity={0.95} />
+          <MapRoute id="v6-ruta-casing" coordinates={route.coords} color="#B23410" width={7.5} opacity={0.95} />
           <MapRoute id="v6-ruta" coordinates={route.coords} color="#FF8D16" width={4} opacity={0.95} />
         </>
       )}

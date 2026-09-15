@@ -11,7 +11,7 @@ import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
 import { calentarRecorrido, calentarTerreno, siguienteDestino } from "@/lib/calentarRecorrido";
-import { aligerarEstilo, pintarCartografia, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { aligerarEstilo, pintarCartografia, pintarProvincias, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
 import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
 import { marcar, publicarMapa } from "@/lib/medicion/marcas";
@@ -112,6 +112,12 @@ export function applyBrandPaint(map: maplibregl.Map) {
   aligerarEstilo(map);
   pintarCartografia(map);
   soloTopónimosDeRD(map);
+
+  // Las provincias: la división sale de `boundary_state`, que el estilo ya
+  // trae y sólo hay que reencender, y el nombre de nuestros 32 puntos. Va aquí
+  // y no en cada escena porque las tres escenas de mapa (Tu ruta, Viajeros y
+  // Negocios) son el MISMO mapa: una sola llamada las cubre a las tres.
+  pintarProvincias(map);
 
   // El relieve de la isla, encima del agua y bajo todo lo demás (lib/relieve):
   // teselas nuestras con el color por altura, la sombra y el mar ya horneados.
