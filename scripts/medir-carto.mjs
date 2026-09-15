@@ -87,15 +87,60 @@ const grupoDe = (url) => GRUPOS.find(([re]) => re.test(url))?.[1] ?? "otros";
 
 // ─── El navegador ────────────────────────────────────────────────────────────
 //
-// Los mismos argumentos que `scripts/medir-recorrido.mjs`: ANGLE sobre el GL
-// del sistema, no swiftshader, para que la capa del relieve compile su shader.
-// Sin GPU real esto sigue cayendo a un rasterizador por software, y por eso las
-// llamadas de dibujo valen (son cuentas) y los fps no (son velocidad).
+// El backend de ANGLE se elige probándolo, no por costumbre.
+//
+// `--use-angle=gl` (lo que usa `scripts/medir-recorrido.mjs`) pide GL de
+// escritorio, y sin un display eso NO consigue contexto WebGL en una máquina
+// con GPU: medido en la laptop, `getContext("webgl2")` devuelve null, MapLibre
+// no llega a emitir `load` y la medición se queda esperando 120 s y se cae.
+// Funciona en agentbox sólo porque allí no hay GPU y Chromium cae al
+// rasterizador por software.
+//
+// `--use-angle=gles-egl` entra por el nodo de render (`/dev/dri/renderD128`) y
+// da la GPU de verdad sin display: en la laptop devuelve la Iris Xe por Mesa.
+// Se prueban en orden y se usa el primero que dé contexto, para que el mismo
+// instrumento valga en las dos máquinas.
+const BACKENDS = [
+  ["gles-egl", ["--use-gl=angle", "--use-angle=gles-egl", "--enable-gpu", "--ignore-gpu-blocklist"]],
+  ["vulkan", ["--use-gl=angle", "--use-angle=vulkan", "--enable-gpu", "--ignore-gpu-blocklist"]],
+  ["gl", ["--use-gl=angle", "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist"]],
+  ["software", ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--in-process-gpu"]],
+];
+
+async function elegirBackend() {
+  for (const [nombre, args] of BACKENDS) {
+    try {
+      const b = await puppeteer.launch({
+        executablePath: process.env.CHROMIUM_PATH ?? "/usr/bin/chromium",
+        headless: "new",
+        args: ["--no-sandbox", ...args],
+        timeout: 30_000,
+      });
+      const p = await b.newPage();
+      await p.goto("about:blank");
+      const r = await p.evaluate(() => {
+        const c = document.createElement("canvas");
+        const gl = c.getContext("webgl2") ?? c.getContext("webgl");
+        if (!gl) return null;
+        const d = gl.getExtension("WEBGL_debug_renderer_info");
+        return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      });
+      await b.close();
+      if (r) return { nombre, args, renderer: r };
+    } catch {
+      // Un backend que ni siquiera arranca es sencillamente el que no toca.
+    }
+  }
+  throw new Error("ningun backend de ANGLE da contexto WebGL en esta maquina");
+}
+
 await fs.mkdir(".artifacts/carto", { recursive: true });
+const backend = await elegirBackend();
+console.log(`backend de ANGLE: ${backend.nombre} → ${backend.renderer}`);
 const browser = await puppeteer.launch({
   executablePath: process.env.CHROMIUM_PATH ?? "/usr/bin/chromium",
   headless: "new",
-  args: ["--no-sandbox", "--use-gl=angle", "--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist"],
+  args: ["--no-sandbox", ...backend.args],
 });
 
 // El estilo real, una vez, para poder recortarlo sin inventarme nada: la rama
