@@ -275,6 +275,44 @@ function distancia1d(f, d, v, z, n) {
 }
 
 /**
+ * Transformada 2D sobre un campo de semillas (0) y no-semillas (un número
+ * enorme), devuelta en metros de suelo. Separable y exacta: primero por
+ * columnas, después por filas.
+ *
+ * El paso a metros va fila a fila porque el píxel de Mercator mide distinto
+ * según la latitud. Entre 17,1° y 20,3° el coseno se mueve un 2 %, poco para
+ * verse pero gratis de hacer bien.
+ */
+function enMetros(campo, ancho, alto, px0, py0, zDem) {
+  const n = Math.max(ancho, alto);
+  const f = new Float64Array(n);
+  const d = new Float64Array(n);
+  const v = new Int32Array(n);
+  const z = new Float64Array(n + 1);
+
+  for (let i = 0; i < ancho; i++) {
+    for (let j = 0; j < alto; j++) f[j] = campo[j * ancho + i];
+    distancia1d(f, d, v, z, alto);
+    for (let j = 0; j < alto; j++) campo[j * ancho + i] = d[j];
+  }
+  for (let j = 0; j < alto; j++) {
+    const fila = j * ancho;
+    for (let i = 0; i < ancho; i++) f[i] = campo[fila + i];
+    distancia1d(f, d, v, z, ancho);
+    for (let i = 0; i < ancho; i++) campo[fila + i] = d[i];
+  }
+
+  const metros = new Float32Array(ancho * alto);
+  for (let j = 0; j < alto; j++) {
+    const lat = y2lat((py0 + j + 0.5) / 256, zDem);
+    const porPixel = (40075016.686 * Math.cos(rad(lat))) / (256 * 2 ** zDem);
+    const fila = j * ancho;
+    for (let i = 0; i < ancho; i++) metros[fila + i] = Math.sqrt(campo[fila + i]) * porPixel;
+  }
+  return metros;
+}
+
+/**
  * El campo de un rectángulo de teselas DEM: para cada píxel de mar, los metros
  * que lo separan de la tierra más cercana.
  *
@@ -357,45 +395,41 @@ async function campoDeDistancia(zDem, rect) {
     }
   }
 
-  // Separable y exacta: primero por columnas, después por filas.
-  const n = Math.max(ancho, alto);
-  const f = new Float64Array(n);
-  const d = new Float64Array(n);
-  const v = new Int32Array(n);
-  const z = new Float64Array(n + 1);
+  // Dos distancias, la misma transformada: a la tierra, que es la que colorea
+  // el mar, y al océano, que es la que dice qué agua es mar.
+  const aLaCosta = enMetros(campo, ancho, alto, px0, py0, zDem);
+  const alOceano = enMetros(
+    Float64Array.from(oceano, (o) => (o ? 0 : LEJOS)),
+    ancho,
+    alto,
+    px0,
+    py0,
+    zDem
+  );
 
-  for (let i = 0; i < ancho; i++) {
-    for (let j = 0; j < alto; j++) f[j] = campo[j * ancho + i];
-    distancia1d(f, d, v, z, alto);
-    for (let j = 0; j < alto; j++) campo[j * ancho + i] = d[j];
-  }
-  for (let j = 0; j < alto; j++) {
-    const fila = j * ancho;
-    for (let i = 0; i < ancho; i++) f[i] = campo[fila + i];
-    distancia1d(f, d, v, z, ancho);
-    for (let i = 0; i < ancho; i++) campo[fila + i] = d[i];
-  }
-
-  // De píxeles de Mercator a metros de suelo. El factor depende de la latitud,
-  // así que se aplica fila a fila: entre 17,1° y 20,3° el coseno se mueve un
-  // 2 %, poco para verse pero gratis de hacer bien.
-  const metros = new Float32Array(ancho * alto);
-  for (let j = 0; j < alto; j++) {
-    const lat = y2lat((py0 + j + 0.5) / 256, zDem);
-    const porPixel = (40075016.686 * Math.cos(rad(lat))) / (256 * 2 ** zDem);
-    const fila = j * ancho;
-    for (let i = 0; i < ancho; i++) metros[fila + i] = Math.sqrt(campo[fila + i]) * porPixel;
-  }
-
-  return { zDem, px0, py0, ancho, alto, metros, oceano };
+  return { zDem, px0, py0, ancho, alto, metros: aLaCosta, alOceano };
 }
 
-/** ¿Ese punto del campo es mar abierto, y no un lago ni una hoya bajo el nivel
- *  del mar? `null` si cae fuera del campo. Al vecino más cercano: es un sí o un
- *  no, y una media entre sí y no no significa nada. */
+/**
+ * ¿Hay océano a menos de `CERCA_DEL_MAR` de ese punto? `null` si cae fuera del
+ * campo.
+ *
+ * La pregunta es de proximidad y no "¿esta celda es océano?" a propósito. El
+ * campo tiene 290 m de resolución y el horneado decide tierra o agua con el DEM
+ * del nivel de abajo, que en un closeup son 18: preguntar por la celda exacta
+ * hacía que cada banco de arena mal clasificado a 290 m convirtiera en tierra
+ * un rectángulo de mar, y que toda la costa saliera escalonada a esa reja. La
+ * silueta de la isla la dibuja el DEM fino, como siempre; esto sólo separa el
+ * mar del agua interior.
+ *
+ * 1,2 km es más que cualquier error de la reja gruesa y mucho menos que lo que
+ * separa del mar a la hoya de Enriquillo (20 km) o a la laguna de Oviedo (2).
+ */
+const CERCA_DEL_MAR = 1200;
+
 function esOceano(campo, fx, fy) {
   if (fx < 0 || fy < 0 || fx > campo.ancho - 1 || fy > campo.alto - 1) return null;
-  return campo.oceano[Math.round(fy) * campo.ancho + Math.round(fx)] === 1;
+  return campo.alOceano[Math.round(fy) * campo.ancho + Math.round(fx)] < CERCA_DEL_MAR;
 }
 
 /** Metros a la costa en una coordenada normalizada del mundo, o `null` si cae
