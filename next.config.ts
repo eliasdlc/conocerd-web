@@ -29,6 +29,13 @@ const nextConfig: NextConfig = {
         source: "/mundo/:ruta*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
+      // Las provincias van por el mismo camino y por el mismo motivo
+      // (`lib/mapaLigero` · PROVINCIAS_VERSION): es la única petición que añade
+      // la fase, y sin esta cabecera se revalidaría en cada visita.
+      {
+        source: "/data/provincias/:ruta*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };

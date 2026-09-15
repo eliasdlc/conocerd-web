@@ -23,8 +23,6 @@
 
 import type maplibregl from "maplibre-gl";
 
-import { PROVINCIAS } from "@/data/provincias";
-
 // ─── 1. Capas que no aportan al recorrido ────────────────────────────────────
 
 /**
@@ -62,8 +60,22 @@ const RUIDO = [
   /^building/,
   // La banda rosa de 8 px a lo largo de la frontera con Haití.
   /^boundary_country_outline$/,
-  // Los municipios. La provincia sí se dibuja (`pintarProvincias`), el
-  // municipio no: son 158 y a este zoom convierten la isla en una malla.
+  // Las divisiones políticas internas del basemap, las dos.
+  //
+  // `boundary_state` sí trae las provincias dominicanas (admin_level 4), y por
+  // eso se sondeó antes de publicar nada: valdría gratis. No sirve, y el
+  // motivo no es la geometría. A los zooms del recorrido, OpenMapTiles suelda
+  // las líneas en un puñado de MultiLineString larguísimos que cruzan la isla
+  // entera: a z7,3 el viewport completo son SEIS rasgos, y uno solo trae 2.284
+  // puntos con 535 en Haití. Un filtro `within` acepta o rechaza el rasgo
+  // entero, así que se lleva por delante las provincias de RD junto con los
+  // diez departamentos haitianos. Los campos que separarían un país del otro
+  // (`adm0_l`, `adm0_r`) existen en el esquema y vienen SIN valor en toda La
+  // Española. Así que las divisiones se dibujan de nuestro propio GeoJSON, que
+  // además es el dato oficial de la ONE y no el admin_level de OSM.
+  /^boundary_state$/,
+  // Los municipios, que además son 158 y a este zoom convierten la isla en una
+  // malla.
   /^boundary_county$/,
   // El mismo polígono de agua dibujado otra vez, desplazado, para simular una
   // sombra de costa: con el agua opaca no aporta un píxel.
@@ -237,11 +249,26 @@ const CONTORNO_RD = {
  * una sintaxis o en la otra: meter un `within` dentro de un filtro viejo lo
  * rechaza con "expected one of [==, !=, ...], within found" y el mapa no
  * arranca. Convertido, las dos partes conviven.
+ *
+ * Tiene que ser IDEMPOTENTE, y no lo era. `applyBrandPaint` se llama dos veces
+ * a propósito (en `onStyle`, para que el planeta nazca del color bueno, y otra
+ * vez en `onLoad`), así que la segunda pasada recibía un filtro ya convertido y
+ * lo volvía a convertir: el nombre del campo, que ya era `["get","class"]`, se
+ * envolvía en otro `get` y quedaba `["get",["get","class"]]`. Eso evalúa a null
+ * siempre, así que el filtro no daba verdadero para ningún rasgo y NINGÚN
+ * nombre de ciudad ni de pueblo se dibujaba en todo el sitio, a ningún zoom.
+ * Medido: a z11, 20 ciudades y 150 pueblos en la fuente, 0 dibujados.
+ *
+ * La marca que distingue las dos sintaxis es el primer argumento: en la vieja
+ * es el NOMBRE del campo (una cadena), en la moderna ya es la expresión que lo
+ * lee (un array). Con eso basta para no tocar lo ya convertido.
  */
 function aExpresión(f: unknown): unknown {
   if (!Array.isArray(f) || f.length === 0) return f;
   const [op, ...resto] = f as [string, ...unknown[]];
   const campo = (k: unknown) => (k === "$type" ? ["geometry-type"] : ["get", k]);
+  /** Ya convertido: el campo dejó de ser una cadena y es la expresión que lo lee. */
+  const yaEsExpresión = typeof resto[0] !== "string";
 
   switch (op) {
     case "all":
@@ -249,21 +276,23 @@ function aExpresión(f: unknown): unknown {
       return [op, ...resto.map(aExpresión)];
     case "none":
       return ["!", ["any", ...resto.map(aExpresión)]];
+    // `["has", "campo"]` se escribe igual en las dos sintaxis: no hay nada que
+    // convertir y por tanto nada que romper al pasar dos veces.
     case "has":
       return ["has", resto[0]];
     case "!has":
       return ["!", ["has", resto[0]]];
     case "in":
-      return ["in", campo(resto[0]), ["literal", resto.slice(1)]];
+      return yaEsExpresión ? f : ["in", campo(resto[0]), ["literal", resto.slice(1)]];
     case "!in":
-      return ["!", ["in", campo(resto[0]), ["literal", resto.slice(1)]]];
+      return yaEsExpresión ? f : ["!", ["in", campo(resto[0]), ["literal", resto.slice(1)]]];
     case "==":
     case "!=":
     case ">":
     case ">=":
     case "<":
     case "<=":
-      return [op, campo(resto[0]), resto[1]];
+      return yaEsExpresión ? f : [op, campo(resto[0]), resto[1]];
     default:
       // Ya era una expresión moderna.
       return f;
@@ -356,118 +385,80 @@ export function soloTopónimosDeRD(map: maplibregl.Map): number {
 
 // ─── 5. Provincias ───────────────────────────────────────────────────────────
 
-/** La capa de Carto que ya dibuja la división provincial, repintada por
- *  `pintarProvincias`. No es una capa nuestra: es la del estilo, reencendida. */
-export const PROVINCIAS_DIVISION = "boundary_state";
-/** Fuente y capa de los nombres, que sí son nuestros. */
+/** Una fuente para las dos capas: la división y el nombre salen del mismo
+ *  archivo y se separan por la propiedad `tipo`. */
 export const PROVINCIAS_FUENTE = "provincias";
+/** Un rehorneado sube de versión, como el relieve y el mundo: el archivo se
+ *  sirve inmutable (next.config.ts) y así la petición se paga UNA vez en la
+ *  vida del visitante, no una por visita. */
+export const PROVINCIAS_VERSION = "v1";
+export const PROVINCIAS_DATOS = `/data/provincias/${PROVINCIAS_VERSION}.json`;
+export const PROVINCIAS_DIVISION = "provincias-division";
 export const PROVINCIAS_NOMBRES = "provincias-nombres";
 
 /**
- * La división provincial no hay que publicarla: ya viaja en la tesela.
+ * La división provincial y sus nombres, del dato oficial de la ONE.
  *
- * `boundary_state` del estilo de Carto filtra `admin_level == 4 && maritime ==
- * 0`, y en República Dominicana el nivel 4 ES la provincia. Estaba apagada por
- * nosotros, junto al resto del ruido político, no ausente. Medido en teselas
- * reales el 15 sep 2026, vértices dentro del contorno de RD por nivel:
+ * Se sondeó antes el basemap, porque habría salido gratis, y no sirve: el
+ * porqué está escrito arriba, en `RUIDO`, junto a `boundary_state`. El resumen
+ * es que Carto SÍ trae la geometría de las provincias dominicanas pero soldada
+ * a la de Haití en los mismos rasgos, sin campo que las separe, y que no trae
+ * los nombres en absoluto.
  *
- *   z4        5   nada: la geometría no llega a este nivel
- *   z5    1.127
- *   z6    2.176
- *   z7    4.660
- *   z8    7.388
- *   z9   11.877
+ * Así que una petición: `public/data/provincias.json`, 21,3 KB comprimidos,
+ * cacheada, con las 32 polilíneas internas y los 32 puntos de rótulo. Sólo las
+ * aristas que separan DOS provincias; la costa no se redibuja porque ya la
+ * dibuja el mar horneado del relieve.
  *
- * Las tres escenas de mapa viven entre z4,96 y z7,6, así que desde z5 hay
- * geometría de sobra. Por eso la opacidad sube de 4,9 a 5,4 y no antes: por
- * debajo el nivel de tesela es 4 y no habría nada que encender.
- *
- * Lo que Carto NO trae es el nombre: `place` con `class == state` devuelve cero
- * rasgos dentro de RD en todos los niveles de 4 a 10. No es el `rank <= 4` del
- * estilo, es que el rasgo no existe; la misma sonda sobre Texas y Colombia
- * devuelve decenas. El nombre sale de `data/provincias`, que son 32 puntos de
- * la ONE y pesan un kilobyte en el bundle.
- *
- * Resultado de la fase: cero peticiones nuevas. La división ya se estaba
- * pagando y los nombres no piden nada.
+ * El reparto por zoom es el de la decisión 2C: la provincia manda hasta z9 y la
+ * ciudad toma el relevo en z9,5 (`TOPÓNIMOS`). Se apagan las dos cosas, línea y
+ * nombre, porque las dos son el mismo registro: en un closeup de un destino la
+ * frontera provincial no ubica, compite con la ruta.
  */
 export function pintarProvincias(map: maplibregl.Map): boolean {
   if (map.getSource(PROVINCIAS_FUENTE)) return false;
 
-  // ── La división ────────────────────────────────────────────────────────────
-  if (map.getLayer(PROVINCIAS_DIVISION)) {
-    map.setLayoutProperty(PROVINCIAS_DIVISION, "visibility", "visible");
-
-    // El mismo `within` que acota los topónimos: sin él se dibujan también los
-    // diez departamentos de Haití, que en este mapa no significan nada. Los
-    // tramos que van pegados a la frontera se caen con el filtro (una línea
-    // sólo pasa si entra ENTERA), y está bien: esa línea ya la dibuja
-    // `boundary_country_inner`, que es de quien es.
-    const previo = map.getFilter(PROVINCIAS_DIVISION);
-    const dentro = ["within", CONTORNO_RD];
-    map.setFilter(
-      PROVINCIAS_DIVISION,
-      (previo ? ["all", aExpresión(previo), dentro] : dentro) as maplibregl.FilterSpecification
-    );
-    map.setLayerZoomRange(PROVINCIAS_DIVISION, 4.9, 24);
-
-    // Continua y en tinta floja, contra la frontera con Haití, que es a trazos
-    // y al doble de opacidad. Las dos líneas políticas del mapa se distinguen
-    // por patrón antes que por peso: un país no es una provincia más gorda.
-    map.setPaintProperty(PROVINCIAS_DIVISION, "line-color", TINTA);
-    map.setPaintProperty(PROVINCIAS_DIVISION, "line-dasharray", [1]);
-    map.setPaintProperty(PROVINCIAS_DIVISION, "line-opacity", [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      4.9, 0,
-      5.4, 0.18,
-      9, 0.18,
-      11.5, 0.1,
-    ]);
-    map.setPaintProperty(PROVINCIAS_DIVISION, "line-width", [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      5, 0.6,
-      9, 1,
-      11.5, 1.2,
-    ]);
-  }
-
-  // ── Los nombres ────────────────────────────────────────────────────────────
   map.addSource(PROVINCIAS_FUENTE, {
     type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: PROVINCIAS.map((p, orden) => ({
-        type: "Feature" as const,
-        // `orden` es el índice por superficie, de mayor a menor, y se convierte
-        // en la prioridad de colisión. Es lo que resuelve el amontonamiento del
-        // Cibao y el Distrito Nacional dentro de Santo Domingo sin una escalera
-        // de zoom escrita a mano: MapLibre esconde el nombre que se pisa con
-        // otro de `symbol-sort-key` más bajo, así que las grandes salen primero
-        // y las apretadas entran cuando hay sitio de verdad. Una escalera fija
-        // no sabe del ancho de pantalla ni del pitch; la colisión sí.
-        properties: { nombre: p.nombre, orden },
-        geometry: { type: "Point" as const, coordinates: [...p.punto] },
-      })),
+    data: PROVINCIAS_DATOS,
+    attribution:
+      "Provincias: Oficina Nacional de Estadística (ONE) vía geoBoundaries, CC BY 3.0 IGO",
+  });
+
+  // ── La división ────────────────────────────────────────────────────────────
+  //
+  // Continua y en tinta floja, contra la frontera con Haití, que es a trazos y
+  // al doble de opacidad (`pintarCartografia`). Las dos líneas políticas del
+  // mapa se distinguen por patrón antes que por peso: un país no es una
+  // provincia más gorda.
+  map.addLayer({
+    id: PROVINCIAS_DIVISION,
+    type: "line",
+    source: PROVINCIAS_FUENTE,
+    filter: ["==", ["get", "tipo"], "linea"],
+    minzoom: 4.7,
+    maxzoom: 9.8,
+    layout: { "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": TINTA,
+      "line-opacity": ["interpolate", ["linear"], ["zoom"], 4.7, 0, 5.4, 0.18, 9, 0.18, 9.7, 0],
+      "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 9.7, 1],
     },
   });
 
+  // ── Los nombres ────────────────────────────────────────────────────────────
   map.addLayer({
     id: PROVINCIAS_NOMBRES,
     type: "symbol",
     source: PROVINCIAS_FUENTE,
-    // Hasta 9,8 y no más: a partir de 9,5 mandan las ciudades (`TOPÓNIMOS`), y
-    // el solape corto es el relevo, no un choque.
+    filter: ["==", ["get", "tipo"], "nombre"],
     minzoom: 4.7,
     maxzoom: 9.8,
     layout: {
       "text-field": ["get", "nombre"],
       // El mismo juego de glifos que ya piden las ciudades de Positron. Pedir
       // otro peso costaría una petición más al servidor de glifos de Carto, y
-      // el número de esta fase es que el peso añadido sea cero.
+      // el número de esta fase es que el peso añadido sea una sola.
       "text-font": ["Montserrat Medium", "Open Sans Bold", "Noto Sans Regular"],
       // Versalitas espaciadas: es la convención de atlas para una división
       // administrativa, y es lo que distingue la provincia de la ciudad sin
@@ -479,6 +470,13 @@ export function pintarProvincias(map: maplibregl.Map): boolean {
       "text-max-width": 7,
       "text-padding": 6,
       "text-line-height": 1.15,
+      // `orden` es el índice por superficie, de mayor a menor, y aquí es la
+      // prioridad de colisión: MapLibre esconde el nombre que se pisa con otro
+      // de `symbol-sort-key` más bajo. Eso es lo que descongestiona el Cibao y
+      // lo que mantiene el Distrito Nacional escondido detrás de Santo Domingo
+      // hasta que hay sitio de verdad, sin una escalera de zoom escrita a mano:
+      // una escalera fija no sabe del ancho de la pantalla ni del pitch, y la
+      // colisión sí.
       "symbol-sort-key": ["get", "orden"],
     },
     paint: {
