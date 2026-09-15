@@ -281,10 +281,15 @@ function CardBody({
         <div className={`truncate font-bold text-ink ${compact ? "text-sm" : "text-copy"}`}>
           {d.name}
         </div>
-        <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
-          <Icon name="star" className="text-sm" />
-          {d.rating.toFixed(1)}
-        </div>
+        {/* Sin valoración real no se dibuja la estrella: ni un cero, ni un
+            guion, ni "sin valoraciones". La fila desaparece y el nombre se
+            queda con todo el ancho (decisión 6A). */}
+        {d.rating !== undefined && (
+          <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
+            <Icon name="star" className="text-sm" />
+            {d.rating.toFixed(1)}
+          </div>
+        )}
       </div>
       <div className="mt-0.5 text-micro text-muted">
         {d.province} · {meta.label}
@@ -383,9 +388,14 @@ function PinCard({
         <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-paper" />
       )}
       <div className="overflow-hidden rounded-block border border-line bg-paper shadow-e1">
-        <div className="relative h-[104px] w-full bg-cream-2">
-          <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
-        </div>
+        {/* Sin foto no hay franja: la carta empieza por el texto. Un bloque
+            crema vacío de 104 px sería un hueco que promete una imagen que no
+            existe, y una foto de otro sitio sería dato inventado (6A). */}
+        {d.image && (
+          <div className="relative h-[104px] w-full bg-cream-2">
+            <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
+          </div>
+        )}
         <div className="px-3 pb-3 pt-2.5">
           <CardBody d={d} stopIndex={stopIndex} stops={stops} />
           <div
@@ -518,7 +528,9 @@ function PresetCard({
           compact ? "size-11" : "size-12"
         }`}
       >
-        {cover && <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />}
+        {cover?.image && (
+          <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -1428,9 +1440,13 @@ export default function MapaSection() {
             className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-surface p-3 shadow-e1 motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
-              <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
-                <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
-              </div>
+              {/* Igual que la carta de escritorio: sin foto, la miniatura no se
+                  dibuja y el texto ocupa la fila entera. */}
+              {sel.image && (
+                <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
+                  <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <CardBody d={sel} stopIndex={selIndex} stops={stops} compact />
               </div>
