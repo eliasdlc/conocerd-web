@@ -65,18 +65,20 @@ const DESTINOS_SCENES = new Set([
 
 // ─── Component ────────────────────────────────────────────────────────────────
 //
-// La pila es EL componente de Destinos, de principio a fin: el scroll la va
-// construyendo carta a carta y un tap/click en la carta del frente la manda al
-// fondo y revela la siguiente (cicla). No hay deck aparte ni carrusel móvil:
-// la interacción es la misma con dedo y con mouse (decisión del dueño, jul
-// 2026 — sustituye al abanico del finale, que rompía la pila).
+// El par es EL componente de Destinos, de principio a fin, y el finale reusa
+// ese mismo par. El scroll lo va construyendo carta a carta y nunca hay más de
+// dos en cuadro: la que acaba de entrar y la anterior.
+//
+// No tiene interacción propia. El par avanza sólo con el scroll, igual con dedo
+// que con mouse; lo único que responde al puntero es la inclinación de la carta
+// del frente en escritorio.
 
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
   const reduceMotion = useReducedMotion();
   // En escritorio la carta del frente se inclina hacia el mouse hasta 8° con
   // un brillo que cruza el papel (hooks/useInclinacion). Sólo mientras la
-  // escena es un destino: fuera de la pila no hay carta que responda.
+  // escena es un destino: fuera del par no hay carta que responda.
   const inclinacion = useInclinacion({ grados: 8, activo: activeScene.startsWith("polaroid-") });
   const climaDe = useClima();
   const isVisible = DESTINOS_SCENES.has(activeScene);
@@ -90,13 +92,8 @@ export default function DestinosOverlay() {
   // (audit 5.6). El pestillo las monta la primera vez que su escena entra y ya
   // no las desmonta. Va en render y no en un efecto: así el montaje ocurre en
   // el mismo commit en que la escena entra.
-  const [pileSeen, setPileSeen] = useState(false);
-  if (isVisible && !pileSeen) setPileSeen(true);
-
-  // El tap que ciclaba la pila se fue (decisión 7B): el par avanza sólo con el
-  // scroll. Con él se van el contador de vueltas, el vuelo de la carta por la
-  // derecha y el z-index rotatorio; lo que decide la composición es únicamente
-  // cuántas cartas ha dejado entrar el recorrido.
+  const [parMontado, setParMontado] = useState(false);
+  if (isVisible && !parMontado) setParMontado(true);
 
   return (
     <>
@@ -137,7 +134,7 @@ export default function DestinosOverlay() {
         </MapMarker>
       ))}
 
-      {/* Visual overlay — polaroid pile + heading */}
+      {/* Capa visual: el par de polaroids y el titular. */}
       <div
         aria-hidden={!isVisible}
         inert={!isVisible}
@@ -145,14 +142,14 @@ export default function DestinosOverlay() {
           isVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. */}
+        {/* Velo crema en móvil: el titular y el par caen sobre el mapa. */}
         <div
           className={`crd-mobile-scrim h-[66%] transition-opacity duration-[450ms] ease-in-out ${
             headingVisible ? "opacity-100" : "opacity-0"
           }`}
         />
 
-        {/* Section heading — appears above the pile on first polaroid.
+        {/* El titular de la sección, que entra con la primera polaroid.
             El bottom de móvil (43%) lo fija .crd-destinos-heading en globals.css,
             así que aquí basta el valor de desktop. En desktop va sobre el
             cristal del tema: sin él, el H2 caía sobre la toponimia del mapa y
@@ -178,7 +175,7 @@ export default function DestinosOverlay() {
             mismo origen. Cada una llega a su puesto por transform, así que la
             entrada, el retiro y la salida son la misma animación con destinos
             distintos y nada salta de sitio. */}
-        {pileSeen && (
+        {parMontado && (
           <div className="crd-destinos-mesa">
             {POLAROIDS.map((pol, i) => {
               const puesto = puestoDe(i, visibleCount);
