@@ -1,34 +1,31 @@
 import type maplibregl from "maplibre-gl";
+import { MUNDO_DIA, MUNDO_ESQUINAS, MUNDO_NOCHE } from "@/lib/mundo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  La Tierra de verdad sobre el globo.
 //
-//  Tres capas encima del estilo de marca, todas de la NASA:
+//  Tres capas encima del estilo de marca, todas con imágenes de la NASA:
 //   · `noche`: Black Marble (luces de ciudad, VIIRS 2012). Es lo que se ve
 //     desde el espacio mientras manda el hero: el país es sus luces.
 //   · `dia`: Blue Marble Next Generation. Entra con el amanecer.
 //   · `nubes`: el mapa global de nubes, reproyectado a Mercator y con el
 //     brillo convertido en alfa (public/assets/nubes.webp).
 //
-//  Las teselas vienen de GIBS (gibs.earthdata.nasa.gov), sin clave y con CORS
-//  abierto, hasta el nivel 8: de sobra para el vuelo, que las suelta antes del
-//  primer plano. Las opacidades siguen al descenso (0 = hero, 1 = aterrizaje):
-//  luces → día → mapa de marca, así que la cámara aterriza en el estilo del
-//  sitio. Es imperativo y sin React a propósito: la home lo pinta desde un
-//  MotionValue por frame y el banco de propuestas desde su propio estado.
+//  Las tres son UNA IMAGEN cada una, servida desde nuestro dominio y con el
+//  mundo entero dentro. La noche y el día venían tesladas de GIBS hasta el
+//  nivel 8: 189 peticiones en móvil y 176 en escritorio por recorrido, con
+//  mediana de 124 ms (272 ms en 4G), para un cielo que se apaga antes del
+//  primer destino. El porqué del horneado y el lado de cada imagen viven en
+//  `lib/mundo`; el horneado, en `scripts/hornear-mundo.mjs`.
+//
+//  Las opacidades siguen al descenso (0 = hero, 1 = aterrizaje): luces → día →
+//  mapa de marca, así que la cámara aterriza en el estilo del sitio. Es
+//  imperativo y sin React a propósito: la home lo pinta desde un MotionValue
+//  por frame y el banco de propuestas desde su propio estado.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GIBS = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best";
-const teselas = (capa: string) =>
-  `${GIBS}/${capa}/default/500m/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg`;
-
-/** Esquinas del mapa de nubes: el mundo entero en Mercator. */
-const MUNDO: [[number, number], [number, number], [number, number], [number, number]] = [
-  [-180, 85.0511],
-  [180, 85.0511],
-  [180, -85.0511],
-  [-180, -85.0511],
-];
+/** Esquinas del cielo: el mundo entero en Mercator, común a las tres capas. */
+const MUNDO = MUNDO_ESQUINAS;
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 /** 0 en `a`, 1 en `b`, lineal entre medias. */
@@ -66,8 +63,8 @@ export type CapasNasa = {
 export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {}): CapasNasa {
   const inicial = opacidades(0);
 
-  map.addSource("nasa-noche", { type: "raster", tiles: [teselas("VIIRS_CityLights_2012")], tileSize: 256, maxzoom: 8 });
-  map.addSource("nasa-dia", { type: "raster", tiles: [teselas("BlueMarble_NextGeneration")], tileSize: 256, maxzoom: 8 });
+  map.addSource("nasa-noche", { type: "image", url: MUNDO_NOCHE, coordinates: MUNDO });
+  map.addSource("nasa-dia", { type: "image", url: MUNDO_DIA, coordinates: MUNDO });
   map.addSource("nasa-nubes", { type: "image", url: "/assets/nubes.webp", coordinates: MUNDO });
 
   map.addLayer({ id: "espacio-dia", type: "raster", source: "nasa-dia", paint: { "raster-opacity": inicial.dia, "raster-fade-duration": 0 } });
