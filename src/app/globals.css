@@ -454,9 +454,13 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 /* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
    inline porque el fundido tiene que poder anularse con prefers-reduced-motion,
    y porque el color es tono de superficie, no un valor suelto. */
+/* El disco que reserva el sitio del globo. Es un planeta a oscuras, no un
+   agujero crema: mientras el mapa arranca, lo que hay ahí es espacio. El tono
+   sale de la imagen de noche (el océano sin luces) y el filo claro imita el
+   limbo iluminado, para que al aparecer el globo debajo no haya salto. */
 .crd-globo-fantasma {
-  background: var(--color-cream-2);
-  border: 1px solid var(--color-line);
+  background: radial-gradient(120% 120% at 32% 26%, #0B1222 0%, #00011C 62%, #000010 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
   transition: opacity 500ms cubic-bezier(.2, .7, .2, 1);
 }
 

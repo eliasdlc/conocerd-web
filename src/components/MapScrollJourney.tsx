@@ -48,9 +48,12 @@ const CTASection = dynamic(() => import("@/sections/CTASection"), { ssr: false }
 // consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
 // de valor desde el grafo inicial devolvería el motor al HTML de arranque y
 // este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
+// Sin placeholder: el hueco del mapa lo ocupa el cielo, que ya está pintado
+// detrás. El crema que había aquí era una sábana blanca a pantalla completa
+// sobre el espacio durante todo lo que tarda el chunk de MapLibre, y el disco
+// del globo se encarga de reservar el sitio de la esfera.
 const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
   ssr: false,
-  loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
 
 // Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
@@ -72,12 +75,59 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
 // la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
 const CACHE_NIVELES_DE_ZOOM = 20;
 
-// Applied once on map load — aligns water/border colors with brand palette.
+// La pintura de marca del mapa. Se aplica en `onStyle`, o sea en cuanto el
+// estilo está parseado y antes del primer frame, no en `load`: lo que se pinta
+// aquí es lo que decide de qué color nace el planeta.
 // Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
+/** El océano y la tierra sin luces de la imagen de noche (`public/mundo`). El
+ *  mapa se pinta con ellos mientras la cámara está en el globo, así que la
+ *  esfera nace de noche y la imagen aterriza encima sin que se note. */
+const NOCHE_MAR = "#00011C";
+const NOCHE_TIERRA = "#0B1222";
+
 export function applyBrandPaint(map: maplibregl.Map) {
-  // El estilo Carto no siempre expone estas capas → guardar con getLayer para
-  // no ensuciar la consola con "Cannot style non-existing layer".
-  if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
+  // El planeta nace de noche, no pálido.
+  //
+  // Entre que el mapa arranca y que la imagen del cielo llega hay un hueco, y
+  // en ese hueco se veía el globo con los colores de Positron: océano mint
+  // claro y tierra casi blanca. Un planeta blanco durante un segundo largo en
+  // mitad del espacio, que es justo lo que se reportó al revisar la fase 1.
+  //
+  // El arreglo no es cargar antes (que también), es que el color de partida sea
+  // el correcto: por debajo de z5 el agua y el fondo son los de la imagen de
+  // noche, y desde z5,5 vuelven a los del mapa. Las dos únicas escenas por
+  // debajo de z5 son los dos globos, el del hero y el del cierre.
+  // El color de arriba se lee del estilo, no se escribe a mano, para que si
+  // Carto cambia su fondo el mapa siga siendo el suyo desde z5,5. Si lo que hay
+  // no es un color plano (una expresión, por ejemplo), no se puede meter como
+  // parada de una interpolación: entonces vale el crema del sitio.
+  const leido = map.getLayer("background")
+    ? map.getPaintProperty("background", "background-color")
+    : undefined;
+  const fondoOriginal = typeof leido === "string" ? leido : "#FAFAF8";
+
+  if (map.getLayer("water")) {
+    map.setPaintProperty("water", "fill-color", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      4,
+      NOCHE_MAR,
+      5.5,
+      "#c8ede9",
+    ]);
+  }
+  if (map.getLayer("background")) {
+    map.setPaintProperty("background", "background-color", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      4,
+      NOCHE_TIERRA,
+      5.5,
+      fondoOriginal,
+    ]);
+  }
   if (map.getLayer("admin_country")) {
     map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
     map.setPaintProperty("admin_country", "line-width", 2);
@@ -368,6 +418,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           projection={PROYECCION_DEL_RECORRIDO}
           initialViewState={initialViewState}
           maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
+          onStyle={applyBrandPaint}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}

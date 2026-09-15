@@ -64,12 +64,27 @@ export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {})
   const inicial = opacidades(0);
 
   map.addSource("nasa-noche", { type: "image", url: MUNDO_NOCHE, coordinates: MUNDO });
-  map.addSource("nasa-dia", { type: "image", url: MUNDO_DIA, coordinates: MUNDO });
   map.addSource("nasa-nubes", { type: "image", url: "/assets/nubes.webp", coordinates: MUNDO });
 
-  map.addLayer({ id: "espacio-dia", type: "raster", source: "nasa-dia", paint: { "raster-opacity": inicial.dia, "raster-fade-duration": 0 } });
   map.addLayer({ id: "espacio-noche", type: "raster", source: "nasa-noche", paint: { "raster-opacity": inicial.noche, "raster-fade-duration": 0 } });
   map.addLayer({ id: "espacio-nubes", type: "raster", source: "nasa-nubes", paint: { "raster-opacity": inicial.nubes, "raster-fade-duration": 0 } });
+
+  // El día entra cuando empieza el descenso, no antes.
+  //
+  // En reposo su opacidad es 0: bajarlo al abrir sólo sirve para que sus 428 KB
+  // compitan con los 94 de la noche, que es la única que se ve, y para que el
+  // planeta tarde más en dejar de ser pálido. Va DEBAJO de la noche, que es el
+  // orden que tenían cuando se montaban los dos de golpe.
+  let dia = false;
+  const montarDia = () => {
+    if (dia || !map.getLayer("espacio-noche")) return;
+    dia = true;
+    map.addSource("nasa-dia", { type: "image", url: MUNDO_DIA, coordinates: MUNDO });
+    map.addLayer(
+      { id: "espacio-dia", type: "raster", source: "nasa-dia", paint: { "raster-opacity": 0, "raster-fade-duration": 0 } },
+      "espacio-noche"
+    );
+  };
 
   const simbolos = etiquetas
     ? (map.getStyle().layers ?? []).filter((l) => l.type === "symbol").map((l) => l.id)
@@ -84,8 +99,9 @@ export function montarCapasNasa(map: maplibregl.Map, { etiquetas = false } = {})
   const pintar = (t: number) => {
     if (!map.getLayer("espacio-noche")) return;
     const op = opacidades(t);
+    if (t > 0) montarDia();
     map.setPaintProperty("espacio-noche", "raster-opacity", op.noche);
-    map.setPaintProperty("espacio-dia", "raster-opacity", op.dia);
+    if (dia) map.setPaintProperty("espacio-dia", "raster-opacity", op.dia);
     map.setPaintProperty("espacio-nubes", "raster-opacity", op.nubes);
     pintarEtiquetas(op.etiquetas);
     map.setSky({ "atmosphere-blend": op.atmosfera });
