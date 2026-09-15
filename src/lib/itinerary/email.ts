@@ -110,7 +110,8 @@ function totalsStrip(stops: number, km: number, min: number): string {
  * mismo original con `pnpm email:photos`; el nombre es el contrato entre ese
  * script y esta función.
  */
-function photoPath(d: Destination): string {
+function photoPath(d: Destination): string | null {
+  if (!d.image) return null;
   const file = d.image.split("/").pop()!.replace(/\.\w+$/, ".jpg");
   return `/assets/email/${file}`;
 }
@@ -118,15 +119,22 @@ function photoPath(d: Destination): string {
 function stopBlock(assets: EmailAssets, id: string, i: number): string {
   const d = DEST[id];
   const meta = CATEGORY_META[d.category];
+  const foto = photoPath(d);
+
+  // Sin foto, la fila de la imagen no se emite: en un correo una celda vacía de
+  // ancho completo deja una banda crema que ningún cliente sabe colapsar bien.
+  const filaFoto = foto
+    ? `<tr><td align="center" bgcolor="${C.cream2}" style="background:${C.cream2};">
+        <img src="${assets.src(foto)}" width="${CARD_W}" alt="${esc(d.name)}"
+          style="display:block;width:100%;max-width:${CARD_W}px;height:auto;border:0;${ALT_TYPE}" />
+      </td></tr>`
+    : "";
 
   return `
   <tr><td style="padding:0 0 8px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
       style="background:${C.paper};border:1px solid ${C.line};border-radius:14px;overflow:hidden;">
-      <tr><td align="center" bgcolor="${C.cream2}" style="background:${C.cream2};">
-        <img src="${assets.src(photoPath(d))}" width="${CARD_W}" alt="${esc(d.name)}"
-          style="display:block;width:100%;max-width:${CARD_W}px;height:auto;border:0;${ALT_TYPE}" />
-      </td></tr>
+      ${filaFoto}
       <tr><td style="padding:16px 20px 20px 20px;">
         <p style="margin:0;font:700 12px/1 ${F.sans};letter-spacing:.1em;color:${meta.ink};text-transform:uppercase;">
           Parada ${i + 1} &nbsp;·&nbsp; ${esc(meta.label)}
@@ -135,7 +143,7 @@ function stopBlock(assets: EmailAssets, id: string, i: number): string {
           ${esc(d.name)}
         </h2>
         <p style="margin:4px 0 0 0;font:400 13px/1.4 ${F.sans};color:${C.muted};">
-          ${esc(d.province)} &nbsp;·&nbsp; ★ ${d.rating.toFixed(1)}
+          ${esc(d.province)}${d.rating !== undefined ? ` &nbsp;·&nbsp; ★ ${d.rating.toFixed(1)}` : ""}
         </p>
         <p style="margin:11px 0 0 0;font:400 15px/1.6 ${F.sans};color:${C.ink};">
           ${esc(d.desc)}

@@ -46,57 +46,62 @@ import {
 } from "@/data/destinations";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
-import pairs from "@/data/routes/pairs.json";
 import CompartirRuta from "@/components/CompartirRuta";
 import { PRESETS, type Preset } from "@/data/rutas";
 import { idsDeSlug } from "@/lib/ruta/slug";
-import { duracion, totalesDeRuta } from "@/lib/ruta/totales";
-
-// ─── Datos de carretera (pares reales precalculados) ─────────────────────────
-
-const IDS = pairs.ids as string[];
-const KM = pairs.km as number[][];
-const MIN = pairs.min as number[][];
+import { duracion, kmEntre, minEntre, totalesDeRuta } from "@/lib/ruta/totales";
 
 /** Geometría por carretera entre dos destinos, indexada por `a|b`. */
 type RoadLegs = Record<string, [number, number][]>;
 
-// Los 153 tramos pesan 547 KB y sólo hacen falta si alguien arma una ruta, así
-// que viven en `public/data/route-legs.json` y no en el bundle. Se piden una
-// vez por sesión, al elegir la primera parada; hasta que llegan, `legCoords`
-// cae a la cuerda recta y la ruta se ve enseguida.
-let legsCache: RoadLegs | null = null;
-let legsRequest: Promise<RoadLegs> | null = null;
+// La geometría vive en un fichero POR ORIGEN: `public/data/route-legs/<id>.json`
+// trae los 37 tramos que salen de ese destino. Con 38 destinos son 703 tramos y
+// unos 2,5 MB; nadie arma una ruta con los 38, así que se baja el fichero del
+// destino que tocas y ninguno más. Antes era un solo archivo de 547 KB con los
+// 153 pares de 18 destinos, y crecía con el cuadrado del catálogo.
+//
+// La caché guarda la PROMESA, no el resultado: dos paradas elegidas seguidas
+// piden el mismo origen una sola vez, aunque la primera aún no haya llegado.
+const legsPorOrigen = new Map<string, Promise<RoadLegs>>();
 
-function loadRoadLegs(): Promise<RoadLegs> {
-  legsRequest ??= fetch("/data/route-legs.json")
+function cargarLegsDe(id: string): Promise<RoadLegs> {
+  const ya = legsPorOrigen.get(id);
+  if (ya) return ya;
+
+  const pedido = fetch(`/data/route-legs/${id}.json`)
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json() as Promise<{ legs: RoadLegs }>;
     })
-    .then((d) => (legsCache = d.legs))
+    .then((d) => d.legs)
     .catch((err) => {
       // La ruta sigue dibujándose recta: se degrada, no se rompe. Pero si esto
       // pasa en producción el mapa miente sobre las carreteras, así que grita.
-      console.error("[MapaSection] no se pudo cargar la geometría de carretera:", err);
-      return (legsCache = {});
+      console.error(`[MapaSection] sin geometría de carretera para ${id}:`, err);
+      return {} as RoadLegs;
     });
-  return legsRequest;
+
+  legsPorOrigen.set(id, pedido);
+  return pedido;
 }
 
-function useRoadLegs(needed: boolean): RoadLegs | null {
-  const [legs, setLegs] = useState<RoadLegs | null>(legsCache);
+/** Los tramos de todas las paradas de la ruta, fundidos en un solo índice. */
+function useRoadLegs(stops: readonly string[]): RoadLegs {
+  const [legs, setLegs] = useState<RoadLegs>({});
+  // La identidad del array cambia en cada render; lo que decide si hay que
+  // pedir algo es la lista de ids, no el array.
+  const clave = stops.join(",");
 
   useEffect(() => {
-    if (!needed || legs) return;
+    if (!clave) return;
     let alive = true;
-    loadRoadLegs().then((l) => {
-      if (alive) setLegs(l);
+    Promise.all(clave.split(",").map(cargarLegsDe)).then((partes) => {
+      if (alive) setLegs(Object.assign({}, ...partes) as RoadLegs);
     });
     return () => {
       alive = false;
     };
-  }, [needed, legs]);
+  }, [clave]);
 
   return legs;
 }
@@ -105,18 +110,20 @@ const DEST: Record<string, Destination> = Object.fromEntries(
   DESTINATIONS.map((d) => [d.id, d])
 );
 
-function pairKm(a: string, b: string): number {
-  return KM[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
-function pairMin(a: string, b: string): number {
-  return MIN[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
+// Los kilómetros y los minutos entre dos paradas salen de `lib/ruta/totales`,
+// que es donde vive la matriz y donde el pase de embarque suma lo mismo.
+//
+// Aquí había una segunda copia de esa cuenta, y era la insegura: indexaba
+// `KM[IDS.indexOf(a)][IDS.indexOf(b)]` sin el `?.` que sí tiene la de la
+// librería. Con un destino que no está en la matriz, `indexOf` da -1, `KM[-1]`
+// es `undefined` y la sección entera se caía al error boundary en cuanto se
+// armaba una ruta con él.
 
 /** Geometría carretera a→b; invierte el leg si está guardado como b→a. */
-function legCoords(a: string, b: string, legs: RoadLegs | null): [number, number][] {
-  const direct = legs?.[`${a}|${b}`];
+function legCoords(a: string, b: string, legs: RoadLegs): [number, number][] {
+  const direct = legs[`${a}|${b}`];
   if (direct) return direct;
-  const rev = legs?.[`${b}|${a}`];
+  const rev = legs[`${b}|${a}`];
   if (rev) return [...rev].reverse();
   return [DEST[a].coords, DEST[b].coords];
 }
@@ -145,7 +152,7 @@ function nearestNeighborOrder(ids: string[]): string[] {
     let best = "";
     let bestKm = Infinity;
     for (const c of pool) {
-      const d = pairKm(last, c);
+      const d = kmEntre(last, c);
       if (d < bestKm) {
         bestKm = d;
         best = c;
@@ -281,10 +288,15 @@ function CardBody({
         <div className={`truncate font-bold text-ink ${compact ? "text-sm" : "text-copy"}`}>
           {d.name}
         </div>
-        <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
-          <Icon name="star" className="text-sm" />
-          {d.rating.toFixed(1)}
-        </div>
+        {/* Sin valoración real no se dibuja la estrella: ni un cero, ni un
+            guion, ni "sin valoraciones". La fila desaparece y el nombre se
+            queda con todo el ancho (decisión 6A). */}
+        {d.rating !== undefined && (
+          <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
+            <Icon name="star" className="text-sm" />
+            {d.rating.toFixed(1)}
+          </div>
+        )}
       </div>
       <div className="mt-0.5 text-micro text-muted">
         {d.province} · {meta.label}
@@ -309,8 +321,8 @@ function CardBody({
         </div>
       ) : showArrival ? (
         <div className="mt-2 flex items-center gap-1.5 font-display text-micro font-bold text-mint-ink">
-          <Icon name="route" className="text-sm" />A {Math.round(pairKm(last, d.id))} km ·{" "}
-          {fmtDur(pairMin(last, d.id))} de {DEST[last].name}
+          <Icon name="route" className="text-sm" />A {Math.round(kmEntre(last, d.id))} km ·{" "}
+          {fmtDur(minEntre(last, d.id))} de {DEST[last].name}
         </div>
       ) : null}
     </>
@@ -383,9 +395,14 @@ function PinCard({
         <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-paper" />
       )}
       <div className="overflow-hidden rounded-block border border-line bg-paper shadow-e1">
-        <div className="relative h-[104px] w-full bg-cream-2">
-          <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
-        </div>
+        {/* Sin foto no hay franja: la carta empieza por el texto. Un bloque
+            crema vacío de 104 px sería un hueco que promete una imagen que no
+            existe, y una foto de otro sitio sería dato inventado (6A). */}
+        {d.image && (
+          <div className="relative h-[104px] w-full bg-cream-2">
+            <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
+          </div>
+        )}
         <div className="px-3 pb-3 pt-2.5">
           <CardBody d={d} stopIndex={stopIndex} stops={stops} />
           <div
@@ -518,7 +535,9 @@ function PresetCard({
           compact ? "size-11" : "size-12"
         }`}
       >
-        {cover && <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />}
+        {cover?.image && (
+          <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -978,7 +997,7 @@ export default function MapaSection() {
 
   // Ruta por carreteras reales: concatena los legs precalculados entre paradas
   // consecutivas (con un stub corto pin→carretera en cada extremo).
-  const roadLegs = useRoadLegs(stops.length > 0);
+  const roadLegs = useRoadLegs(stops);
   const route = useMemo(() => {
     if (stops.length < 2) return null;
     const coords: [number, number][] = [];
@@ -987,8 +1006,8 @@ export default function MapaSection() {
     for (let i = 0; i < stops.length - 1; i++) {
       const a = stops[i];
       const b = stops[i + 1];
-      km += pairKm(a, b);
-      min += pairMin(a, b);
+      km += kmEntre(a, b);
+      min += minEntre(a, b);
       const leg = [DEST[a].coords, ...legCoords(a, b, roadLegs), DEST[b].coords];
       coords.push(...(i === 0 ? leg : leg.slice(1)));
     }
@@ -1154,8 +1173,8 @@ export default function MapaSection() {
                       {/* Tramo hacia la siguiente parada: km y minutos reales */}
                       {i < stops.length - 1 && (
                         <div className="ml-[10px] border-l-2 border-dashed border-mint py-1 pl-[19px] text-mini text-muted">
-                          {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
-                          {fmtDur(pairMin(id, stops[i + 1]))} manejando
+                          {Math.round(kmEntre(id, stops[i + 1]))} km ·{" "}
+                          {fmtDur(minEntre(id, stops[i + 1]))} manejando
                         </div>
                       )}
                     </li>
@@ -1428,9 +1447,13 @@ export default function MapaSection() {
             className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-surface p-3 shadow-e1 motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
-              <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
-                <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
-              </div>
+              {/* Igual que la carta de escritorio: sin foto, la miniatura no se
+                  dibuja y el texto ocupa la fila entera. */}
+              {sel.image && (
+                <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
+                  <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <CardBody d={sel} stopIndex={selIndex} stops={stops} compact />
               </div>
