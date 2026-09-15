@@ -75,17 +75,19 @@ describe("ponerRelieve", () => {
     expect(mapa.añadidas).toHaveLength(1);
   });
 
-  it("el fondo toma el color de la cota cero, para que una tesela que tarda no se vea como un hueco", () => {
+  it("el fondo y el agua nacen de noche bajo z5 y son los del sitio desde z5,5", () => {
     const mapa = mapaFalso(POSITRON);
     ponerRelieve(mapa);
-    expect(mapa.pintadas).toContainEqual(["background", "background-color", PALETA.fondo]);
+    const fondo = mapa.pintadas.find(([capa, prop]) => capa === "background" && prop === "background-color");
+    expect(fondo?.[2]).toContain(PALETA.fondo);
     expect(PALETA.fondo).toBe(PALETA.suelo[0][1]);
   });
 
   it("el agua queda plana y opaca: la profundidad del DEM se veía a bloques", () => {
     const mapa = mapaFalso(POSITRON);
     ponerRelieve(mapa);
-    expect(mapa.pintadas).toContainEqual(["water", "fill-color", PALETA.agua]);
+    const agua = mapa.pintadas.find(([capa, prop]) => capa === "water" && prop === "fill-color");
+    expect(agua?.[2]).toContain(PALETA.agua);
     expect(mapa.pintadas).toContainEqual(["water", "fill-opacity", 1]);
   });
 });

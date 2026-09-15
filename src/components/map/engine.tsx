@@ -42,6 +42,12 @@ export interface MapProps {
   viewport?: ViewState;
   onViewportChange?: (viewport: ViewState) => void;
   onLoad?: (map: maplibregl.Map) => void;
+  /**
+   * Se llama en cuanto el estilo está parseado, antes del primer frame. Es
+   * donde va todo lo que cambia cómo se ve el mapa: si eso espera a `onLoad`,
+   * se ve un frame (o varios) con los colores de quien sirve el estilo.
+   */
+  onStyle?: (map: maplibregl.Map) => void;
   loading?: React.ReactNode;
   initialViewState?: InitialViewState;
   interactive?: boolean;
@@ -73,6 +79,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     viewport,
     onViewportChange,
     onLoad,
+    onStyle,
     loading,
     initialViewState,
     interactive = true,
@@ -162,6 +169,29 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     map.on("error", (e) => {
       if (map && !mapRef.current && !map.isStyleLoaded()) fail(e.error ?? e);
     });
+
+    // La pintura de marca, en cuanto el estilo existe y ANTES del primer frame.
+    //
+    // `load` no llega hasta que el mapa ya pintó, así que entre medias se veía
+    // el mapa con los colores de quien lo sirve: sobre el globo del hero, un
+    // planeta blanco de Positron durante más de un segundo. `styledata` llega
+    // con el estilo parseado (las capas ya existen, que es todo lo que la
+    // pintura necesita) y antes de que se dibuje nada.
+    //
+    // La proyección va con ella por el mismo motivo: en mercator el lienzo se
+    // rellena entero, y en globo sólo la esfera.
+    if (onStyle || projection) {
+      map.once("styledata", () => {
+        if (!map) return;
+        if (projection) map.setProjection(projection);
+        try {
+          onStyle?.(map);
+        } catch (err) {
+          // Una pintura que falla no puede impedir que el mapa cargue.
+          console.warn("[Map] la pintura temprana del estilo falló:", err);
+        }
+      });
+    }
 
     map.on("load", () => {
       if (!map) return;

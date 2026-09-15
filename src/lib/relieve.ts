@@ -106,6 +106,16 @@ export const PALETA: Paleta = {
   fondo: "#CFDDB4",
 };
 
+/** El océano y la tierra sin luces de la imagen de noche (`lib/mundo`). Por
+ *  debajo de z5 el mapa se pinta con ellos, así que la esfera del hero nace de
+ *  noche y la imagen aterriza encima sin que se note. */
+const NOCHE_MAR = "#00011C";
+const NOCHE_TIERRA = "#0B1222";
+
+/** Zoom donde los colores de noche ya cedieron del todo a los del sitio. Las
+ *  dos únicas escenas por debajo de z5 son los dos globos. */
+const DIA_DESDE = 5.5;
+
 /**
  * Debajo de qué capa va el relieve: `landcover`, que es la primera de Positron
  * después del fondo. Así el relieve es el suelo y TODO lo vectorial (agua,
@@ -160,11 +170,35 @@ export function ponerRelieve(map: MapaConRelieve, paleta: Paleta = PALETA): bool
     capaDeReferencia(map)
   );
 
+  // El planeta nace de noche, no pálido.
+  //
+  // Entre que el mapa arranca y que la imagen del cielo llega hay un hueco, y
+  // en ese hueco se veía el globo con los colores de Positron: océano mint
+  // claro y tierra casi blanca. El arreglo no es cargar antes (que también), es
+  // que el color de partida sea el correcto. Las paradas viven aquí y no en
+  // `applyBrandPaint` porque esta función es la que escribe estos dos colores,
+  // y corre después: allí se perdían.
   if (map.getLayer("background")) {
-    map.setPaintProperty("background", "background-color", paleta.fondo);
+    map.setPaintProperty("background", "background-color", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      RELIEVE_MINZOOM,
+      NOCHE_TIERRA,
+      DIA_DESDE,
+      paleta.fondo,
+    ]);
   }
   if (map.getLayer("water")) {
-    map.setPaintProperty("water", "fill-color", paleta.agua);
+    map.setPaintProperty("water", "fill-color", [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      RELIEVE_MINZOOM,
+      NOCHE_MAR,
+      DIA_DESDE,
+      paleta.agua,
+    ]);
     map.setPaintProperty("water", "fill-opacity", 1);
   }
   return true;
