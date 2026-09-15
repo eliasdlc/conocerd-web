@@ -182,6 +182,23 @@ async function corrida(nombreVp, rama) {
   await page.evaluateOnNewDocument(() => {
     const w = window;
     w.__dib = { total: 0, previo: 0, porFrame: [] };
+    // Pérdida de contexto WebGL. Sin esto, cuando el navegador tira el contexto
+    // el mapa deja de dibujar y la tabla se llena de ceros que parecen una
+    // escena barata: medido en la laptop, el recorrido moría en `viajeros` y
+    // las cuatro escenas siguientes salían a 0 dibujos y 0 rasgos.
+    w.__gl = { perdido: false, restaurado: false, cuando: null };
+    document.addEventListener(
+      "webglcontextlost",
+      (e) => {
+        w.__gl.perdido = true;
+        w.__gl.cuando = Math.round(performance.now());
+        // No se llama preventDefault: interesa ver lo que el sitio hace de
+        // verdad, no rescatar el contexto desde la sonda.
+        void e;
+      },
+      true
+    );
+    document.addEventListener("webglcontextrestored", () => { w.__gl.restaurado = true; }, true);
     for (const P of [WebGLRenderingContext, WebGL2RenderingContext]) {
       for (const m of ["drawElements", "drawArrays", "drawElementsInstanced", "drawArraysInstanced"]) {
         const orig = P.prototype[m];
@@ -276,6 +293,7 @@ async function corrida(nombreVp, rama) {
   });
 
   const porEscena = [];
+  const avisado = { gl: false };
 
   // Llamadas de dibujo con la cámara QUIETA en la escena. `triggerRepaint` en
   // bucle obliga a MapLibre a redibujar el mismo encuadre: eso aísla el coste
@@ -336,7 +354,17 @@ async function corrida(nombreVp, rama) {
       });
     }
 
-    porEscena.push({ escena: ESCENAS[indice], ...dib, ...capas });
+    const gl = await page.evaluate(() => window.__gl);
+    if (gl.perdido && !avisado.gl) {
+      avisado.gl = true;
+      console.log(
+        `  ⚠ CONTEXTO WEBGL PERDIDO a los ${gl.cuando} ms, en la escena "${ESCENAS[indice]}"` +
+          `${gl.restaurado ? " (restaurado)" : " (NO restaurado: el mapa deja de dibujar)"}.` +
+          " Las escenas de aqui en adelante no miden nada."
+      );
+    }
+
+    porEscena.push({ escena: ESCENAS[indice], ...dib, ...capas, glPerdido: gl.perdido });
   };
 
   await medirEscena(0);
@@ -390,6 +418,7 @@ async function corrida(nombreVp, rama) {
     viewport: nombreVp,
     rama,
     gpu,
+    glPerdido: porEscena.some((e) => e.glPerdido),
     segunTiming,
     arranque: informe.arranque,
     totales: informe.totales,
@@ -411,6 +440,7 @@ for (const vp of cuales) {
     const r = await corrida(vp, rama);
     salida.push(r);
     console.log(`  ${Math.round((Date.now() - t0) / 1000)} s · dibujando con: ${r.gpu}`);
+    if (r.glPerdido) console.log("  ⚠ esta corrida perdio el contexto WebGL: sus numeros no valen enteros.");
     console.table(r.red);
     console.log(
       `  totales: ${r.totales.peticiones} peticiones · ${r.totales.kb} KB (timing API) · ` +
