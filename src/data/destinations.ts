@@ -549,6 +549,18 @@ export const FEATURED_DESTINATIONS: FeaturedDestination[] = DESTINATIONS.filter(
   (d): d is FeaturedDestination => Boolean(d.featured) && typeof d.image === "string"
 ).sort((a, b) => (a.featuredOrder ?? 0) - (b.featuredOrder ?? 0));
 
+/** A partir de qué zoom entran los 32 destinos que no son del recorrido.
+ *
+ *  La escena del mapa abre en z6,2 en teléfono y en z7,3 en escritorio, y 7,6
+ *  está por encima de las dos: la escena abre con los seis del recorrido y el
+ *  resto entra cuando el visitante se acerca, que es cuando hay sitio.
+ *
+ *  El número sale de una medida, no de una impresión: con los 38 a la vez, a
+ *  z6,2 sobreviven 11 de los 32 nombres de provincia y hay 30 pares de pines
+ *  montados; a z7,3 son 24 nombres y 11 pares. Si cambia el zoom de la escena
+ *  (`SCENE_CAMERAS.mapa`), este número se vuelve a medir, no se ajusta a ojo. */
+export const DESTINOS_DESDE = 7.6;
+
 // ─── Cámaras por escena ───────────────────────────────────────────────────────
 // Migra LOCATIONS + SCENE_TO_LOCATION de MapScrollJourney a un único mapa
 // escena→viewport. El motor de scroll (#3) interpola entre estos keyframes.

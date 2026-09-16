@@ -35,12 +35,13 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MapRoute } from "@/components/map/context";
+import { MapMarker, MarkerContent, MapRoute, useZoomAlMenos } from "@/components/map/context";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
   CATEGORIES,
   CATEGORY_META,
+  DESTINOS_DESDE,
   type Category,
   type Destination,
 } from "@/data/destinations";
@@ -1016,11 +1017,27 @@ export default function MapaSection() {
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;
-  // El filtro nunca esconde una parada ya elegida: se vería como si la ruta
-  // se hubiera roto sola.
-  const visibleDests = DESTINATIONS.filter(
-    (d) => cats.size === 0 || cats.has(d.category) || stops.includes(d.id)
-  );
+  // Qué pines se dibujan, por dos reglas que se aplican en orden.
+  //
+  // El filtro de categoría nunca esconde una parada ya elegida: se vería como
+  // si la ruta se hubiera roto sola.
+  //
+  // El zoom decide el resto. Con los 38 a la vez la escena no se lee: medido el
+  // 15 sep 2026, en teléfono sobreviven 11 de los 32 nombres de provincia y hay
+  // 30 pares de pines montados unos sobre otros. Los pines son DOM por encima
+  // del canvas, así que el índice de colisión de MapLibre, que es lo que
+  // descongestiona los nombres, no los ve y no puede ayudar aquí.
+  //
+  // Tres excepciones al zoom, y las tres son lo mismo: si el visitante ya pidió
+  // ver algo, se le enseña. Los seis del recorrido son la puerta de entrada al
+  // mapa; una parada suya no puede desaparecer al alejarse; y filtrar por
+  // categoría ES pedir ver esa categoría, que además deja entre 6 y 12 pines.
+  const cerca = useZoomAlMenos(DESTINOS_DESDE);
+  const visibleDests = DESTINATIONS.filter((d) => {
+    const pasaFiltro = cats.size === 0 || cats.has(d.category) || stops.includes(d.id);
+    const pasaZoom = cerca || d.featured || stops.includes(d.id) || cats.size > 0;
+    return pasaFiltro && pasaZoom;
+  });
   const totalKm = route?.km ?? 0;
   const totalMin = route?.min ?? 0;
 

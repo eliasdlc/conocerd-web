@@ -37,6 +37,29 @@ export function useMap(): maplibregl.Map | null {
   return useContext(MapContext)?.map ?? null;
 }
 
+/** Si el mapa está a `umbral` de zoom o más cerca.
+ *
+ *  Devuelve un booleano y no el zoom a propósito. El evento `zoom` de MapLibre
+ *  dispara en cada frame de un vuelo, así que publicar el número repintaría
+ *  React sesenta veces por segundo para nada: quien pregunta esto sólo quiere
+ *  saber de qué lado del umbral está, y eso cambia una vez por cruce. */
+export function useZoomAlMenos(umbral: number): boolean {
+  const map = useMap();
+  const [cerca, setCerca] = useState(() => (map ? map.getZoom() >= umbral : false));
+
+  useEffect(() => {
+    if (!map) return;
+    const mirar = () => setCerca(map.getZoom() >= umbral);
+    mirar();
+    map.on("zoom", mirar);
+    return () => {
+      map.off("zoom", mirar);
+    };
+  }, [map, umbral]);
+
+  return cerca;
+}
+
 // ─── MapMarker ───────────────────────────────────────────────────────────────
 
 export interface MapMarkerProps {
