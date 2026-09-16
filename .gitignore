@@ -60,3 +60,8 @@ next-env.d.ts
 # Las mismas sondas cuando se nombran con punto delante: los patrones de arriba
 # no las ven y acaban apareciendo como archivos sin trackear.
 /.*.mjs
+
+# Caché de los dos horneados: el DEM de Terrain Tiles que alimenta el relieve
+# (scripts/hornear-relieve.mjs) y las teselas de GIBS que alimentan el cielo del
+# hero (scripts/hornear-mundo.mjs). Se vuelven a bajar solas si hacen falta.
+/.cache/

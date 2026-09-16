@@ -17,6 +17,7 @@ import {
   type JourneyViewport,
 } from "@/lib/journey";
 import { MOBILE_BREAKPOINT } from "@/hooks/useIsMobile";
+import { mapaVivo } from "@/lib/mapaVivo";
 
 let viewport: JourneyViewport = REFERENCE_VIEWPORT;
 let idleBearing = 0;
@@ -72,7 +73,9 @@ export function getIdleBearing() {
 
 /** Escribe en el mapa el frame correspondiente al progreso `p` (0..1). */
 export function applyJourneyFrame(map: maplibregl.Map | null | undefined, p: number) {
-  if (!map || activeFlight) return;
+  // `mapaVivo` y no `!map`: tras perder el contexto WebGL la instancia sigue ahí
+  // pero su estilo es null, y escribirle la cámara lanza.
+  if (!mapaVivo(map) || activeFlight) return;
   // Pestaña oculta: el rAF del mapa no corre y nadie está mirando. Escribir
   // aquí sólo deja trabajo acumulado para cuando la pestaña vuelva.
   if (typeof document !== "undefined" && document.hidden) return;
@@ -129,6 +132,10 @@ export function flyToJourneyFrame(
   durationMs: number,
   onDone: () => void
 ) {
+  if (!mapaVivo(map)) {
+    onDone();
+    return;
+  }
   const token = Symbol("journey-flight");
   activeFlight = token;
   // El vuelo mueve la cámara por su cuenta: lo que quede anotado como último

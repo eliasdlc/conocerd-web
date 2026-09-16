@@ -42,6 +42,12 @@ export interface MapProps {
   viewport?: ViewState;
   onViewportChange?: (viewport: ViewState) => void;
   onLoad?: (map: maplibregl.Map) => void;
+  /**
+   * Se llama en cuanto el estilo está parseado, antes del primer frame. Es
+   * donde va todo lo que cambia cómo se ve el mapa: si eso espera a `onLoad`,
+   * se ve un frame (o varios) con los colores de quien sirve el estilo.
+   */
+  onStyle?: (map: maplibregl.Map) => void;
   loading?: React.ReactNode;
   initialViewState?: InitialViewState;
   interactive?: boolean;
@@ -73,6 +79,7 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
     viewport,
     onViewportChange,
     onLoad,
+    onStyle,
     loading,
     initialViewState,
     interactive = true,
@@ -163,12 +170,65 @@ export const Map = forwardRef<maplibregl.Map | null, MapProps>(function Map(
       if (map && !mapRef.current && !map.isStyleLoaded()) fail(e.error ?? e);
     });
 
+    // La pintura de marca, en cuanto el estilo existe y ANTES del primer frame.
+    //
+    // `load` no llega hasta que el mapa ya pintó, así que entre medias se veía
+    // el mapa con los colores de quien lo sirve: sobre el globo del hero, un
+    // planeta blanco de Positron durante más de un segundo. `styledata` llega
+    // con el estilo parseado (las capas ya existen, que es todo lo que la
+    // pintura necesita) y antes de que se dibuje nada.
+    //
+    // La proyección va con ella por el mismo motivo: en mercator el lienzo se
+    // rellena entero, y en globo sólo la esfera.
+    if (onStyle || projection) {
+      map.once("styledata", () => {
+        if (!map) return;
+        if (projection) map.setProjection(projection);
+        try {
+          onStyle?.(map);
+        } catch (err) {
+          // Una pintura que falla no puede impedir que el mapa cargue.
+          console.warn("[Map] la pintura temprana del estilo falló:", err);
+        }
+      });
+    }
+
     map.on("load", () => {
       if (!map) return;
       if (projection) map.setProjection(projection);
       onLoad?.(map);
       mapRef.current = map;
       setReady(true);
+    });
+
+    // Pérdida del contexto WebGL. MapLibre destruye el pintor y pone su estilo
+    // a null, así que durante unos frames CUALQUIER llamada al mapa lanza. No
+    // es hipotético: medido el 14 sep 2026, el recorrido lo pierde al pasar de
+    // Tu ruta a Viajeros, y también en producción.
+    //
+    // No se destruye nada aquí: MapLibre se restaura solo (rehace el estilo
+    // entero con `setStyle`, capas añadidas incluidas). Lo único que hace falta
+    // es que el resto de la página deje de tocar el mapa mientras tanto, y eso
+    // es lo que dice el contexto en null. Lo que se re-emite al volver es
+    // `onLoad`: la pintura de marca viaja dentro del estilo restaurado, pero
+    // los consumidores sí tienen que volver a engancharse.
+    map.on("webglcontextlost", () => {
+      console.warn("[Map] contexto WebGL perdido — el mapa se reconstruye solo");
+      mapRef.current = null;
+      setReady(false);
+    });
+    map.on("webglcontextrestored", () => {
+      if (!map) return;
+      // `setStyle` del restaurador es asíncrono: el estilo no está hasta que
+      // vuelve a cargar, y añadir capas antes las perdería.
+      const listo = () => {
+        if (!map) return;
+        if (projection) map.setProjection(projection);
+        mapRef.current = map;
+        setReady(true);
+      };
+      if (map.isStyleLoaded()) listo();
+      else map.once("styledata", listo);
     });
 
     if (onViewportChange) {

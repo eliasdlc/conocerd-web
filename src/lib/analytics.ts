@@ -49,3 +49,12 @@ export function trackWaitlistSuccess(common: Common & { already: boolean }) {
 export function trackWaitlistError(common: Common & { reason: "validacion" | "red" }) {
   track("waitlist_error", { ...props(common), reason: common.reason });
 }
+
+/**
+ * Alguien compartió la ruta que armó en Tu ruta. `method` separa el share
+ * nativo del teléfono de la copia al portapapeles: el primero llega a un chat,
+ * el segundo a donde sea.
+ */
+export function trackRouteShare(data: { stops: number; method: "share" | "copy" }) {
+  track("route_share", data);
+}

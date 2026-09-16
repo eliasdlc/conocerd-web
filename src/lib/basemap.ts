@@ -39,3 +39,20 @@ export const CARTO_HOSTS = [
   "https://basemaps.cartocdn.com",
   "https://tiles.basemaps.cartocdn.com",
 ] as const;
+
+// ─── Créditos ────────────────────────────────────────────────────────────────
+//
+// El relieve ya no se pide a AWS en vivo: las teselas se hornean una vez desde
+// el DEM abierto de Terrain Tiles y se sirven desde nuestro dominio
+// (scripts/hornear-relieve.mjs, lib/relieve). La atribución sigue siendo
+// obligatoria y vive en el pie del sitio, porque el mapa del recorrido no lleva
+// control de atribución.
+
+export const RELIEVE_CREDITO = "Relieve: Terrain Tiles (Mapzen, NASA SRTM, USGS, GEBCO)";
+export const MAPA_CREDITO = "Mapa: © CARTO, © OpenStreetMap contributors";
+
+// Los puntos donde van los nombres de provincia salen de los polígonos de la
+// ONE (`scripts/hornear-provincias.mjs`). La CC BY 3.0 IGO obliga a citar la
+// fuente aunque lo que viaje sea un dato derivado, y son 32 puntos derivados.
+export const PROVINCIAS_CREDITO =
+  "Provincias: Oficina Nacional de Estadística (ONE) vía geoBoundaries, CC BY 3.0 IGO";

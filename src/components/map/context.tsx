@@ -37,6 +37,29 @@ export function useMap(): maplibregl.Map | null {
   return useContext(MapContext)?.map ?? null;
 }
 
+/** Si el mapa está a `umbral` de zoom o más cerca.
+ *
+ *  Devuelve un booleano y no el zoom a propósito. El evento `zoom` de MapLibre
+ *  dispara en cada frame de un vuelo, así que publicar el número repintaría
+ *  React sesenta veces por segundo para nada: quien pregunta esto sólo quiere
+ *  saber de qué lado del umbral está, y eso cambia una vez por cruce. */
+export function useZoomAlMenos(umbral: number): boolean {
+  const map = useMap();
+  const [cerca, setCerca] = useState(() => (map ? map.getZoom() >= umbral : false));
+
+  useEffect(() => {
+    if (!map) return;
+    const mirar = () => setCerca(map.getZoom() >= umbral);
+    mirar();
+    map.on("zoom", mirar);
+    return () => {
+      map.off("zoom", mirar);
+    };
+  }, [map, umbral]);
+
+  return cerca;
+}
+
 // ─── MapMarker ───────────────────────────────────────────────────────────────
 
 export interface MapMarkerProps {
@@ -128,13 +151,14 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
 
   return (
     <div
+      // El material (fondo, canto, óptica) es el cristal líquido corto, el
+      // mismo de los chips: la etiqueta mide 20px de alto y un blur largo la
+      // convertiría en una pastilla plana.
+      className="crd-cristal-liquido-chip"
       style={{
         position: "absolute",
         ...posStyle,
         whiteSpace: "nowrap",
-        background: "var(--crd-glass)",
-        backdropFilter: "blur(24px) saturate(1.8)",
-        border: "1px solid var(--crd-glass-line)",
         borderRadius: 999,
         padding: "3px 8px",
         fontSize: 11,
@@ -143,7 +167,6 @@ export function MarkerLabel({ children, position = "top" }: MarkerLabelProps) {
         fontFamily: "var(--font-jakarta), system-ui, sans-serif",
         fontWeight: 700,
         color: "#0F1A2E",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
         pointerEvents: "none",
       }}
     >

@@ -1,5 +1,6 @@
 "use client";
 
+import { useScene } from "@/context/SceneContext";
 import { CHAPTERS, chapterIndexOfScene, SCENE_COUNT } from "@/lib/journey";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,6 +19,13 @@ import { CHAPTERS, chapterIndexOfScene, SCENE_COUNT } from "@/lib/journey";
 //  Es el dock de la app en versión de una pieza: barra de cristal de 64 de
 //  alto, flotando a 15 de los lados y 21 del borde. El avance va en `selected`,
 //  como todo estado del sistema; el acento se reserva a la acción.
+//
+//  El material es `crd-cristal-liquido` (globals.css), no el cristal del tema:
+//  a 84 % de crema el panel tapaba lo que tenía debajo y sobre la noche del
+//  hero se leía como una pastilla encendida. Y son dos materiales, porque el
+//  recorrido tiene dos fondos: sobre el hero va la variante de noche y lo de
+//  dentro se invierte (crema sobre tinta), igual que la píldora del nav. La
+//  transparencia la paga el material; el texto nunca.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface JourneyStepperProps {
@@ -54,9 +62,15 @@ export default function JourneyStepper({
   onEnd,
   visible,
 }: JourneyStepperProps) {
+  const { activeScene } = useScene();
   const activeChapter = chapterIndexOfScene(index);
   const isFirst = index === 0;
   const isLast = index === SCENE_COUNT - 1;
+  // Mismo criterio que la píldora del nav: el único fondo oscuro del recorrido
+  // es el hero. `activeScene` y no `index` porque la escena cambia cuando la
+  // cámara llega, que es cuando el cielo ya ha amanecido.
+  const noche = activeScene === "hero";
+  const enNoche = noche ? "true" : undefined;
 
   return (
     <div
@@ -69,23 +83,28 @@ export default function JourneyStepper({
         visible ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >
-      <div className="flex h-16 items-center gap-3 rounded-full border border-[var(--crd-glass-line)] bg-[var(--crd-glass)] px-[5px] shadow-e1 backdrop-blur-[24px] backdrop-saturate-[1.8]">
+      <div data-noche={enNoche} className="crd-cristal-liquido flex h-16 items-center gap-3 rounded-full border px-[5px]">
         {/* Escena anterior */}
         <button
           type="button"
           onClick={onPrev}
           disabled={isFirst}
           aria-label="Escena anterior"
-          className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border border-line bg-paper text-ink transition-opacity duration-200 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2 ${
-            isFirst ? "cursor-default opacity-35" : ""
-          }`}
+          data-noche={enNoche}
+          className={`crd-cristal-hueco flex size-11 flex-none cursor-pointer items-center justify-center rounded-full border transition-opacity duration-200 ${
+            noche ? "text-white" : "text-ink"
+          } ${isFirst ? "cursor-default opacity-35" : ""}`}
         >
           <Chevron dir="up" />
         </button>
 
         {/* Capítulo activo + puntos de capítulo tocables */}
         <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-          <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-label text-micro font-extrabold uppercase tracking-[.15em] text-muted">
+          <span
+            className={`max-w-full overflow-hidden text-ellipsis whitespace-nowrap font-label text-micro font-extrabold uppercase tracking-[.15em] ${
+              noche ? "text-white" : "text-ink"
+            }`}
+          >
             {CHAPTERS[activeChapter].label}
           </span>
           <div className="flex items-center gap-[5px]">
@@ -93,6 +112,10 @@ export default function JourneyStepper({
               const isActive = i === activeChapter;
               const span = c.last - c.first + 1;
               const fill = isActive ? (index - c.first + 1) / span : 0;
+              // Con el fondo a la vista, `line-strong` desaparece: la pista es
+              // la tinta (o el blanco, de noche) a baja opacidad.
+              const pista = noche ? "bg-white/28" : "bg-ink/25";
+              const avance = noche ? "bg-paper" : "bg-selected";
               return (
                 <button
                   key={c.label}
@@ -102,14 +125,14 @@ export default function JourneyStepper({
                   aria-current={isActive ? "step" : undefined}
                   className={`h-[7px] flex-none cursor-pointer overflow-hidden rounded-full border-0 p-0 transition-[width,background-color] duration-300 ease-[cubic-bezier(.2,.8,.3,1)] ${
                     isActive
-                      ? `bg-line-strong ${span > 1 ? "w-[34px]" : "w-4"}`
+                      ? `${pista} ${span > 1 ? "w-[34px]" : "w-4"}`
                       : i < activeChapter
-                        ? "w-[7px] bg-selected"
-                        : "w-[7px] bg-line-strong"
+                        ? `w-[7px] ${avance}`
+                        : `w-[7px] ${pista}`
                   }`}
                 >
                   <span
-                    className="block h-full rounded-full bg-selected transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.3,1)]"
+                    className={`block h-full rounded-full ${avance} transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.3,1)]`}
                     style={{ width: `${Math.round(fill * 100)}%` }}
                   />
                 </button>
@@ -123,7 +146,11 @@ export default function JourneyStepper({
           type="button"
           onClick={isLast ? onEnd : onNext}
           aria-label={isLast ? "Ver el pie de página" : "Siguiente escena"}
-          className="flex size-[54px] flex-none cursor-pointer items-center justify-center rounded-full bg-selected text-on-selected transition-transform duration-200 active:scale-95 focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-ink-2"
+          // De noche el relleno de tinta se funde con el cielo: la acción se
+          // invierte a papel con el glifo en tinta, como el CTA de la píldora.
+          className={`flex size-[54px] flex-none cursor-pointer items-center justify-center rounded-full transition-[transform,background-color,color] duration-200 active:scale-95 ${
+            noche ? "bg-paper text-ink" : "bg-selected text-on-selected"
+          }`}
         >
           <Chevron dir="down" />
         </button>

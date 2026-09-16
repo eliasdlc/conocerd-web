@@ -10,13 +10,18 @@ import { useHeroIdleMotion } from "@/hooks/useHeroIdleMotion";
 import { useViewportMode } from "@/hooks/useIsMobile";
 import { cameraAtProgress, SCENES, SCENE_BANDS } from "@/lib/journey";
 import { applyJourneyFrame, currentViewport, measureViewport } from "@/lib/journeyCamera";
-import { calentarRecorrido } from "@/lib/calentarRecorrido";
-import { aligerarEstilo, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { calentarRecorrido, calentarTerreno, siguienteDestino } from "@/lib/calentarRecorrido";
+import { aligerarEstilo, pintarCartografia, pintarProvincias, PROYECCION_DEL_RECORRIDO, soloTopónimosDeRD } from "@/lib/mapaLigero";
+import { ponerRelieve } from "@/lib/relieve";
 import { registerSceneJumper, scrollToFooter, scrollToSection } from "@/lib/journeyNav";
+import { marcar, publicarMapa } from "@/lib/medicion/marcas";
 import DiscoDelGlobo from "@/components/DiscoDelGlobo";
 import JourneyProgress from "@/components/JourneyProgress";
 import JourneyStepper from "@/components/JourneyStepper";
-import HeroOverlay, { HeroPinMarker } from "@/sections/HeroOverlay";
+import HeroEspacio, { CapasNasaJourney, descensoDe, HeroPinMarker } from "@/sections/HeroEspacio";
+import Cielo from "@/sections/espacio/Cielo";
+import { cajaDelGlobo } from "@/components/DiscoDelGlobo";
+import e from "@/sections/espacio/espacio.module.css";
 
 // Los paneles de las escenas van detrás del mismo `dynamic` que el motor del
 // mapa. Son ~4.000 líneas que el arranque no necesita: en el primer pixel sólo
@@ -45,9 +50,12 @@ const CTASection = dynamic(() => import("@/sections/CTASection"), { ssr: false }
 // consumen `map/context`, que sólo tiene `import type` de maplibre. Un import
 // de valor desde el grafo inicial devolvería el motor al HTML de arranque y
 // este `dynamic` volvería a ser decorativo, que es justo lo que pasaba antes.
+// Sin placeholder: el hueco del mapa lo ocupa el cielo, que ya está pintado
+// detrás. El crema que había aquí era una sábana blanca a pantalla completa
+// sobre el espacio durante todo lo que tarda el chunk de MapLibre, y el disco
+// del globo se encarga de reservar el sitio de la esfera.
 const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Map), {
   ssr: false,
-  loading: () => <div aria-hidden="true" className="absolute inset-0 bg-cream" />,
 });
 
 // Multiplicador de la caché de tiles de MapLibre. La caché no se dimensiona por
@@ -69,17 +77,11 @@ const Map = dynamic(() => import("@/components/map/engine").then((mod) => mod.Ma
 // la cámara por frame y barre los zooms más rápido de lo que el worker parsea.
 const CACHE_NIVELES_DE_ZOOM = 20;
 
-// Applied once on map load — aligns water/border colors with brand palette.
+// La pintura de marca del mapa. Se aplica en `onStyle`, o sea en cuanto el
+// estilo está parseado y antes del primer frame, no en `load`: lo que se pinta
+// aquí es lo que decide de qué color nace el planeta.
 // Exportada para que el lienzo de /dev/camara pinte el mapa igual que el sitio.
 export function applyBrandPaint(map: maplibregl.Map) {
-  // El estilo Carto no siempre expone estas capas → guardar con getLayer para
-  // no ensuciar la consola con "Cannot style non-existing layer".
-  if (map.getLayer("water")) map.setPaintProperty("water", "fill-color", "#c8ede9");
-  if (map.getLayer("admin_country")) {
-    map.setPaintProperty("admin_country", "line-color", "#0F1A2E");
-    map.setPaintProperty("admin_country", "line-width", 2);
-  }
-
   // El globo del hero va sin etiquetas. Los nombres de continente y de país
   // sobre la esfera no dicen nada que el hero necesite, y a este zoom compiten
   // con el titular y con el pin, que es lo único que hay que mirar.
@@ -103,21 +105,26 @@ export function applyBrandPaint(map: maplibregl.Map) {
   // limpio. El área alrededor queda transparente y muestra el crema del wrapper.
   map.setSky({ "atmosphere-blend": 0 });
 
-  // `water_shadow` de Positron dibuja el mismo polígono de agua que `water`,
-  // desplazado, para simular una sombra bajo la costa. Con nuestro color de
-  // agua queda tapada al 100 %: no aporta un solo píxel y sí manda toda la
-  // geometría del océano una segunda vez. En el hero son 425,9k índices y 20
-  // draw calls por frame para no cambiar nada (medido: 0 px de diferencia
-  // sobre 2.073.600 en tres encuadres).
-  if (map.getLayer("water_shadow")) {
-    map.setLayoutProperty("water_shadow", "visibility", "none");
-  }
-
-  // Los otros dos recortes al basemap, con su porqué y sus cifras en
-  // lib/mapaLigero: fuera las capas que a este zoom dibujan lo mismo que la
-  // carretera de debajo, y fuera todo topónimo que no sea de RD.
+  // Los tres recortes al basemap, con su porqué y sus cifras en lib/mapaLigero:
+  // fuera las capas que a este zoom dibujan lo mismo que otra (o que el
+  // relieve), las carreteras dejan de ser cicatrices blancas, y de la toponimia
+  // sólo quedan las ciudades y los pueblos de RD, y sólo en los closeups.
   aligerarEstilo(map);
+  pintarCartografia(map);
   soloTopónimosDeRD(map);
+
+  // Las provincias: la división sale de `boundary_state`, que el estilo ya
+  // trae y sólo hay que reencender, y el nombre de nuestros 32 puntos. Va aquí
+  // y no en cada escena porque las tres escenas de mapa (Tu ruta, Viajeros y
+  // Negocios) son el MISMO mapa: una sola llamada las cubre a las tres.
+  pintarProvincias(map);
+
+  // El relieve de la isla, encima del agua y bajo todo lo demás (lib/relieve):
+  // teselas nuestras con el color por altura, la sombra y el mar ya horneados.
+  // Arranca en z4, así que el globo del hero no pide ni una. Va al final porque
+  // también fija el fondo y el color del agua, incluidos los tonos de noche con
+  // los que nace el planeta.
+  ponerRelieve(map);
 }
 
 // Feel del slideshow de escritorio, elegido entre tres variantes en el mismo
@@ -130,6 +137,7 @@ const GESTO = { umbral: 40, silencioMs: 220 };
 function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | null> }) {
   const { activeScene, setActiveScene, progress } = useScene();
   const outerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const { mobile: isMobile, resolved: viewportResolved } = useViewportMode();
 
   // El recorrido bloquea el scroll de la página; solo se libera al final para
@@ -171,6 +179,43 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   });
 
   useHeroIdleMotion(mapRef, progress, activeScene === "hero");
+
+  // Al llegar a un destino se calienta el terreno del siguiente: la persona lee
+  // la carta unos segundos y las teselas llegan antes que la cámara.
+  useEffect(() => {
+    if (!activeScene.startsWith("polaroid-")) return;
+    const siguiente = siguienteDestino(activeScene);
+    if (!siguiente) return;
+    const ctl = new AbortController();
+    calentarTerreno(siguiente, currentViewport(), ctl.signal).catch(() => {});
+    return () => ctl.abort();
+  }, [activeScene]);
+
+  // La escena desde el espacio lee el descenso desde CSS: el sticky publica
+  // `--descenso` (0 en el hero, 1 al aterrizar en el primer destino) y la
+  // fase, una vez por frame del vuelo y sin pasar por React. También el radio
+  // exacto del globo, del mismo modelo que dimensiona el disco de reserva.
+  useEffect(() => {
+    const sticky = stickyRef.current;
+    if (!sticky) return;
+    const escribir = (p: number) => {
+      const t = descensoDe(p);
+      sticky.style.setProperty("--descenso", t.toFixed(4));
+      sticky.dataset.fase = t < 0.04 ? "hero" : t > 0.96 ? "destino" : "descenso";
+    };
+    const medir = () => {
+      const { diametro } = cajaDelGlobo(window.innerWidth, window.innerHeight);
+      sticky.style.setProperty("--globo-r", `${(diametro / 2).toFixed(1)}px`);
+    };
+    escribir(progress.get());
+    medir();
+    const parar = progress.on("change", escribir);
+    window.addEventListener("resize", medir);
+    return () => {
+      parar();
+      window.removeEventListener("resize", medir);
+    };
+  }, [progress]);
 
   // Los enlaces de nav/footer (`trigger-<escena>`) van al keyframe de la escena.
   // Un link desde el pie llega con la página desbloqueada y abajo: volver
@@ -258,8 +303,15 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
   // que cae en cualquier sitio. Se resuelve con el mismo saltador del nav, ya
   // registrado por el efecto de arriba.
   useEffect(() => {
-    const scene = window.location.hash.slice(1);
-    if (!scene.startsWith("trigger-")) return;
+    const hash = window.location.hash.slice(1);
+    // Una ruta compartida (/ruta/<slug>) abre directo en Tu ruta, que es donde
+    // esas paradas ya están puestas.
+    const scene = hash.startsWith("trigger-")
+      ? hash
+      : window.location.pathname.startsWith("/ruta/")
+        ? "trigger-mapa"
+        : "";
+    if (!scene) return;
     const id = window.setTimeout(() => scrollToSection(scene), 120);
     return () => window.clearTimeout(id);
   }, []);
@@ -278,6 +330,8 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
 
   const handleLoad = useCallback(
     (map: maplibregl.Map) => {
+      marcar("mapa:load");
+      publicarMapa(map);
       applyBrandPaint(map);
       measureViewport();
       applyJourneyFrame(map, progress.get());
@@ -290,7 +344,13 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
         if (calentado.current) return;
         const ctl = new AbortController();
         calentado.current = ctl;
-        const arrancar = () => calentarRecorrido(currentViewport(), ctl.signal).catch(() => {});
+        const arrancar = () => {
+          const v = currentViewport();
+          calentarRecorrido(v, ctl.signal).catch(() => {});
+          // El terreno del primer destino, para que el color y la sombra
+          // estén ahí cuando termine el primer vuelo.
+          calentarTerreno("polaroid-0", v, ctl.signal).catch(() => {});
+        };
         // El tipo se anota opcional a mano: Safari no trae requestIdleCallback
         // hasta 16.4 y TypeScript lo da por presente siempre.
         const ocioso: typeof window.requestIdleCallback | undefined = window.requestIdleCallback;
@@ -308,9 +368,9 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
       data-active-scene={activeScene}
     >
       {/* Sticky layer — map stays fixed while scroll track advances below.
-          Fondo crema (con halos cálidos de marca) detrás del canvas: el globo,
-          ya sin atmósfera, flota sobre este crema en el hero. En las escenas con
-          zoom el mapa es opaco y tapa el gradiente. */}
+          Fondo crema (con halos cálidos de marca) detrás del canvas: es lo que
+          queda cuando el cielo del hero se ha ido. En las escenas con zoom el
+          mapa es opaco y tapa el gradiente. */}
       {/* h-[100dvh] y no 100vh: en móvil la barra de URL cambia el 100vh y el
           globo se movía verticalmente al aparecer/desaparecer. El fondo son tres
           radial-gradients de marca; como utilidad arbitraria sería ilegible, así
@@ -320,13 +380,18 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           pequeño. Con dvh la capa medía hasta 190px más de lo visible y todo lo
           anclado abajo —el botón del sheet, el pie de la carta del CTA— caía
           detrás del panel de pasos o fuera de pantalla. */}
-      <div className="crd-journey-sticky sticky top-0 h-[100svh] w-full overflow-hidden">
+      <div ref={stickyRef} className={`crd-journey-sticky ${e.escena} ${e.arcoBajo} sticky top-0 h-[100svh] w-full overflow-hidden`}>
+        {/* El cielo, DEBAJO del canvas: estrellas, noche y el amanecer que la
+            cubre durante el vuelo. Al aterrizar ya no queda nada de él. */}
+        <Cielo />
+
         <Map
           ref={mapRef}
           theme="light"
           projection={PROYECCION_DEL_RECORRIDO}
           initialViewState={initialViewState}
           maxTileCacheZoomLevels={CACHE_NIVELES_DE_ZOOM}
+          onStyle={applyBrandPaint}
           onLoad={handleLoad}
           interactive={false}
           scrollZoom={false}
@@ -335,6 +400,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
           touchZoomRotate={false}
           attributionControl={false}
         >
+          <CapasNasaJourney />
           <HeroPinMarker />
           <DestinosSection />
           <MapaSection />
@@ -352,7 +418,7 @@ function MapScrollInner({ mapRef }: { mapRef: React.RefObject<maplibregl.Map | n
             cuelgue de él desaparece del HTML inicial. El hero es lo primero
             que se ve y su logo es el LCP, así que se sirve renderizado desde
             el servidor y se pinta sin esperar a MapLibre (audit 5.6). */}
-        <HeroOverlay />
+        <HeroEspacio />
       </div>
 
       {/* Fuera de la capa sticky: son `fixed` y deben sobrevivir a todo el

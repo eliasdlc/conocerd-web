@@ -119,6 +119,182 @@
   --crd-glass-blur: blur(24px) saturate(1.8);
 }
 
+/* ── Cristal líquido · el panel de pasos ──────────────────────────────────────
+   El cristal del tema es un panel: crema al 84 % que tapa lo que hay debajo.
+   Sobre la noche del hero eso es una pastilla encendida pegada encima del
+   planeta, no una pieza de la escena. Este material es lo contrario: el fondo
+   se ve, y el cuerpo lo pone la óptica, no la opacidad.
+
+   Tres capas, ninguna de relleno plano:
+     1. `backdrop-filter`, que es quien trabaja. Blur largo (32) para que lo de
+        debajo se deshaga en color, saturación alta, y un realce de brillo que
+        aclara justo lo oscuro que pasaría por detrás del texto: eso es lo que
+        deja bajar la crema del 84 al 40 % sin perder contraste.
+     2. Un degradado de lente, más claro arriba que abajo. Sin él el panel es
+        una calcomanía de un solo tono.
+     3. Dos hairlines internos y el canto blanco del borde. El canto es lo que
+        le da grosor; sin él no hay cristal, hay transparencia.
+
+   Dos materiales, no uno, porque el recorrido tiene dos fondos. De día la
+   crema; sobre la noche del hero (`data-noche`, el mismo criterio que la
+   píldora del nav) el cristal se hace de tinta translúcida y lo de dentro se
+   invierte. Un solo material claro sobre los dos fondos es justamente lo que
+   se veía mal.
+
+   Sin `backdrop-filter` la transparencia mentiría, así que ahí cae al cristal
+   opaco del tema. */
+.crd-cristal-liquido {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 62%, transparent),
+      color-mix(in srgb, var(--color-cream) 52%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 56%, transparent)
+    );
+  border-color: rgba(255, 255, 255, .62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .85),
+    inset 0 -1px 0 rgba(255, 255, 255, .3),
+    0 10px 30px rgba(38, 70, 83, .14);
+  transition: background .5s ease, border-color .5s ease, box-shadow .5s ease;
+}
+
+/* De noche el fondo puede ser el negro del espacio, donde no hay nada que
+   difuminar: un backdrop que oscurece sobre negro sigue siendo negro, y la
+   píldora del nav desaparecía. El cuerpo lo pone el relleno, que termina en
+   blanco al 8 % en vez de en tinta, y el oscurecido del backdrop sube para
+   compensar el blanco de más donde SÍ hay planeta detrás. */
+.crd-cristal-liquido[data-noche="true"] {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .2),
+      rgba(255, 255, 255, .12) 55%,
+      rgba(255, 255, 255, .08)
+    );
+  border-color: rgba(255, 255, 255, .3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .45),
+    inset 0 -1px 0 rgba(255, 255, 255, .12),
+    0 14px 36px rgba(7, 12, 23, .5);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  /* La saturación se queda cerca de 1 a propósito. Con 1.85 el azul del mar
+     (#A4D0E0) salía del filtro convertido en cian puro y el chip competía con
+     el mint de la marca; sobre tierra, que ya es pálida, el mismo par sólo
+     aclaraba, y por eso ahí no se notaba. El vidrio tiene que enseñar el fondo
+     como tono, no como neón. */
+  .crd-cristal-liquido {
+    -webkit-backdrop-filter: blur(28px) saturate(1.12) brightness(1.06);
+    backdrop-filter: blur(28px) saturate(1.12) brightness(1.06);
+  }
+  .crd-cristal-liquido[data-noche="true"] {
+    -webkit-backdrop-filter: blur(30px) saturate(1.4) brightness(.78);
+    backdrop-filter: blur(30px) saturate(1.4) brightness(.78);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crd-cristal-liquido {
+    background: var(--crd-glass);
+    border-color: var(--crd-glass-line);
+  }
+  .crd-cristal-liquido[data-noche="true"] {
+    background: rgba(15, 26, 46, .78);
+    border-color: rgba(255, 255, 255, .24);
+  }
+}
+
+/* El hueco del control secundario dentro del panel: no es otra superficie, es
+   el mismo cristal con un velo encima y su propio canto. Con `bg-paper` opaco
+   el círculo se leía pegado sobre el cristal en vez de excavado en él. */
+.crd-cristal-hueco {
+  background: rgba(255, 255, 255, .42);
+  border-color: rgba(255, 255, 255, .62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: background .5s ease, border-color .5s ease;
+}
+.crd-cristal-hueco[data-noche="true"] {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+
+/* ── Cristal líquido de pieza corta ───────────────────────────────────────────
+   Chips, etiquetas de marcador y botones redondos sobre foto. Es el mismo
+   material con la óptica corta: a 28px de alto un blur de 32 promedia todo lo
+   que hay debajo y la pieza se vuelve una pastilla plana de un solo tono. Con
+   16 el color de la foto sigue moviéndose por detrás, que es exactamente lo que
+   hace que se lea como vidrio y no como calcomanía.
+
+   Sin sombra exterior: sobre una foto nítida no separa, sólo ensucia. */
+.crd-cristal-liquido-chip {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .64),
+      rgba(255, 255, 255, .5) 55%,
+      rgba(253, 248, 240, .56)
+    );
+  border: 1px solid rgba(255, 255, 255, .64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .85),
+    inset 0 -1px 0 rgba(255, 255, 255, .22);
+}
+
+.crd-cristal-liquido-chip[data-noche="true"] {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .18),
+      rgba(255, 255, 255, .08) 55%,
+      rgba(15, 26, 46, .26)
+    );
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -1px 0 rgba(255, 255, 255, .1);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .crd-cristal-liquido-chip {
+    -webkit-backdrop-filter: blur(16px) saturate(1.12) brightness(1.05);
+    backdrop-filter: blur(16px) saturate(1.12) brightness(1.05);
+  }
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    -webkit-backdrop-filter: blur(16px) saturate(1.5) brightness(.8);
+    backdrop-filter: blur(16px) saturate(1.5) brightness(.8);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .crd-cristal-liquido-chip {
+    background: rgba(255, 255, 255, .88);
+    border-color: var(--crd-glass-line);
+  }
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    background: rgba(15, 26, 46, .82);
+  }
+}
+
+/* Quien pide menos transparencia recibe el cristal opaco del tema. Vale para el
+   panel y para el chip: la transparencia es el material, no la información. */
+@media (prefers-reduced-transparency: reduce) {
+  .crd-cristal-liquido,
+  .crd-cristal-liquido-chip {
+    background: var(--crd-glass);
+    border-color: var(--crd-glass-line);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .crd-cristal-liquido[data-noche="true"],
+  .crd-cristal-liquido-chip[data-noche="true"] {
+    background: rgba(15, 26, 46, .82);
+    border-color: rgba(255, 255, 255, .24);
+  }
+}
+
 html {
   scroll-behavior: smooth;
   overflow-x: clip; /* clip horizontal overflow at html level without affecting scroll container */
@@ -238,17 +414,6 @@ body::after {
 }
 .crd-skip-link:focus-visible { transform: translateY(0); }
 
-/* Hero entrance */
-@keyframes crdLogoIn {
-  0%   { opacity: 0; transform: translateY(22px) scale(.92); filter: blur(8px); }
-  60%  { filter: blur(0); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-@keyframes crdRise {
-  0%   { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
 /* ───────────────────── Map scrollytelling ────────────────────── */
 @keyframes mapBubbleIn {
   from { opacity: 0; transform: scale(0.7) translateY(12px); }
@@ -262,19 +427,6 @@ body::after {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
-
-/* ── Cue de scroll: empujón acotado ──────────────────────────────────────────
-   No es levitación en reposo (el proyecto no la usa): la flecha está quieta y
-   solo se mueve cuando el visitante lleva unos segundos en el hero sin bajar
-   —el disparador vive en useEmpujonDeScroll—, tres iteraciones y para. Al
-   primer scroll no vuelve a dispararse. */
-@keyframes crdScrollNudge {
-  0%, 100% { transform: translateY(0);   opacity: .8; }
-  40%      { transform: translateY(6px); opacity: 1;  }
-  70%      { transform: translateY(0);   opacity: .8; }
-}
-.crd-scroll-arrow[data-empujon] { animation: crdScrollNudge 1.15s ease-in-out 3 both; }
-.crd-scroll-cue:hover .crd-scroll-arrow { transform: translateY(3px); transition: transform .2s ease; }
 
 /* ── Auto-demo del rail de pasos (Viajeros / Negocios) ───────────────────────
    Barra que consume el tiempo del paso activo mientras la demo se pasa sola.
@@ -290,6 +442,28 @@ body::after {
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ── El reloj de las animaciones de entrada ───────────────────────────────────
+   Una animación CSS arranca cuando el navegador resuelve el estilo, no cuando
+   pinta. En un teléfono real median segundos entre las dos cosas (1,28 s y
+   2,70 s medidos con la CPU a un cuarto y red 3G sobre el build de
+   producción), así que toda la entrada del hero se consumía antes del primer
+   pixel y el visitante veía el estado final, sin animación.
+
+   El script de `layout.tsx` pone `lista` al empezar a parsear el body y
+   `corre` en el primer frame pintado. Entre esos dos momentos, todo queda
+   congelado en el frame cero: `paused` con relleno `both` deja a la vista el
+   fotograma inicial de cada animación, que es justo lo que hay que ver antes
+   de que empiece.
+
+   Es el `*` más justificado del archivo: la alternativa es marcar a mano cada
+   pieza que anima al entrar, y la siguiente que alguien añada nacería otra vez
+   con el bug. Sólo vive durante ese hueco; en el primer frame desaparece. */
+html[data-entrada="lista"] *,
+html[data-entrada="lista"] *::before,
+html[data-entrada="lista"] *::after {
+  animation-play-state: paused !important;
 }
 
 /* ─────────────────────────── Journey ──────────────────────────────────── */
@@ -363,9 +537,13 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 /* El disco que ocupa el sitio del globo mientras el mapa carga. Va en CSS y no
    inline porque el fundido tiene que poder anularse con prefers-reduced-motion,
    y porque el color es tono de superficie, no un valor suelto. */
+/* El disco que reserva el sitio del globo. Es un planeta a oscuras, no un
+   agujero crema: mientras el mapa arranca, lo que hay ahí es espacio. El tono
+   sale de la imagen de noche (el océano sin luces) y el filo claro imita el
+   limbo iluminado, para que al aparecer el globo debajo no haya salto. */
 .crd-globo-fantasma {
-  background: var(--color-cream-2);
-  border: 1px solid var(--color-line);
+  background: radial-gradient(120% 120% at 32% 26%, #0B1222 0%, #00011C 62%, #000010 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07);
   transition: opacity 500ms cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -408,10 +586,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   --crd-banda-bottom: calc(var(--crd-stepper-h) + 20px);
 }
 
-/* Cuánto se eleva la pila de polaroids sobre el panel de pasos: 10 de aire más
-   los 42 del desparrame de la carta más alta (`--pile-bottom` en
-   DestinosSection). Es lo que el titular tiene que saltar para no montarse. */
-:root { --crd-pila-alza: 52px; }
+/* Cuánto se eleva el par de polaroids sobre el panel de pasos: 10 de aire más
+   lo que la carta del frente sube al inclinarse. Es lo que el titular tiene que
+   saltar para no montarse encima. */
+:root { --crd-par-alza: 26px; }
 
 /* Velo crema bajo el contenido: en móvil el texto del hero y de destinos cae
    sobre el mapa y competía con las etiquetas de ciudades. */
@@ -450,11 +628,6 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    misma que en el teléfono y se lee del mismo token. Lo que cambia por viewport
    es qué contenido baja hasta ella. */
 @media (min-width: 900px) {
-  /* La pila de Destinos se apoya en la franja, igual que en móvil. */
-  .crd-destinos-card {
-    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
-  }
-
   /* El envoltorio ocupa la banda segura y centra la caja dentro de ella; la
      caja (card + sello) no puede crecer más que la banda y la card scrollea
      cuando no cabe. El sello vive FUERA de la card (hermano en .crd-ol-caja):
@@ -639,20 +812,28 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
     content: "";
     flex: 1 0 0;
   }
-  /* Alto de la carta del frente, MEDIDO (foto 150 + papel + pie + descripción).
-     El titular se cuelga de la pila y la pila se apoya en el panel de pasos, así
-     que este número es lo único que hace falta para que los dos se aparten sin
-     tocarse a ningún alto de pantalla. Si cambia la foto o el pie de la carta,
-     cambia aquí. */
-  :root { --crd-pila-h: 282px; }
+  /* Alto de la carta del frente. Ya no se mide sumando partes: sale de la
+     proporción de la Polaroid 600, 196 de ancho por 1,215. El titular se cuelga
+     del par y el par se apoya en el panel de pasos, así que este número es lo
+     único que hace falta para que los dos se aparten sin tocarse a ningún alto
+     de pantalla. Si cambia el ancho de la carta, cambia aquí. */
+  :root { --crd-par-h: 238px; }
 
-  /* El titular se apoya sobre la carta más alta de la pila, no sobre un % de
-     pantalla. Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max
-     y se montaba sobre la pila en un SE, porque el cromo flotante (píldora +
-     panel de pasos) mide igual en las dos y el 46% no. */
+  /* El titular se apoya sobre la carta del frente, no sobre un % de pantalla.
+     Con `calc(46% + 26px)` el mismo layout despejaba en un 14 Pro Max y se
+     montaba sobre la carta en un SE, porque el cromo flotante (píldora + panel
+     de pasos) mide igual en las dos y el 46% no. */
+  /* En el teléfono el titular no lleva panel: lo que lo separa del mapa es el
+     velo crema de la escena, y una superficie más ahí tapa isla. El cristal
+     líquido que trae la clase se apaga entero. */
   .crd-destinos-heading {
     left: 16px !important;
-    bottom: calc(var(--crd-stepper-h) + var(--crd-pila-alza) + var(--crd-pila-h) + 10px) !important;
+    bottom: calc(var(--crd-stepper-h) + var(--crd-par-alza) + var(--crd-par-h) + 10px) !important;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   /* El halo sobrevive SÓLO en móvil. En escritorio el titular va sobre el
      cristal del tema y ahí la sombra únicamente emborrona el canto de las
@@ -662,24 +843,12 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   .crd-destinos-heading h2 {
     text-shadow: 0 1px 2px rgba(253, 248, 240, .95), 0 0 16px rgba(253, 248, 240, .6);
   }
-  .crd-destinos-card {
-    width: min(196px, calc(100vw - 116px)) !important;
-    padding: 9px 9px 0 !important;
-    /* La pila se apoya en el panel de pasos. `--pile-bottom` es el desparrame
-       vertical de cada carta (0 a 42) y lo trae el componente, igual que
-       `--pile-left`: en escritorio el desparrame sigue siendo el % del inline
-       style, aquí manda el píxel porque el cromo que hay debajo también mide
-       píxeles. */
-    bottom: calc(var(--crd-stepper-h) + 10px + var(--pile-bottom, 0px)) !important;
-    margin-bottom: 0 !important;
-  }
-  .crd-destinos-card-media { height: 150px !important; }
 }
 
-/* Short laptop/browser viewports need vertical composition, not another width
-   breakpoint. The heading remains above the interactive deck instead of
-   competing for the same absolute region. (El chip crema del heading vive en
-   el componente desde audit 2.1 — aquí solo queda el reposicionado.) */
+/* Los viewports de portátil bajos piden composición vertical, no otro
+   breakpoint de ancho: el titular se queda por encima del par en vez de
+   competir con él por la misma región absoluta. (El chip crema del titular vive
+   en el componente desde audit 2.1; aquí sólo queda el reposicionado.) */
 @media (min-width: 900px) and (max-height: 780px) {
   .crd-destinos-heading {
     top: clamp(112px, 19vh, 148px) !important;
@@ -764,15 +933,10 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 
 @media (min-width: 900px) and (max-height: 700px) {
-  /* La foto de la polaroid cede 56: la pila ya subió para esquivar el panel de
-     pasos de la esquina, y con los 196 originales su canto superior alcanzaba
-     el titular de la sección. */
-  .crd-destinos-card-media { height: 140px !important; }
-
-  .crd-hero-logo { width: min(34vw, 360px) !important; }
-  .crd-hero-title { font-size: 34px !important; line-height: 1.06 !important; margin-top: 10px !important; }
-  .crd-hero-copy { margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 16px !important; }
+  /* La carta cede ancho, y con él alto: la proporción de la 600 es fija, así
+     que encoger la mesa es lo único que hace falta para que el par no alcance
+     el titular en una pantalla baja. */
+  .crd-destinos-mesa { width: min(216px, 15vw) !important; }
 }
 
 /* ── Teléfonos cortos: la compresión manda por ALTO, no por ancho ─────────────
@@ -782,44 +946,74 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
    no 667. En esa franja el hero no cabía y el wordmark salía cortado por
    arriba, con la píldora encima.
 
-   El bloque del hero es la lista completa de lo que cede: logo, titular,
-   párrafo, botones y el cue. Nada se oculta — un control que desaparece en una
-   pantalla chica es una función que el visitante no sabe que existe. */
-@media (max-width: 899px) and (max-height: 700px) {
-  .crd-hero-logo { width: min(66vw, 340px) !important; }
-  .crd-hero-title { font-size: 27px !important; line-height: 30px !important; margin-top: 10px !important; }
-  .crd-hero-copy { font-size: 15px !important; line-height: 1.38 !important; margin-top: 8px !important; }
-  .crd-hero-actions { margin-top: 14px !important; gap: 10px !important; }
-  .crd-hero-cue { margin-top: 6px !important; }
-}
+   Lo que cede el hero en estas alturas vive con él (sections/espacio/hero.module.css).
+   Nada se oculta: un control que desaparece en una pantalla chica es una función
+   que el visitante no sabe que existe. */
 
 @media (max-width: 899px) and (max-height: 600px) {
-  .crd-hero-content { max-width: 300px !important; }
-  .crd-hero-logo { width: min(52vw, 240px) !important; }
-  .crd-hero-title { font-size: 22px !important; line-height: 25px !important; margin-top: 8px !important; }
-  .crd-hero-copy { font-size: 14px !important; margin-top: 6px !important; }
-  .crd-hero-actions { margin-top: 10px !important; gap: 8px !important; }
-  .crd-hero-cue { margin-top: 2px !important; }
   /* Adorno, no control: a este alto el globo y el titular ocupan la misma
      franja y el pin se posaba sobre "República Dominicana". */
   .crd-hero-pin { display: none; }
 
-  /* La pila baja de 282 a 238: la foto encoge y la descripción del papel sale,
-     que es lo que la hacía ~30px más alta. El titular la sigue solo porque
-     `--crd-pila-h` es la misma variable que usa su `bottom`. */
-  :root { --crd-pila-h: 238px; }
+  /* El par baja de 282 a 214: la carta encoge de 196 a 176 de ancho y su alto
+     sale de la proporción, 176 x 1,215. El titular lo sigue solo porque
+     `--crd-par-h` es la misma variable que usa su `bottom`. */
+  :root { --crd-par-h: 214px; }
   .crd-destinos-heading h2 { font-size: 24px !important; }
-  .crd-destinos-card { width: 176px !important; }
-  .crd-destinos-card-media { height: 124px !important; }
-  .crd-destinos-desc { display: none; }
+  .crd-destinos-mesa { width: 176px !important; }
+}
+
+
+/* ── La mesa de las polaroids ─────────────────────────────────────────────────
+   Las dos cartas en cuadro viven aquí, superpuestas en el mismo origen, y cada
+   una llega a su puesto por transform (DestinosSection · MESA). La mesa sólo
+   fija dónde está el par y cuánto mide una carta; la proporción de la carta la
+   pone el papel, que es la de una Polaroid 600.
+
+   La caja se declara con la misma proporción que la carta para que `inset-0`
+   sirva de origen: sin alto, las cartas absolutas no tendrían contra qué medir.
+
+   No lleva `overflow: hidden`: la carta que se retira y la que sale se van por
+   la izquierda y tienen que poder salirse de la caja. */
+.crd-destinos-mesa {
+  position: absolute;
+  z-index: 10;
+  /* El 13 % deja sitio a la carta retirada, que asoma un 44 % del ancho de la
+     carta por la izquierda: con el 7 % de la pila vieja se salía de pantalla. */
+  left: 13%;
+  /* En el teléfono el par se apoya en el panel de pasos, que ya lo levanta. En
+     escritorio no hay panel y `--crd-stepper-h` vale 0, así que la separación
+     del borde la pone el porcentaje: pegado a 10 px el par se leía como caído
+     en la esquina. */
+  bottom: calc(var(--crd-stepper-h) + 7%);
+  width: clamp(210px, 17vw, 270px);
+  aspect-ratio: 1 / 1.215;
+}
+
+@media (max-width: 899px) {
+  /* Centrada por el PAR entero y no por la carta del frente: la retirada asoma
+     un 44 % por la izquierda, así que el conjunto mide un 144 % de una carta y
+     su borde izquierdo cae en el 34 % de la pantalla. */
+  .crd-destinos-mesa {
+    left: 34%;
+    bottom: calc(var(--crd-stepper-h) + 10px);
+    width: min(196px, calc(100vw - 150px));
+  }
 }
 
 /* ── Cinta adhesiva de la polaroid (audit §3, movimiento 5) ───────────────────
    Media pulgada de cinta translúcida asomando por el borde superior. Es lo que
    convierte una card blanca con foto en una foto pegada al papel. Va en un
-   ::before y no en el markup para que las dos escenas que dibujan polaroids
-   —la pila de Destinos y el deck del finale— la hereden del papel compartido
-   sin añadir un nodo por carta. */
+   ::before y no en el markup para que las dos piezas que dibujan polaroids (el
+   par de Destinos y la carta del equipo) la hereden del papel sin añadir un
+   nodo por carta.
+
+   UNA CINTA POR CARTA, elegido el 15 sep 2026 entre tres tratamientos puestos
+   sobre la carta real. La alternativa era una sola cinta larga cruzando las dos
+   cartas del par: convierte el par en un bloque pegado y se pierde lo que la
+   cinta cuenta, que cada foto está pegada al papel por su cuenta. El ángulo lo
+   pone `--cinta-giro`, que el par alterna carta a carta para que las dos no se
+   lean como cintas gemelas puestas por una máquina. */
 .crd-tape::before {
   content: '';
   position: absolute;
@@ -827,7 +1021,7 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
   left: 50%;
   width: 62px;
   height: 17px;
-  transform: translateX(-50%) rotate(-2.5deg);
+  transform: translateX(-50%) rotate(var(--cinta-giro, -2.5deg));
   background: linear-gradient(180deg, rgba(255,255,255,.62), rgba(253,248,240,.42));
   border-left: 1px solid rgba(38,70,83,.07);
   border-right: 1px solid rgba(38,70,83,.07);
@@ -864,25 +1058,23 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 .crd-accent-on-ink { color: var(--color-mango); }
 
 /* ── Píldora del nav ──────────────────────────────────────────────────────────
-   Dos estados y dos materiales. En reposo flota sobre el globo, no sobre texto:
-   crema al 60 % con un blur corto y sin sombra, porque una sombra ahí sólo
-   ensucia el mapa. Pasados 36px de scroll conmuta al cristal del tema, la
-   misma receta que todo lo que flota sobre el mapa, y ahí sí se apoya con e1.
-
-   El blur va en CSS y no en utilidades con variante `data-`: las dos
-   escribirían la misma custom property de Tailwind y el orden de capas
-   decidiría cuál gana, que es justo lo que no se quiere depurar. */
-.crd-nav-pill {
-  background: color-mix(in srgb, var(--color-cream) 60%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: none;
+   El material es `crd-cristal-liquido`, el mismo del panel de pasos, con sus
+   dos fondos: `data-noche` sobre el hero, día en las doce escenas restantes.
+   Aquí no queda ni fondo ni blur ni sombra, sólo qué color toman los enlaces y
+   el CTA sobre cada uno de los dos cristales. */
+.crd-nav-pill[data-solid="false"] .crd-navlink {
+  color: rgba(255, 255, 255, 0.72);
 }
-.crd-nav-pill[data-solid="true"] {
-  background: var(--crd-glass);
-  backdrop-filter: var(--crd-glass-blur);
-  box-shadow: var(--shadow-e1);
+.crd-nav-pill[data-solid="false"] .crd-navlink:hover,
+.crd-nav-pill[data-solid="false"] .crd-navlink[aria-current="location"] {
+  color: #ffffff;
 }
-
+/* El botón de la lista, de tinta, se fundía con la píldora de tinta: en
+   reposo va en blanco con la etiqueta en tinta. */
+.crd-nav-pill[data-solid="false"] .crd-nav-cta {
+  background: #ffffff;
+  color: var(--color-ink);
+}
 /* El enlace es UI, no titular: familia de etiqueta y su propia píldora
    invisible de 40, para que el área táctil exista aunque no se vea. El
    subrayado animado y el hover coral mueren: el acento de la web es para
@@ -935,6 +1127,50 @@ html[data-recorrido="bloqueado"] .crd-footer { display: none; }
 }
 .crd-button:active {
   transform: translateY(1px) !important;
+}
+
+/* La acción secundaria de cristal. El material entero viene de
+   `.crd-cristal-liquido`; aquí sólo se mueve el gradiente de lente con el
+   puntero, que es lo que hace que un vidrio responda al tacto. El anillo de
+   foco es el global. */
+.crd-button.crd-cristal-liquido {
+  transition: transform .2s, background .25s ease;
+}
+.crd-button.crd-cristal-liquido:hover {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 70%, transparent),
+      color-mix(in srgb, var(--color-cream) 60%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 64%, transparent)
+    );
+}
+.crd-button.crd-cristal-liquido:active {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-paper) 52%, transparent),
+      color-mix(in srgb, var(--color-cream) 44%, transparent) 52%,
+      color-mix(in srgb, var(--color-cream-2) 48%, transparent)
+    );
+}
+.crd-button.crd-cristal-liquido[data-noche="true"]:hover {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .28),
+      rgba(255, 255, 255, .18) 55%,
+      rgba(255, 255, 255, .14)
+    );
+}
+.crd-button.crd-cristal-liquido[data-noche="true"]:active {
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, .14),
+      rgba(255, 255, 255, .08) 55%,
+      rgba(255, 255, 255, .05)
+    );
 }
 
 /* ── Visible keyboard focus for every interactive element ───────────── */

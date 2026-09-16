@@ -194,6 +194,48 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   star: <path d="m12 3.6 2.6 5.5 6 .9-4.3 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.4 10l6-.9Z" />,
+  share: (
+    <>
+      <circle cx="6" cy="12" r="2.6" />
+      <circle cx="17.4" cy="5.6" r="2.6" />
+      <circle cx="17.4" cy="18.4" r="2.6" />
+      <path d="m8.3 10.8 6.8-3.9M8.3 13.2l6.8 3.9" />
+    </>
+  ),
+  // El tiempo de ahora en las polaroids (lib/clima/etiquetas). Misma geometría
+  // simple del resto del set: una nube base y lo que la distingue encima.
+  sunny: (
+    <>
+      <circle cx="12" cy="12" r="3.8" />
+      <path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2M5.8 5.8l1.5 1.5M16.7 16.7l1.5 1.5M5.8 18.2l1.5-1.5M16.7 7.3l1.5-1.5" />
+    </>
+  ),
+  partly_cloudy: (
+    <>
+      <path d="M8.2 3.4v1.8M3.4 8.2h1.8M4.8 4.8l1.3 1.3" />
+      <path d="M6.2 10.6a3 3 0 1 1 4.6-3.2" />
+      <path d="M9 20h8.4a3.6 3.6 0 0 0 .4-7.2 5.2 5.2 0 0 0-10-1.3A4.3 4.3 0 0 0 9 20Z" />
+    </>
+  ),
+  cloud: <path d="M7.6 19h9.6a4 4 0 0 0 .5-8 6 6 0 0 0-11.6 1.6A3.3 3.3 0 0 0 7.6 19Z" />,
+  fog: (
+    <>
+      <path d="M7.6 14.6h9.6a3.6 3.6 0 0 0 .5-7.2 5.6 5.6 0 0 0-10.8 1.5 2.9 2.9 0 0 0 .7 5.7Z" />
+      <path d="M6 18h12M8 21h8" />
+    </>
+  ),
+  rain: (
+    <>
+      <path d="M7.6 15h9.6a3.6 3.6 0 0 0 .5-7.2 5.6 5.6 0 0 0-10.8 1.5A2.9 2.9 0 0 0 7.6 15Z" />
+      <path d="m9 17.6-1 2.8M13 17.6l-1 2.8M17 17.6l-1 2.8" />
+    </>
+  ),
+  thunderstorm: (
+    <>
+      <path d="M7.6 14h9.6a3.6 3.6 0 0 0 .5-7.2 5.6 5.6 0 0 0-10.8 1.5A2.9 2.9 0 0 0 7.6 14Z" />
+      <path d="m13 13-2.4 4h3l-2 4" />
+    </>
+  ),
   support_agent: (
     <>
       <path d="M5.6 14.2v-2.4a6.4 6.4 0 0 1 12.8 0v2.4" />

@@ -35,105 +35,112 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MapRoute } from "@/components/map/context";
+import { MapMarker, MarkerContent, MapRoute, useZoomAlMenos } from "@/components/map/context";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
   CATEGORIES,
   CATEGORY_META,
+  DESTINOS_DESDE,
   type Category,
   type Destination,
 } from "@/data/destinations";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
-import pairs from "@/data/routes/pairs.json";
-
-// ─── Datos de carretera (pares reales precalculados) ─────────────────────────
-
-const IDS = pairs.ids as string[];
-const KM = pairs.km as number[][];
-const MIN = pairs.min as number[][];
+import CompartirRuta from "@/components/CompartirRuta";
+import { PRESETS, type Preset } from "@/data/rutas";
+import { idsDeSlug } from "@/lib/ruta/slug";
+import { duracion, kmEntre, minEntre, totalesDeRuta } from "@/lib/ruta/totales";
 
 /** Geometría por carretera entre dos destinos, indexada por `a|b`. */
 type RoadLegs = Record<string, [number, number][]>;
 
-// Los 153 tramos pesan 547 KB y sólo hacen falta si alguien arma una ruta, así
-// que viven en `public/data/route-legs.json` y no en el bundle. Se piden una
-// vez por sesión, al elegir la primera parada; hasta que llegan, `legCoords`
-// cae a la cuerda recta y la ruta se ve enseguida.
-let legsCache: RoadLegs | null = null;
-let legsRequest: Promise<RoadLegs> | null = null;
+// La geometría vive en un fichero POR ORIGEN: `public/data/route-legs/<id>.json`
+// trae los 37 tramos que salen de ese destino. Con 38 destinos son 703 tramos y
+// unos 2,5 MB; nadie arma una ruta con los 38, así que se baja el fichero del
+// destino que tocas y ninguno más. Antes era un solo archivo de 547 KB con los
+// 153 pares de 18 destinos, y crecía con el cuadrado del catálogo.
+//
+// La caché guarda la PROMESA, no el resultado: dos paradas elegidas seguidas
+// piden el mismo origen una sola vez, aunque la primera aún no haya llegado.
+const legsPorOrigen = new Map<string, Promise<RoadLegs>>();
 
-function loadRoadLegs(): Promise<RoadLegs> {
-  legsRequest ??= fetch("/data/route-legs.json")
+function cargarLegsDe(id: string): Promise<RoadLegs> {
+  const ya = legsPorOrigen.get(id);
+  if (ya) return ya;
+
+  const pedido = fetch(`/data/route-legs/${id}.json`)
     .then((r) => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json() as Promise<{ legs: RoadLegs }>;
     })
-    .then((d) => (legsCache = d.legs))
+    .then((d) => d.legs)
     .catch((err) => {
       // La ruta sigue dibujándose recta: se degrada, no se rompe. Pero si esto
       // pasa en producción el mapa miente sobre las carreteras, así que grita.
-      console.error("[MapaSection] no se pudo cargar la geometría de carretera:", err);
-      return (legsCache = {});
+      console.error(`[MapaSection] sin geometría de carretera para ${id}:`, err);
+      return {} as RoadLegs;
     });
-  return legsRequest;
+
+  legsPorOrigen.set(id, pedido);
+  return pedido;
 }
 
-function useRoadLegs(needed: boolean): RoadLegs | null {
-  const [legs, setLegs] = useState<RoadLegs | null>(legsCache);
+/** Los tramos de todas las paradas de la ruta, fundidos en un solo índice. */
+function useRoadLegs(stops: readonly string[]): RoadLegs {
+  const [legs, setLegs] = useState<RoadLegs>({});
+  // La identidad del array cambia en cada render; lo que decide si hay que
+  // pedir algo es la lista de ids, no el array.
+  const clave = stops.join(",");
 
   useEffect(() => {
-    if (!needed || legs) return;
+    if (!clave) return;
     let alive = true;
-    loadRoadLegs().then((l) => {
-      if (alive) setLegs(l);
+    Promise.all(clave.split(",").map(cargarLegsDe)).then((partes) => {
+      if (alive) setLegs(Object.assign({}, ...partes) as RoadLegs);
     });
     return () => {
       alive = false;
     };
-  }, [needed, legs]);
+  }, [clave]);
 
   return legs;
 }
+
+// El glifo del pin. En el teléfono baja de 30 a 26 porque con los 38 puestos a
+// 30 hay 30 pares tapándose, y a 26 quedan 28 pines con uno solo. El ÁREA
+// TÁCTIL no encoge: el botón se queda en 44 px, que ya está por debajo del
+// mínimo de 48 del sistema y no puede bajar más.
+const PIN_MOVIL = 26;
+const PIN_ESCRITORIO = 30;
 
 const DEST: Record<string, Destination> = Object.fromEntries(
   DESTINATIONS.map((d) => [d.id, d])
 );
 
-function pairKm(a: string, b: string): number {
-  return KM[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
-function pairMin(a: string, b: string): number {
-  return MIN[IDS.indexOf(a)][IDS.indexOf(b)] ?? 0;
-}
+// Los kilómetros y los minutos entre dos paradas salen de `lib/ruta/totales`,
+// que es donde vive la matriz y donde el pase de embarque suma lo mismo.
+//
+// Aquí había una segunda copia de esa cuenta, y era la insegura: indexaba
+// `KM[IDS.indexOf(a)][IDS.indexOf(b)]` sin el `?.` que sí tiene la de la
+// librería. Con un destino que no está en la matriz, `indexOf` da -1, `KM[-1]`
+// es `undefined` y la sección entera se caía al error boundary en cuanto se
+// armaba una ruta con él.
 
 /** Geometría carretera a→b; invierte el leg si está guardado como b→a. */
-function legCoords(a: string, b: string, legs: RoadLegs | null): [number, number][] {
-  const direct = legs?.[`${a}|${b}`];
+function legCoords(a: string, b: string, legs: RoadLegs): [number, number][] {
+  const direct = legs[`${a}|${b}`];
   if (direct) return direct;
-  const rev = legs?.[`${b}|${a}`];
+  const rev = legs[`${b}|${a}`];
   if (rev) return [...rev].reverse();
   return [DEST[a].coords, DEST[b].coords];
 }
 
-function totalsFor(stops: string[]): { km: number; min: number } {
-  let km = 0;
-  let min = 0;
-  for (let i = 0; i < stops.length - 1; i++) {
-    km += pairKm(stops[i], stops[i + 1]);
-    min += pairMin(stops[i], stops[i + 1]);
-  }
-  return { km: Math.round(km), min: Math.round(min) };
-}
-
-function fmtDur(totalMin: number): string {
-  const h = Math.floor(totalMin / 60);
-  const m = Math.round(totalMin % 60);
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
+// Los totales y la duración larga viven en lib/ruta/totales: el pase de
+// embarque de /ruta/<slug> suma con la misma matriz y escribe igual.
+const totalsFor = totalesDeRuta;
+const fmtDur = duracion;
 
 /** Formato corto para la fila de totales: "6 h 59" cabe, "6 h 59 min" no. */
 function fmtDurShort(totalMin: number): string {
@@ -154,7 +161,7 @@ function nearestNeighborOrder(ids: string[]): string[] {
     let best = "";
     let bestKm = Infinity;
     for (const c of pool) {
-      const d = pairKm(last, c);
+      const d = kmEntre(last, c);
       if (d < bestKm) {
         bestKm = d;
         best = c;
@@ -168,40 +175,8 @@ function nearestNeighborOrder(ids: string[]): string[] {
 
 // ─── Viajes recomendados (v2) ────────────────────────────────────────────────
 
-type Preset = {
-  id: string;
-  name: string;
-  tagline: string;
-  cover: string; // id del destino cuya foto ilustra la carta
-  stops: string[];
-};
-
-// El orden de paradas está pensado como se maneja de verdad (los km de la
-// matriz lo confirman), no en el orden en que se nombran los lugares.
-const PRESETS: Preset[] = [
-  {
-    id: "sur",
-    name: "Sur salvaje",
-    tagline: "Playa virgen, costa y lago",
-    cover: "aguilas",
-    stops: ["aguilas", "barahona", "lago-enriquillo"],
-  },
-  {
-    id: "samana",
-    name: "Samaná completo",
-    tagline: "Cascada, playas y Los Haitises",
-    cover: "limon",
-    stops: ["las-terrenas", "limon", "playa-rincon", "playa-fronton", "haitises"],
-  },
-  {
-    id: "cibao",
-    name: "Cibao aventurero",
-    tagline: "Charcos, kite y montaña",
-    cover: "charcos",
-    stops: ["charcos", "cabarete", "jarabacoa", "constanza"],
-  },
-];
-
+// Los tres viajes recomendados viven en data/rutas: también los lee el
+// servidor para nombrar la URL de una ruta armada.
 // ─── Demo por URL (solo capturas; esto solo corre en cliente: la sección
 //     monta dentro de <Map>, que entra con dynamic ssr:false) ────────────────
 
@@ -212,12 +187,18 @@ function readDemo(): { stops: string[]; card: string | null; sello: boolean } {
   try {
     const p = new URLSearchParams(window.location.search);
     const ruta = p.get("demo-ruta");
+    // Una ruta compartida (/ruta/<slug>, o ?ruta=<slug>) llega ya armada:
+    // es la misma precarga que `demo-ruta`, pero con URL propia y pública.
+    const camino = window.location.pathname.match(/^\/ruta\/([^/]+)/)?.[1];
+    const compartida = camino ?? p.get("ruta");
     const stops =
       ruta === "1"
         ? DEMO_ROUTE
         : ruta
           ? ruta.split(",").filter((id) => id in DEST)
-          : [];
+          : compartida
+            ? idsDeSlug(decodeURIComponent(compartida))
+            : [];
     const card = p.get("demo-card");
     return {
       stops,
@@ -316,10 +297,15 @@ function CardBody({
         <div className={`truncate font-bold text-ink ${compact ? "text-sm" : "text-copy"}`}>
           {d.name}
         </div>
-        <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
-          <Icon name="star" className="text-sm" />
-          {d.rating.toFixed(1)}
-        </div>
+        {/* Sin valoración real no se dibuja la estrella: ni un cero, ni un
+            guion, ni "sin valoraciones". La fila desaparece y el nombre se
+            queda con todo el ancho (decisión 6A). */}
+        {d.rating !== undefined && (
+          <div className="flex flex-none items-center gap-1 text-xs font-bold text-mango-ink">
+            <Icon name="star" className="text-sm" />
+            {d.rating.toFixed(1)}
+          </div>
+        )}
       </div>
       <div className="mt-0.5 text-micro text-muted">
         {d.province} · {meta.label}
@@ -344,8 +330,8 @@ function CardBody({
         </div>
       ) : showArrival ? (
         <div className="mt-2 flex items-center gap-1.5 font-display text-micro font-bold text-mint-ink">
-          <Icon name="route" className="text-sm" />A {Math.round(pairKm(last, d.id))} km ·{" "}
-          {fmtDur(pairMin(last, d.id))} de {DEST[last].name}
+          <Icon name="route" className="text-sm" />A {Math.round(kmEntre(last, d.id))} km ·{" "}
+          {fmtDur(minEntre(last, d.id))} de {DEST[last].name}
         </div>
       ) : null}
     </>
@@ -418,9 +404,14 @@ function PinCard({
         <span className="absolute bottom-full left-1/2 z-10 size-3.5 -translate-x-1/2 translate-y-1/2 rotate-45 border-l border-t border-line bg-paper" />
       )}
       <div className="overflow-hidden rounded-block border border-line bg-paper shadow-e1">
-        <div className="relative h-[104px] w-full bg-cream-2">
-          <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
-        </div>
+        {/* Sin foto no hay franja: la carta empieza por el texto. Un bloque
+            crema vacío de 104 px sería un hueco que promete una imagen que no
+            existe, y una foto de otro sitio sería dato inventado (6A). */}
+        {d.image && (
+          <div className="relative h-[104px] w-full bg-cream-2">
+            <Image src={d.image} alt="" fill sizes="242px" className="object-cover" />
+          </div>
+        )}
         <div className="px-3 pb-3 pt-2.5">
           <CardBody d={d} stopIndex={stopIndex} stops={stops} />
           <div
@@ -446,6 +437,7 @@ function DestinationPin({
   d,
   stopIndex,
   stops,
+  tamano,
   isHovered,
   isSelected,
   onToggle,
@@ -455,6 +447,8 @@ function DestinationPin({
   d: Destination;
   stopIndex: number;
   stops: string[];
+  /** Diámetro del glifo. El área táctil NO encoge con él: se queda en 44. */
+  tamano: number;
   /** Hover o foco de teclado: abre la card informativa (solo desktop). */
   isHovered: boolean;
   /** Último pin tocado: en móvil es el que tiene la card abierta abajo. */
@@ -503,9 +497,9 @@ function DestinationPin({
               }`}
             >
               {inRoute ? (
-                <RoutePin d={d} n={stopIndex + 1} />
+                <RoutePin d={d} n={stopIndex + 1} size={tamano + 4} />
               ) : (
-                <CategoryPin category={d.category} size={30} />
+                <CategoryPin category={d.category} size={tamano} />
               )}
             </span>
           </button>
@@ -553,7 +547,9 @@ function PresetCard({
           compact ? "size-11" : "size-12"
         }`}
       >
-        {cover && <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />}
+        {cover?.image && (
+          <Image src={cover.image} alt="" fill sizes="48px" className="object-cover" />
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -603,7 +599,7 @@ function CategoryFilter({
       // vive centrado abajo: es el filtro el que sube, no el panel el que se
       // aparta. En móvil el filtro cuelga de la píldora, arriba, y la franja de
       // abajo la ocupa el sheet del itinerario.
-      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[calc(var(--crd-stepper-h)+clamp(10px,1.6%,20px))] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 shadow-e1 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
+      className={`${PANEL_GLASS} pointer-events-auto absolute bottom-[calc(var(--crd-stepper-h)+clamp(10px,1.6%,20px))] left-1/2 z-20 flex -translate-x-1/2 gap-1 rounded-surface p-1.5 max-[899px]:bottom-auto max-[899px]:left-3 max-[899px]:right-3 max-[899px]:top-[var(--crd-nav-clear)] max-[899px]:translate-x-0`}
     >
       {CATEGORIES.map((cat) => {
         const meta = CATEGORY_META[cat];
@@ -626,7 +622,7 @@ function CategoryFilter({
             className={`grid h-16 w-16 cursor-pointer content-center justify-items-center gap-1 rounded-ctrl border-[1.5px] px-1 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 max-[899px]:h-[54px] max-[899px]:w-auto max-[899px]:flex-1 max-[899px]:px-0.5 ${
               picked
                 ? "border-selected bg-selected text-on-selected"
-                : "border-line bg-paper text-ink-3"
+                : "crd-cristal-hueco text-ink-3"
             }`}
           >
             <Icon name={meta.icon} active={picked} className="text-lg leading-none" />
@@ -1013,7 +1009,7 @@ export default function MapaSection() {
 
   // Ruta por carreteras reales: concatena los legs precalculados entre paradas
   // consecutivas (con un stub corto pin→carretera en cada extremo).
-  const roadLegs = useRoadLegs(stops.length > 0);
+  const roadLegs = useRoadLegs(stops);
   const route = useMemo(() => {
     if (stops.length < 2) return null;
     const coords: [number, number][] = [];
@@ -1022,8 +1018,8 @@ export default function MapaSection() {
     for (let i = 0; i < stops.length - 1; i++) {
       const a = stops[i];
       const b = stops[i + 1];
-      km += pairKm(a, b);
-      min += pairMin(a, b);
+      km += kmEntre(a, b);
+      min += minEntre(a, b);
       const leg = [DEST[a].coords, ...legCoords(a, b, roadLegs), DEST[b].coords];
       coords.push(...(i === 0 ? leg : leg.slice(1)));
     }
@@ -1032,11 +1028,33 @@ export default function MapaSection() {
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;
-  // El filtro nunca esconde una parada ya elegida: se vería como si la ruta
-  // se hubiera roto sola.
-  const visibleDests = DESTINATIONS.filter(
-    (d) => cats.size === 0 || cats.has(d.category) || stops.includes(d.id)
-  );
+  // Qué pines se dibujan, por dos reglas que se aplican en orden.
+  //
+  // El filtro de categoría nunca esconde una parada ya elegida: se vería como
+  // si la ruta se hubiera roto sola.
+  //
+  // El zoom decide el resto, y SOLO en el teléfono. Medido el 15 sep 2026 con
+  // los 38 pines a la vez: a la apertura de la escena hay 30 pares de pines
+  // tapándose en un teléfono y de 7 a 9 en escritorio. Los pines son DOM por
+  // encima del canvas, así que el índice de colisión de MapLibre, que es lo que
+  // descongestiona los nombres de provincia, no los ve y no puede ayudar.
+  //
+  // En el teléfono esperan los diez marcados `esperaEnMovil`, que son los que
+  // más se tapan; con el glifo a 26 px quedan 28 en pantalla y un solo par
+  // solapado. En escritorio entran los 38: ahí hay sitio.
+  //
+  // Tres excepciones, y las tres son lo mismo: si el visitante ya pidió ver
+  // algo, se le enseña. Los seis del recorrido son la puerta de entrada al
+  // mapa; una parada suya no puede desaparecer al alejarse; y filtrar por
+  // categoría ES pedir ver esa categoría.
+  const isMobile = useIsMobile();
+  const cerca = useZoomAlMenos(DESTINOS_DESDE);
+  const visibleDests = DESTINATIONS.filter((d) => {
+    const pasaFiltro = cats.size === 0 || cats.has(d.category) || stops.includes(d.id);
+    const apretado = isMobile && d.esperaEnMovil;
+    const pasaZoom = !apretado || cerca || stops.includes(d.id) || cats.size > 0;
+    return pasaFiltro && pasaZoom;
+  });
   const totalKm = route?.km ?? 0;
   const totalMin = route?.min ?? 0;
 
@@ -1189,8 +1207,8 @@ export default function MapaSection() {
                       {/* Tramo hacia la siguiente parada: km y minutos reales */}
                       {i < stops.length - 1 && (
                         <div className="ml-[10px] border-l-2 border-dashed border-mint py-1 pl-[19px] text-mini text-muted">
-                          {Math.round(pairKm(id, stops[i + 1]))} km ·{" "}
-                          {fmtDur(pairMin(id, stops[i + 1]))} manejando
+                          {Math.round(kmEntre(id, stops[i + 1]))} km ·{" "}
+                          {fmtDur(minEntre(id, stops[i + 1]))} manejando
                         </div>
                       )}
                     </li>
@@ -1353,7 +1371,7 @@ export default function MapaSection() {
             </div>
           </div>
           {stops.length >= 2 && (
-            <div className="px-[18px] pb-3.5 pt-0.5 max-[899px]:pb-5">
+            <div className="grid grid-cols-2 gap-2 px-[18px] pb-3.5 pt-0.5 max-[899px]:pb-5">
               <button
                 type="button"
                 onClick={startSave}
@@ -1364,6 +1382,9 @@ export default function MapaSection() {
                 <Glyph d={GLYPH_SAVE} className="text-sm" />
                 Guardar viaje
               </button>
+              {/* Compartir vive al lado de guardar: son dos salidas distintas
+                  de la misma ruta, una al correo y otra a un chat. */}
+              <CompartirRuta stops={stops} />
             </div>
           )}
         </div>
@@ -1375,10 +1396,13 @@ export default function MapaSection() {
     <>
       <style>{V6_CSS}</style>
 
-      {/* Ruta con casing blanco debajo (se lee como carretera, no como trazo) */}
+      {/* Ruta con su contorno debajo (se lee como carretera, no como trazo).
+          El contorno es coral profundo, no blanco: sobre el verde del relieve
+          el blanco era lo más brillante de la pantalla. Es el mismo #B23410 de
+          la ruta de Destinos, así que las rutas del sitio hablan igual. */}
       {isVisible && route && (
         <>
-          <MapRoute id="v6-ruta-casing" coordinates={route.coords} color="#FFFFFF" width={7.5} opacity={0.95} />
+          <MapRoute id="v6-ruta-casing" coordinates={route.coords} color="#B23410" width={7.5} opacity={0.95} />
           <MapRoute id="v6-ruta" coordinates={route.coords} color="#FF8D16" width={4} opacity={0.95} />
         </>
       )}
@@ -1391,6 +1415,7 @@ export default function MapaSection() {
             d={d}
             stopIndex={stops.indexOf(d.id)}
             stops={stops}
+            tamano={isMobile ? PIN_MOVIL : PIN_ESCRITORIO}
             isHovered={hovered === d.id}
             isSelected={selected === d.id}
             onToggle={() => togglePin(d.id)}
@@ -1414,7 +1439,7 @@ export default function MapaSection() {
         {/* Carta izquierda: la intro + los viajes recomendados (solo desktop;
             en móvil ambos viven dentro del sheet del itinerario). */}
         <div
-          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 shadow-e1 max-[899px]:hidden`}
+          className={`${PANEL_GLASS} pointer-events-auto absolute left-[clamp(16px,3%,40px)] top-1/2 w-[260px] -translate-y-1/2 rounded-surface px-4 py-4 max-[899px]:hidden`}
         >
           <h2 className="m-0 font-display text-[20px] font-bold leading-tight tracking-[-.02em] text-ink">
             Arma tu <em className="crd-accent">itinerario</em>
@@ -1457,9 +1482,13 @@ export default function MapaSection() {
             className={`${PANEL_SOLID} pointer-events-auto absolute inset-x-3 bottom-[calc(var(--crd-stepper-h)+12px)] z-30 animate-slide-up rounded-surface p-3 shadow-e1 motion-reduce:animate-none min-[900px]:hidden`}
           >
             <div className="flex gap-3">
-              <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
-                <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
-              </div>
+              {/* Igual que la carta de escritorio: sin foto, la miniatura no se
+                  dibuja y el texto ocupa la fila entera. */}
+              {sel.image && (
+                <div className="relative size-[92px] flex-none overflow-hidden rounded-chip bg-cream-2">
+                  <Image src={sel.image} alt="" fill sizes="92px" className="object-cover" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <CardBody d={sel} stopIndex={selIndex} stops={stops} compact />
               </div>

@@ -15,7 +15,7 @@ import { clientIp, rateLimit } from "@/lib/rateLimit";
 import { addToAudience } from "@/lib/waitlist/esp";
 import { HONEYPOT_FIELD, type SubscribeResult } from "@/lib/waitlist/constants";
 import { subscribeSchema } from "@/lib/waitlist/schema";
-import { getWaitlistStore } from "@/lib/waitlist/store";
+import { getWaitlistStore, type SaveOutcome } from "@/lib/waitlist/store";
 
 const RATE_LIMIT = { limit: 5, windowMs: 60_000 };
 
@@ -84,9 +84,9 @@ export async function POST(request: Request) {
     );
   }
 
-  let status: "created" | "already_subscribed";
+  let guardado: SaveOutcome;
   try {
-    status = await getWaitlistStore().save({
+    guardado = await getWaitlistStore().save({
       email: data.email,
       audience: data.audience,
       name: data.name,
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
   // éxito no promete un correo inmediato, a diferencia del mapa, que estampa
   // "te lo mandamos" y por eso allí un fallo sí es un error), y sumaban medio
   // segundo largo de espera delante de alguien que acaba de escanear un QR.
-  if (status === "created") {
+  if (guardado.status === "created") {
     after(async () => {
       const [welcome, esp] = await Promise.all([
         sendWelcomeEmail(data.email, data.audience, {
@@ -128,5 +128,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return json({ ok: true, status });
+  return json({ ok: true, status: guardado.status, numero: guardado.numero });
 }

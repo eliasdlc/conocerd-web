@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { useInclinacion } from "@/hooks/useInclinacion";
 
 import { useScene } from "@/context/SceneContext";
-import Icon from "@/components/Icon";
 import { MapMarker, MarkerContent, MarkerLabel, MapRoute } from "@/components/map/context";
 import { FEATURED_DESTINATIONS, CATEGORY_META } from "@/data/destinations";
 import { type LngLat } from "@/lib/geo";
-import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption } from "@/components/Polaroid";
+import { POLAROID_PAPER, PolaroidMedia, PolaroidCaption, PolaroidVivo } from "@/components/Polaroid";
+import { useClima } from "@/context/ClimaContext";
 import { PIN_CHROME } from "@/components/map/pins";
 import featuredRoute from "@/data/routes/featured-route.json";
 
@@ -21,22 +22,30 @@ const POLAROIDS = FEATURED_DESTINATIONS;
 // siguen las calles del país, no cuerdas rectas entre pines.
 const ROUTE_COORDS: LngLat[] = (featuredRoute.legs as [number, number][][]).flat();
 
-// Desparrame de cada carta de la pila: posición y rotación extra sobre la del
-// destino. `bottom` es el desparrame de escritorio, en % de la capa; `bottomPx`
-// el de móvil, donde la pila se apoya sobre el panel de pasos y por eso el
-// desparrame tiene que medir lo mismo en toda pantalla. Los dos entran por
-// `--pile-bottom` / inline style y los lee globals.css.
+// Dónde está cada carta en la mesa.
 //
-// El mayor de los `bottomPx` (42) está codificado en `--crd-pila-alza`: es lo
-// que el titular de la sección salta para no montarse sobre la pila.
-const PILE_OFFSETS = [
-  { left: "4%", bottom: "8%", bottomPx: "14px", extraRotate: 0 },
-  { left: "7%", bottom: "6%", bottomPx: "0px", extraRotate: -1 },
-  { left: "5%", bottom: "10%", bottomPx: "28px", extraRotate: 1.5 },
-  { left: "9%", bottom: "7%", bottomPx: "7px", extraRotate: -2 },
-  { left: "3%", bottom: "12%", bottomPx: "42px", extraRotate: 0.5 },
-  { left: "8%", bottom: "9%", bottomPx: "21px", extraRotate: -1 },
-];
+// En cuadro hay dos: la que acaba de entrar y la anterior, que se retira detrás
+// y a la izquierda (decisión 2C). Las que ya pasaron salen del cuadro y no
+// dejan rastro (3A), así que el capítulo nunca acumula más de dos cartas.
+//
+// Los valores son porcentajes del ancho de la carta, no píxeles: la mesa cambia
+// de tamaño entre escritorio y teléfono y la composición tiene que ser la misma.
+const MESA = {
+  frente: { x: "0%", y: "0%", scale: 1, rotate: 1.4, opacity: 1, zIndex: 3 },
+  atras: { x: "-44%", y: "-7%", scale: 0.84, rotate: -3.4, opacity: 0.5, zIndex: 2 },
+  fuera: { x: "-112%", y: "-13%", scale: 0.7, rotate: -7, opacity: 0, zIndex: 1 },
+  porVenir: { x: "34%", y: "22%", scale: 0.92, rotate: 5, opacity: 0, zIndex: 4 },
+} as const;
+
+type Puesto = keyof typeof MESA;
+
+/** Qué puesto le toca a la carta `i` con `visibles` cartas ya entradas. */
+function puestoDe(i: number, visibles: number): Puesto {
+  if (i >= visibles) return "porVenir";
+  if (i === visibles - 1) return "frente";
+  if (i === visibles - 2) return "atras";
+  return "fuera";
+}
 
 const SCENE_TO_COUNT: Record<string, number> = {
   "polaroid-0": 1,
@@ -56,15 +65,22 @@ const DESTINOS_SCENES = new Set([
 
 // ─── Component ────────────────────────────────────────────────────────────────
 //
-// La pila es EL componente de Destinos, de principio a fin: el scroll la va
-// construyendo carta a carta y un tap/click en la carta del frente la manda al
-// fondo y revela la siguiente (cicla). No hay deck aparte ni carrusel móvil:
-// la interacción es la misma con dedo y con mouse (decisión del dueño, jul
-// 2026 — sustituye al abanico del finale, que rompía la pila).
+// El par es EL componente de Destinos, de principio a fin, y el finale reusa
+// ese mismo par. El scroll lo va construyendo carta a carta y nunca hay más de
+// dos en cuadro: la que acaba de entrar y la anterior.
+//
+// No tiene interacción propia. El par avanza sólo con el scroll, igual con dedo
+// que con mouse; lo único que responde al puntero es la inclinación de la carta
+// del frente en escritorio.
 
 export default function DestinosOverlay() {
   const { activeScene } = useScene();
   const reduceMotion = useReducedMotion();
+  // En escritorio la carta del frente se inclina hacia el mouse hasta 8° con
+  // un brillo que cruza el papel (hooks/useInclinacion). Sólo mientras la
+  // escena es un destino: fuera del par no hay carta que responda.
+  const inclinacion = useInclinacion({ grados: 8, activo: activeScene.startsWith("polaroid-") });
+  const climaDe = useClima();
   const isVisible = DESTINOS_SCENES.has(activeScene);
   const visibleCount = SCENE_TO_COUNT[activeScene] ?? 0;
   const headingVisible = isVisible;
@@ -76,33 +92,8 @@ export default function DestinosOverlay() {
   // (audit 5.6). El pestillo las monta la primera vez que su escena entra y ya
   // no las desmonta. Va en render y no en un efecto: así el montaje ocurre en
   // el mismo commit en que la escena entra.
-  const [pileSeen, setPileSeen] = useState(false);
-  if (isVisible && !pileSeen) setPileSeen(true);
-
-  // `k` = cuántas veces se cicló la pila; la carta del frente es la de índice
-  // (n-1-k) mod n y cada tap manda el frente al fondo. Se resetea cuando el
-  // scroll cambia el nº de cartas visibles, para que la narrativa (la carta
-  // recién llegada arriba) siempre gane al estado del juego.
-  const [k, setK] = useState(0);
-  const [lastCycled, setLastCycled] = useState<number | null>(null);
-  const [lastCount, setLastCount] = useState(visibleCount);
-  if (lastCount !== visibleCount) {
-    setLastCount(visibleCount);
-    setK(0);
-    setLastCycled(null);
-  }
-
-  const n = Math.max(visibleCount, 1);
-  const frontIndex = visibleCount > 0 ? (((visibleCount - 1 - k) % n) + n) % n : -1;
-
-  const cycle = () => {
-    if (visibleCount < 2) return;
-    setLastCycled(frontIndex);
-    setK((prev) => prev + 1);
-    // Al soltar el flag, `x` vuelve a 0 (donde ya está) y el próximo ciclo de
-    // la misma carta re-dispara los keyframes (si no, framer los deduplica).
-    setTimeout(() => setLastCycled(null), 600);
-  };
+  const [parMontado, setParMontado] = useState(false);
+  if (isVisible && !parMontado) setParMontado(true);
 
   return (
     <>
@@ -143,7 +134,7 @@ export default function DestinosOverlay() {
         </MapMarker>
       ))}
 
-      {/* Visual overlay — polaroid pile + heading */}
+      {/* Capa visual: el par de polaroids y el titular. */}
       <div
         aria-hidden={!isVisible}
         inert={!isVisible}
@@ -151,14 +142,14 @@ export default function DestinosOverlay() {
           isVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        {/* Velo crema en móvil: el titular y la pila caen sobre el mapa. */}
+        {/* Velo crema en móvil: el titular y el par caen sobre el mapa. */}
         <div
           className={`crd-mobile-scrim h-[66%] transition-opacity duration-[450ms] ease-in-out ${
             headingVisible ? "opacity-100" : "opacity-0"
           }`}
         />
 
-        {/* Section heading — appears above the pile on first polaroid.
+        {/* El titular de la sección, que entra con la primera polaroid.
             El bottom de móvil (43%) lo fija .crd-destinos-heading en globals.css,
             así que aquí basta el valor de desktop. En desktop va sobre el
             cristal del tema: sin él, el H2 caía sobre la toponimia del mapa y
@@ -169,7 +160,7 @@ export default function DestinosOverlay() {
             el titular del mapa antes de que existiera el panel, y con panel
             debajo sólo emborronaba el canto de las letras. */}
         <div
-          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out desk:w-fit desk:rounded-surface desk:border desk:border-[var(--crd-glass-line)] desk:bg-[var(--crd-glass)] desk:px-4 desk:py-3.5 desk:shadow-e1 desk:backdrop-blur-[24px] desk:backdrop-saturate-[1.8] ${
+          className={`crd-destinos-heading${isFinale ? " crd-destinos-heading-finale" : ""} absolute bottom-1/2 left-[4%] z-20 transition-[opacity,transform] duration-[450ms] ease-in-out crd-cristal-liquido desk:w-fit desk:rounded-surface desk:border desk:px-4 desk:py-3.5 ${
             headingVisible ? "translate-y-0 opacity-100" : "translate-y-[14px] opacity-0"
           }`}
         >
@@ -180,112 +171,69 @@ export default function DestinosOverlay() {
           </h2>
         </div>
 
-        {/* Polaroid pile — interactiva: tap/click cicla la carta del frente */}
-        {pileSeen && POLAROIDS.map((pol, i) => {
-          const offset = PILE_OFFSETS[i];
-          const totalRotate = (pol.rotate ?? 0) + offset.extraRotate;
-          const isCardVisible = i < visibleCount;
-          const isFront = i === frontIndex && isCardVisible;
-          const justCycled = lastCycled === i;
-          // z-index rota con `k`: el frente baja al fondo y las demás suben un
-          // nivel. Fórmula estable para cartas aún no visibles (quedan abajo).
-          const z = isCardVisible ? ((((i + k) % n) + n) % n) + 1 : i + 1;
+        {/* La mesa: las dos cartas en cuadro, una encima de la otra en el
+            mismo origen. Cada una llega a su puesto por transform, así que la
+            entrada, el retiro y la salida son la misma animación con destinos
+            distintos y nada salta de sitio. */}
+        {parMontado && (
+          <div className="crd-destinos-mesa">
+            {POLAROIDS.map((pol, i) => {
+              const puesto = puestoDe(i, visibleCount);
+              const enFrente = puesto === "frente";
+              const clima = climaDe?.destinos[pol.id];
 
-          return (
-            <motion.button
-              key={pol.id}
-              type="button"
-              disabled={!isFront || visibleCount < 2}
-              aria-hidden={!isFront}
-              aria-label={
-                isFront ? `Ver el próximo destino. Ahora: ${pol.name}` : undefined
-              }
-              onClick={isFront ? cycle : undefined}
-              // El desparrame de la pila es dato por carta (--pile-left permite
-              // el corrimiento móvil sin pasar por JS).
-              //
-              // El reset del botón NO lleva `border-0` ni `bg-transparent`: las
-              // dos escriben la misma propiedad que el papel de la polaroid y,
-              // como el orden lo decide Tailwind al emitir y no el className,
-              // ganaban ellas. La carta llevaba el papel sin pintar y el pie se
-              // leía sobre el mapa. `p-0` sí puede quedarse: `px-3`/`pt-3` son
-              // más específicas y le ganan.
-              className={`crd-destinos-card absolute m-0 w-[clamp(210px,17vw,270px)] appearance-none p-0 text-left text-[inherit] ${POLAROID_PAPER} left-[var(--pile-left)] max-desk:left-[calc(50%_-_98px_+_var(--pile-left)_-_6%)] ${
-                isFront && visibleCount > 1 ? "cursor-pointer" : "cursor-default"
-              }`}
-              style={{
-                "--pile-left": offset.left,
-                "--pile-bottom": offset.bottomPx,
-                bottom: offset.bottom,
-              } as React.CSSProperties}
-              initial={false}
-              animate={{
-                opacity: isCardVisible ? 1 : 0,
-                y: isCardVisible ? 0 : -80,
-                scale: isCardVisible ? 1 : 0.88,
-                rotate: totalRotate,
-                // La carta ciclada sale por la derecha, cambia de capa a mitad
-                // de vuelo y aterriza debajo de la pila.
-                x: justCycled ? [0, 150, 0] : 0,
-                zIndex: z,
-              }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : justCycled
-                    ? {
-                        x: { duration: 0.5, times: [0, 0.5, 1], ease: "easeInOut" },
-                        zIndex: { duration: 0.5 },
-                        default: { type: "spring", stiffness: 260, damping: 30 },
-                      }
-                    : {
-                        zIndex: { duration: 0 },
-                        default: { type: "spring", stiffness: 260, damping: 30 },
-                      }
-              }
-              whileHover={
-                isFront && visibleCount > 1 && !reduceMotion
-                  ? { y: -10, scale: 1.02 }
-                  : undefined
-              }
-            >
-              <PolaroidMedia
-                image={pol.image}
-                alt={pol.name}
-                sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
-                icon={CATEGORY_META[pol.category].icon}
-                chip={pol.tagline}
-                className="crd-destinos-card-media h-[196px]"
-                overlayClassName={`transition-opacity duration-300 ${isFront ? "opacity-100" : "opacity-0"}`}
-                action={
-                  isFront && isFinale ? (
-                    // Flecha circular y no un pill con texto: los taglines
-                    // largos ("Pueblo & valle") lo empujaban fuera de la foto.
-                    <span
+              return (
+                <motion.figure
+                  key={pol.id}
+                  aria-hidden={!enFrente}
+                  className={`crd-destinos-card absolute inset-0 m-0 ${POLAROID_PAPER}`}
+                  // Sólo la del frente sigue al puntero: la de atrás está a
+                  // medio salir y moverla con el mouse la convierte en un
+                  // objeto vivo que no se puede tocar.
+                  // Cada carta lleva su cinta (`crd-tape` en el papel) y el
+                  // ángulo alterna: dos cintas idénticas una al lado de la otra
+                  // delatan que las pegó una máquina.
+                  style={{
+                    "--cinta-giro": i % 2 === 0 ? "-2.8deg" : "2.4deg",
+                    ...(enFrente ? inclinacion.style : {}),
+                  } as React.CSSProperties}
+                  {...(enFrente ? inclinacion.handlers : {})}
+                  initial={false}
+                  animate={{ ...MESA[puesto], rotate: MESA[puesto].rotate + (pol.rotate ?? 0) }}
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { type: "spring", stiffness: 210, damping: 28, zIndex: { duration: 0 } }
+                  }
+                >
+                  <PolaroidMedia
+                    image={pol.image}
+                    alt={pol.name}
+                    sizes="(max-width: 899px) 196px, (max-width: 1440px) 17vw, 270px"
+                    icon={CATEGORY_META[pol.category].icon}
+                    chip={pol.tagline}
+                  />
+                  {/* El pie ocupa el papel de abajo, que es el 29 % del ancho de
+                      la carta. La descripción salió de aquí (decisión 3B): lo
+                      que queda es lo que una polaroid lleva escrito, el nombre
+                      y el sitio, más el único dato vivo. */}
+                  <figcaption className="crd-destinos-pie min-h-0 flex-1 px-[2%] pt-[3%]">
+                    <PolaroidCaption name={pol.name} meta={pol.meta} />
+                    {clima && <PolaroidVivo temp={clima.temp} codigo={clima.codigo} />}
+                  </figcaption>
+                  {/* El brillo que cruza el papel con el puntero. */}
+                  {enFrente && inclinacion.activa && (
+                    <motion.span
                       aria-hidden="true"
-                      className="flex size-7 flex-none items-center justify-center rounded-full bg-white/70 text-ink backdrop-blur-[12px]"
-                    >
-                      <Icon name="arrow_forward" className="text-sm" />
-                    </span>
-                  ) : undefined
-                }
-              />
-              {/* Solo la carta del frente lleva texto: las traseras asoman
-                  rebanadas y sus títulos quedaban cortados (audit 1.5).
-                  (div y no figcaption: el contenedor ahora es un botón.)
-                  La descripción vive aquí, en el papel — sobre la foto tapaba
-                  el 62% de la imagen. */}
-              <div
-                className={`px-1 pb-3.5 pt-3 transition-opacity duration-300 ${
-                  isFront ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <PolaroidCaption name={pol.name} meta={pol.meta} />
-                <p className="crd-destinos-desc m-0 mt-1 text-tiny leading-[1.4] text-ink-3">{pol.desc}</p>
-              </div>
-            </motion.button>
-          );
-        })}
+                      className="pointer-events-none absolute inset-0 rounded-[6px]"
+                      style={{ background: inclinacion.brillo }}
+                    />
+                  )}
+                </motion.figure>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );

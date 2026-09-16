@@ -6,6 +6,7 @@ import { AppleGlyph, GooglePlayGlyph } from "@/components/StoreGlyphs";
 import { requestSubscribe } from "@/hooks/useSubscribeIntent";
 import { scrollToSection } from "@/lib/journeyNav";
 import { DESTINATIONS } from "@/data/destinations";
+import { MAPA_CREDITO, PROVINCIAS_CREDITO, RELIEVE_CREDITO } from "@/lib/basemap";
 
 // Atribución obligatoria de las fotos CC BY / BY-SA (Wikimedia Commons). Se
 // deriva de los datos para que añadir o cambiar una foto no desincronice el
@@ -122,8 +123,13 @@ export default function Footer() {
 
       {/* Legal */}
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-3 border-t border-white/10 px-[clamp(20px,5vw,56px)] py-4">
+        {/* El mapa del recorrido va sin control de atribución (lo tapaba el
+            panel de pasos), así que el crédito del basemap y del relieve vive
+            aquí, junto al de las fotos. */}
         <p className="m-0 w-full text-xs leading-[1.7] text-white/55">
-          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}.
+          Fotos de destinos vía Wikimedia Commons: {PHOTO_CREDITS}. Imágenes de la Tierra
+          del hero: NASA GIBS (Blue Marble, Black Marble y nubes de Visible Earth).{" "}
+          {MAPA_CREDITO}. {RELIEVE_CREDITO}. {PROVINCIAS_CREDITO}.
         </p>
         <div className="text-xs text-white/55">
           © 2026 ConoceRD · Hecho con orgullo en RD

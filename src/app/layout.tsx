@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Medicion from "@/components/Medicion";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 
@@ -72,6 +73,33 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// El reloj de las animaciones de entrada.
+//
+// Una animación CSS arranca cuando el navegador resuelve el estilo del
+// elemento, no cuando lo pinta. En esta máquina esos dos momentos son el
+// mismo; en un teléfono real no: medido con la CPU a un cuarto y red 3G sobre
+// el build de producción, los estilos salen a los 1,28 s y el primer pintado a
+// los 2,70 s. La entrada del hero (planeta, cielo, logo, frase, botones) dura
+// 1,8 s como mucho, así que terminaba entera dentro de ese hueco y el primer
+// pixel que veía el visitante ya era el estado final: el hero aparecía montado
+// de golpe, sin una sola animación.
+//
+// Esto la congela en el frame cero hasta que hay un frame pintado de verdad.
+// `requestAnimationFrame` es exactamente esa señal: mientras el render está
+// bloqueado el navegador no produce frames y no lo llama.
+//
+// Va en línea y de primero en el <body> para correr antes de que exista el
+// hero. Si el visitante tiene JavaScript apagado, el atributo nunca se pone y
+// todo anima como antes: nadie se queda con un hero en blanco. El temporizador
+// de 4 s es la red por si el navegador no entrega frames (una pestaña abierta
+// en segundo plano) y luego nunca los reclama.
+const RELOJ_DE_ENTRADA = `
+document.documentElement.dataset.entrada = "lista";
+var arranca = function () { document.documentElement.dataset.entrada = "corre"; };
+requestAnimationFrame(function () { requestAnimationFrame(arranca); });
+setTimeout(arranca, 4000);
+`.trim();
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -79,10 +107,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${bricolage.variable} ${plusJakarta.variable} ${inter.variable}`}
     >
       <body>
+        <script dangerouslySetInnerHTML={{ __html: RELOJ_DE_ENTRADA }} />
         {children}
         {/* Vistas de página y los cuatro eventos del embudo (src/lib/analytics).
             En local no envía nada: el script sólo se carga en Vercel. */}
         <Analytics />
+        {/* Sólo con `?medir` en la URL: sin el parámetro no descarga la sonda
+            ni pinta nada. Es el instrumento con el que se compara un cambio
+            de rendimiento contra el anterior. */}
+        <Medicion />
       </body>
     </html>
   );

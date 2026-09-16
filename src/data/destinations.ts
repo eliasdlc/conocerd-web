@@ -21,15 +21,18 @@ export type Destination = {
   province: string;
   coords: [number, number]; // [lng, lat]
   category: Category;
-  image: string; // /assets/destino-*.webp
+  /** `/assets/destino-*.webp`. Opcional: los 20 destinos que entraron el 15 sep
+   *  2026 no tienen foto propia y ninguna pantalla puede inventarles una
+   *  (decisión 6A). Quien la consuma dibuja su versión sin foto. */
+  image?: string;
   /** Autor y licencia de la foto (Wikimedia Commons). Obligatorio mostrarlo
    *  para CC BY / BY-SA; se agrega en el footer. CC0 no lo exige. */
   imageCredit?: string;
   activities: string[];
   /** Valoración real de viajeros (Google Maps vía agregadores, ago 2026).
-   *  Donde no existe rating del destino (pueblos/municipios) se conserva una
-   *  estimación conservadora. */
-  rating: number; // 0–5
+   *  Opcional por la misma razón que `image`: donde no hay valoración real no
+   *  se estima una. Sin dato, la estrella no se dibuja. */
+  rating?: number; // 0–5
   desc: string;
   /** Aparece en el journey de polaroids (Destinos). El orden lo da `featuredOrder`. */
   featured?: boolean;
@@ -41,6 +44,19 @@ export type Destination = {
   tagline?: string;
   /** Rotación visual de la polaroid en grados (presentación). */
   rotate?: number;
+  /** En el teléfono este pin se tapa con otro cuando la escena del mapa abre,
+   *  así que espera a `DESTINOS_DESDE` para entrar. En escritorio entra desde
+   *  el principio: ahí hay sitio.
+   *
+   *  Los diez salieron de medir, no de elegir a dedo. Con los 38 a la vez y el
+   *  glifo a 26 px, se quitó repetidamente el pin metido en más solapes hasta
+   *  llegar a diez, con los seis del recorrido protegidos y contando los dos
+   *  viewports de teléfono a la vez para que el conjunto no dependa de una
+   *  pantalla. Quedan 28 pines y un solo par que se tapa.
+   *
+   *  Se recalcula con `herramientas/densidad-mapa.mjs` si cambian las cámaras
+   *  de la escena o el tamaño del pin. */
+  esperaEnMovil?: boolean;
 };
 
 // ─── Presentación por categoría ───────────────────────────────────────────────
@@ -202,6 +218,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Senderismo", "Snorkel", "Escalada"],
     rating: 4.7,
     desc: "Acantilados y arena solo accesible en bote.",
+    esperaEnMovil: true,
   },
   {
     id: "las-terrenas",
@@ -214,6 +231,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Playa", "Gastronomía", "Atardecer"],
     rating: 4.6,
     desc: "Pueblo costero con sabor europeo.",
+    esperaEnMovil: true,
   },
   {
     id: "barahona",
@@ -286,6 +304,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Anfiteatro", "Arte", "Miradores"],
     rating: 4.6,
     desc: "Una aldea mediterránea sobre el río Chavón.",
+    esperaEnMovil: true,
   },
   {
     id: "puerto-plata",
@@ -298,6 +317,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Teleférico", "Fortaleza", "Playa"],
     rating: 4.5,
     desc: "Casas victorianas y el monte Isabel.",
+    esperaEnMovil: true,
   },
   {
     id: "cabarete",
@@ -310,6 +330,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Kitesurf", "Surf", "Vida nocturna"],
     rating: 4.6,
     desc: "Capital del kitesurf en el Caribe.",
+    esperaEnMovil: true,
   },
   {
     id: "jarabacoa",
@@ -323,12 +344,245 @@ export const DESTINATIONS: Destination[] = [
     rating: 4.7,
     desc: "La ciudad de la eterna primavera.",
   },
+
+  // ── Los 20 del 15 sep 2026 ───────────────────────────────────────────────
+  // Entran sin foto y sin valoración (decisión 6A): cero dato inventado. Cada
+  // coordenada se resolvió contra Nominatim y se comprobó por geocodificación
+  // inversa, que contesta qué hay en el punto exacto en vez de qué creyó
+  // entender la búsqueda. Las 20 caen en tierra y en la provincia que dice su
+  // fila. El `meta` es el municipio que devolvió esa consulta.
+  {
+    id: "punta-rucia",
+    name: "Punta Rucia",
+    province: "Puerto Plata",
+    coords: [-71.2133, 19.8402],
+    category: "playa",
+    activities: ["Paseo en bote", "Snorkel", "Playa"],
+    desc: "El pueblo de pescadores del que sale Cayo Arena.",
+    meta: "Punta Rucia, Puerto Plata",
+  },
+  {
+    id: "playa-grande",
+    name: "Playa Grande",
+    province: "María Trinidad Sánchez",
+    coords: [-70.0165, 19.6782],
+    category: "playa",
+    activities: ["Playa", "Surf", "Mirador"],
+    desc: "Arena gruesa y acantilado, la playa de postal del norte.",
+    meta: "Río San Juan, María Trinidad Sánchez",
+  },
+  {
+    id: "laguna-dudu",
+    name: "Laguna Dudú",
+    province: "María Trinidad Sánchez",
+    coords: [-69.9077, 19.5639],
+    category: "naturaleza",
+    activities: ["Baño", "Salto", "Cueva"],
+    desc: "Cenote azul en una cueva taína.",
+    meta: "Cabrera, María Trinidad Sánchez",
+    esperaEnMovil: true,
+  },
+  {
+    id: "jamao-al-norte",
+    name: "Jamao al Norte",
+    province: "Espaillat",
+    coords: [-70.4471, 19.6355],
+    category: "aventura",
+    activities: ["Rafting", "Cañoning", "Senderismo"],
+    desc: "Rafting y cañoning donde solo hay gente de allí.",
+    meta: "Jamao al Norte, Espaillat",
+  },
+  {
+    id: "casa-mirabal",
+    name: "Casa Museo Hermanas Mirabal",
+    province: "Hermanas Mirabal",
+    coords: [-70.3685, 19.3705],
+    category: "cultura",
+    activities: ["Museo", "Visita guiada", "Historia"],
+    desc: "La casa real de las Mirabal, no un monumento.",
+    meta: "Salcedo, Hermanas Mirabal",
+  },
+  {
+    id: "quita-espuela",
+    name: "Loma Quita Espuela",
+    province: "Duarte",
+    coords: [-70.1436, 19.3847],
+    category: "naturaleza",
+    activities: ["Senderismo", "Cacao", "Avistamiento"],
+    desc: "Reserva de cacao y bosque húmedo sobre San Francisco.",
+    meta: "Reserva Loma Quita Espuela, Duarte",
+  },
+  {
+    id: "san-jose-matas",
+    name: "San José de las Matas",
+    province: "Santiago",
+    coords: [-70.9372, 19.3372],
+    category: "aventura",
+    activities: ["Senderismo", "Río", "Montaña"],
+    desc: "La puerta de la Cordillera por el lado que nadie usa.",
+    meta: "San José de las Matas, Santiago",
+  },
+  {
+    id: "las-galeras",
+    name: "Las Galeras",
+    province: "Samaná",
+    coords: [-69.1997, 19.2909],
+    category: "playa",
+    activities: ["Playa", "Paseo en bote", "Buceo"],
+    desc: "Pueblo de pescadores al final de la península.",
+    meta: "Las Galeras, Samaná",
+    esperaEnMovil: true,
+  },
+  {
+    id: "aguas-blancas",
+    name: "Salto de Aguas Blancas",
+    province: "La Vega",
+    coords: [-70.6771, 18.8429],
+    category: "naturaleza",
+    activities: ["Cascada", "Senderismo", "Fotografía"],
+    desc: "La caída más alta del país, con agua helada.",
+    meta: "Constanza, La Vega",
+    esperaEnMovil: true,
+  },
+  {
+    id: "valle-nuevo",
+    name: "Valle Nuevo",
+    province: "La Vega",
+    coords: [-70.608, 18.7834],
+    category: "aventura",
+    activities: ["Camping", "Senderismo", "Pinar"],
+    desc: "Pinar de altura, el único sitio de RD donde hiela.",
+    meta: "P. N. Valle Nuevo, La Vega",
+  },
+  {
+    id: "bayahibe",
+    name: "Bayahíbe",
+    province: "La Altagracia",
+    coords: [-68.8397, 18.3687],
+    category: "playa",
+    activities: ["Playa", "Buceo", "Paseo en bote"],
+    desc: "Pueblo pesquero y puerta del Parque Cotubanamá.",
+    meta: "Bayahíbe, La Altagracia",
+    esperaEnMovil: true,
+  },
+  {
+    id: "isla-saona",
+    name: "Isla Saona",
+    province: "La Altagracia",
+    coords: [-68.6768, 18.1545],
+    category: "playa",
+    activities: ["Playa", "Paseo en bote", "Snorkel"],
+    desc: "Playas dentro del parque nacional.",
+    meta: "P. N. Cotubanamá, La Altagracia",
+  },
+  {
+    id: "isla-catalina",
+    name: "Isla Catalina",
+    province: "La Romana",
+    coords: [-69.0081, 18.3589],
+    category: "playa",
+    activities: ["Buceo", "Snorkel", "Playa"],
+    desc: "Pared de coral, de las mejores inmersiones del país.",
+    meta: "Isla Catalina, La Romana",
+    esperaEnMovil: true,
+  },
+  {
+    id: "cueva-maravillas",
+    name: "Cueva de las Maravillas",
+    province: "San Pedro de Macorís",
+    coords: [-69.1603, 18.4521],
+    category: "cultura",
+    activities: ["Cueva", "Visita guiada", "Arte rupestre"],
+    desc: "Pictografías taínas bajo tierra, con guía.",
+    meta: "San Pedro de Macorís",
+  },
+  {
+    id: "laguna-limon",
+    name: "Laguna Limón",
+    province: "El Seibo",
+    coords: [-68.8511, 18.9806],
+    category: "naturaleza",
+    activities: ["Laguna", "Manglar", "Paseo en bote"],
+    desc: "Agua dulce, manglar y la duna de Miches al lado.",
+    meta: "Miches, El Seibo",
+  },
+  {
+    id: "laguna-oviedo",
+    name: "Laguna de Oviedo",
+    province: "Pedernales",
+    coords: [-71.3683, 17.7549],
+    category: "naturaleza",
+    activities: ["Avistamiento", "Paseo en bote", "Flamencos"],
+    desc: "Flamencos e iguanas, en bote y con guía local.",
+    meta: "P. N. Jaragua, Pedernales",
+  },
+  {
+    id: "playa-san-rafael",
+    name: "Playa San Rafael",
+    province: "Barahona",
+    coords: [-71.1374, 18.0281],
+    category: "playa",
+    activities: ["Balneario", "Playa", "Río"],
+    desc: "Balneario de río y mar a la vez, bajo la sierra.",
+    meta: "Barahona",
+  },
+  {
+    id: "polo",
+    name: "Polo",
+    province: "Barahona",
+    coords: [-71.3097, 18.1209],
+    category: "gastronomia",
+    activities: ["Café", "Ruta en carro", "Mirador"],
+    desc: "Café de altura y el Polo Magnético en la misma carretera.",
+    meta: "Polo, Barahona",
+  },
+  {
+    id: "dunas-bani",
+    name: "Dunas de Baní",
+    province: "Peravia",
+    coords: [-70.5314, 18.2133],
+    category: "naturaleza",
+    activities: ["Dunas", "Senderismo", "Fotografía"],
+    desc: "Duna viva frente al Caribe.",
+    meta: "Las Salinas, Baní, Peravia",
+  },
+  {
+    id: "bani",
+    name: "Baní",
+    province: "Peravia",
+    coords: [-70.3321, 18.2777],
+    category: "gastronomia",
+    activities: ["Dulces", "Mangos", "Pueblo"],
+    desc: "Dulce de leche, mangos y el sur que nadie visita.",
+    meta: "Baní, Peravia",
+  },
 ];
 
-/** Los 6 destinos del journey, ya ordenados por `featuredOrder`. */
-export const FEATURED_DESTINATIONS: Destination[] = DESTINATIONS.filter(
-  (d) => d.featured
+/** Un destino del recorrido de polaroids. La carta SIEMPRE dibuja una foto, así
+ *  que el tipo lo exige aquí y no en cada consumidor: `image` deja de ser
+ *  opcional para los seis, y el filtro de abajo es lo que lo garantiza. */
+export type FeaturedDestination = Destination & { image: string };
+
+/** Los 6 destinos del journey, ya ordenados por `featuredOrder`.
+ *
+ *  Un destino marcado `featured` sin foto no entra: la polaroid no tiene una
+ *  versión sin ventana, y dejarlo pasar cambiaría un error de datos por una
+ *  carta rota en pantalla. */
+export const FEATURED_DESTINATIONS: FeaturedDestination[] = DESTINATIONS.filter(
+  (d): d is FeaturedDestination => Boolean(d.featured) && typeof d.image === "string"
 ).sort((a, b) => (a.featuredOrder ?? 0) - (b.featuredOrder ?? 0));
+
+/** A partir de qué zoom entran los 32 destinos que no son del recorrido.
+ *
+ *  La escena del mapa abre en z6,2 en teléfono y en z7,3 en escritorio, y 7,6
+ *  está por encima de las dos: la escena abre con los seis del recorrido y el
+ *  resto entra cuando el visitante se acerca, que es cuando hay sitio.
+ *
+ *  El número sale de una medida, no de una impresión: con los 38 a la vez, a
+ *  z6,2 sobreviven 11 de los 32 nombres de provincia y hay 30 pares de pines
+ *  montados; a z7,3 son 24 nombres y 11 pares. Si cambia el zoom de la escena
+ *  (`SCENE_CAMERAS.mapa`), este número se vuelve a medir, no se ajusta a ojo. */
+export const DESTINOS_DESDE = 7.6;
 
 // ─── Cámaras por escena ───────────────────────────────────────────────────────
 // Migra LOCATIONS + SCENE_TO_LOCATION de MapScrollJourney a un único mapa

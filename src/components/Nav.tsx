@@ -52,7 +52,8 @@ export default function Nav() {
     >
       <div
         data-solid={String(solido)}
-        className="crd-nav-pill group flex h-14 items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border border-[var(--crd-glass-line)] pl-[clamp(10px,1.6vw,18px)] pr-[6px] transition-[background-color,box-shadow] duration-300 [--nav-gap:clamp(4px,1vw,10px)] [scrollbar-width:none]"
+        data-noche={solido ? undefined : "true"}
+        className="crd-nav-pill crd-cristal-liquido group flex h-14 items-center gap-[var(--nav-gap)] overflow-x-auto rounded-full border pl-[clamp(10px,1.6vw,18px)] pr-[6px] [--nav-gap:clamp(4px,1vw,10px)] [scrollbar-width:none]"
       >
         {/* Aparece con el estado sólido: en el hero el logo ya está en pantalla
             a tamaño completo y repetirlo sobraría. */}
@@ -108,6 +109,9 @@ export default function Nav() {
           variant="selected"
           size="sm"
           icon="notifications_active"
+          // `.crd-nav-cta`: en reposo, sobre la noche del hero, la píldora es
+          // de tinta y el botón se invierte (globals.css).
+          className="crd-nav-cta"
           onClick={() => requestSubscribe("viajero")}
         >
           Unirme a la lista

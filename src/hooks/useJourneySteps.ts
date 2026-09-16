@@ -5,6 +5,7 @@ import { animate, type AnimationPlaybackControls, type MotionValue } from "motio
 import type maplibregl from "maplibre-gl";
 import { SCENE_BANDS, SCENE_COUNT, nearestSceneIndex, sceneAtProgress } from "@/lib/journey";
 import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
+import { marcar } from "@/lib/medicion/marcas";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Motor de PASOS — el único motor del recorrido, en teléfono y en escritorio.
@@ -24,6 +25,10 @@ import { applyJourneyFrame, measureViewport } from "@/lib/journeyCamera";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STEP_BASE_MS = 1150; // un paso
+// El primer paso es el amanecer: la cámara baja del espacio al primer destino
+// mientras las luces ceden al día y el cielo se vuelve crema. A 1150 ms era un
+// fogonazo; a este ritmo se ve pasar.
+const STEP_HERO_MS = 2600;
 const STEP_EXTRA_MS = 300; // por cada paso adicional en un salto
 const STEP_MAX_MS = 2600;
 
@@ -91,18 +96,23 @@ export function useJourneySteps({
       indexRef.current = clamped;
       setIndex(clamped);
       animRef.current?.stop();
+      marcar("paso:pide", { a: clamped, desde: nearestSceneIndex(from) });
 
       if (Math.abs(to - from) < 1e-6) {
         apply(to);
+        marcar("paso:llega", { a: clamped });
         return;
       }
 
       // Duración según cuántos keyframes se atraviesan: un salto de capítulo
       // no puede durar lo mismo que un paso, pero tampoco escalar sin techo.
-      const jump = Math.max(1, Math.abs(clamped - nearestSceneIndex(from)));
+      const desde = nearestSceneIndex(from);
+      const jump = Math.max(1, Math.abs(clamped - desde));
       const ms = prefersReducedMotion()
         ? 1
-        : Math.min(STEP_MAX_MS, STEP_BASE_MS + (jump - 1) * STEP_EXTRA_MS);
+        : desde === 0 && clamped === 1
+          ? STEP_HERO_MS
+          : Math.min(STEP_MAX_MS, STEP_BASE_MS + (jump - 1) * STEP_EXTRA_MS);
 
       animatingRef.current = true;
       animRef.current = animate(from, to, {
@@ -111,6 +121,7 @@ export function useJourneySteps({
         onUpdate: apply,
         onComplete: () => {
           animatingRef.current = false;
+          marcar("paso:llega", { a: clamped });
         },
       });
     },

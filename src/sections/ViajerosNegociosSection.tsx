@@ -433,6 +433,28 @@ function PantallaReal({ src }: { src: string }) {
   );
 }
 
+/**
+ * Cuándo existe el `src` de un vídeo de demo.
+ *
+ * Los cinco paneles del recorrido son hijos del <Map> y montan todos a la vez,
+ * en cuanto el motor del mapa termina de cargar. Con el `src` puesto desde el
+ * montaje, los cuatro archivos de demo empezaban a bajar a los tres segundos
+ * de abrir la home, ocho escenas antes de que se vean: 4,0 MB robados a la
+ * conexión mientras la persona mira el hero y el mapa pide sus teselas
+ * (medido el 14 sep 2026). `preload="metadata"` no lo evita.
+ *
+ * Devuelve el `src` sólo desde la primera vez que el vídeo se activa, y ya no
+ * lo suelta: volver a un paso no tiene que volver a descargar.
+ */
+function useSrcCuandoToque(src: string, activa: boolean): string | undefined {
+  const [pedido, setPedido] = useState(activa);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pestillo de una sola transición: sólo va de false a true, y una vez puesto el efecto no vuelve a entrar
+    if (activa && !pedido) setPedido(true);
+  }, [activa, pedido]);
+  return pedido ? src : undefined;
+}
+
 /** Demo en video de la app (grabación del dueño, ago 2026). Reproduce solo
  *  mientras su parada está activa y arranca desde el inicio cada vez que
  *  vuelve, para que el gesto grabado se entienda completo. Con
@@ -440,6 +462,7 @@ function PantallaReal({ src }: { src: string }) {
 function PantallaVideo({ src, poster, activa }: { src: string; poster: string; activa: boolean }) {
   const reduced = !!useReducedMotion();
   const ref = useRef<HTMLVideoElement>(null);
+  const fuente = useSrcCuandoToque(src, activa);
 
   useEffect(() => {
     const v = ref.current;
@@ -460,7 +483,7 @@ function PantallaVideo({ src, poster, activa }: { src: string; poster: string; a
       <Image src={poster} alt="" fill sizes="264px" className="object-cover" />
       <video
         ref={ref}
-        src={src}
+        src={fuente}
         muted
         loop
         playsInline
@@ -498,6 +521,7 @@ function PantallaVideoTramo({
 }) {
   const reduced = !!useReducedMotion();
   const ref = useRef<HTMLVideoElement>(null);
+  const fuente = useSrcCuandoToque(VIDEO_PANEL, activa);
 
   useEffect(() => {
     const v = ref.current;
@@ -536,7 +560,7 @@ function PantallaVideoTramo({
       <Image src={poster} alt="" fill sizes="264px" className="object-cover" />
       <video
         ref={ref}
-        src={VIDEO_PANEL}
+        src={fuente}
         muted
         playsInline
         preload="metadata"
@@ -695,10 +719,12 @@ function ViajerosFinal() {
 
   return (
     <>
-      {/* La ruta del país, con el estilo de siempre: casing blanco + mango. */}
+      {/* La ruta del país, con el estilo de siempre: contorno + mango. El
+          contorno pasa de blanco a coral profundo por el mismo motivo que en
+          Tu ruta y en Destinos: el filo se queda, el brillo se va. */}
       {visible && (
         <>
-          <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#FFFFFF" width={6.5} opacity={0.9} />
+          <MapRoute id="vn6-ruta-casing" coordinates={F_ROUTE.pts} color="#B23410" width={6.5} opacity={0.9} />
           <MapRoute id="vn6-ruta" coordinates={F_ROUTE.pts} color="#FF8D16" width={3.2} opacity={0.95} />
           {traveled && (
             <MapRoute id="vn6-ruta-recorrida" coordinates={traveled} color="#0F1A2E" width={3.2} opacity={0.32} />
@@ -962,7 +988,9 @@ function NegociosFinal() {
   return (
     <>
       {/* Carreteras VIVAS: se dibujan cuando su viajero sale, se desvanecen
-          cuando llega. Solo existen las de los 2–3 clientes en camino. */}
+          cuando llega. Solo existen las de los 2–3 clientes en camino.
+          Mismo contorno coral que las otras rutas del sitio: es el par
+          contorno + mango de siempre, con el blanco fuera. */}
       {visible &&
         estados.map(({ c, est }) => {
           if (!est) return null;
@@ -972,7 +1000,7 @@ function NegociosFinal() {
               key={`road-${c.id}`}
               id={`vn6-road-${c.id}`}
               coordinates={carreteraDe(c, est)}
-              color="#FFFFFF"
+              color="#B23410"
               width={5}
               opacity={0.85 * fade}
             />
