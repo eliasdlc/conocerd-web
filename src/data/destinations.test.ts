@@ -1,6 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { DESTINATIONS, FEATURED_DESTINATIONS } from "@/data/destinations";
+import {
+  DESTINATIONS,
+  DESTINOS_DESDE,
+  FEATURED_DESTINATIONS,
+  SCENE_CAMERAS,
+} from "@/data/destinations";
 import pairs from "@/data/routes/pairs.json";
 
 // Lo que estas pruebas cuidan es una sola cosa: que el catálogo no mienta.
@@ -63,6 +68,21 @@ describe("catálogo de destinos", () => {
       (d) => !existsSync(`public/data/route-legs/${d.id}.json`)
     );
     expect(sinTramos.map((d) => d.id)).toEqual([]);
+  });
+
+  it("abre la escena del mapa por debajo del zoom que deja entrar a los 38", () => {
+    // Si una cámara de la escena sube por encima del umbral, la escena vuelve a
+    // abrir con los 38 pines y la congestión regresa sin que nadie lo note: a
+    // z6,2 eso eran 30 pares de pines montados unos sobre otros.
+    const m = SCENE_CAMERAS.mapa;
+    const aperturas = [
+      m.zoom,
+      ...(m.tramos?.mobile ?? []).map((t) => t.zoom),
+      ...(m.tramos?.desktop ?? []).map((t) => t.zoom),
+    ].filter((z): z is number => typeof z === "number");
+
+    expect(aperturas.length).toBeGreaterThan(0);
+    expect(Math.max(...aperturas)).toBeLessThan(DESTINOS_DESDE);
   });
 
   it("no inventa una valoración donde no hay foto", () => {

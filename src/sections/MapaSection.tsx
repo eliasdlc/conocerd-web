@@ -35,15 +35,17 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useScene } from "@/context/SceneContext";
 import Icon from "@/components/Icon";
-import { MapMarker, MarkerContent, MapRoute } from "@/components/map/context";
+import { MapMarker, MarkerContent, MapRoute, useZoomAlMenos } from "@/components/map/context";
 import { CategoryPin } from "@/components/map/pins";
 import {
   DESTINATIONS,
   CATEGORIES,
   CATEGORY_META,
+  DESTINOS_DESDE,
   type Category,
   type Destination,
 } from "@/data/destinations";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { PANEL_GLASS, PANEL_SOLID } from "@/lib/surfaces";
 import StampCRD from "@/components/StampCRD";
 import CompartirRuta from "@/components/CompartirRuta";
@@ -105,6 +107,13 @@ function useRoadLegs(stops: readonly string[]): RoadLegs {
 
   return legs;
 }
+
+// El glifo del pin. En el teléfono baja de 30 a 26 porque con los 38 puestos a
+// 30 hay 30 pares tapándose, y a 26 quedan 28 pines con uno solo. El ÁREA
+// TÁCTIL no encoge: el botón se queda en 44 px, que ya está por debajo del
+// mínimo de 48 del sistema y no puede bajar más.
+const PIN_MOVIL = 26;
+const PIN_ESCRITORIO = 30;
 
 const DEST: Record<string, Destination> = Object.fromEntries(
   DESTINATIONS.map((d) => [d.id, d])
@@ -428,6 +437,7 @@ function DestinationPin({
   d,
   stopIndex,
   stops,
+  tamano,
   isHovered,
   isSelected,
   onToggle,
@@ -437,6 +447,8 @@ function DestinationPin({
   d: Destination;
   stopIndex: number;
   stops: string[];
+  /** Diámetro del glifo. El área táctil NO encoge con él: se queda en 44. */
+  tamano: number;
   /** Hover o foco de teclado: abre la card informativa (solo desktop). */
   isHovered: boolean;
   /** Último pin tocado: en móvil es el que tiene la card abierta abajo. */
@@ -485,9 +497,9 @@ function DestinationPin({
               }`}
             >
               {inRoute ? (
-                <RoutePin d={d} n={stopIndex + 1} />
+                <RoutePin d={d} n={stopIndex + 1} size={tamano + 4} />
               ) : (
-                <CategoryPin category={d.category} size={30} />
+                <CategoryPin category={d.category} size={tamano} />
               )}
             </span>
           </button>
@@ -1016,11 +1028,33 @@ export default function MapaSection() {
 
   const sel = selected ? DEST[selected] : null;
   const selIndex = sel ? stops.indexOf(sel.id) : -1;
-  // El filtro nunca esconde una parada ya elegida: se vería como si la ruta
-  // se hubiera roto sola.
-  const visibleDests = DESTINATIONS.filter(
-    (d) => cats.size === 0 || cats.has(d.category) || stops.includes(d.id)
-  );
+  // Qué pines se dibujan, por dos reglas que se aplican en orden.
+  //
+  // El filtro de categoría nunca esconde una parada ya elegida: se vería como
+  // si la ruta se hubiera roto sola.
+  //
+  // El zoom decide el resto, y SOLO en el teléfono. Medido el 15 sep 2026 con
+  // los 38 pines a la vez: a la apertura de la escena hay 30 pares de pines
+  // tapándose en un teléfono y de 7 a 9 en escritorio. Los pines son DOM por
+  // encima del canvas, así que el índice de colisión de MapLibre, que es lo que
+  // descongestiona los nombres de provincia, no los ve y no puede ayudar.
+  //
+  // En el teléfono esperan los diez marcados `esperaEnMovil`, que son los que
+  // más se tapan; con el glifo a 26 px quedan 28 en pantalla y un solo par
+  // solapado. En escritorio entran los 38: ahí hay sitio.
+  //
+  // Tres excepciones, y las tres son lo mismo: si el visitante ya pidió ver
+  // algo, se le enseña. Los seis del recorrido son la puerta de entrada al
+  // mapa; una parada suya no puede desaparecer al alejarse; y filtrar por
+  // categoría ES pedir ver esa categoría.
+  const isMobile = useIsMobile();
+  const cerca = useZoomAlMenos(DESTINOS_DESDE);
+  const visibleDests = DESTINATIONS.filter((d) => {
+    const pasaFiltro = cats.size === 0 || cats.has(d.category) || stops.includes(d.id);
+    const apretado = isMobile && d.esperaEnMovil;
+    const pasaZoom = !apretado || cerca || stops.includes(d.id) || cats.size > 0;
+    return pasaFiltro && pasaZoom;
+  });
   const totalKm = route?.km ?? 0;
   const totalMin = route?.min ?? 0;
 
@@ -1381,6 +1415,7 @@ export default function MapaSection() {
             d={d}
             stopIndex={stops.indexOf(d.id)}
             stops={stops}
+            tamano={isMobile ? PIN_MOVIL : PIN_ESCRITORIO}
             isHovered={hovered === d.id}
             isSelected={selected === d.id}
             onToggle={() => togglePin(d.id)}

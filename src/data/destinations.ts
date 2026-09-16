@@ -44,6 +44,19 @@ export type Destination = {
   tagline?: string;
   /** Rotación visual de la polaroid en grados (presentación). */
   rotate?: number;
+  /** En el teléfono este pin se tapa con otro cuando la escena del mapa abre,
+   *  así que espera a `DESTINOS_DESDE` para entrar. En escritorio entra desde
+   *  el principio: ahí hay sitio.
+   *
+   *  Los diez salieron de medir, no de elegir a dedo. Con los 38 a la vez y el
+   *  glifo a 26 px, se quitó repetidamente el pin metido en más solapes hasta
+   *  llegar a diez, con los seis del recorrido protegidos y contando los dos
+   *  viewports de teléfono a la vez para que el conjunto no dependa de una
+   *  pantalla. Quedan 28 pines y un solo par que se tapa.
+   *
+   *  Se recalcula con `herramientas/densidad-mapa.mjs` si cambian las cámaras
+   *  de la escena o el tamaño del pin. */
+  esperaEnMovil?: boolean;
 };
 
 // ─── Presentación por categoría ───────────────────────────────────────────────
@@ -205,6 +218,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Senderismo", "Snorkel", "Escalada"],
     rating: 4.7,
     desc: "Acantilados y arena solo accesible en bote.",
+    esperaEnMovil: true,
   },
   {
     id: "las-terrenas",
@@ -217,6 +231,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Playa", "Gastronomía", "Atardecer"],
     rating: 4.6,
     desc: "Pueblo costero con sabor europeo.",
+    esperaEnMovil: true,
   },
   {
     id: "barahona",
@@ -289,6 +304,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Anfiteatro", "Arte", "Miradores"],
     rating: 4.6,
     desc: "Una aldea mediterránea sobre el río Chavón.",
+    esperaEnMovil: true,
   },
   {
     id: "puerto-plata",
@@ -301,6 +317,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Teleférico", "Fortaleza", "Playa"],
     rating: 4.5,
     desc: "Casas victorianas y el monte Isabel.",
+    esperaEnMovil: true,
   },
   {
     id: "cabarete",
@@ -313,6 +330,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Kitesurf", "Surf", "Vida nocturna"],
     rating: 4.6,
     desc: "Capital del kitesurf en el Caribe.",
+    esperaEnMovil: true,
   },
   {
     id: "jarabacoa",
@@ -362,6 +380,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Baño", "Salto", "Cueva"],
     desc: "Cenote azul en una cueva taína.",
     meta: "Cabrera, María Trinidad Sánchez",
+    esperaEnMovil: true,
   },
   {
     id: "jamao-al-norte",
@@ -412,6 +431,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Playa", "Paseo en bote", "Buceo"],
     desc: "Pueblo de pescadores al final de la península.",
     meta: "Las Galeras, Samaná",
+    esperaEnMovil: true,
   },
   {
     id: "aguas-blancas",
@@ -422,6 +442,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Cascada", "Senderismo", "Fotografía"],
     desc: "La caída más alta del país, con agua helada.",
     meta: "Constanza, La Vega",
+    esperaEnMovil: true,
   },
   {
     id: "valle-nuevo",
@@ -442,6 +463,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Playa", "Buceo", "Paseo en bote"],
     desc: "Pueblo pesquero y puerta del Parque Cotubanamá.",
     meta: "Bayahíbe, La Altagracia",
+    esperaEnMovil: true,
   },
   {
     id: "isla-saona",
@@ -462,6 +484,7 @@ export const DESTINATIONS: Destination[] = [
     activities: ["Buceo", "Snorkel", "Playa"],
     desc: "Pared de coral, de las mejores inmersiones del país.",
     meta: "Isla Catalina, La Romana",
+    esperaEnMovil: true,
   },
   {
     id: "cueva-maravillas",
@@ -548,6 +571,18 @@ export type FeaturedDestination = Destination & { image: string };
 export const FEATURED_DESTINATIONS: FeaturedDestination[] = DESTINATIONS.filter(
   (d): d is FeaturedDestination => Boolean(d.featured) && typeof d.image === "string"
 ).sort((a, b) => (a.featuredOrder ?? 0) - (b.featuredOrder ?? 0));
+
+/** A partir de qué zoom entran los 32 destinos que no son del recorrido.
+ *
+ *  La escena del mapa abre en z6,2 en teléfono y en z7,3 en escritorio, y 7,6
+ *  está por encima de las dos: la escena abre con los seis del recorrido y el
+ *  resto entra cuando el visitante se acerca, que es cuando hay sitio.
+ *
+ *  El número sale de una medida, no de una impresión: con los 38 a la vez, a
+ *  z6,2 sobreviven 11 de los 32 nombres de provincia y hay 30 pares de pines
+ *  montados; a z7,3 son 24 nombres y 11 pares. Si cambia el zoom de la escena
+ *  (`SCENE_CAMERAS.mapa`), este número se vuelve a medir, no se ajusta a ojo. */
+export const DESTINOS_DESDE = 7.6;
 
 // ─── Cámaras por escena ───────────────────────────────────────────────────────
 // Migra LOCATIONS + SCENE_TO_LOCATION de MapScrollJourney a un único mapa
